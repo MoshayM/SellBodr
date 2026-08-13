@@ -13,8 +13,12 @@ export const metadata: Metadata = {
     title: 'SellBodr',
   },
   icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/apple-icon-180.png',
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
+    ],
+    apple: [{ url: '/icons/apple-icon-180.png', sizes: '180x180' }],
+    shortcut: '/icons/icon.svg',
   },
   openGraph: {
     title: 'SellBodr – Find Products in India. Sell Globally.',

@@ -74,9 +74,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         {/* Logo */}
         <div className="px-4 h-16 border-b border-white/5 flex items-center">
           <Link href="/opportunities" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
-              <span className="text-white font-black text-sm">S</span>
-            </div>
+            <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow-lg shadow-violet-500/40 shrink-0" />
             <div>
               <div className="text-sm font-black text-white">SellBodr</div>
               <div className="text-[10px] text-white/30 -mt-0.5">Intelligence Platform</div>
@@ -122,9 +120,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       {/* ── Mobile top bar ─────────────────────────────────────── */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 glass border-b border-white/5 flex items-center px-3 gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shrink-0">
-            <span className="text-white font-black text-xs">S</span>
-          </div>
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shadow shadow-violet-500/30 shrink-0" />
           <span className="text-sm font-bold text-white truncate">{pageName}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -155,9 +151,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               {/* Header */}
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                    <span className="text-white font-black text-xs">S</span>
-                  </div>
+                  <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shadow shadow-violet-500/30 shrink-0" />
                   <span className="text-sm font-bold text-white">SellBodr</span>
                 </div>
                 <button onClick={() => setMenuOpen(false)}
