@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,16 +8,13 @@ import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 
 function fmt(minor: number, currency = '') { return `${currency} ${(minor / 100).toFixed(0)}`.trim(); }
 
-function flag(country: string) {
-  return country.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397));
-}
-
 const PLATFORM_NAMES: Record<string, string> = {
   amazon: 'Amazon', ebay: 'eBay', shopee: 'Shopee', lazada: 'Lazada',
   tiktok: 'TikTok Shop', walmart: 'Walmart', noon: 'Noon', temu: 'Temu',
   mercadolibre: 'MercadoLibre', flipkart: 'Flipkart', meesho: 'Meesho',
-  coupang: 'Coupang', rakuten: 'Rakuten', allegro: 'Allegro', bol: 'bol.com',
+  coupang: 'Coupang', rakuten: 'Rakuten', allegro: 'Allegro', bol: 'Bol.com',
   jumia: 'Jumia', takealot: 'Takealot', etsy: 'Etsy', daraz: 'Daraz',
+  cdiscount: 'Cdiscount', onbuy: 'OnBuy', zalando: 'Zalando', otto: 'Otto',
 };
 
 function platformOf(code: string) {
@@ -25,9 +22,148 @@ function platformOf(code: string) {
   return PLATFORM_NAMES[p] || p.charAt(0).toUpperCase() + p.slice(1);
 }
 
-function mkLabel(mp: any) {
-  return `${flag(mp.country)} ${platformOf(mp.code)} ${mp.country}`;
+function countryCode(mpCode: string): string {
+  const parts = mpCode.split('_');
+  const last = parts[parts.length - 1];
+  return last.length === 2 ? last.toUpperCase() : '';
 }
+
+function flag(cc: string): string {
+  if (!cc || cc.length !== 2) return '';
+  return cc.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397));
+}
+
+function mkLabel(mp: any): string {
+  const cc = countryCode(mp.code);
+  const emoji = cc ? flag(cc) : '🛒';
+  return `${emoji} ${platformOf(mp.code)}${cc ? ` ${cc}` : ''}`;
+}
+
+// ── Custom dark dropdown ──────────────────────────────────────────
+function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
+  marketplaces: any[]; value: string; onChange: (v: string) => void; loading: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false); setSearch('');
+      }
+    }
+    if (open) document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const grouped: Record<string, any[]> = {};
+  for (const mp of marketplaces) {
+    const p = platformOf(mp.code);
+    if (!grouped[p]) grouped[p] = [];
+    grouped[p].push(mp);
+  }
+
+  const q = search.toLowerCase();
+  const filtered: Record<string, any[]> = {};
+  for (const [p, mps] of Object.entries(grouped)) {
+    const f = mps.filter(mp =>
+      p.toLowerCase().includes(q) ||
+      mkLabel(mp).toLowerCase().includes(q) ||
+      mp.code.includes(q)
+    );
+    if (f.length) filtered[p] = f;
+  }
+
+  const selected = marketplaces.find(mp => mp.code === value);
+  const totalCount = marketplaces.length;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => { setOpen(o => !o); setSearch(''); }}
+        disabled={loading}
+        className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500/60 rounded-xl px-3 py-2.5 text-sm text-white min-w-[230px] min-h-[42px] transition-colors disabled:opacity-50 text-left focus:outline-none focus:ring-2 focus:ring-violet-500/20">
+        <span className="flex-1 leading-snug">{loading ? 'Loading…' : (selected ? mkLabel(selected) : 'Select marketplace')}</span>
+        <svg
+          className={`shrink-0 w-3.5 h-3.5 text-white/40 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          viewBox="0 0 12 8" fill="none">
+          <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1.5 w-72 bg-[#0d1526] border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden">
+          {/* Search */}
+          <div className="p-2 border-b border-white/5">
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 focus-within:border-violet-500/60">
+              <svg className="w-3.5 h-3.5 text-white/30 shrink-0" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <input
+                autoFocus
+                type="text"
+                placeholder={`Search ${totalCount} marketplaces…`}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60 text-xs leading-none">✕</button>
+              )}
+            </div>
+          </div>
+
+          {/* Options list */}
+          <div className="max-h-60 overflow-y-auto scrollbar-dark py-1">
+            {Object.keys(filtered).length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <div className="text-2xl mb-2">🔍</div>
+                <div className="text-xs text-white/30">No marketplaces match "{search}"</div>
+              </div>
+            ) : (
+              Object.entries(filtered).map(([platform, mps]) => (
+                <div key={platform}>
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-white/25 uppercase tracking-widest sticky top-0 bg-[#0d1526]">
+                    {platform}
+                  </div>
+                  {mps.map((mp: any) => (
+                    <button
+                      key={mp.code}
+                      type="button"
+                      onClick={() => { onChange(mp.code); setOpen(false); setSearch(''); }}
+                      className={`w-full text-left px-3 py-2 text-sm leading-snug transition-colors flex items-center gap-2.5 ${
+                        mp.code === value
+                          ? 'bg-violet-500/20 text-violet-300'
+                          : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      }`}>
+                      <span>{mkLabel(mp)}</span>
+                      {mp.code === value && (
+                        <svg className="ml-auto shrink-0 w-3.5 h-3.5 text-violet-400" viewBox="0 0 14 14" fill="none">
+                          <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Recommendation filter pills ───────────────────────────────────
+const REC_FILTERS = [
+  { value: '', label: 'All' },
+  { value: 'launch', label: '🚀 Launch' },
+  { value: 'hold',   label: '⏸ Hold' },
+  { value: 'reject', label: '✕ Reject' },
+];
 
 function SkeletonRow() {
   return (
@@ -52,13 +188,6 @@ export default function OpportunitiesPage() {
     queryFn: () => api.marketplaces.list({ active: true }),
   });
 
-  const grouped = (marketplaces as any[]).reduce((acc: Record<string, any[]>, mp: any) => {
-    const platform = platformOf(mp.code);
-    if (!acc[platform]) acc[platform] = [];
-    acc[platform].push(mp);
-    return acc;
-  }, {});
-
   const { data: opps = [], isLoading } = useQuery({
     queryKey: ['opportunities', filter],
     queryFn: () => api.opportunities.list(filter.recommendation ? filter : { marketplace: filter.marketplace }),
@@ -82,8 +211,6 @@ export default function OpportunitiesPage() {
     },
   });
 
-  const selectCls = 'bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 min-h-[40px] transition-colors [&>option]:bg-[#0a0f1e] [&>option]:text-white [&>optgroup]:text-white/40';
-
   return (
     <div>
       {/* Header */}
@@ -97,48 +224,49 @@ export default function OpportunitiesPage() {
           disabled={searching}
           className="btn-primary text-sm disabled:opacity-60 shrink-0">
           {searching
-            ? <><span className="animate-spin inline-block mr-1">&#x27F3;</span> {searchStatus}</>
+            ? <><span className="animate-spin inline-block mr-1">⟳</span> {searchStatus}</>
             : <><span className="mr-1">+</span> New Search</>}
         </button>
       </div>
 
       {/* Filters */}
-      <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 flex flex-wrap gap-3 items-end">
+      <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 flex flex-wrap gap-4 items-end">
+        {/* Marketplace dropdown */}
         <div>
           <label className="text-xs font-medium text-white/50 block mb-1.5">
             Marketplace
             {!mktLoading && (
-              <span className="ml-1.5 text-white/30 font-normal">({(marketplaces as any[]).length} available)</span>
+              <span className="ml-1.5 text-white/25 font-normal">({(marketplaces as any[]).length} available)</span>
             )}
           </label>
-          <select
+          <MarketplaceDropdown
+            marketplaces={marketplaces as any[]}
             value={filter.marketplace}
-            onChange={e => setFilter(f => ({ ...f, marketplace: e.target.value }))}
-            disabled={mktLoading}
-            className={`${selectCls} min-w-[220px] disabled:opacity-50`}>
-            {mktLoading
-              ? <option>Loading marketplaces…</option>
-              : Object.entries(grouped).map(([platform, mps]) => (
-                  <optgroup key={platform} label={platform}>
-                    {(mps as any[]).map((mp: any) => (
-                      <option key={mp.code} value={mp.code}>{mkLabel(mp)}</option>
-                    ))}
-                  </optgroup>
-                ))
-            }
-          </select>
+            onChange={v => setFilter(f => ({ ...f, marketplace: v }))}
+            loading={mktLoading}
+          />
         </div>
+
+        {/* Recommendation pills */}
         <div>
           <label className="text-xs font-medium text-white/50 block mb-1.5">Filter by</label>
-          <select value={filter.recommendation}
-            onChange={e => setFilter(f => ({ ...f, recommendation: e.target.value }))}
-            className={selectCls}>
-            <option value="">All recommendations</option>
-            <option value="launch">Launch</option>
-            <option value="hold">Hold</option>
-            <option value="reject">Reject</option>
-          </select>
+          <div className="flex gap-1.5">
+            {REC_FILTERS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(f => ({ ...f, recommendation: value }))}
+                className={`px-3 py-2 rounded-lg text-xs font-medium leading-none transition-colors whitespace-nowrap min-h-[42px] ${
+                  filter.recommendation === value
+                    ? 'bg-violet-600 text-white'
+                    : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+
         {(opps as any[]).length > 0 && (
           <div className="ml-auto text-xs text-white/30 self-end pb-1">
             {(opps as any[]).length} result{(opps as any[]).length !== 1 ? 's' : ''}
@@ -173,48 +301,51 @@ export default function OpportunitiesPage() {
                     </div>
                   </td></tr>
                 )
-                : (opps as any[]).map((opp: any) => (
-                  <tr key={opp.id} className="hover:bg-violet-500/5 transition-colors group cursor-pointer"
-                    onClick={() => { window.location.href = `/opportunities/${opp.id}`; }}>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
-                          {opp.product?.imageUrl ? (
-                            <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-lg">🎯</div>
-                          )}
+                : (opps as any[]).map((opp: any) => {
+                  const cc = countryCode(opp.marketplace?.code || '');
+                  return (
+                    <tr key={opp.id} className="hover:bg-violet-500/5 transition-colors group cursor-pointer"
+                      onClick={() => { window.location.href = `/opportunities/${opp.id}`; }}>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                            {opp.product?.imageUrl ? (
+                              <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-lg">🎯</div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-white line-clamp-1">{opp.product?.title}</div>
+                            <div className="text-xs text-white/40 mt-0.5 leading-snug">{opp.product?.category?.replace(/_/g,' ')}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-white line-clamp-1">{opp.product?.title}</div>
-                          <div className="text-xs text-white/40 mt-0.5 leading-snug">{opp.product?.category?.replace(/_/g,' ')}</div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="text-sm font-medium text-white/80 leading-snug">
+                          {cc ? flag(cc) : '🛒'} {platformOf(opp.marketplace?.code || '')}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-sm font-medium text-white/80">
-                        {opp.marketplace ? `${flag(opp.marketplace.country)} ${platformOf(opp.marketplace.code)}` : '—'}
-                      </span>
-                      <div className="text-xs text-white/40 leading-snug">{opp.marketplace?.currency}</div>
-                    </td>
-                    <td className="px-4 py-3.5 text-center">
-                      <ScoreGauge score={opp.score?.opportunity || 0} size="sm" />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
-                    </td>
-                    <td className="px-4 py-3.5 text-right font-semibold text-white">
-                      {opp.profitModel ? fmt(opp.profitModel.netProfitMinor, opp.marketplace?.currency) : <span className="text-white/25">&mdash;</span>}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Link href={`/opportunities/${opp.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className="text-xs text-violet-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline whitespace-nowrap">
-                        View &rarr;
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                        <div className="text-xs text-white/40 leading-snug">{opp.marketplace?.currency}</div>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <ScoreGauge score={opp.score?.opportunity || 0} size="sm" />
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                      </td>
+                      <td className="px-4 py-3.5 text-right font-semibold text-white">
+                        {opp.profitModel ? fmt(opp.profitModel.netProfitMinor, opp.marketplace?.currency) : <span className="text-white/25">&mdash;</span>}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <Link href={`/opportunities/${opp.id}`}
+                          onClick={e => e.stopPropagation()}
+                          className="text-xs text-violet-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline whitespace-nowrap">
+                          View &rarr;
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               }
             </tbody>
           </table>
