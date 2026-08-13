@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -86,8 +86,9 @@ export const api = {
 };
 
 export function saveAuth(data: any) {
-  localStorage.setItem('bs_access_token', data.accessToken);
-  if (data.refreshToken) localStorage.setItem('bs_refresh_token', data.refreshToken);
+  const token = data.accessToken || data.access_token;
+  if (token) localStorage.setItem('bs_access_token', token);
+  if (data.refreshToken || data.refresh_token) localStorage.setItem('bs_refresh_token', data.refreshToken || data.refresh_token);
   if (data.user) localStorage.setItem('bs_user', JSON.stringify(data.user));
 }
 
