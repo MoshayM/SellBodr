@@ -1,5 +1,6 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -39,23 +40,41 @@ function mkLabel(mp: any): string {
   return `${emoji} ${platformOf(mp.code)}${cc ? ` ${cc}` : ''}`;
 }
 
-// ── Custom dark dropdown ──────────────────────────────────────────
+// ── Custom dark dropdown (portal-based to escape backdrop-filter stacking context) ────
 function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
   marketplaces: any[]; value: string; onChange: (v: string) => void; loading: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const reposition = useCallback(() => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + 6, left: r.left, width: Math.max(r.width, 288) });
+  }, []);
 
   useEffect(() => {
+    if (!open) return;
+    reposition();
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false); setSearch('');
-      }
+      if (
+        panelRef.current && !panelRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) { setOpen(false); setSearch(''); }
     }
-    if (open) document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [open]);
+    function onScroll() { reposition(); }
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [open, reposition]);
 
   const grouped: Record<string, any[]> = {};
   for (const mp of marketplaces) {
@@ -78,9 +97,74 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
   const selected = marketplaces.find(mp => mp.code === value);
   const totalCount = marketplaces.length;
 
+  const panel = open && typeof window !== 'undefined' ? createPortal(
+    <div
+      ref={panelRef}
+      style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+      className="bg-[#0d1526] border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden">
+      {/* Search */}
+      <div className="p-2 border-b border-white/5">
+        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 focus-within:border-violet-500/60">
+          <svg className="w-3.5 h-3.5 text-white/30 shrink-0" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <input
+            autoFocus
+            type="text"
+            placeholder={`Search ${totalCount} marketplaces…`}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60 text-xs leading-none">✕</button>
+          )}
+        </div>
+      </div>
+      {/* Options list */}
+      <div className="max-h-60 overflow-y-auto scrollbar-dark py-1">
+        {Object.keys(filtered).length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <div className="text-2xl mb-2">🔍</div>
+            <div className="text-xs text-white/30">No marketplaces match &ldquo;{search}&rdquo;</div>
+          </div>
+        ) : (
+          Object.entries(filtered).map(([platform, mps]) => (
+            <div key={platform}>
+              <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-white/25 uppercase tracking-widest sticky top-0 bg-[#0d1526]">
+                {platform}
+              </div>
+              {mps.map((mp: any) => (
+                <button
+                  key={mp.code}
+                  type="button"
+                  onClick={() => { onChange(mp.code); setOpen(false); setSearch(''); }}
+                  className={`w-full text-left px-3 py-2 text-sm leading-snug transition-colors flex items-center gap-2.5 ${
+                    mp.code === value
+                      ? 'bg-violet-500/20 text-violet-300'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}>
+                  <span>{mkLabel(mp)}</span>
+                  {mp.code === value && (
+                    <svg className="ml-auto shrink-0 w-3.5 h-3.5 text-violet-400" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          ))
+        )}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => { setOpen(o => !o); setSearch(''); }}
         disabled={loading}
@@ -92,67 +176,7 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
           <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
-
-      {open && (
-        <div className="absolute top-full left-0 mt-1.5 w-72 bg-[#0d1526] border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 overflow-hidden">
-          {/* Search */}
-          <div className="p-2 border-b border-white/5">
-            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 focus-within:border-violet-500/60">
-              <svg className="w-3.5 h-3.5 text-white/30 shrink-0" viewBox="0 0 16 16" fill="none">
-                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              <input
-                autoFocus
-                type="text"
-                placeholder={`Search ${totalCount} marketplaces…`}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60 text-xs leading-none">✕</button>
-              )}
-            </div>
-          </div>
-
-          {/* Options list */}
-          <div className="max-h-60 overflow-y-auto scrollbar-dark py-1">
-            {Object.keys(filtered).length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <div className="text-2xl mb-2">🔍</div>
-                <div className="text-xs text-white/30">No marketplaces match "{search}"</div>
-              </div>
-            ) : (
-              Object.entries(filtered).map(([platform, mps]) => (
-                <div key={platform}>
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-white/25 uppercase tracking-widest sticky top-0 bg-[#0d1526]">
-                    {platform}
-                  </div>
-                  {mps.map((mp: any) => (
-                    <button
-                      key={mp.code}
-                      type="button"
-                      onClick={() => { onChange(mp.code); setOpen(false); setSearch(''); }}
-                      className={`w-full text-left px-3 py-2 text-sm leading-snug transition-colors flex items-center gap-2.5 ${
-                        mp.code === value
-                          ? 'bg-violet-500/20 text-violet-300'
-                          : 'text-white/70 hover:bg-white/5 hover:text-white'
-                      }`}>
-                      <span>{mkLabel(mp)}</span>
-                      {mp.code === value && (
-                        <svg className="ml-auto shrink-0 w-3.5 h-3.5 text-violet-400" viewBox="0 0 14 14" fill="none">
-                          <path d="M2 7l4 4 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {panel}
     </div>
   );
 }

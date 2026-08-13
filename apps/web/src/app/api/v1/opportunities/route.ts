@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { ensureSchema } from '@/lib/schema';
 
 export async function GET(req: NextRequest) {
   try {
-    const db = getDb();
+    const db = await getDb();
+    await ensureSchema(db);
+
     const result = await db.execute(`
       SELECT o.*,
         p.id as pId, p.title as pTitle, p.category as pCategory, p.imageUrl as pImageUrl,
@@ -16,7 +19,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN "Marketplace" m ON o.marketplaceId = m.id
       LEFT JOIN "Score" s ON o.id = s.opportunityId
       LEFT JOIN "ProfitModel" pm ON o.id = pm.opportunityId
-      ORDER BY o.createdAt DESC
+      ORDER BY s.opportunity DESC, o.createdAt DESC
     `);
     const rows = result.rows.map(r => ({
       id: r.id, status: r.status, recommendation: r.recommendation, confidence: r.confidence,
@@ -28,6 +31,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(rows);
   } catch (err: any) {
     console.error('Opportunities GET error:', err);
-    return NextResponse.json({ message: 'Failed to fetch opportunities' }, { status: 500 });
+    return NextResponse.json([], { status: 200 });
   }
 }

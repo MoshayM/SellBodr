@@ -1,38 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7c3aed"/>
-      <stop offset="1" stop-color="#4338ca"/>
+    <!-- Main gradient: saffron-orange (India) → deep violet (global/tech) -->
+    <linearGradient id="g1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="55%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4338ca"/>
     </linearGradient>
-    <radialGradient id="glow" cx="72%" cy="28%" r="55%">
-      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    <!-- Subtle inner glow -->
+    <radialGradient id="glow" cx="30%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#fdba74" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#fdba74" stop-opacity="0"/>
     </radialGradient>
-    <clipPath id="gc">
-      <circle cx="215" cy="285" r="158"/>
-    </clipPath>
   </defs>
 
-  <!-- Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+  <!-- Rounded square background -->
+  <rect width="100" height="100" rx="22" fill="url(#g1)"/>
+  <rect width="100" height="100" rx="22" fill="url(#glow)"/>
 
-  <!-- Globe outline -->
-  <circle cx="215" cy="285" r="158" stroke="white" stroke-opacity="0.88" stroke-width="20" fill="none"/>
+  <!--
+    The mark: two stacked arrowhead-capped paths forming a stylised "S" / trade-flow symbol.
+    Top arc: source (India, lower-left) → global (upper-right) with outbound arrow
+    Bottom arc: feedback loop, inbound, mirrored
+    Combined they read as the letter S and suggest bidirectional cross-border flow.
+  -->
 
-  <!-- Globe interior lines, clipped to circle -->
-  <g clip-path="url(#gc)" stroke="white" fill="none">
-    <!-- Equator -->
-    <ellipse cx="215" cy="285" rx="158" ry="54" stroke-opacity="0.32" stroke-width="13"/>
-    <!-- Upper latitude -->
-    <ellipse cx="215" cy="210" rx="124" ry="40" stroke-opacity="0.20" stroke-width="11"/>
-    <!-- Central meridian -->
-    <ellipse cx="215" cy="285" rx="62" ry="158" stroke-opacity="0.26" stroke-width="13"/>
-  </g>
+  <!-- Top arc: curves from left to upper-right, arrow pointing out -->
+  <!-- Bezier from (20,58) curving up-right to (72,28) -->
+  <path d="M 20 58 C 20 35, 50 22, 72 28"
+        stroke="white" stroke-width="9" stroke-linecap="round" fill="none" stroke-opacity="0.95"/>
+  <!-- Arrowhead at (72,28) pointing upper-right -->
+  <polyline points="58,20 72,28 65,43"
+            stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.95"/>
 
-  <!-- Arrow shaft: from globe top-right toward upper-right corner -->
-  <line x1="318" y1="168" x2="418" y2="72" stroke="white" stroke-width="28" stroke-linecap="round"/>
-
-  <!-- Arrow head: L-bracket (clean, modern, scales to 16px) -->
-  <path d="M 374 50 L 446 50 L 446 122" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Bottom arc: mirrors, curves from right to lower-left, arrow pointing inward -->
+  <!-- Bezier from (80,42) curving down-left to (28,72) -->
+  <path d="M 80 42 C 80 65, 50 78, 28 72"
+        stroke="white" stroke-width="9" stroke-linecap="round" fill="none" stroke-opacity="0.95"/>
+  <!-- Arrowhead at (28,72) pointing lower-left -->
+  <polyline points="42,80 28,72 35,57"
+            stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.95"/>
 </svg>
