@@ -3,6 +3,9 @@ import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
 import { groqJSON, MODELS } from '@/lib/ai/gateway';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 // Scoring weights (mirrors packages/core/scoring.ts)
 const W = { demand: 0.22, margin: 0.20, competition: 0.16, trend: 0.14, marketplaceFit: 0.12, shipping: 0.10, saturation: 0.06 };
 
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const marketplace: string = body.marketplace || 'amazon_us';
 
-    const db = await getDb();
+    const db = getDb();
     await ensureSchema(db);
 
     const searchId = crypto.randomUUID();

@@ -206,32 +206,45 @@ export default function OpportunitiesPage() {
   const [filter, setFilter] = useState({ marketplace: 'amazon_us', recommendation: '' });
   const [searching, setSearching] = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
+  const [searchError, setSearchError] = useState('');
 
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
     queryKey: ['marketplaces', 'active'],
     queryFn: () => api.marketplaces.list({ active: true }),
   });
 
-  const { data: opps = [], isLoading } = useQuery({
+  // Build query params — server now filters by marketplace + recommendation
+  const oppParams: Record<string, string> = {};
+  if (filter.marketplace)    oppParams.marketplace    = filter.marketplace;
+  if (filter.recommendation) oppParams.recommendation = filter.recommendation;
+
+  const { data: opps = [], isLoading, error: oppError } = useQuery({
     queryKey: ['opportunities', filter],
-    queryFn: () => api.opportunities.list(filter.recommendation ? filter : { marketplace: filter.marketplace }),
+    queryFn: () => api.opportunities.list(oppParams),
   });
 
   const runSearch = useMutation({
-    mutationFn: () => api.searches.create({ marketplace: filter.marketplace }),
-    onSuccess: async (data: any) => {
-      setSearching(true); setSearchStatus('AI pipeline running…');
-      const poll = setInterval(async () => {
-        try {
-          const s = await api.searches.get(data.searchId);
-          if (s.status === 'complete' || s.status === 'failed') {
-            clearInterval(poll); setSearching(false);
-            setSearchStatus(s.status === 'complete' ? '✓ Complete' : '✗ Failed');
-            qc.invalidateQueries({ queryKey: ['opportunities'] });
-            setTimeout(() => setSearchStatus(''), 3000);
-          }
-        } catch { /* silent retry */ }
-      }, 2000);
+    mutationFn: () => {
+      setSearchError('');
+      setSearching(true);
+      setSearchStatus('AI analysing market…');
+      return api.searches.create({ marketplace: filter.marketplace });
+    },
+    onSuccess: (data: any) => {
+      setSearching(false);
+      if (data?.status === 'failed' || data?.error) {
+        setSearchError(data.error || 'Search failed');
+        setSearchStatus('');
+      } else {
+        setSearchStatus(`✓ Found ${data?.count ?? 0} opportunities`);
+        qc.invalidateQueries({ queryKey: ['opportunities'] });
+        setTimeout(() => setSearchStatus(''), 4000);
+      }
+    },
+    onError: (err: any) => {
+      setSearching(false);
+      setSearchStatus('');
+      setSearchError(err?.message || 'Search failed — check Groq API key in settings');
     },
   });
 
@@ -249,9 +262,20 @@ export default function OpportunitiesPage() {
           className="btn-primary text-sm disabled:opacity-60 shrink-0">
           {searching
             ? <><span className="animate-spin inline-block mr-1">⟳</span> {searchStatus}</>
+            : searchStatus
+            ? <><span className="mr-1">✓</span> {searchStatus}</>
             : <><span className="mr-1">+</span> New Search</>}
         </button>
       </div>
+
+      {/* Error banner */}
+      {searchError && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
+          <span className="shrink-0 mt-0.5">✕</span>
+          <span>{searchError}</span>
+          <button onClick={() => setSearchError('')} className="ml-auto shrink-0 opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 flex flex-wrap gap-4 items-end">

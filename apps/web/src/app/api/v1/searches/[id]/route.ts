@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const db = await getDb();
+    const db = getDb();
     await ensureSchema(db);
 
     const r = await db.execute({
