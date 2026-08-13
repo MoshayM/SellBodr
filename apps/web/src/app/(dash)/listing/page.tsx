@@ -6,23 +6,21 @@ import { api } from '@/lib/api';
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   function copy() {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true); setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
   return (
     <button onClick={copy}
-      className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all">
-      {copied ? '&#x2713; Copied' : 'Copy'}
+      className="text-xs leading-none px-2.5 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/20 hover:bg-white/5 transition-all">
+      {copied ? '✓ Copied' : 'Copy'}
     </button>
   );
 }
 
 function Section({ label, children, copyText }: { label: string; children: React.ReactNode; copyText?: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm">
+    <div className="card-dark rounded-xl p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] leading-none font-semibold text-white/30 uppercase tracking-widest">{label}</span>
         {copyText && <CopyButton text={copyText} />}
       </div>
       {children}
@@ -52,44 +50,51 @@ export default function ListingPage() {
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Listing Optimization</h1>
-          <p className="text-sm text-gray-400 mt-0.5">AI-generated marketplace-ready copy, bullets, and keyword strategy</p>
+          <h1 className="text-2xl font-bold text-white">AI Listing</h1>
+          <p className="text-sm text-white/40 mt-0.5 leading-snug">AI-generated marketplace-ready copy, bullets, and keyword strategy</p>
         </div>
       </div>
 
-      {/* Mobile: select dropdown */}
+      {/* Mobile dropdown */}
       {(opps as any[]).length > 0 && (
         <div className="lg:hidden mb-4">
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">Select Opportunity</label>
+          <label className="block text-xs font-medium text-white/50 mb-1.5">Select Opportunity</label>
           <select
             value={selected || (opps as any[])[0]?.id || ''}
             onChange={e => setSelected(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 [&>option]:bg-[#0a0f1e]">
             {(opps as any[]).map((o: any) => (
-              <option key={o.id} value={o.id}>{o.product?.title} &middot; {o.marketplace?.code?.toUpperCase()}</option>
+              <option key={o.id} value={o.id}>{o.product?.title} · {o.marketplace?.code?.toUpperCase()}</option>
             ))}
           </select>
         </div>
       )}
 
       <div className="flex gap-5">
-        {/* Desktop Sidebar */}
+        {/* Desktop sidebar */}
         <div className="hidden lg:block w-56 shrink-0">
-          <div className="bg-white border border-gray-200 rounded-xl p-3 sticky top-0 shadow-sm">
-            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2 px-2">Opportunity</div>
+          <div className="card-dark rounded-xl p-3 sticky top-4">
+            <div className="text-[10px] leading-none font-semibold text-white/30 uppercase tracking-widest mb-3 px-2 mt-1">
+              Opportunity
+            </div>
             <div className="space-y-0.5">
               {(opps as any[]).map((o: any) => (
                 <button key={o.id} onClick={() => setSelected(o.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
-                    (selected || (opps as any[])[0]?.id) === o.id ? 'bg-green-50 text-green-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors leading-snug ${
+                    (selected || (opps as any[])[0]?.id) === o.id
+                      ? 'bg-violet-500/20 text-violet-300 font-medium border border-violet-500/20'
+                      : 'text-white/50 hover:bg-white/5 hover:text-white'
                   }`}>
                   <div className="truncate">{o.product?.title}</div>
-                  <div className="text-gray-400 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
+                  <div className="text-white/30 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
                 </button>
               ))}
-              {(opps as any[]).length === 0 && <div className="text-xs text-gray-400 px-3 py-2">Run a search first</div>}
+              {(opps as any[]).length === 0 && (
+                <div className="text-xs text-white/30 px-3 py-2">Run a search first</div>
+              )}
             </div>
           </div>
         </div>
@@ -97,35 +102,35 @@ export default function ListingPage() {
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-4">
           {!listing && opp && (
-            <div className="bg-white border border-gray-200 rounded-xl p-8 sm:p-10 text-center shadow-sm">
-              <div className="text-4xl mb-4">&#x2728;</div>
-              <p className="text-gray-600 font-medium mb-1">No listing generated yet</p>
-              <p className="text-sm text-gray-400 mb-5">Generate AI-optimised title, bullets, description, and keyword strategy</p>
+            <div className="card-dark rounded-xl p-8 sm:p-10 text-center">
+              <div className="text-5xl mb-4">✨</div>
+              <p className="text-white font-semibold mb-1">No listing generated yet</p>
+              <p className="text-sm text-white/40 mb-5">Generate AI-optimised title, bullets, description, and keyword strategy</p>
               <button onClick={() => gen.mutate()} disabled={gen.isPending}
                 className="btn-primary text-sm disabled:opacity-50">
-                {gen.isPending ? 'Generating…' : '&#x2728; Generate Listing Assets'}
+                {gen.isPending ? 'Generating…' : '✨ Generate Listing Assets'}
               </button>
             </div>
           )}
 
           {!opp && (
-            <div className="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm text-gray-400">
-              <div className="text-3xl mb-2">📝</div>
-              <p className="text-sm">Run a search to generate listing assets</p>
+            <div className="card-dark rounded-xl p-10 text-center">
+              <div className="text-4xl mb-3">📝</div>
+              <p className="text-sm text-white/50">Run a search to generate listing assets</p>
             </div>
           )}
 
           {listing && (
             <>
               <Section label="SEO Title" copyText={listing.seoTitle}>
-                <p className="font-semibold text-gray-900 text-base leading-snug">{listing.seoTitle}</p>
+                <p className="font-semibold text-white text-base leading-snug">{listing.seoTitle}</p>
               </Section>
 
               <Section label="Bullet Points" copyText={bullets.join('\n')}>
                 <ul className="space-y-2.5">
                   {bullets.map((b: string, i: number) => (
-                    <li key={i} className="flex gap-2.5 text-sm text-gray-700">
-                      <span className="text-green-500 font-bold shrink-0 mt-0.5">&#x2713;</span>
+                    <li key={i} className="flex gap-2.5 text-sm text-white/70 leading-snug">
+                      <span className="text-violet-400 font-bold shrink-0 mt-0.5">✓</span>
                       <span>{b}</span>
                     </li>
                   ))}
@@ -133,7 +138,7 @@ export default function ListingPage() {
               </Section>
 
               <Section label="Description" copyText={listing.description}>
-                <p className="text-sm text-gray-700 leading-relaxed">{listing.description}</p>
+                <p className="text-sm text-white/70 leading-relaxed">{listing.description}</p>
               </Section>
 
               {Object.keys(kwMap).length > 0 && (
@@ -141,10 +146,10 @@ export default function ListingPage() {
                   <div className="space-y-3">
                     {Object.entries(kwMap).map(([k, vals]: [string, any]) => (
                       <div key={k}>
-                        <div className="text-xs font-semibold text-gray-500 capitalize mb-1.5">{k}</div>
+                        <div className="text-xs font-semibold text-white/40 capitalize mb-2">{k}</div>
                         <div className="flex flex-wrap gap-1.5">
                           {(Array.isArray(vals) ? vals : []).map((kw: string, i: number) => (
-                            <span key={i} className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full">
+                            <span key={i} className="text-xs leading-snug bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2.5 py-1 rounded-full">
                               {kw}
                             </span>
                           ))}
@@ -157,14 +162,14 @@ export default function ListingPage() {
 
               {listing.positioning && (
                 <Section label="Brand Positioning" copyText={listing.positioning}>
-                  <p className="text-sm text-gray-700">{listing.positioning}</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{listing.positioning}</p>
                 </Section>
               )}
 
               <div className="pt-2">
                 <button onClick={() => gen.mutate()} disabled={gen.isPending}
-                  className="text-xs text-gray-400 hover:text-gray-600 underline disabled:opacity-40">
-                  {gen.isPending ? 'Regenerating…' : '&#x21BA; Regenerate assets'}
+                  className="text-xs text-white/30 hover:text-white/60 underline disabled:opacity-40 transition-colors">
+                  {gen.isPending ? 'Regenerating…' : '↺ Regenerate assets'}
                 </button>
               </div>
             </>

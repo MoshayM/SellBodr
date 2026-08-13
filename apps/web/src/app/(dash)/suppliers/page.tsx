@@ -3,13 +3,32 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 
-const FEASIBILITY_COLOR: Record<string, string> = {
-  easy:     'bg-green-100 text-green-700',
-  moderate: 'bg-amber-100 text-amber-700',
-  hard:     'bg-red-100 text-red-700',
-};
-
 function minor(v: number) { return (v / 100).toFixed(2); }
+
+function SourceBadge({ source }: { source: string }) {
+  const styles: Record<string, string> = {
+    indiamart: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    alibaba:   'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  };
+  return (
+    <span className={`text-[11px] leading-none font-semibold px-2 py-1 rounded border uppercase tracking-wide ${styles[source] || 'bg-white/10 text-white/50 border-white/10'}`}>
+      {source}
+    </span>
+  );
+}
+
+function FeasibilityBadge({ level }: { level: string }) {
+  const styles: Record<string, string> = {
+    easy:     'bg-green-500/20 text-green-400 border-green-500/30',
+    moderate: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    hard:     'bg-red-500/20 text-red-400 border-red-500/30',
+  };
+  return (
+    <span className={`text-xs leading-none px-2 py-1 rounded-full font-medium border ${styles[level] || 'bg-white/10 text-white/40 border-white/10'}`}>
+      {level}
+    </span>
+  );
+}
 
 export default function SuppliersPage() {
   const { data: opps = [], isLoading } = useQuery({
@@ -25,130 +44,123 @@ export default function SuppliersPage() {
   }
 
   if (isLoading) return (
-    <div className="space-y-3">
-      {[1,2,3].map(i => (
-        <div key={i} className="card p-4 animate-pulse">
-          <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
-          <div className="h-3 bg-gray-100 rounded w-1/3" />
-        </div>
-      ))}
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Suppliers</h1>
+        <p className="text-sm text-white/40 mt-0.5 leading-snug">Sourcing candidates ranked by landed cost and feasibility</p>
+      </div>
+      <div className="space-y-3">
+        {[1,2,3].map(i => (
+          <div key={i} className="card-dark rounded-xl p-4 animate-pulse">
+            <div className="h-4 bg-white/10 rounded w-1/2 mb-2" />
+            <div className="h-3 bg-white/5 rounded w-1/3" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <h1 className="text-2xl font-bold text-white">Suppliers</h1>
+        <p className="text-sm text-white/40 mt-0.5 leading-snug">
           Sourcing candidates ranked by landed cost and feasibility
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <div className="card p-12 sm:p-16 text-center">
-          <div className="text-4xl mb-3">🏭</div>
-          <p className="font-medium text-gray-700 mb-1">No suppliers found yet</p>
-          <p className="text-sm text-gray-400">
-            <Link href="/opportunities" className="text-green-600 hover:underline">Run a search</Link> to discover supplier candidates
-          </p>
+        <div className="card-dark rounded-xl p-12 sm:p-16 text-center">
+          <div className="text-5xl mb-4">🏭</div>
+          <p className="font-semibold text-white mb-1">No suppliers found yet</p>
+          <p className="text-sm text-white/40 mb-5">Discover supplier candidates by running a product search</p>
+          <Link href="/opportunities" className="btn-primary text-sm">Find Suppliers →</Link>
         </div>
       ) : (
         <>
-          {/* Mobile card layout */}
+          {/* Mobile cards */}
           <div className="sm:hidden space-y-3">
             {rows.map((sc: any) => (
-              <div key={sc.id} className="card p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
+              <div key={sc.id} className="card-dark rounded-xl p-4">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
                     {sc.supplier?.sourceUrl ? (
                       <a href={sc.supplier.sourceUrl} target="_blank" rel="noopener noreferrer"
-                        className="font-semibold text-green-700 hover:underline inline-flex items-center gap-1 text-sm">
+                        className="font-semibold text-violet-400 hover:underline inline-flex items-center gap-1 text-sm leading-snug">
                         {sc.supplier?.name}
-                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 12 12"><path d="M3.5 1h7.5v7.5M11 1L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                        <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 12 12">
+                          <path d="M3.5 1h7.5v7.5M11 1L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
                       </a>
                     ) : (
-                      <div className="font-semibold text-gray-900 text-sm">{sc.supplier?.name}</div>
+                      <div className="font-semibold text-white text-sm leading-snug">{sc.supplier?.name}</div>
                     )}
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide ${
-                        sc.supplier?.source === 'indiamart' ? 'bg-orange-100 text-orange-700' :
-                        sc.supplier?.source === 'alibaba'   ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>{sc.supplier?.source}</span>
+                    <div className="mt-1.5">
+                      <SourceBadge source={sc.supplier?.source} />
                     </div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${FEASIBILITY_COLOR[sc.feasibility] || 'bg-gray-100 text-gray-600'}`}>
-                    {sc.feasibility}
-                  </span>
+                  <FeasibilityBadge level={sc.feasibility} />
                 </div>
-                <div className="text-xs text-gray-500 mb-2.5 truncate">{sc.opp.product?.title}</div>
+                <div className="text-xs text-white/40 mb-3 leading-snug truncate">{sc.opp.product?.title}</div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-[10px] text-gray-400">Cost</div>
-                    <div className="text-sm font-bold text-gray-800">₹{minor(sc.productCostMinor)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-[10px] text-gray-400">MOQ</div>
-                    <div className="text-sm font-bold text-gray-800">{sc.moq}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-[10px] text-gray-400">Lead</div>
-                    <div className="text-sm font-bold text-gray-800">{sc.leadTimeDays}d</div>
-                  </div>
+                  {[
+                    { label: 'Cost', value: `₹${minor(sc.productCostMinor)}` },
+                    { label: 'MOQ',  value: sc.moq },
+                    { label: 'Lead', value: `${sc.leadTimeDays}d` },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-white/5 rounded-lg px-2 py-2 text-center">
+                      <div className="text-[10px] leading-none text-white/30 mb-1">{label}</div>
+                      <div className="text-sm font-bold text-white leading-snug">{value}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Desktop table */}
-          <div className="hidden sm:block card overflow-hidden">
-            <div className="table-scroll">
+          <div className="hidden sm:block card-dark rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[640px]">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-white/5 border-b border-white/10">
                   <tr>
-                    <th className="text-left px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Supplier</th>
-                    <th className="text-left px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Source</th>
-                    <th className="text-left px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Product</th>
-                    <th className="text-right px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Cost (INR)</th>
-                    <th className="text-right px-4 py-3 font-semibold text-xs text-gray-500 uppercase">MOQ</th>
-                    <th className="text-right px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Lead</th>
-                    <th className="text-center px-4 py-3 font-semibold text-xs text-gray-500 uppercase">Feasibility</th>
-                    <th className="px-4 py-3" />
+                    {['Supplier','Source','Product','Cost (INR)','MOQ','Lead','Feasibility',''].map((h, i) => (
+                      <th key={i} className={`px-4 py-3.5 font-semibold text-xs text-white/40 uppercase tracking-wide ${i >= 3 && i <= 5 ? 'text-right' : i === 6 ? 'text-center' : 'text-left'}`}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-white/5">
                   {rows.map((sc: any) => (
-                    <tr key={sc.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
+                    <tr key={sc.id} className="hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3.5">
                         {sc.supplier?.sourceUrl ? (
                           <a href={sc.supplier.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="font-medium text-green-700 hover:underline inline-flex items-center gap-1">
+                            className="font-medium text-violet-400 hover:underline inline-flex items-center gap-1 leading-snug">
                             {sc.supplier?.name}
-                            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 12 12"><path d="M3.5 1h7.5v7.5M11 1L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 12 12">
+                              <path d="M3.5 1h7.5v7.5M11 1L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
                           </a>
                         ) : (
-                          <span className="font-medium text-gray-900">{sc.supplier?.name}</span>
+                          <span className="font-medium text-white leading-snug">{sc.supplier?.name}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wide ${
-                          sc.supplier?.source === 'indiamart' ? 'bg-orange-100 text-orange-700' :
-                          sc.supplier?.source === 'alibaba'   ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>{sc.supplier?.source}</span>
+                      <td className="px-4 py-3.5">
+                        <SourceBadge source={sc.supplier?.source} />
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate">{sc.opp.product?.title}</td>
-                      <td className="px-4 py-3 text-right">{minor(sc.productCostMinor)}</td>
-                      <td className="px-4 py-3 text-right">{sc.moq}</td>
-                      <td className="px-4 py-3 text-right">{sc.leadTimeDays}d</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${FEASIBILITY_COLOR[sc.feasibility] || 'bg-gray-100 text-gray-600'}`}>
-                          {sc.feasibility}
-                        </span>
+                      <td className="px-4 py-3.5 text-xs text-white/50 max-w-[200px] truncate leading-snug">{sc.opp.product?.title}</td>
+                      <td className="px-4 py-3.5 text-right text-white/80 font-medium">{minor(sc.productCostMinor)}</td>
+                      <td className="px-4 py-3.5 text-right text-white/80">{sc.moq}</td>
+                      <td className="px-4 py-3.5 text-right text-white/80">{sc.leadTimeDays}d</td>
+                      <td className="px-4 py-3.5 text-center">
+                        <FeasibilityBadge level={sc.feasibility} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <Link href={`/opportunities/${sc.opp.id}`}
-                          className="text-xs text-green-600 hover:underline whitespace-nowrap">
+                          className="text-xs text-violet-400 hover:underline whitespace-nowrap font-medium">
                           View →
                         </Link>
                       </td>
