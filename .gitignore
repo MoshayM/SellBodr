@@ -16,6 +16,14 @@ Antropic API Key.txt
 Open AI API Key.txt
 Login Credentials.txt
 Token.txt
+Turso.txt
+Turso url.txt
+Turso db url.txt
+vercel.txt
+git.txt
 
 # Reserved Windows device name — cannot be indexed on Windows
 apps/api/nul
+
+.vercel
+.env*
