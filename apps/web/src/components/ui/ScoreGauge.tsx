@@ -27,23 +27,23 @@ export function ScoreGauge({ score, label, size = 'md' }: Props) {
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="100%"
             startAngle={90} endAngle={-270} data={data} barSize={8}>
-            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#f1f5f9' }} />
+            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: 'rgba(255,255,255,0.08)' }} />
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
           <span className={`font-bold ${fontSize}`} style={{ color }}>{Math.round(score)}</span>
         </div>
       </div>
-      {label && <span className="text-xs text-gray-500 text-center">{label}</span>}
+      {label && <span className="text-xs text-white/40 text-center">{label}</span>}
     </div>
   );
 }
 
 export function RecommendationBadge({ rec, confidence }: { rec: string; confidence?: number }) {
   const styles: Record<string, string> = {
-    launch: 'bg-green-100 text-green-800 border-green-200',
-    hold: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    reject: 'bg-red-100 text-red-800 border-red-200',
+    launch: 'bg-green-500/20 text-green-400 border-green-500/30',
+    hold:   'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    reject: 'bg-red-500/20 text-red-400 border-red-500/30',
   };
   const icons: Record<string, string> = { launch: '🚀', hold: '⏸', reject: '✕' };
   const s = styles[rec] || styles.hold;
