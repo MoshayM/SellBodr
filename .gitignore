@@ -21,6 +21,7 @@ Turso url.txt
 Turso db url.txt
 vercel.txt
 git.txt
+groq api.txt
 
 # Reserved Windows device name — cannot be indexed on Windows
 apps/api/nul
