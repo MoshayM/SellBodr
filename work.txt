@@ -1,0 +1,319 @@
+# TASK
+
+Fix the Compliance Audit workflow.
+
+Current issue:
+
+- Compliance Audit fails.
+- Error:
+  HTTP 429 (No Body)
+
+Because this step fails,
+
+Generate Metadata
+
+SEO Optimization
+
+Thumbnail Brief
+
+Publish
+
+remain locked.
+
+Do NOT apply temporary fixes.
+
+Implement a production-ready solution.
+
+------------------------------------------------
+
+ROOT CAUSE ANALYSIS
+
+Identify why HTTP 429 occurs.
+
+Inspect
+
+AI Orchestrator
+
+Compliance Service
+
+API Client
+
+Provider Adapter
+
+Rate Limiter
+
+Retry Logic
+
+Queue
+
+Token Manager
+
+Logs
+
+Never hide the error.
+
+------------------------------------------------
+
+IMPLEMENT
+
+### 1. Intelligent Retry
+
+Retry only for
+
+429
+
+408
+
+502
+
+503
+
+504
+
+Use
+
+Exponential Backoff
+
+Random Jitter
+
+Respect Retry-After header
+
+Maximum retries configurable.
+
+------------------------------------------------
+
+### 2. Provider Failover
+
+If Provider A returns
+
+429
+
+Automatically
+
+Recalculate provider score
+
+Select next healthy provider
+
+Retry request
+
+Never fail immediately.
+
+------------------------------------------------
+
+### 3. Queue
+
+If provider is rate limited
+
+Queue request
+
+Process automatically
+
+Show
+
+Waiting...
+
+instead of Failed.
+
+------------------------------------------------
+
+### 4. Rate Limiter
+
+Track
+
+RPM
+
+TPM
+
+Daily quota
+
+Monthly quota
+
+Prevent requests before limits are exceeded.
+
+------------------------------------------------
+
+### 5. Token Optimization
+
+Before every request
+
+Remove duplicate instructions
+
+Compress prompt
+
+Summarize history
+
+Trim unused context
+
+Estimate tokens
+
+Reject oversized requests
+
+Reuse cache
+
+------------------------------------------------
+
+### 6. Cache
+
+Cache deterministic compliance results.
+
+Avoid duplicate API calls.
+
+------------------------------------------------
+
+### 7. Dependency Workflow
+
+Workflow
+
+Script
+
+↓
+
+Fact Check
+
+↓
+
+Compliance Audit
+
+↓
+
+Metadata
+
+↓
+
+SEO
+
+↓
+
+Thumbnail
+
+↓
+
+Publish
+
+If Compliance succeeds
+
+Automatically unlock next step.
+
+No page refresh required.
+
+------------------------------------------------
+
+### 8. UI
+
+Replace
+
+FAILED
+
+with
+
+Retrying...
+
+Queued...
+
+Rate Limited
+
+Provider Switching
+
+Completed
+
+Display progress.
+
+------------------------------------------------
+
+### 9. Logging
+
+Log
+
+Provider
+
+Model
+
+Latency
+
+Input Tokens
+
+Output Tokens
+
+Estimated Cost
+
+Retry Count
+
+Failover
+
+Queue Time
+
+429 Reason
+
+Retry-After
+
+------------------------------------------------
+
+### 10. Configuration
+
+No hardcoded
+
+Provider
+
+Model
+
+Rate limits
+
+Timeouts
+
+Retries
+
+Read from configuration.
+
+------------------------------------------------
+
+### 11. Validation
+
+Verify
+
+Compliance completes
+
+Metadata unlocks
+
+SEO unlocks
+
+Thumbnail unlocks
+
+Publish unlocks
+
+No duplicate requests
+
+No infinite retries
+
+No UI freeze
+
+------------------------------------------------
+
+### 12. Deliverables
+
+Generate production-ready
+
+AI Orchestrator updates
+
+Compliance Service
+
+Retry Manager
+
+Rate Limiter
+
+Queue Manager
+
+Provider Failover
+
+Token Optimizer
+
+React UI updates
+
+API changes
+
+Unit Tests
+
+Integration Tests
+
+Keep existing functionality intact.
+
+Use Clean Architecture, SOLID, Strategy Pattern, Adapter Pattern, Dependency Injection and TypeScript best practices.

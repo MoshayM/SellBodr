@@ -1,0 +1,174 @@
+======================================================================
+  BorderScout AI — Quick Reference
+  Cross-Border eCommerce Intelligence Platform
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+  HOW TO START THE APP
+──────────────────────────────────────────────────────────────────────
+
+  Double-click:  BorderScout.bat
+  (This stops old processes, syncs API keys, builds, and launches)
+
+  Web App  →  http://localhost:3000
+  API      →  http://localhost:4000/v1
+  API Docs →  http://localhost:4000/v1/docs
+
+
+──────────────────────────────────────────────────────────────────────
+  LOGIN CREDENTIALS (Owner)
+──────────────────────────────────────────────────────────────────────
+
+  Email    :  owner@borderscout.ai
+  Password :  BorderScout@2024
+  Role     :  Owner
+
+  Change password after first login:
+  Settings → Password tab
+
+
+──────────────────────────────────────────────────────────────────────
+  AI API KEYS (auto-loaded from these files on every startup)
+──────────────────────────────────────────────────────────────────────
+
+  Anthropic  →  D:\project\BorderScout AI\Antropic API Key.txt
+  OpenAI     →  D:\project\BorderScout AI\Open AI API Key.txt
+
+  Additional keys can be added via:
+  http://localhost:3000/settings  →  AI Provider Keys tab
+
+  Supported providers:
+  · Anthropic  (Claude models)
+  · OpenAI     (GPT-4o, o1)
+  · xAI        (Grok-2, Grok-3)
+  · Gemini     (1.5, 2.0)
+  · Mistral    (Large, Codestral)
+  · Cohere     (Command R+)
+
+
+──────────────────────────────────────────────────────────────────────
+  APP PAGES
+──────────────────────────────────────────────────────────────────────
+
+  /opportunities     AI-ranked cross-border product opportunities
+  /research          Deep-dive analytics per product
+  /suppliers         Sourcing candidates (IndiaMART, Alibaba, TradeIndia)
+  /marketplace       Opportunities grouped by marketplace
+  /profitability     Landed-cost profit waterfall
+  /listing           AI-generated listing copy & keywords
+  /recommendation    Launch / Hold / Reject decisions with confidence
+  /reports           Full intelligence report generator
+  /settings          API keys, marketplace manager, password
+
+
+──────────────────────────────────────────────────────────────────────
+  GLOBAL MARKETPLACES (76 seeded)
+──────────────────────────────────────────────────────────────────────
+
+  AMAZON (19 countries)
+  amazon_us  · amazon_uk  · amazon_de  · amazon_ca  · amazon_au
+  amazon_fr  · amazon_it  · amazon_es  · amazon_nl  · amazon_se
+  amazon_pl  · amazon_tr  · amazon_ae  · amazon_sa  · amazon_sg
+  amazon_in  · amazon_jp  · amazon_mx  · amazon_br
+
+  SHOPEE (8 markets)
+  shopee_sg  · shopee_my  · shopee_th  · shopee_ph
+  shopee_id  · shopee_vn  · shopee_tw  · shopee_br
+
+  LAZADA (6 markets)
+  lazada_sg  · lazada_my  · lazada_th
+  lazada_ph  · lazada_id  · lazada_vn
+
+  TIKTOK SHOP (9 markets)
+  tiktok_us  · tiktok_uk  · tiktok_de  · tiktok_sg
+  tiktok_my  · tiktok_th  · tiktok_ph  · tiktok_id · tiktok_vn
+
+  EBAY              ebay_us · ebay_uk · ebay_de · ebay_au
+  WALMART           walmart · walmart_ca
+  NOON (Middle East) noon_ae · noon_sa · noon_eg
+  TEMU              temu_us · temu_uk · temu_de
+  MERCADOLIBRE      mercadolibre_br · mx · ar · co · cl
+  INDIA             flipkart_in · meesho_in
+  EAST ASIA         coupang_kr · rakuten_jp
+  EUROPE            allegro_pl · bol_nl · zalando_eu · otto_de
+                    cdiscount_fr · onbuy_uk
+  AFRICA            jumia_ng · jumia_ke · takealot_za
+  SOUTH ASIA        daraz_pk · daraz_lk · daraz_bd
+  OTHER             etsy
+
+  Manage / add custom marketplaces:
+  http://localhost:3000/settings  →  Marketplaces tab
+
+
+──────────────────────────────────────────────────────────────────────
+  SUPPLIER SOURCES (auto-linked on every search)
+──────────────────────────────────────────────────────────────────────
+
+  · IndiaMART   →  https://www.indiamart.com
+  · Alibaba     →  https://www.alibaba.com
+  · TradeIndia  →  https://www.tradeindia.com
+
+  Each opportunity gets 3 supplier candidates:
+  Easy (IndiaMART) · Moderate (Alibaba) · Hard (TradeIndia)
+
+
+──────────────────────────────────────────────────────────────────────
+  PROJECT STRUCTURE
+──────────────────────────────────────────────────────────────────────
+
+  D:\project\BorderScout AI\
+  ├── apps\
+  │   ├── web\          Next.js 14 frontend  (port 3000)
+  │   └── api\          NestJS backend       (port 4000)
+  ├── packages\
+  │   └── core\         Shared types & scoring formulas
+  ├── BorderScout.bat   ← START HERE
+  ├── Login Credentials.txt
+  ├── Antropic API Key.txt
+  ├── Open AI API Key.txt
+  └── BorderScout AI - Quick Reference.txt  ← THIS FILE
+
+
+──────────────────────────────────────────────────────────────────────
+  OPPORTUNITY SCORING (v2.0.0)
+──────────────────────────────────────────────────────────────────────
+
+  Overall Score  =  Weighted composite of 7 sub-scores (0–100)
+
+  Sub-score       Weight   What it measures
+  ─────────────────────────────────────────────────────────────────
+  Demand          25%      Search volume + sales velocity
+  Competition     20%      Number & strength of competitors
+  Margin          20%      Net profit after all costs
+  Trend           15%      Rising / stable / falling interest
+  Saturation      10%      Market crowding index
+  Shipping        5%       Weight / size / duty feasibility
+  Marketplace Fit 5%       Category suitability for the market
+
+  Decision thresholds:
+  · LAUNCH  →  Score ≥ 65
+  · HOLD    →  Score 40–64
+  · REJECT  →  Score < 40
+
+
+──────────────────────────────────────────────────────────────────────
+  DEVICE SUPPORT
+──────────────────────────────────────────────────────────────────────
+
+  ✓ Android phone / tablet
+  ✓ iPhone / iPad (with safe-area notch support)
+  ✓ Windows desktop / laptop
+  ✓ macOS desktop / laptop
+  ✓ All modern browsers (Chrome, Firefox, Safari, Edge)
+
+  Mobile:  fixed top bar + bottom nav (Scout, Research, Markets, AI Picks)
+  Desktop: full sidebar navigation
+
+
+──────────────────────────────────────────────────────────────────────
+  SUPPORT & FEEDBACK
+──────────────────────────────────────────────────────────────────────
+
+  Email  :  Digiaim_group3@iimcal.ac.in
+
+======================================================================

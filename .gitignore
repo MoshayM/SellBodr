@@ -1,0 +1,21 @@
+node_modules/
+.next/
+dist/
+.turbo/
+*.log
+.env
+.env.local
+.env.production
+*.db
+*.db-journal
+coverage/
+.pnpm-store/
+
+# Sensitive credential files
+Antropic API Key.txt
+Open AI API Key.txt
+Login Credentials.txt
+Token.txt
+
+# Reserved Windows device name — cannot be indexed on Windows
+apps/api/nul

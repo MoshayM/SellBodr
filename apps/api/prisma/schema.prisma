@@ -1,0 +1,359 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                String    @id @default(uuid())
+  name              String
+  plan              String    @default("starter")
+  whiteLabelConfig  String?
+  aiProviderKeys    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  users             User[]
+  workspaces        Workspace[]
+  subscription      Subscription?
+  auditLogs         AuditLog[]
+}
+
+model User {
+  id               String       @id @default(uuid())
+  organizationId   String
+  email            String       @unique
+  passwordHash     String?
+  name             String
+  role             String       @default("member")
+  mfaSecret        String?
+  mfaEnabled       Boolean      @default(false)
+  oauthProvider    String?
+  lastLoginAt      DateTime?
+  deletedAt        DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  searches         Search[]
+  reports          Report[]
+  auditLogs        AuditLog[]
+  apiKeys          ApiKey[]
+}
+
+model Workspace {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  members        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  portfolios     Portfolio[]
+}
+
+model Portfolio {
+  id            String        @id @default(uuid())
+  workspaceId   String
+  name          String
+  description   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  workspace     Workspace     @relation(fields: [workspaceId], references: [id])
+  opportunities Opportunity[]
+}
+
+model Product {
+  id              String        @id @default(uuid())
+  title           String
+  category        String
+  attributes      String?
+  weightG         Int           @default(500)
+  isLightweight   Boolean       @default(false)
+  hsCode          String?
+  imageUrl        String?
+  imageSource     String?
+  imageConfidence Float?
+  marketplaceUrl  String?
+  seller          String?
+  sellerRating    Float?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  opportunities Opportunity[]
+}
+
+model Marketplace {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  country     String
+  currency    String
+  feeSchedule String
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  opportunities Opportunity[]
+}
+
+model Search {
+  id          String        @id @default(uuid())
+  userId      String
+  filters     String
+  status      String        @default("queued")
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+  opportunities Opportunity[]
+}
+
+model Opportunity {
+  id              String      @id @default(uuid())
+  searchId        String
+  productId       String
+  marketplaceId   String
+  portfolioId     String?
+  status          String      @default("scored")
+  recommendation  String      @default("hold")
+  confidence      Float       @default(0)
+  scoreVersion    String      @default("2.0.0")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  search          Search      @relation(fields: [searchId], references: [id])
+  product         Product     @relation(fields: [productId], references: [id])
+  marketplace     Marketplace @relation(fields: [marketplaceId], references: [id])
+  portfolio       Portfolio?  @relation(fields: [portfolioId], references: [id])
+  score           Score?
+  profitModel     ProfitModel?
+  sourcingCandidates SourcingCandidate[]
+  competitors     Competitor[]
+  launchAsset     LaunchAsset?
+  reports         Report[]
+  agentRuns       AgentRun[]
+}
+
+model Score {
+  id              String      @id @default(uuid())
+  opportunityId   String      @unique
+  demand          Float       @default(0)
+  competition     Float       @default(0)
+  margin          Float       @default(0)
+  saturation      Float       @default(0)
+  trend           Float       @default(0)
+  shipping        Float       @default(0)
+  marketplaceFit  Float       @default(0)
+  opportunity     Float       @default(0)
+  breakdown       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  opportunityRel  Opportunity @relation(fields: [opportunityId], references: [id])
+}
+
+model Supplier {
+  id                 String   @id @default(uuid())
+  name               String
+  source             String
+  location           String
+  exportExperience   String   @default("none")
+  qualityIndicators  String?
+  verified           Boolean  @default(false)
+  sourceUrl          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  sourcingCandidates SourcingCandidate[]
+}
+
+model SourcingCandidate {
+  id                      String      @id @default(uuid())
+  opportunityId           String
+  supplierId              String
+  productCostMinor        Int         @default(0)
+  currency                String      @default("INR")
+  moq                     Int         @default(100)
+  leadTimeDays            Int         @default(30)
+  productionCapacityMonth Int         @default(500)
+  feasibility             String      @default("moderate")
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  opportunity             Opportunity @relation(fields: [opportunityId], references: [id])
+  supplier                Supplier    @relation(fields: [supplierId], references: [id])
+}
+
+model ProfitModel {
+  id                   String      @id @default(uuid())
+  opportunityId        String      @unique
+  currency             String      @default("USD")
+  salePriceMinor       Int         @default(0)
+  productCostMinor     Int         @default(0)
+  packagingCostMinor   Int         @default(0)
+  intlShippingMinor    Int         @default(0)
+  fbaFeeMinor          Int         @default(0)
+  referralFeeMinor     Int         @default(0)
+  storageFeeMajor      Int         @default(0)
+  adCostMinor          Int         @default(0)
+  taxMinor             Int         @default(0)
+  landedCostMinor      Int         @default(0)
+  marketplaceFeesMinor Int         @default(0)
+  grossProfitMinor     Int         @default(0)
+  netProfitMinor       Int         @default(0)
+  roiPct               Float       @default(0)
+  breakevenUnits       Int         @default(0)
+  monthlyProfitMinor   Int         @default(0)
+  annualProfitMinor    Int         @default(0)
+  netMarginPct         Float       @default(0)
+  assumptions          String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  opportunity          Opportunity @relation(fields: [opportunityId], references: [id])
+}
+
+model Competitor {
+  id              String      @id @default(uuid())
+  opportunityId   String
+  externalId      String
+  title           String
+  priceMinor      Int         @default(0)
+  rating          Float       @default(0)
+  reviewCount     Int         @default(0)
+  listingQuality  Float       @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id])
+  reviewInsights  ReviewInsight[]
+}
+
+model ReviewInsight {
+  id           String     @id @default(uuid())
+  competitorId String
+  painPoint    String
+  sentiment    String     @default("neutral")
+  frequency    Int        @default(1)
+  createdAt    DateTime   @default(now())
+
+  competitor   Competitor @relation(fields: [competitorId], references: [id])
+}
+
+model LaunchAsset {
+  id                    String      @id @default(uuid())
+  opportunityId         String      @unique
+  seoTitle              String?
+  bullets               String?
+  description           String?
+  keywords              String?
+  positioning           String?
+  usps                  String?
+  recommendedPriceMinor Int?
+  bundleSuggestions     String?
+  brandConcepts         String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  opportunity           Opportunity @relation(fields: [opportunityId], references: [id])
+}
+
+model Report {
+  id            String      @id @default(uuid())
+  opportunityId String
+  s3Key         String?
+  format        String      @default("json")
+  generatedById String
+  content       String?
+  createdAt     DateTime    @default(now())
+
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id])
+  generatedBy   User        @relation(fields: [generatedById], references: [id])
+}
+
+model AgentRun {
+  id             String      @id @default(uuid())
+  opportunityId  String?
+  pipeline       String
+  status         String      @default("running")
+  costUsdMicro   Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id])
+  steps          AgentStep[]
+}
+
+model AgentStep {
+  id          String    @id @default(uuid())
+  agentRunId  String
+  agent       String
+  model       String    @default("mock")
+  input       String?
+  output      String?
+  tokensIn    Int       @default(0)
+  tokensOut   Int       @default(0)
+  status      String    @default("ok")
+  latencyMs   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  agentRun    AgentRun  @relation(fields: [agentRunId], references: [id])
+}
+
+model AuditLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  actorUserId    String?
+  action         String
+  resourceType   String
+  resourceId     String
+  metadata       String?
+  ip             String?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  actor          User?        @relation(fields: [actorUserId], references: [id])
+}
+
+model Subscription {
+  id                   String       @id @default(uuid())
+  organizationId       String       @unique
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  plan                 String       @default("starter")
+  status               String       @default("active")
+  usageMeters          String?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  organization         Organization @relation(fields: [organizationId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id])
+}
