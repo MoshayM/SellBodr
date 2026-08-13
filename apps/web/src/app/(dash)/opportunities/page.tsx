@@ -33,7 +33,9 @@ function SkeletonRow() {
   return (
     <tr className="animate-pulse">
       {[1,2,3,4,5,6].map(i => (
-        <td key={i} className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-full" /></td>
+        <td key={i} className="px-4 py-3.5">
+          <div className="h-4 bg-white/10 rounded w-full" />
+        </td>
       ))}
     </tr>
   );
@@ -80,13 +82,15 @@ export default function OpportunitiesPage() {
     },
   });
 
+  const selectCls = 'bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 min-h-[40px] transition-colors [&>option]:bg-[#0a0f1e] [&>option]:text-white [&>optgroup]:text-white/40';
+
   return (
     <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Opportunities</h1>
-          <p className="text-sm text-gray-400 mt-0.5">AI-ranked cross-border eCommerce opportunities</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Opportunities</h1>
+          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities</p>
         </div>
         <button
           onClick={() => runSearch.mutate()}
@@ -99,19 +103,19 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 mb-4 flex flex-wrap gap-3 items-end shadow-sm">
+      <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 flex flex-wrap gap-3 items-end">
         <div>
-          <label className="text-xs font-medium text-gray-500 block mb-1.5">
+          <label className="text-xs font-medium text-white/50 block mb-1.5">
             Marketplace
             {!mktLoading && (
-              <span className="ml-1.5 text-gray-400 font-normal">({(marketplaces as any[]).length} available)</span>
+              <span className="ml-1.5 text-white/30 font-normal">({(marketplaces as any[]).length} available)</span>
             )}
           </label>
           <select
             value={filter.marketplace}
             onChange={e => setFilter(f => ({ ...f, marketplace: e.target.value }))}
             disabled={mktLoading}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white min-h-[40px] min-w-[220px] disabled:opacity-50">
+            className={`${selectCls} min-w-[220px] disabled:opacity-50`}>
             {mktLoading
               ? <option>Loading marketplaces…</option>
               : Object.entries(grouped).map(([platform, mps]) => (
@@ -125,10 +129,10 @@ export default function OpportunitiesPage() {
           </select>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-500 block mb-1.5">Filter by</label>
+          <label className="text-xs font-medium text-white/50 block mb-1.5">Filter by</label>
           <select value={filter.recommendation}
             onChange={e => setFilter(f => ({ ...f, recommendation: e.target.value }))}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white min-h-[40px]">
+            className={selectCls}>
             <option value="">All recommendations</option>
             <option value="launch">Launch</option>
             <option value="hold">Hold</option>
@@ -136,27 +140,27 @@ export default function OpportunitiesPage() {
           </select>
         </div>
         {(opps as any[]).length > 0 && (
-          <div className="ml-auto text-xs text-gray-400 self-end pb-1">
+          <div className="ml-auto text-xs text-white/30 self-end pb-1">
             {(opps as any[]).length} result{(opps as any[]).length !== 1 ? 's' : ''}
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div className="table-scroll">
+      <div className="card-dark rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-white/5 border-b border-white/10">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Product</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Market</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Score</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Decision</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide">Net Profit</th>
-                <th className="px-4 py-3" />
+                <th className="text-left px-4 py-3.5 font-semibold text-white/40 text-xs uppercase tracking-wide">Product</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-white/40 text-xs uppercase tracking-wide">Market</th>
+                <th className="text-center px-4 py-3.5 font-semibold text-white/40 text-xs uppercase tracking-wide">Score</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-white/40 text-xs uppercase tracking-wide">Decision</th>
+                <th className="text-right px-4 py-3.5 font-semibold text-white/40 text-xs uppercase tracking-wide">Net Profit</th>
+                <th className="px-4 py-3.5" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {isLoading
                 ? [1,2,3].map(i => <SkeletonRow key={i} />)
                 : (opps as any[]).length === 0
@@ -164,17 +168,17 @@ export default function OpportunitiesPage() {
                   <tr><td colSpan={6}>
                     <div className="py-14 text-center">
                       <div className="text-4xl mb-3">🎯</div>
-                      <p className="font-medium text-gray-700 mb-1">No opportunities yet</p>
-                      <p className="text-sm text-gray-400">Click <strong>+ New Search</strong> to discover products</p>
+                      <p className="font-medium text-white/70 mb-1">No opportunities yet</p>
+                      <p className="text-sm text-white/40">Click <strong className="text-white/70">+ New Search</strong> to discover products</p>
                     </div>
                   </td></tr>
                 )
                 : (opps as any[]).map((opp: any) => (
-                  <tr key={opp.id} className="hover:bg-green-50/40 transition-colors group cursor-pointer"
+                  <tr key={opp.id} className="hover:bg-violet-500/5 transition-colors group cursor-pointer"
                     onClick={() => { window.location.href = `/opportunities/${opp.id}`; }}>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
                           {opp.product?.imageUrl ? (
                             <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                           ) : (
@@ -182,30 +186,30 @@ export default function OpportunitiesPage() {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 line-clamp-1">{opp.product?.title}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{opp.product?.category?.replace(/_/g,' ')}</div>
+                          <div className="font-medium text-white line-clamp-1">{opp.product?.title}</div>
+                          <div className="text-xs text-white/40 mt-0.5 leading-snug">{opp.product?.category?.replace(/_/g,' ')}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm font-medium text-gray-700">
+                    <td className="px-4 py-3.5">
+                      <span className="text-sm font-medium text-white/80">
                         {opp.marketplace ? `${flag(opp.marketplace.country)} ${platformOf(opp.marketplace.code)}` : '—'}
                       </span>
-                      <div className="text-xs text-gray-400">{opp.marketplace?.currency}</div>
+                      <div className="text-xs text-white/40 leading-snug">{opp.marketplace?.currency}</div>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3.5 text-center">
                       <ScoreGauge score={opp.score?.opportunity || 0} size="sm" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-800">
-                      {opp.profitModel ? fmt(opp.profitModel.netProfitMinor, opp.marketplace?.currency) : <span className="text-gray-300">&mdash;</span>}
+                    <td className="px-4 py-3.5 text-right font-semibold text-white">
+                      {opp.profitModel ? fmt(opp.profitModel.netProfitMinor, opp.marketplace?.currency) : <span className="text-white/25">&mdash;</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <Link href={`/opportunities/${opp.id}`}
                         onClick={e => e.stopPropagation()}
-                        className="text-xs text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline whitespace-nowrap">
+                        className="text-xs text-violet-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline whitespace-nowrap">
                         View &rarr;
                       </Link>
                     </td>

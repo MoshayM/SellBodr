@@ -38,7 +38,7 @@ function NavItem({ href, label, icon, badge, onClick }: { href: string; label: s
       <span className="text-base relative z-10">{icon}</span>
       <span className="relative z-10">{label}</span>
       {badge && (
-        <span className="ml-auto relative z-10 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-violet-600 text-white leading-none">
+        <span className="ml-auto relative z-10 text-[10px] leading-none font-bold px-1.5 py-1 rounded-md bg-violet-600 text-white">
           {badge}
         </span>
       )}
@@ -89,7 +89,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           <div className="flex items-center gap-2 bg-white/4 hover:bg-white/6 border border-white/6 rounded-xl px-3 py-2 text-sm text-white/30 cursor-text transition-colors">
             <span>🔍</span>
             <span className="text-xs">Search everything...</span>
-            <span className="ml-auto text-[10px] glass rounded px-1.5 py-0.5 border border-white/8">⌘K</span>
+            <span className="ml-auto text-[10px] leading-none glass rounded px-1.5 py-1 border border-white/8">⌘K</span>
           </div>
         </div>
 
