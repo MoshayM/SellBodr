@@ -61,22 +61,32 @@ export async function POST(req: NextRequest) {
       args: [searchId, marketplace, now],
     });
 
-    // Derive readable marketplace name for prompt
+    // Derive readable marketplace name and current date context for trend-aware prompt
     const mpName = marketplace.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const month = new Date().toLocaleString('en-US', { month: 'long' });
+    const year  = new Date().getFullYear();
 
-    // Single FLASH call: ~1200 tokens in, ~900 out
-    const prompt = `You are a cross-border eCommerce analyst. List exactly 8 Indian export products ideal for ${mpName}.
-For each product output JSON with these fields (scores 0–100):
+    // Single FLASH call: ~1400 tokens in, ~1000 out — trend-aware prompt
+    const prompt = `You are a cross-border eCommerce analyst. Today is ${today} (${month} ${year}).
+
+List exactly 8 Indian-manufactured products that are CURRENTLY TRENDING on ${mpName} RIGHT NOW in ${month} ${year}.
+Base your selection on: seasonal demand, current consumer trends, viral social commerce, and supply gaps in the destination market.
+Prioritise products with rising search volume, low saturation, and practical Indian manufacturing advantage.
+
+For each product output JSON:
 {"title","category","description","sourcePriceUSD","salePriceUSD","netMarginPct","scores":{"demand","competition","margin","trend","marketplaceFit","shipping","saturation"}}
 
-Rules:
-- competition: 100=lowest competition (good), 0=saturated
-- saturation: 100=least saturated (good), 0=very saturated
-- sourcePriceUSD: realistic Indian manufacturing cost
-- salePriceUSD: realistic marketplace selling price
-- netMarginPct: after all fees and shipping
+Score rules (0–100):
+- demand: current search/buy demand this month
+- competition: 100=low competition (good), 0=saturated
+- margin: profit margin quality
+- trend: 100=strongly rising trend right now, 0=declining
+- marketplaceFit: how well this product suits ${mpName} rules and buyer expectations
+- shipping: 100=easy to ship from India (light/non-hazardous), 0=restricted/fragile
+- saturation: 100=not yet saturated, 0=fully saturated
 
-Return a JSON array only. No prose.`;
+Return a JSON array only. No prose, no markdown.`;
 
     let products: AiProduct[] = [];
     try {
