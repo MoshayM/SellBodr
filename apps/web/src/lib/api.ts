@@ -73,7 +73,7 @@ export const api = {
   },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
-      request<{ success: boolean }>('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
+      request<{ success: boolean }>('/settings/change-password', { method: 'POST', body: JSON.stringify(data) }),
     getAiProviderKeys: () => request<any[]>('/settings/ai-provider-keys'),
     updateAiProviderKeys: (data: Record<string, string>) =>
       request<{ success: boolean }>('/settings/ai-provider-keys', { method: 'PUT', body: JSON.stringify(data) }),
