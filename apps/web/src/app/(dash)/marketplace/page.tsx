@@ -190,7 +190,7 @@ export default function MarketplacePage() {
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{meta.flag}</span>
                 <span className="font-semibold text-white">{meta.label}</span>
-                <span className="text-xs text-white/50 bg-white/10 px-2 py-0.5 rounded-full">
+                <span className="text-xs leading-none text-white/50 bg-white/10 px-2 py-1 rounded-full">
                   {list.length} opp{list.length !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -294,10 +294,10 @@ export default function MarketplacePage() {
       </div>
 
       {/* Region filter tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 mb-5 scrollbar-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 mb-5 scrollbar-none">
         {regions.map(r => (
           <button key={r} onClick={() => setRegionFilter(r)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`shrink-0 px-3 py-2 rounded-full text-xs font-medium leading-none transition-colors whitespace-nowrap ${
               regionFilter === r
                 ? 'bg-violet-600 text-white'
                 : 'bg-white/10 text-white/60 hover:bg-white/15 hover:text-white'
@@ -323,8 +323,8 @@ export default function MarketplacePage() {
           {filteredRegions.map(region => {
             const mps = byRegion[region] || [];
             return (
-              <div key={region} className="card-dark overflow-hidden">
-                <div className="px-4 sm:px-5 py-3 border-b border-white/10 flex items-center justify-between">
+              <div key={region} className="card-dark rounded-xl overflow-hidden">
+                <div className="px-4 sm:px-5 py-3.5 border-b border-white/10 flex items-center justify-between">
                   <span className="font-semibold text-white text-sm">{region}</span>
                   <span className="text-xs text-white/40">{mps.length} marketplace{mps.length !== 1 ? 's' : ''}</span>
                 </div>
@@ -342,9 +342,9 @@ export default function MarketplacePage() {
                             : 'border-dashed border-white/10 bg-white/[0.02] opacity-50'
                         }`}>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xl leading-none">{meta.flag}</span>
+                          <span className="text-xl leading-normal">{meta.flag}</span>
                           {stat ? (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            <span className={`text-[11px] leading-none font-bold px-1.5 py-1 rounded-full ${
                               stat.avgScore >= 65 ? 'bg-green-500/20 text-green-400' :
                               stat.avgScore >= 40 ? 'bg-yellow-500/20 text-yellow-400' :
                               'bg-white/10 text-white/50'
@@ -352,26 +352,26 @@ export default function MarketplacePage() {
                               {stat.avgScore}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-white/25 font-medium">—</span>
+                            <span className="text-xs text-white/25 font-medium leading-none">—</span>
                           )}
                         </div>
 
-                        <div className="text-xs font-semibold text-white leading-tight line-clamp-1 mb-0.5">
+                        <div className="text-xs font-semibold text-white leading-snug line-clamp-1 mb-0.5">
                           {meta.label}
                         </div>
-                        <div className="text-[10px] text-white/40 mb-1.5">{mp.currency}</div>
+                        <div className="text-[11px] leading-snug text-white/40 mb-1.5">{mp.currency}</div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-white/40">
+                          <span className="text-[11px] leading-snug text-white/40">
                             {stat ? `${stat.count} opp${stat.count !== 1 ? 's' : ''}` : 'No opps'}
                           </span>
                           {fees.referralPct != null && (
-                            <span className="text-[10px] text-white/40">{fees.referralPct}% ref</span>
+                            <span className="text-[11px] leading-snug text-white/40">{fees.referralPct}% ref</span>
                           )}
                         </div>
 
                         {!mp.active && (
-                          <div className="mt-1.5 text-[10px] text-white/40 font-medium">Inactive</div>
+                          <div className="mt-1.5 text-[11px] leading-snug text-white/40 font-medium">Inactive</div>
                         )}
                       </button>
                     );
