@@ -1,6 +1,6 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@borderscout/core'],
+  transpilePackages: ['@sellbodr/core'],
   experimental: {
     serverComponentsExternalPackages: [],
   },

@@ -1,13 +1,13 @@
-import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
 const OWNER = {
-  name:     'BorderScout Owner',
-  email:    'owner@borderscout.ai',
-  password: 'BorderScout@2024',
-  orgName:  'BorderScout AI',
+  name:     'SellBodr Owner',
+  email:    'owner@SellBodr.ai',
+  password: 'SellBodr@2024',
+  orgName:  'SellBodr',
 };
 
 // ── Global marketplace catalogue ──────────────────────────────────────────────

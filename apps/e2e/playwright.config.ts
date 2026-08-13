@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+﻿import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 
 const projectRoot = path.resolve(__dirname, '../..');
@@ -46,8 +46,8 @@ export default defineConfig({
         DATABASE_URL: 'file:./dev.db',
         NODE_ENV: 'development',
         API_PORT: '4000',
-        JWT_ACCESS_SECRET: 'borderscout-access-secret',
-        JWT_REFRESH_SECRET: 'borderscout-refresh-secret',
+        JWT_ACCESS_SECRET: 'SellBodr-access-secret',
+        JWT_REFRESH_SECRET: 'SellBodr-refresh-secret',
         JWT_ACCESS_EXPIRY: '3600',
         JWT_REFRESH_EXPIRY: '604800',
         CORS_ORIGIN: 'http://localhost:3000',

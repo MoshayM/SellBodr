@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,9 +6,9 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.locator('aside')).toBeVisible();
   });
 
-  test('sidebar shows BorderScout AI branding', async ({ page }) => {
+  test('sidebar shows SellBodr branding', async ({ page }) => {
     const sidebar = page.locator('aside');
-    await expect(sidebar.getByText('BorderScout AI')).toBeVisible();
+    await expect(sidebar.getByText('SellBodr')).toBeVisible();
     await expect(sidebar.getByText('Intelligence Platform')).toBeVisible();
   });
 

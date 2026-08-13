@@ -1,6 +1,6 @@
-# api.md — BorderScout AI
+﻿# api.md — SellBodr
 
-REST + WebSocket API. Base URL `https://api.borderscout.ai/v1`. JSON only. Auth via `Authorization: Bearer <jwt>` (web) or `X-API-Key` (Enterprise). All list endpoints support `?page`, `?limit`, `?sort`. Errors follow a single envelope.
+REST + WebSocket API. Base URL `https://api.SellBodr.ai/v1`. JSON only. Auth via `Authorization: Bearer <jwt>` (web) or `X-API-Key` (Enterprise). All list endpoints support `?page`, `?limit`, `?sort`. Errors follow a single envelope.
 
 ## Conventions
 

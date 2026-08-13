@@ -1,4 +1,4 @@
-# database.md — BorderScout AI
+﻿# database.md — SellBodr
 
 PostgreSQL schema (via Prisma). Money is stored as **integer minor units** with an explicit currency. All tables have `id (uuid)`, `created_at`, `updated_at`. Soft deletes via `deleted_at` where noted.
 

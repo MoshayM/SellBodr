@@ -1,4 +1,4 @@
-# deployment.md — BorderScout AI
+﻿# deployment.md — SellBodr
 
 Deployment topology on AWS, environments, CI/CD, and operational concerns.
 

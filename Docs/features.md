@@ -1,4 +1,4 @@
-# features.md — BorderScout AI
+﻿# features.md — SellBodr
 
 Functional specification for every feature. Each feature lists its purpose, inputs, behaviour, outputs, and owning agent/module.
 

@@ -1,4 +1,4 @@
-# integrations.md — BorderScout AI
+﻿# integrations.md — SellBodr
 
 External integrations: marketplaces, suppliers, AI providers, payments, and auth. All external calls live in `packages/connectors` behind typed interfaces. No marketplace/supplier SDK is imported inside `apps/`.
 

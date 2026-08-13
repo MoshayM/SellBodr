@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 // These tests bypass saved auth state to test fresh authentication flows
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -8,7 +8,7 @@ test.describe('Authentication', () => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByText('BorderScout AI')).toBeVisible();
+    await expect(page.getByText('SellBodr')).toBeVisible();
     await expect(page.getByText('Find Products in India. Sell Globally.')).toBeVisible();
   });
 
@@ -52,7 +52,7 @@ test.describe('Authentication', () => {
 
   test('login with valid credentials → redirects to /opportunities', async ({ page }) => {
     await page.goto('/login');
-    await page.getByPlaceholder('you@example.com').fill('e2e-fixed@borderscout.test');
+    await page.getByPlaceholder('you@example.com').fill('e2e-fixed@SellBodr.test');
     await page.getByPlaceholder('••••••••').fill('TestPass123!');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
@@ -62,7 +62,7 @@ test.describe('Authentication', () => {
 
   test('login with wrong password → API returns 401 and stays on /login', async ({ page }) => {
     await page.goto('/login');
-    await page.getByPlaceholder('you@example.com').fill('e2e-fixed@borderscout.test');
+    await page.getByPlaceholder('you@example.com').fill('e2e-fixed@SellBodr.test');
     await page.getByPlaceholder('••••••••').fill('WrongPassword999!');
 
     // Intercept response before clicking to avoid race condition

@@ -1,12 +1,12 @@
-# claude.md — BorderScout AI Master Context
+﻿# claude.md — SellBodr Master Context
 
-> **Purpose**: This is the root context file for Claude Code. Read this first before working on any task in this repository. It defines what BorderScout AI is, how the codebase is organized, the conventions every contributor (human or AI) must follow, and where to find deeper documentation.
+> **Purpose**: This is the root context file for Claude Code. Read this first before working on any task in this repository. It defines what SellBodr is, how the codebase is organized, the conventions every contributor (human or AI) must follow, and where to find deeper documentation.
 
 ---
 
 ## 1. Product One-Liner
 
-**BorderScout AI** — *"Find Products in India. Sell Globally."*
+**SellBodr** — *"Find Products in India. Sell Globally."*
 
 An AI-powered **Cross-Border eCommerce Intelligence Platform** that discovers products which can be **sourced cheaply in India** and **sold profitably on international eCommerce marketplaces** (Amazon USA/UK/DE/CA/AU, Etsy, eBay, Walmart, Shopify, TikTok Shop, and later Temu/Noon/Lazada/Shopee).
 
@@ -25,7 +25,7 @@ Sellers cannot easily answer:
 5. Is **sourcing in India feasible** (cost, MOQ, lead time)?
 6. What is the **estimated net profit** after fees + shipping + ads + tax?
 
-BorderScout AI answers all six with an AI agent pipeline that ends in a single **Opportunity Score (0–100)** and a **Launch / Hold / Reject** recommendation with a confidence percentage.
+SellBodr answers all six with an AI agent pipeline that ends in a single **Opportunity Score (0–100)** and a **Launch / Hold / Reject** recommendation with a confidence percentage.
 
 ---
 
@@ -42,7 +42,7 @@ Each stage is owned by one or more **AI Agents** (see `agents.md`). Agents read/
 ## 4. Repository Layout (Target)
 
 ```
-borderscout-ai/
+sellbodr/
 ├── apps/
 │   ├── web/                 # Next.js 14 (App Router) + TS + Tailwind + ShadCN
 │   └── api/                 # NestJS modular monolith (REST + WS)

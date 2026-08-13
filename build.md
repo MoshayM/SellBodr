@@ -1,6 +1,6 @@
-# build.md — BorderScout AI
+﻿# build.md — SellBodr
 
-How to build, run, and develop the BorderScout AI monorepo locally and in CI.
+How to build, run, and develop the SellBodr monorepo locally and in CI.
 
 ---
 
@@ -16,7 +16,7 @@ How to build, run, and develop the BorderScout AI monorepo locally and in CI.
 ## 2. Monorepo Layout
 
 ```
-borderscout-ai/
+sellbodr/
 ├── apps/web        # Next.js 14
 ├── apps/api        # NestJS
 ├── packages/core   # domain types, scoring, profit, Money
@@ -34,7 +34,7 @@ borderscout-ai/
 ## 3. First-Time Setup
 
 ```bash
-git clone <repo> && cd borderscout-ai
+git clone <repo> && cd sellbodr
 corepack enable
 pnpm install
 cp .env.example .env            # fill DB, Redis, ES, model keys
@@ -98,7 +98,7 @@ API_PORT=4000
 WEB_URL=http://localhost:3000
 
 # Data
-DATABASE_URL=postgresql://bs:bs@localhost:5432/borderscout
+DATABASE_URL=postgresql://bs:bs@localhost:5432/SellBodr
 REDIS_URL=redis://localhost:6379
 ELASTICSEARCH_URL=http://localhost:9200
 
@@ -114,7 +114,7 @@ OPENAI_API_KEY=...
 MODEL_BUDGET_USD_PER_PIPELINE=0.50
 
 # Storage / Billing
-S3_BUCKET=borderscout-local
+S3_BUCKET=SellBodr-local
 STRIPE_SECRET_KEY=...
 STRIPE_WEBHOOK_SECRET=...
 ```

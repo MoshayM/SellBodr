@@ -1,5 +1,5 @@
-{
-  "name": "@borderscout/core",
+﻿{
+  "name": "@sellbodr/core",
   "version": "0.1.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

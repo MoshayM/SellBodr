@@ -1,4 +1,4 @@
-# testing.md — BorderScout AI
+﻿# testing.md — SellBodr
 
 Test strategy across the monorepo, with hard coverage gates and AI-specific evaluation.
 

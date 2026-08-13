@@ -1,4 +1,4 @@
-# techstack.md — BorderScout AI
+﻿# techstack.md — SellBodr
 
 Every technology, its role, and why it was chosen. The stack is a **TypeScript monorepo** so domain types and scoring logic are shared end-to-end.
 

@@ -1,8 +1,8 @@
-# BorderScout AI
+﻿# SellBodr
 
 > **Find Products in India. Sell Globally.**
 
-BorderScout AI is an **AI-powered Cross-Border eCommerce Intelligence Platform**. It discovers products that can be **sourced cheaply in India** and **sold profitably on international marketplaces** — Amazon (US/UK/DE/CA/AU), Etsy, eBay, Walmart, Shopify, TikTok Shop, and more.
+SellBodr is an **AI-powered Cross-Border eCommerce Intelligence Platform**. It discovers products that can be **sourced cheaply in India** and **sold profitably on international marketplaces** — Amazon (US/UK/DE/CA/AU), Etsy, eBay, Walmart, Shopify, TikTok Shop, and more.
 
 It is **not** a B2B export tool. It is focused entirely on **cross-border eCommerce opportunities**, from discovery to a launch-ready listing.
 
@@ -10,7 +10,7 @@ It is **not** a B2B export tool. It is focused entirely on **cross-border eComme
 
 ## What it does
 
-For any product × marketplace × country, BorderScout AI produces a single **Opportunity Score (0–100)** and a **Launch / Hold / Reject** recommendation with a confidence %, backed by:
+For any product × marketplace × country, SellBodr produces a single **Opportunity Score (0–100)** and a **Launch / Hold / Reject** recommendation with a confidence %, backed by:
 
 - **Discovery** — best sellers, trending, rising, seasonal, evergreen products
 - **Sourcing** — matched Indian suppliers (cost, MOQ, lead time, export readiness)

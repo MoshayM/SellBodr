@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -50,7 +50,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               <span className="text-white font-bold text-xs">B</span>
             </div>
             <div>
-              <div className="text-sm font-bold text-gray-900">BorderScout AI</div>
+              <div className="text-sm font-bold text-gray-900">SellBodr</div>
               <div className="text-xs text-gray-400">Intelligence Platform</div>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           <div className="w-7 h-7 bg-green-600 rounded-md flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-xs">B</span>
           </div>
-          <span className="text-sm font-bold text-gray-900 truncate">BorderScout AI</span>
+          <span className="text-sm font-bold text-gray-900 truncate">SellBodr</span>
         </div>
         <Link href="/settings" aria-label="Settings"
           className="w-11 h-11 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors">
@@ -119,7 +119,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               <div className="w-7 h-7 bg-green-600 rounded-md flex items-center justify-center">
                 <span className="text-white font-bold text-xs">B</span>
               </div>
-              <span className="text-sm font-bold text-gray-900">BorderScout AI</span>
+              <span className="text-sm font-bold text-gray-900">SellBodr</span>
             </div>
             <button onClick={() => setMenuOpen(false)}
               className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 text-xl">

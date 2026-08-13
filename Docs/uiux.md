@@ -1,4 +1,4 @@
-# uiux.md — BorderScout AI
+﻿# uiux.md — SellBodr
 
 UI/UX specification: the eight dashboards, screen structure, navigation, component breakdown, and design system. Built with Next.js App Router + Tailwind + ShadCN UI.
 

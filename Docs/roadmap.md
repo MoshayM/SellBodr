@@ -1,4 +1,4 @@
-# roadmap.md — BorderScout AI
+﻿# roadmap.md — SellBodr
 
 A phased plan from MVP to Enterprise. Each phase is shippable and gated by the success criteria listed.
 

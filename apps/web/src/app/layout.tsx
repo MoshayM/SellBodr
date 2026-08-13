@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'BorderScout AI – Find Products in India. Sell Globally.',
+  title: 'SellBodr – Find Products in India. Sell Globally.',
   description: 'AI-powered cross-border eCommerce intelligence platform',
 };
 

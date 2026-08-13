@@ -1,5 +1,5 @@
-======================================================================
-  BorderScout AI — Quick Reference
+﻿======================================================================
+  SellBodr — Quick Reference
   Cross-Border eCommerce Intelligence Platform
 ======================================================================
 
@@ -7,7 +7,7 @@
   HOW TO START THE APP
 ──────────────────────────────────────────────────────────────────────
 
-  Double-click:  BorderScout.bat
+  Double-click:  SellBodr.bat
   (This stops old processes, syncs API keys, builds, and launches)
 
   Web App  →  http://localhost:3000
@@ -19,8 +19,8 @@
   LOGIN CREDENTIALS (Owner)
 ──────────────────────────────────────────────────────────────────────
 
-  Email    :  owner@borderscout.ai
-  Password :  BorderScout@2024
+  Email    :  owner@SellBodr.ai
+  Password :  SellBodr@2024
   Role     :  Owner
 
   Change password after first login:
@@ -31,8 +31,8 @@
   AI API KEYS (auto-loaded from these files on every startup)
 ──────────────────────────────────────────────────────────────────────
 
-  Anthropic  →  D:\project\BorderScout AI\Antropic API Key.txt
-  OpenAI     →  D:\project\BorderScout AI\Open AI API Key.txt
+  Anthropic  →  D:\project\SellBodr\Antropic API Key.txt
+  OpenAI     →  D:\project\SellBodr\Open AI API Key.txt
 
   Additional keys can be added via:
   http://localhost:3000/settings  →  AI Provider Keys tab
@@ -116,17 +116,17 @@
   PROJECT STRUCTURE
 ──────────────────────────────────────────────────────────────────────
 
-  D:\project\BorderScout AI\
+  D:\project\SellBodr\
   ├── apps\
   │   ├── web\          Next.js 14 frontend  (port 3000)
   │   └── api\          NestJS backend       (port 4000)
   ├── packages\
   │   └── core\         Shared types & scoring formulas
-  ├── BorderScout.bat   ← START HERE
+  ├── SellBodr.bat   ← START HERE
   ├── Login Credentials.txt
   ├── Antropic API Key.txt
   ├── Open AI API Key.txt
-  └── BorderScout AI - Quick Reference.txt  ← THIS FILE
+  └── SellBodr - Quick Reference.txt  ← THIS FILE
 
 
 ──────────────────────────────────────────────────────────────────────

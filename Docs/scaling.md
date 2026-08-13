@@ -1,4 +1,4 @@
-# scaling.md — BorderScout AI
+﻿# scaling.md — SellBodr
 
 How the platform scales from MVP to enterprise load, and how each bottleneck is addressed.
 

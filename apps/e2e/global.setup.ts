@@ -1,9 +1,9 @@
-import { test as setup, expect } from '@playwright/test';
+﻿import { test as setup, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
 const AUTH_FILE = path.join(__dirname, 'playwright/.auth/user.json');
-const TEST_EMAIL = 'e2e-fixed@borderscout.test';
+const TEST_EMAIL = 'e2e-fixed@SellBodr.test';
 const TEST_PASSWORD = 'TestPass123!';
 
 setup('create or restore test user session', async ({ page }) => {

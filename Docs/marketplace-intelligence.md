@@ -1,4 +1,4 @@
-# marketplace-intelligence.md — BorderScout AI
+﻿# marketplace-intelligence.md — SellBodr
 
 The heart of the product: the **scoring formulas**, the **profitability math**, the **recommendation logic**, and the **research workflows**. Implemented once in `packages/core/scoring` and `packages/core/profit`, versioned via `scoreVersion`. **Current version: `2.0.0`.**
 

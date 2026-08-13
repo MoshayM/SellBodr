@@ -1,4 +1,4 @@
-# monetization.md — BorderScout AI
+﻿# monetization.md — SellBodr
 
 Pricing, plans, metering, and billing implementation.
 

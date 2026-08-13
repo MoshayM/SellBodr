@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -114,7 +114,7 @@ export class SettingsService {
     }
   }
 
-  // ── Personal API Keys (BorderScout access tokens) ───────────────────────────
+  // ── Personal API Keys (SellBodr access tokens) ───────────────────────────
 
   async listApiKeys(userId: string) {
     return this.prisma.apiKey.findMany({

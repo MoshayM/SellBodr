@@ -1,4 +1,4 @@
-# vision.md — BorderScout AI
+﻿# vision.md — SellBodr
 
 ## 1. Mission
 
@@ -10,7 +10,7 @@ Enable any individual or business in India to discover and launch **profitable c
 
 ## 3. The Opportunity
 
-India has deep, fragmented, low-cost supply (handicrafts, textiles, home goods, jewelry, leather, wellness, decor). International marketplaces have high willingness-to-pay and high information asymmetry. The arbitrage exists; the **decision intelligence to act on it does not.** BorderScout AI is that intelligence.
+India has deep, fragmented, low-cost supply (handicrafts, textiles, home goods, jewelry, leather, wellness, decor). International marketplaces have high willingness-to-pay and high information asymmetry. The arbitrage exists; the **decision intelligence to act on it does not.** SellBodr is that intelligence.
 
 We are deliberately **not** a B2B export marketplace, a freight forwarder, or a generic product-research tool for one marketplace. We are a **cross-border, multi-marketplace, India-sourced opportunity engine.**
 

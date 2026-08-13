@@ -1,4 +1,4 @@
-# ai-system.md — BorderScout AI
+﻿# ai-system.md — SellBodr
 
 The AI subsystem: the Model Gateway, prompting standards, model routing, RAG, grounding, caching, evaluation, and cost control. Every model interaction in the platform goes through this layer.
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ export default function LoginPage() {
             <span className="text-white font-bold text-base">B</span>
           </div>
           <div>
-            <div className="font-bold text-base">BorderScout AI</div>
+            <div className="font-bold text-base">SellBodr</div>
             <div className="text-green-300 text-xs">Intelligence Platform</div>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="hidden lg:block text-xs text-green-400">
-          &copy; {new Date().getFullYear()} BorderScout AI
+          &copy; {new Date().getFullYear()} SellBodr
         </div>
       </div>
 

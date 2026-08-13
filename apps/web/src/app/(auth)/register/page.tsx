@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,7 +37,7 @@ export default function RegisterPage() {
             <span className="text-white font-bold text-base">B</span>
           </div>
           <div>
-            <div className="font-bold text-base">BorderScout AI</div>
+            <div className="font-bold text-base">SellBodr</div>
             <div className="text-green-300 text-xs">Intelligence Platform</div>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function RegisterPage() {
           </div>
         </div>
         <div className="hidden lg:block text-xs text-green-400">
-          &copy; {new Date().getFullYear()} BorderScout AI
+          &copy; {new Date().getFullYear()} SellBodr
         </div>
       </div>
 
@@ -65,7 +65,7 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-center justify-center px-5 py-10 lg:px-12 bg-white">
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Create account</h2>
-          <p className="text-sm text-gray-400 mb-7">Get started with BorderScout AI</p>
+          <p className="text-sm text-gray-400 mb-7">Get started with SellBodr</p>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">

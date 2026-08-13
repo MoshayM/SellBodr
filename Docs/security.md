@@ -1,4 +1,4 @@
-# security.md — BorderScout AI
+﻿# security.md — SellBodr
 
 Security architecture covering RBAC, MFA, audit logs, encryption, and API rate limiting, plus the surrounding controls.
 

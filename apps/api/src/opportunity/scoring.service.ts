@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import {
   demandScore, competitionScore, marginScore, saturationScore,
   trendScore, shippingScore, marketplaceFitScore, opportunityScore,
   recommend, confidence, SCORE_VERSION,
-} from '@borderscout/core';
-import { computeProfit } from '@borderscout/core';
+} from '@sellbodr/core';
+import { computeProfit } from '@sellbodr/core';
 
 @Injectable()
 export class ScoringService {

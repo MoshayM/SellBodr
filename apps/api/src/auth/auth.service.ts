@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
@@ -125,7 +125,7 @@ export class AuthService {
   async enrollMfa(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     const secret = authenticator.generateSecret();
-    const otpauthUrl = authenticator.keyuri(user.email, 'BorderScout AI', secret);
+    const otpauthUrl = authenticator.keyuri(user.email, 'SellBodr', secret);
     await this.prisma.user.update({ where: { id: userId }, data: { mfaSecret: secret } });
     return { otpauthUrl, secret };
   }

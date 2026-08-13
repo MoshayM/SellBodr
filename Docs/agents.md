@@ -1,4 +1,4 @@
-# agents.md — BorderScout AI
+﻿# agents.md — SellBodr
 
 The ten specialized AI agents. Each agent is a **stateless** job handler that: reads typed inputs, calls models only via the **Model Gateway**, returns **structured JSON** matching its output schema, and writes an `agent_step` record. Agents never invent verifiable facts (suppliers, prices, fees) — those must come from connectors and are otherwise flagged `unverified` and excluded from scoring.
 

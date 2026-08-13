@@ -1,15 +1,15 @@
-@echo off
+﻿@echo off
 setlocal enabledelayedexpansion
-title BorderScout AI - Starting...
+title SellBodr - Starting...
 color 0A
 
 echo.
 echo  ================================================
-echo   BorderScout AI  -  Starting up...
+echo   SellBodr  -  Starting up...
 echo  ================================================
 echo.
 
-set "ROOT=D:\project\BorderScout AI"
+set "ROOT=D:\project\SellBodr"
 set "API_DIR=%ROOT%\apps\api"
 set "WEB_DIR=%ROOT%\apps\web"
 set "CORE_DIR=%ROOT%\packages\core"
@@ -34,8 +34,8 @@ if not exist "%API_DIR%\.env" (
         echo API_PORT=4000
         echo WEB_URL=http://localhost:3000
         echo DATABASE_URL=file:./dev.db
-        echo JWT_ACCESS_SECRET=borderscout-access-secret-2024
-        echo JWT_REFRESH_SECRET=borderscout-refresh-secret-2024
+        echo JWT_ACCESS_SECRET=SellBodr-access-secret-2024
+        echo JWT_REFRESH_SECRET=SellBodr-refresh-secret-2024
         echo JWT_ACCESS_EXPIRY=3600
         echo JWT_REFRESH_EXPIRY=604800
         echo GOOGLE_CLIENT_ID=
@@ -128,8 +128,8 @@ echo.
 echo  Launching servers...
 echo.
 
-start "BorderScout API  [port 4000]" /d "%API_DIR%" cmd /k "set PATH=C:\Program Files\nodejs;C:\Users\Win\AppData\Roaming\npm;%PATH% && color 0B && echo. && echo  API  http://localhost:4000/v1 && echo. && node dist\src\main"
-start "BorderScout Web  [port 3000]" /d "%WEB_DIR%" cmd /k "set PATH=C:\Program Files\nodejs;C:\Users\Win\AppData\Roaming\npm;%PATH% && color 0D && echo. && echo  Web  http://localhost:3000 && echo. && pnpm run dev"
+start "SellBodr API  [port 4000]" /d "%API_DIR%" cmd /k "set PATH=C:\Program Files\nodejs;C:\Users\Win\AppData\Roaming\npm;%PATH% && color 0B && echo. && echo  API  http://localhost:4000/v1 && echo. && node dist\src\main"
+start "SellBodr Web  [port 3000]" /d "%WEB_DIR%" cmd /k "set PATH=C:\Program Files\nodejs;C:\Users\Win\AppData\Roaming\npm;%PATH% && color 0D && echo. && echo  Web  http://localhost:3000 && echo. && pnpm run dev"
 
 REM ── [6] Wait for web then open browser ─────────────────
 echo  Waiting for web server...
@@ -153,12 +153,12 @@ echo  ================================================
 echo   Web    http://localhost:3000
 echo   API    http://localhost:4000/v1
 echo.
-echo   Email  owner@borderscout.ai
-echo   Pass   BorderScout@2024
+echo   Email  owner@SellBodr.ai
+echo   Pass   SellBodr@2024
 echo  ================================================
 echo.
 start "" "http://localhost:3000"
-title BorderScout AI - Running
+title SellBodr - Running
 echo  Press any key to close this launcher.
 pause >nul
 endlocal

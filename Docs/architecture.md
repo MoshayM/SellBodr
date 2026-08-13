@@ -1,4 +1,4 @@
-# architecture.md — BorderScout AI
+﻿# architecture.md — SellBodr
 
 System architecture: services, data flow, agent orchestration, and deployment topology.
 

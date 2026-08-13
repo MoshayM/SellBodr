@@ -20,9 +20,6 @@ importers:
 
   apps/api:
     dependencies:
-      '@borderscout/core':
-        specifier: workspace:*
-        version: link:../../packages/core
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
@@ -56,6 +53,9 @@ importers:
       '@prisma/client':
         specifier: ^6.2.1
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@sellbodr/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       argon2:
         specifier: ^0.41.1
         version: 0.41.1
@@ -156,7 +156,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@borderscout/core':
+      '@sellbodr/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@tanstack/react-query':
