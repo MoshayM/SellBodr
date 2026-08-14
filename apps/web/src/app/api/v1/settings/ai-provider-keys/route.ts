@@ -36,14 +36,19 @@ function mask(key: string): string {
 async function ensureTable(db: ReturnType<typeof getDb>) {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS "ProviderKey" (
-      id         TEXT PRIMARY KEY,
-      provider   TEXT UNIQUE NOT NULL,
-      keyValue   TEXT NOT NULL,
-      maskedKey  TEXT NOT NULL,
-      createdAt  TEXT NOT NULL,
-      updatedAt  TEXT NOT NULL
+      id           TEXT PRIMARY KEY,
+      provider     TEXT UNIQUE NOT NULL,
+      encryptedKey TEXT NOT NULL DEFAULT '',
+      keyValue     TEXT NOT NULL DEFAULT '',
+      maskedKey    TEXT NOT NULL DEFAULT '',
+      createdAt    TEXT NOT NULL,
+      updatedAt    TEXT NOT NULL
     )
   `);
+  // Idempotent column additions for databases created with an older schema
+  try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN keyValue TEXT DEFAULT ''`); } catch { /* already exists */ }
+  try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN maskedKey TEXT DEFAULT ''`); } catch { /* already exists */ }
+  try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN encryptedKey TEXT DEFAULT ''`); } catch { /* already exists */ }
 }
 
 async function getUserFromRequest(req: NextRequest) {
@@ -115,8 +120,8 @@ export async function PUT(req: NextRequest) {
         });
       } else {
         await db.execute({
-          sql:  'INSERT INTO "ProviderKey" (id,provider,keyValue,maskedKey,createdAt,updatedAt) VALUES (?,?,?,?,?,?)',
-          args: [uuidv4(), provider, trimmed, maskedKey, now, now],
+          sql:  'INSERT INTO "ProviderKey" (id,provider,encryptedKey,keyValue,maskedKey,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?)',
+          args: [uuidv4(), provider, trimmed, trimmed, maskedKey, now, now],
         });
       }
     }

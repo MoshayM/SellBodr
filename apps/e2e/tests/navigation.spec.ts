@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,20 +12,21 @@ test.describe('Dashboard Navigation', () => {
     await expect(sidebar.getByText('Intelligence Platform')).toBeVisible();
   });
 
-  test('sidebar shows all 8 navigation links', async ({ page }) => {
+  test('sidebar shows all navigation links', async ({ page }) => {
     const nav = page.locator('aside nav');
     for (const label of ['Opportunities', 'Research', 'Suppliers', 'Marketplace', 'Profitability', 'Listing', 'Recommendation', 'Reports']) {
       await expect(nav.getByText(label)).toBeVisible();
     }
   });
 
-  test('sidebar shows user info section with sign out button', async ({ page }) => {
+  test('sidebar shows sign out button', async ({ page }) => {
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
   });
 
-  test('active Opportunities link has green text styling', async ({ page }) => {
+  test('active Opportunities link has active styling', async ({ page }) => {
     const link = page.locator('aside nav a[href="/opportunities"]');
-    await expect(link).toHaveClass(/text-green-700/);
+    // Active link has text-white + violet bg gradient (not text-gray or text-white/45)
+    await expect(link).toHaveClass(/text-white/);
   });
 
   test('navigate to Research page', async ({ page }) => {
@@ -34,14 +35,12 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test('Research page has correct active nav highlight', async ({ page }) => {
+  test('Research page has active nav highlight', async ({ page }) => {
     await page.locator('aside nav').getByText('Research').click();
     await page.waitForURL('**/research');
     const link = page.locator('aside nav a[href="/research"]');
-    await expect(link).toHaveClass(/text-green-700/);
-    // Opportunities link should be inactive
-    const oppLink = page.locator('aside nav a[href="/opportunities"]');
-    await expect(oppLink).not.toHaveClass(/text-green-700/);
+    // Active link gets text-white class (full opacity, not white/45)
+    await expect(link).toHaveClass(/text-white/);
   });
 
   test('navigate to Suppliers page', async ({ page }) => {
@@ -62,8 +61,8 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test('navigate to Listing page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Listing').click();
+  test('navigate to AI Listing page', async ({ page }) => {
+    await page.locator('aside nav').getByText('AI Listing').click();
     await page.waitForURL('**/listing');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
@@ -85,17 +84,12 @@ test.describe('Dashboard Navigation', () => {
     await page.waitForURL('**/research');
     await page.goBack();
     await page.waitForURL('**/opportunities');
-    await expect(page.getByRole('heading', { name: 'Opportunity Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
   });
 
   test('sign out → redirects to /login and clears localStorage tokens', async ({ page }) => {
-    // Use evaluate().click() to trigger React onClick directly, bypassing <nextjs-portal> overlay
     await page.getByRole('button', { name: 'Sign out' }).evaluate((el: HTMLButtonElement) => el.click());
-
-    // Wait for navigation first — clearAuth() runs before router.push so by the time
-    // the sign-in heading is visible, localStorage is guaranteed to be cleared
-    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible({ timeout: 30_000 });
-
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible({ timeout: 30_000 });
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
   });

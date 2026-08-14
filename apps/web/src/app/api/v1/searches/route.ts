@@ -137,8 +137,8 @@ Return a JSON array only. No prose, no markdown.`;
       const marginPct = saleMinor > 0 ? (netMinor / saleMinor) * 100 : 0;
 
       await db.execute({
-        sql: `INSERT INTO "Product" (id, title, category, description, createdAt) VALUES (?, ?, ?, ?, ?)`,
-        args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), ts],
+        sql: `INSERT INTO "Product" (id, title, category, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), ts, ts],
       });
       await db.execute({
         sql: `INSERT INTO "Opportunity" (id, productId, marketplaceId, status, recommendation, confidence, createdAt) VALUES (?, ?, ?, 'active', ?, ?, ?)`,

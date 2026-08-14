@@ -2,18 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { getDb } from '@/lib/db';
+import { ensureSchema } from '@/lib/schema';
 import { randomBytes, createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+
+export const dynamic = 'force-dynamic';
 
 const ACCESS_SECRET  = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET  || 'dev-access-secret-change-me');
 const REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me');
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
-    if (!email || !password) return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
+    const body = await req.json().catch(() => null);
+    if (!body || !body.email || !body.password) {
+      return NextResponse.json({ message: 'Email and password are required' }, { status: 400 });
+    }
+    const { email, password } = body;
 
     const db = getDb();
+    await ensureSchema(db);
     const result = await db.execute({ sql: 'SELECT * FROM "User" WHERE email = ? AND deletedAt IS NULL', args: [email] });
     const user = result.rows[0];
 

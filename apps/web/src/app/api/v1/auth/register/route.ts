@@ -2,18 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { getDb } from '@/lib/db';
+import { ensureSchema } from '@/lib/schema';
 import { randomBytes, createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+
+export const dynamic = 'force-dynamic';
 
 const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, orgName } = await req.json();
-    if (!name || !email || !password) return NextResponse.json({ message: 'Name, email and password are required' }, { status: 400 });
+    const body = await req.json().catch(() => null);
+    if (!body || !body.name || !body.email || !body.password) {
+      return NextResponse.json({ message: 'Name, email and password are required' }, { status: 400 });
+    }
+    const { name, email, password, orgName } = body;
     if (password.length < 8) return NextResponse.json({ message: 'Password must be at least 8 characters' }, { status: 400 });
 
     const db  = getDb();
+    await ensureSchema(db);
     const existing = await db.execute({ sql: 'SELECT id FROM "User" WHERE email = ?', args: [email] });
     if (existing.rows.length > 0) return NextResponse.json({ message: 'Email already registered' }, { status: 409 });
 

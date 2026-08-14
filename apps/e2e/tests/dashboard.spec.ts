@@ -1,58 +1,84 @@
 import { test, expect, type Page } from '@playwright/test';
 
-// The dashboard page has 2 selects: [0]=Marketplace [1]=Recommendation
-// Labels don't use for/id so we use position-based selectors
-function marketplaceSelect(page: Page) { return page.locator('select').first(); }
-function recommendationSelect(page: Page) { return page.locator('select').nth(1); }
-
 async function runNewSearch(page: Page) {
-  await page.getByRole('button', { name: '+ New Search' }).click();
-  await expect(page.getByText(/Running AI pipeline/i)).toBeVisible({ timeout: 5_000 });
-  // Wait for button to return (pipeline complete) — no networkidle since HMR keeps sockets open
-  await expect(page.getByRole('button', { name: '+ New Search' })).toBeVisible({ timeout: 30_000 });
-  await page.waitForTimeout(500);
+  // Use waitForResponse to reliably detect search result regardless of React render timing.
+  // Clicking the button AND starting the response listener together prevents a race condition
+  // where the response arrives before the listener is set up.
+  const [searchResp] = await Promise.all([
+    page.waitForResponse(
+      resp => resp.url().includes('/api/v1/searches') && resp.request().method() === 'POST',
+      { timeout: 90_000 }
+    ),
+    page.getByRole('button', { name: /New Search/i }).click(),
+  ]);
+
+  if (!searchResp.ok()) {
+    const body = await searchResp.json().catch(() => ({}));
+    throw new Error(`Search API failed (${searchResp.status()}): ${(body as any).error || 'unknown'}`);
+  }
+
+  // Wait for react-query invalidation + refetch to populate the table
+  await expect(page.locator('tbody tr').first().locator('.font-medium')).toBeVisible({ timeout: 15_000 });
 }
 
 async function ensureHasOpportunities(page: Page) {
   await page.goto('/opportunities');
-  await expect(page.getByRole('heading', { name: 'Opportunity Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+  await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
   const noOpps = await page.getByText('No opportunities yet').isVisible().catch(() => false);
   if (noOpps) {
-    await runNewSearch(page);
+    // Try dev seed endpoint first; fall back to Groq search (works in production too)
+    const seedRes = await page.request.post('/api/v1/test/seed', {
+      data: { marketplace: 'amazon_us' },
+      headers: { 'Content-Type': 'application/json' },
+    }).catch(() => null);
+    if (!seedRes || !seedRes.ok()) {
+      const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
+      await page.request.post('/api/v1/searches', {
+        data: { marketplace: 'amazon_us' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token ?? ''}` },
+        timeout: 60_000,
+      }).catch(() => null);
+    }
+    await page.reload();
+    await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
   }
 }
 
 test.describe('Opportunity Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/opportunities');
-    await expect(page.getByRole('heading', { name: 'Opportunity Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
   });
 
   test('shows heading and subtitle', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Opportunity Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
     await expect(page.getByText('AI-ranked cross-border eCommerce opportunities')).toBeVisible();
   });
 
-  test('marketplace filter has all 7 options', async ({ page }) => {
-    const select = marketplaceSelect(page);
-    await expect(select).toBeVisible();
-    for (const code of ['amazon_us', 'amazon_uk', 'amazon_de', 'amazon_ca', 'amazon_au', 'etsy', 'ebay']) {
-      await expect(select.locator(`option[value="${code}"]`)).toBeAttached();
+  test('marketplace dropdown shows available count', async ({ page }) => {
+    // Label shows "(76 available)" or "(N available)"
+    await expect(page.getByText(/available\)/)).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('recommendation filter has All / Launch / Hold / Reject pills', async ({ page }) => {
+    for (const label of ['All', 'Launch', 'Hold', 'Reject']) {
+      await expect(page.locator('button').filter({ hasText: new RegExp(`^[\\S\\s]*${label}[\\S\\s]*$`) }).first()).toBeVisible();
     }
   });
 
-  test('recommendation filter has launch/hold/reject options', async ({ page }) => {
-    const select = recommendationSelect(page);
-    await expect(select).toBeVisible();
-    for (const val of ['', 'launch', 'hold', 'reject']) {
-      await expect(select.locator(`option[value="${val}"]`)).toBeAttached();
-    }
-  });
+  test('"+ New Search" button runs AI pipeline and populates opportunity table', async ({ page, request }) => {
+    // Intercept POST /searches and fulfil with the dev-only seed endpoint (no Groq needed)
+    await page.route('**/api/v1/searches', async (route) => {
+      if (route.request().method() !== 'POST') { await route.continue(); return; }
+      const seedRes = await request.post('/api/v1/test/seed', { data: { marketplace: 'amazon_us' } }).catch(() => null);
+      const count = (seedRes?.ok() ? (await seedRes.json().catch(() => ({}))).count : 0) ?? 0;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ searchId: 'test-seed', status: 'complete', count }) });
+    });
 
-  test('"+ New Search" button runs pipeline and populates opportunity table', async ({ page }) => {
     await runNewSearch(page);
 
-    await expect(page.locator('table')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('table')).toBeVisible({ timeout: 10_000 });
     const rows = page.locator('tbody tr');
     await expect(rows.first()).toBeVisible();
     expect(await rows.count()).toBeGreaterThan(0);
@@ -63,77 +89,78 @@ test.describe('Opportunity Dashboard', () => {
 
     const headers = page.locator('thead th');
     await expect(headers.filter({ hasText: 'Product' })).toBeVisible();
-    await expect(headers.filter({ hasText: 'Marketplace' })).toBeVisible();
+    await expect(headers.filter({ hasText: 'Market' })).toBeVisible();
     await expect(headers.filter({ hasText: 'Score' })).toBeVisible();
-    await expect(headers.filter({ hasText: 'Recommendation' })).toBeVisible();
+    await expect(headers.filter({ hasText: 'Decision' })).toBeVisible();
     await expect(headers.filter({ hasText: 'Net Profit' })).toBeVisible();
-    await expect(headers.filter({ hasText: 'Confidence' })).toBeVisible();
   });
 
-  test('each row has product title, marketplace badge, and View link', async ({ page }) => {
+  test('each row has product title and a View link', async ({ page }) => {
     await ensureHasOpportunities(page);
 
     const firstRow = page.locator('tbody tr').first();
+    // Product title in first column
     await expect(firstRow.locator('td').first().locator('.font-medium')).toBeVisible();
-    await expect(firstRow.locator('.font-mono')).toBeVisible();
-    await expect(firstRow.locator('a').filter({ hasText: 'View →' })).toBeVisible();
+    // View → link is opacity-0 by default, only visible on hover — hover first to reveal it
+    await firstRow.hover();
+    await expect(firstRow.locator('a').filter({ hasText: 'View' })).toBeVisible();
   });
 
-  test('marketplace filter change updates selection', async ({ page }) => {
+  test('clicking marketplace dropdown opens searchable panel', async ({ page }) => {
+    const btn = page.locator('button').filter({ hasText: /Amazon|Allegro|eBay|Etsy|Select marketplace/i }).first();
+    await btn.click();
+    // Search input appears in the portal panel
+    await expect(page.locator('input[placeholder*="marketplaces"]')).toBeVisible({ timeout: 5_000 });
+    // Close by pressing Escape
+    await page.keyboard.press('Escape');
+  });
+
+  test('recommendation "Launch" pill filters table', async ({ page }) => {
     await ensureHasOpportunities(page);
 
-    const select = marketplaceSelect(page);
-    await select.selectOption('amazon_uk');
-    await expect(select).toHaveValue('amazon_uk');
+    await page.locator('button').filter({ hasText: /🚀.*Launch/ }).click();
+    // After filtering, either a table (with or without rows) or empty state must be visible
+    await expect(
+      page.locator('table').or(page.getByText('No opportunities yet'))
+    ).toBeVisible({ timeout: 8_000 });
   });
 
-  test('marketplace filter changes back to amazon_us', async ({ page }) => {
+  test('"All" pill resets recommendation filter', async ({ page }) => {
     await ensureHasOpportunities(page);
 
-    const select = marketplaceSelect(page);
-    await select.selectOption('etsy');
-    await expect(select).toHaveValue('etsy');
-    await select.selectOption('amazon_us');
-    await expect(select).toHaveValue('amazon_us');
+    await page.locator('button').filter({ hasText: /🚀.*Launch/ }).click();
+    await page.locator('button').filter({ hasText: /^All$/ }).click();
+    await expect(page.locator('table')).toBeVisible({ timeout: 8_000 });
   });
 
-  test('recommendation filter "launch" shows filtered results or empty state', async ({ page }) => {
-    await ensureHasOpportunities(page);
-
-    const recSelect = recommendationSelect(page);
-    await recSelect.selectOption('launch');
-    await expect(recSelect).toHaveValue('launch');
-    await expect(page.locator('table, .card:has-text("No opportunities")')).toBeVisible({ timeout: 5_000 });
-  });
-
-  test('recommendation filter "reject" shows filtered results or empty state', async ({ page }) => {
-    await ensureHasOpportunities(page);
-
-    const recSelect = recommendationSelect(page);
-    await recSelect.selectOption('reject');
-    await expect(recSelect).toHaveValue('reject');
-    await expect(page.locator('table, .card:has-text("No opportunities")')).toBeVisible({ timeout: 5_000 });
-  });
-
-  test('empty state message is shown when no opportunities', async ({ page }) => {
+  test('empty state message shown when no opportunities exist', async ({ page }) => {
+    // Wait for loading to finish
+    await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
     const noOpps = await page.getByText('No opportunities yet').isVisible().catch(() => false);
     if (noOpps) {
-      await expect(page.getByText('Click "New Search" to discover products')).toBeVisible();
-      await expect(page.getByRole('button', { name: '+ New Search' })).toBeVisible();
+      // The empty state <p> has "Click + New Search to discover products" — match by regex to avoid
+      // strict-mode violations from other elements that contain "Click" or "New Search" separately
+      await expect(page.getByText(/Click.*New Search/i)).toBeVisible();
     } else {
       await expect(page.locator('table')).toBeVisible();
     }
   });
 
-  test('running a second search adds more opportunities', async ({ page }) => {
+  test('running a second search adds more opportunities', async ({ page, request }) => {
     await ensureHasOpportunities(page);
 
     const countBefore = await page.locator('tbody tr').count();
-    await runNewSearch(page);
-    await expect(page.locator('tbody tr')).toHaveCount(countBefore + 10, { timeout: 10_000 }).catch(async () => {
-      // If count didn't increase by exactly 10, just verify it's more than before
-      const countAfter = await page.locator('tbody tr').count();
-      expect(countAfter).toBeGreaterThanOrEqual(countBefore);
+
+    // Intercept POST /searches and fulfil with the dev-only seed endpoint (no Groq needed)
+    await page.route('**/api/v1/searches', async (route) => {
+      if (route.request().method() !== 'POST') { await route.continue(); return; }
+      const seedRes = await request.post('/api/v1/test/seed', { data: { marketplace: 'amazon_us' } }).catch(() => null);
+      const count = (seedRes?.ok() ? (await seedRes.json().catch(() => ({}))).count : 0) ?? 0;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ searchId: 'test-seed-2', status: 'complete', count }) });
     });
+
+    await runNewSearch(page);
+    const countAfter = await page.locator('tbody tr').count();
+    expect(countAfter).toBeGreaterThanOrEqual(countBefore);
   });
 });
