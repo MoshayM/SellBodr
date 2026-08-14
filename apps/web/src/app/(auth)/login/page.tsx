@@ -160,6 +160,21 @@ export default function LoginPage() {
             ))}
           </div>
 
+          {/* Install app row */}
+          <div className="mt-5 p-3 rounded-xl bg-white/[0.03] border border-white/8 flex items-center gap-3">
+            <img src="/icons/icon.svg" alt="" className="w-8 h-8 rounded-lg flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-white/60 leading-snug">Install SellBodr</div>
+              <div className="text-[10px] text-white/30 leading-snug mt-0.5">
+                Android: tap <span className="text-white/50">⋮ → Add to Home Screen</span> &nbsp;·&nbsp;
+                iOS: tap <span className="text-white/50">Share → Add to Home Screen</span>
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-white/20 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </div>
+
           <div className="flex items-center justify-center gap-4 mt-4">
             <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40 transition-colors">Privacy Policy</Link>
             <span className="text-white/10 text-xs">·</span>
