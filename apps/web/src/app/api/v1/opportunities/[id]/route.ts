@@ -11,16 +11,16 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
     const r = await db.execute({
       sql: `
-        SELECT o.id, o.status, o.recommendation, o.confidence,
+        SELECT o.id, o.status, o.recommendation, o.confidence, o.scoreVersion as sVersion,
           p.id as pId, p.title as pTitle, p.category as pCategory,
           p.imageUrl as pImageUrl, p.description as pDesc,
           m.id as mId, m.code as mCode, m.country as mCountry, m.currency as mCurrency,
           s.opportunity as sOpp, s.demand as sDemand, s.competition as sComp,
           s.margin as sMargin, s.trend as sTrend, s.shipping as sShipping,
           s.marketplaceFit as sMktFit, s.saturation as sSat,
-          s.scoreVersion as sVersion,
-          pm.sourcePriceMinor, pm.salePriceMinor, pm.landedCostMinor,
-          pm.marketplaceFeeMinor, pm.netProfitMinor, pm.netMarginPct, pm.roi, pm.currency as pmCurrency
+          pm.productCostMinor as sourcePriceMinor, pm.salePriceMinor, pm.landedCostMinor,
+          pm.marketplaceFeesMinor as marketplaceFeeMinor, pm.netProfitMinor,
+          pm.netMarginPct, pm.roiPct as roi, pm.currency as pmCurrency
         FROM "Opportunity" o
         LEFT JOIN "Product" p ON o.productId = p.id
         LEFT JOIN "Marketplace" m ON o.marketplaceId = m.id
