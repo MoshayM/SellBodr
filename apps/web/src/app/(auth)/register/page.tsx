@@ -46,9 +46,7 @@ export default function RegisterPage() {
 
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 mb-10">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
-          <span className="text-white font-black text-base">S</span>
-        </div>
+        <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 rounded-xl shadow-lg shadow-violet-500/40" />
         <span className="text-white font-bold text-xl">SellBodr</span>
       </Link>
 
@@ -176,9 +174,9 @@ export default function RegisterPage() {
 
               <p className="text-center text-white/25 text-xs">
                 By creating an account you agree to our{' '}
-                <a href="#" className="text-white/40 hover:text-white/60 transition-colors">Terms</a>
+                <Link href="/terms" className="text-white/40 hover:text-white/60 transition-colors">Terms</Link>
                 {' '}and{' '}
-                <a href="#" className="text-white/40 hover:text-white/60 transition-colors">Privacy Policy</a>
+                <Link href="/privacy" className="text-white/40 hover:text-white/60 transition-colors">Privacy Policy</Link>
               </p>
             </form>
 

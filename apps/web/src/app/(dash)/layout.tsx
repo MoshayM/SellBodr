@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clearAuth, getUser } from '@/lib/api';
+import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 
 const NAV = [
   { href: '/opportunities',  label: 'Opportunities',  icon: '🎯', badge: null },
@@ -197,6 +198,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </main>
+
+      <PWAInstallBanner />
 
       {/* ── Mobile bottom nav ───────────────────────────────────── */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 glass border-t border-white/5"

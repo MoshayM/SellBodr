@@ -37,9 +37,7 @@ export default function LoginPage() {
         <div className="absolute bottom-1/3 right-0 w-60 h-60 bg-cyan-600/15 rounded-full blur-3xl" />
 
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
-            <span className="text-white font-black text-base">S</span>
-          </div>
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 rounded-xl shadow-lg shadow-violet-500/40" />
           <span className="text-white font-bold text-xl">SellBodr</span>
         </motion.div>
 
@@ -77,9 +75,7 @@ export default function LoginPage() {
 
         {/* Mobile logo */}
         <div className="lg:hidden relative z-10 mb-8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <span className="text-white font-black text-sm">S</span>
-          </div>
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow shadow-violet-500/30" />
           <span className="text-white font-bold text-lg">SellBodr</span>
         </div>
 
@@ -162,6 +158,12 @@ export default function LoginPage() {
             {['🔒 256-bit SSL', '🛡️ SOC2 ready', '🌍 99.9% uptime'].map(b => (
               <span key={b} className="text-white/20 text-xs">{b}</span>
             ))}
+          </div>
+
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40 transition-colors">Privacy Policy</Link>
+            <span className="text-white/10 text-xs">·</span>
+            <Link href="/terms" className="text-white/20 text-xs hover:text-white/40 transition-colors">Terms of Service</Link>
           </div>
         </motion.div>
       </div>

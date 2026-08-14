@@ -2,7 +2,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { api, getUser } from '@/lib/api';
 
-type Tab = 'ai-keys' | 'password' | 'marketplaces';
+type Tab = 'ai-keys' | 'password' | 'marketplaces' | 'guide';
 
 const PROVIDERS = [
   { id: 'groq',      label: 'Groq',        hint: 'Llama 3, Mixtral (fast inference)', docsUrl: 'https://console.groq.com/keys',                placeholder: 'gsk_...'          },
@@ -45,6 +45,7 @@ export default function SettingsPage() {
     { key: 'ai-keys',      label: 'AI Provider Keys', icon: '🔑' },
     { key: 'marketplaces', label: 'Marketplaces',      icon: '🛒' },
     { key: 'password',     label: 'Password',          icon: '🔒' },
+    { key: 'guide',        label: 'User Guide',        icon: '📖' },
   ];
 
   return (
@@ -71,6 +72,7 @@ export default function SettingsPage() {
       {tab === 'ai-keys'      && <AiProviderKeysTab />}
       {tab === 'marketplaces' && <MarketplacesTab />}
       {tab === 'password'     && <PasswordTab />}
+      {tab === 'guide'        && <UserGuideTab />}
     </div>
   );
 }
@@ -354,6 +356,104 @@ function MarketplacesTab() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ── User Guide ────────────────────────────────────────────────────────────────
+
+const GUIDE_STEPS = [
+  {
+    step: '01',
+    title: 'Run your first AI search',
+    icon: '🎯',
+    body: 'Go to Opportunities → click "+ New Search". The AI scouts 10,000+ India-sourced products, scores each across 7 dimensions, and surfaces the top 8 opportunities for your selected marketplace. Each search takes ~10–30 seconds.',
+  },
+  {
+    step: '02',
+    title: 'Read the Opportunity Score',
+    icon: '📊',
+    body: 'Each opportunity gets a 0–100 composite score and a Launch / Hold / Reject decision. The score is a weighted blend of: Demand (22%), Margin (20%), Competition (16%), Trend (14%), Marketplace Fit (12%), Shipping (10%), and Saturation (6%). A score ≥70 with margin ≥35 earns a Launch badge.',
+  },
+  {
+    step: '03',
+    title: 'Drill into an opportunity',
+    icon: '🔍',
+    body: 'Click "View" on any row to open the full opportunity detail. You\'ll see: the profit model (source cost → landed cost → marketplace fees → net profit), all 7 dimension scores with explanations, and sourcing candidates from Indian suppliers with MOQ and lead-time estimates.',
+  },
+  {
+    step: '04',
+    title: 'Filter and compare',
+    icon: '🔬',
+    body: 'Use the marketplace dropdown to compare the same product across Amazon US, eBay UK, Etsy, and 70+ other markets. Use the Launch / Hold / Reject pill filters to focus on your strongest candidates. Sort by score, net profit, or trend direction.',
+  },
+  {
+    step: '05',
+    title: 'Build your AI listing',
+    icon: '📝',
+    body: 'Head to AI Listing (Tools section in the sidebar). Select an opportunity and the AI generates an SEO-optimised title, 5 bullet points, product description, and backend keywords — ready to paste into Seller Central or your preferred tool.',
+  },
+  {
+    step: '06',
+    title: 'Track profitability',
+    icon: '💰',
+    body: 'The Profitability page lets you enter your real landed cost, ads spend, and storage fees to compute your actual net margin and ROI. Adjust the sliders to model different pricing strategies before committing to a listing.',
+  },
+  {
+    step: '07',
+    title: 'Connect your own AI keys (optional)',
+    icon: '🔑',
+    body: 'In Settings → AI Provider Keys you can connect your own Groq, Anthropic, or OpenAI API key. Your personal key overrides the shared server key and gives you higher rate limits. Keys are encrypted at rest and never exposed in the UI.',
+  },
+  {
+    step: '08',
+    title: 'Install the app',
+    icon: '📱',
+    body: 'SellBodr is a Progressive Web App. On Chrome / Edge: click "Install" in the address bar or wait for the install banner. On iOS Safari: tap Share → Add to Home Screen. On Android Chrome: tap the three-dot menu → Add to Home Screen. The installed app works offline for previously loaded pages.',
+  },
+];
+
+function UserGuideTab() {
+  return (
+    <div className="space-y-4">
+      <div className="mb-6">
+        <p className="text-sm text-white/50">
+          A step-by-step walkthrough of every major feature in SellBodr.
+        </p>
+      </div>
+      {GUIDE_STEPS.map(s => (
+        <div key={s.step} className="card-dark rounded-xl p-5 flex gap-4">
+          <div className="shrink-0 flex flex-col items-center gap-1.5">
+            <div className="text-2xl">{s.icon}</div>
+            <div className="text-[10px] font-bold text-violet-400 font-mono">{s.step}</div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-bold text-white mb-1.5">{s.title}</h3>
+            <p className="text-xs text-white/55 leading-relaxed">{s.body}</p>
+          </div>
+        </div>
+      ))}
+
+      <div className="card-dark rounded-xl p-5 mt-2">
+        <h3 className="text-sm font-bold text-white mb-2">Need more help?</h3>
+        <p className="text-xs text-white/55 leading-relaxed mb-3">
+          Browse our documentation or reach out to the team directly. We typically respond within one business day.
+        </p>
+        <div className="flex gap-3 flex-wrap">
+          <a href="mailto:support@sellbodr.com"
+            className="btn-secondary text-xs py-2 min-h-0">
+            Email support
+          </a>
+          <a href="/privacy"
+            className="text-xs text-white/30 hover:text-white/50 transition-colors self-center">
+            Privacy Policy
+          </a>
+          <a href="/terms"
+            className="text-xs text-white/30 hover:text-white/50 transition-colors self-center">
+            Terms of Service
+          </a>
+        </div>
       </div>
     </div>
   );
