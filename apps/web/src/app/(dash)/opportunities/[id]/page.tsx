@@ -6,8 +6,9 @@ import Image from 'next/image';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
+import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
 
-const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Recommendation', 'Report'];
+const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
 
 function minor(v: number) { return (v / 100).toFixed(2); }
 
@@ -26,6 +27,7 @@ export default function OpportunityDetailPage() {
   const id = Array.isArray(params.id) ? params.id[0] : (params.id as string);
   const [tab, setTab] = useState('Overview');
   const [genLoading, setGenLoading] = useState(false);
+  const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
 
   const { data: opp, isLoading } = useQuery({
     queryKey: ['opportunity', id],
@@ -52,6 +54,14 @@ export default function OpportunityDetailPage() {
 
   const genReport = useMutation({
     mutationFn: () => api.opportunities.generateReport(id),
+  });
+
+  const genAds = useMutation({
+    mutationFn: () => api.opportunities.generateAds(id),
+  });
+
+  const genGrowth = useMutation({
+    mutationFn: () => api.opportunities.generateGrowth(id),
   });
 
   if (isLoading) return (
@@ -175,54 +185,67 @@ export default function OpportunityDetailPage() {
 
       {/* ── Suppliers ── */}
       {tab === 'Suppliers' && (
-        <div className="card overflow-hidden">
-          <div className="p-4 border-b border-gray-100 font-semibold text-gray-800">Sourcing Candidates</div>
-          {(opp.sourcingCandidates?.length === 0 || !opp.sourcingCandidates) ? (
-            <div className="p-8 text-center text-gray-400">No suppliers found</div>
-          ) : (
-            <div className="table-scroll">
-              <table className="w-full text-sm min-w-[540px]">
-                <thead className="bg-gray-50 text-xs text-gray-600">
-                  <tr>
-                    <th className="text-left px-4 py-2.5">Supplier</th>
-                    <th className="text-left px-4 py-2.5">Source</th>
-                    <th className="text-right px-4 py-2.5">Cost (INR)</th>
-                    <th className="text-right px-4 py-2.5">MOQ</th>
-                    <th className="text-right px-4 py-2.5">Lead Time</th>
-                    <th className="text-center px-4 py-2.5">Feasibility</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {opp.sourcingCandidates?.map((sc: any) => (
-                    <tr key={sc.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        {sc.supplier?.sourceUrl ? (
-                          <a href={sc.supplier.sourceUrl} target="_blank" rel="noopener noreferrer"
-                            className="font-medium text-green-700 hover:underline flex items-center gap-1">
-                            {sc.supplier?.name}
-                            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 12 12"><path d="M3.5 1h7.5v7.5M11 1L4 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                          </a>
-                        ) : (
-                          <span className="font-medium text-gray-900">{sc.supplier?.name}</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs uppercase text-gray-500">{sc.supplier?.source}</td>
-                      <td className="px-4 py-3 text-right">{minor(sc.productCostMinor)}</td>
-                      <td className="px-4 py-3 text-right">{sc.moq}</td>
-                      <td className="px-4 py-3 text-right">{sc.leadTimeDays}d</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          sc.feasibility === 'easy' ? 'bg-green-100 text-green-700' :
-                          sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>{sc.feasibility}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="space-y-3">
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <span className="font-semibold text-gray-800">Sourcing Candidates</span>
+              <span className="text-xs text-gray-400">Click a row to view full profile &amp; contact</span>
             </div>
-          )}
+            {(opp.sourcingCandidates?.length === 0 || !opp.sourcingCandidates) ? (
+              <div className="p-8 text-center text-gray-400">No suppliers found</div>
+            ) : (
+              <div className="table-scroll">
+                <table className="w-full text-sm min-w-[600px]">
+                  <thead className="bg-gray-50 text-xs text-gray-600">
+                    <tr>
+                      <th className="text-left px-4 py-2.5">Supplier</th>
+                      <th className="text-left px-4 py-2.5">Source</th>
+                      <th className="text-right px-4 py-2.5">Cost (INR)</th>
+                      <th className="text-right px-4 py-2.5">MOQ</th>
+                      <th className="text-right px-4 py-2.5">Lead Time</th>
+                      <th className="text-center px-4 py-2.5">Feasibility</th>
+                      <th className="text-center px-4 py-2.5">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {opp.sourcingCandidates?.map((sc: any) => (
+                      <tr key={sc.id} className="hover:bg-green-50/40 cursor-pointer transition-colors"
+                        onClick={() => setDrawerSupplier(sc.id)}>
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-gray-900">{sc.supplier?.name || sc.supplierName}</span>
+                        </td>
+                        <td className="px-4 py-3 text-xs uppercase text-gray-500">{sc.supplier?.source}</td>
+                        <td className="px-4 py-3 text-right font-mono">₹{minor(sc.productCostMinor)}</td>
+                        <td className="px-4 py-3 text-right">{sc.moq}</td>
+                        <td className="px-4 py-3 text-right">{sc.leadTimeDays}d</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            sc.feasibility === 'easy' ? 'bg-green-100 text-green-700' :
+                            sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>{sc.feasibility}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={e => { e.stopPropagation(); setDrawerSupplier(sc.id); }}
+                            className="text-xs px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap">
+                            View &amp; Contact
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div className="card p-4 flex items-start gap-3 text-sm text-gray-600 bg-blue-50/50 border-blue-100">
+            <span className="text-xl shrink-0">💡</span>
+            <div>
+              <span className="font-semibold text-gray-800">Negotiation tip: </span>
+              Contact 2–3 suppliers simultaneously. Reference competitor prices and mention long-term volume to unlock 15–25% below the listed rate.
+            </div>
+          </div>
         </div>
       )}
 
@@ -315,6 +338,383 @@ export default function OpportunityDetailPage() {
         </div>
       )}
 
+      {/* ── Ads ── */}
+      {tab === 'Ads' && (
+        <div className="space-y-4">
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold text-gray-800">Ad Campaign Generator</h2>
+                <p className="text-xs text-gray-500 mt-0.5">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
+              </div>
+              <button onClick={() => genAds.mutate()} disabled={genAds.isPending}
+                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
+                {genAds.isPending ? '⟳ Generating…' : genAds.data ? '↻ Regenerate' : '✨ Generate Ads'}
+              </button>
+            </div>
+
+            {!genAds.data && !genAds.isPending && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {['Facebook', 'Instagram', 'YouTube', 'Google'].map(p => (
+                  <div key={p} className="card p-4 text-center opacity-50">
+                    <div className="text-2xl mb-1">
+                      {p === 'Facebook' ? '🔵' : p === 'Instagram' ? '🟣' : p === 'YouTube' ? '🔴' : '🟢'}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600">{p}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {genAds.isPending && (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin text-3xl text-green-600 mb-3">&#x27F3;</div>
+                  <p className="text-sm text-gray-500">Crafting your ad campaigns…</p>
+                </div>
+              </div>
+            )}
+
+            {genAds.data && (() => {
+              const ads = genAds.data as any;
+              return (
+                <div className="space-y-4">
+                  {/* Facebook */}
+                  {ads.facebook && (
+                    <div className="border border-blue-100 rounded-xl overflow-hidden">
+                      <div className="bg-blue-50 px-4 py-2.5 flex items-center gap-2">
+                        <span className="text-lg">🔵</span>
+                        <span className="font-semibold text-blue-800 text-sm">Facebook</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-gray-400 uppercase">Headline</span>
+                            <CopyButton text={ads.facebook.headline} />
+                          </div>
+                          <p className="text-sm font-semibold text-gray-800">{ads.facebook.headline}</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-gray-400 uppercase">Primary Text</span>
+                            <CopyButton text={ads.facebook.primaryText} />
+                          </div>
+                          <p className="text-sm text-gray-700 whitespace-pre-line">{ads.facebook.primaryText}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs">
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">CTA: {ads.facebook.cta}</span>
+                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">{ads.facebook.dailyBudget}</span>
+                        </div>
+                        {ads.facebook.audience && (
+                          <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-600">
+                            <span className="font-semibold">Audience: </span>{ads.facebook.audience}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instagram */}
+                  {ads.instagram && (
+                    <div className="border border-purple-100 rounded-xl overflow-hidden">
+                      <div className="bg-purple-50 px-4 py-2.5 flex items-center gap-2">
+                        <span className="text-lg">🟣</span>
+                        <span className="font-semibold text-purple-800 text-sm">Instagram</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-gray-400 uppercase">Caption</span>
+                            <CopyButton text={ads.instagram.caption} />
+                          </div>
+                          <p className="text-sm text-gray-700">{ads.instagram.caption}</p>
+                        </div>
+                        {ads.instagram.reelHook && (
+                          <div>
+                            <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Reel Hook</div>
+                            <p className="text-sm text-gray-700 italic">{ads.instagram.reelHook}</p>
+                          </div>
+                        )}
+                        {ads.instagram.hashtags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {ads.instagram.hashtags.map((tag: string, i: number) => (
+                              <span key={i} className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* YouTube */}
+                  {ads.youtube && (
+                    <div className="border border-red-100 rounded-xl overflow-hidden">
+                      <div className="bg-red-50 px-4 py-2.5 flex items-center gap-2">
+                        <span className="text-lg">🔴</span>
+                        <span className="font-semibold text-red-800 text-sm">YouTube</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        {ads.youtube.title && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-semibold text-gray-400 uppercase">Video Title</span>
+                              <CopyButton text={ads.youtube.title} />
+                            </div>
+                            <p className="text-sm font-semibold text-gray-800">{ads.youtube.title}</p>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {[['Hook (0–5s)', ads.youtube.hook], ['Body', ads.youtube.body], ['CTA', ads.youtube.cta]].map(([label, text]) => text && (
+                            <div key={label as string} className="bg-gray-50 rounded-lg p-2.5">
+                              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">{label as string}</div>
+                              <p className="text-xs text-gray-700">{text as string}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Google */}
+                  {ads.google && (
+                    <div className="border border-green-100 rounded-xl overflow-hidden">
+                      <div className="bg-green-50 px-4 py-2.5 flex items-center gap-2">
+                        <span className="text-lg">🟢</span>
+                        <span className="font-semibold text-green-800 text-sm">Google Shopping / Search</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {[ads.google.headline1, ads.google.headline2, ads.google.headline3].filter(Boolean).map((h: string, i) => (
+                            <div key={i} className="bg-gray-50 rounded p-2">
+                              <div className="text-xs text-gray-400 mb-0.5">H{i + 1}</div>
+                              <p className="text-sm font-semibold text-gray-800">{h}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {ads.google.keywords?.length > 0 && (
+                          <div>
+                            <div className="text-xs font-semibold text-gray-400 uppercase mb-1.5">Target Keywords</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {ads.google.keywords.map((kw: string, i: number) => (
+                                <span key={i} className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full">{kw}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tips */}
+                  {ads.tips?.length > 0 && (
+                    <div className="card p-4 bg-amber-50/50 border-amber-100">
+                      <div className="text-xs font-semibold text-amber-700 uppercase mb-2">Pro Tips</div>
+                      <ul className="space-y-1.5">
+                        {ads.tips.map((tip: string, i: number) => (
+                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                            <span className="text-amber-500 shrink-0">&#x2022;</span>{tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ── Growth ── */}
+      {tab === 'Growth' && (
+        <div className="space-y-4">
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold text-gray-800">Growth Playbook</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Personalized strategy for this product &amp; marketplace</p>
+              </div>
+              <button onClick={() => genGrowth.mutate()} disabled={genGrowth.isPending}
+                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
+                {genGrowth.isPending ? '⟳ Generating…' : genGrowth.data ? '↻ Refresh' : '🚀 Build Playbook'}
+              </button>
+            </div>
+
+            {!genGrowth.data && !genGrowth.isPending && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 opacity-50">
+                {['Quick Wins', 'Listing Optimization', 'Pricing Strategy', 'Review Strategy', 'Launch Sequence', 'PPC Plan'].map(s => (
+                  <div key={s} className="card p-3 text-center text-sm text-gray-500">{s}</div>
+                ))}
+              </div>
+            )}
+
+            {genGrowth.isPending && (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin text-3xl text-green-600 mb-3">&#x27F3;</div>
+                  <p className="text-sm text-gray-500">Building your growth playbook…</p>
+                </div>
+              </div>
+            )}
+
+            {genGrowth.data && (() => {
+              const g = genGrowth.data as any;
+              return (
+                <div className="space-y-5">
+                  {/* Quick Wins */}
+                  {g.quickWins?.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">⚡ Quick Wins</div>
+                      <ul className="space-y-2">
+                        {g.quickWins.map((w: string, i: number) => (
+                          <li key={i} className="text-sm text-gray-700 flex gap-2 p-2.5 rounded-lg bg-green-50">
+                            <span className="text-green-600 font-bold shrink-0">{i + 1}.</span>{w}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Listing Optimization */}
+                  {g.listingOptimization && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📝 Listing Optimization</div>
+                      <div className="space-y-3">
+                        {g.listingOptimization.title && (
+                          <div className="card p-3">
+                            <div className="text-xs text-gray-500 font-semibold mb-1">Title Formula</div>
+                            <p className="text-sm text-gray-700">{g.listingOptimization.title}</p>
+                          </div>
+                        )}
+                        {g.listingOptimization.bullets?.length > 0 && (
+                          <div className="card p-3">
+                            <div className="text-xs text-gray-500 font-semibold mb-2">Bullet Framework</div>
+                            <ul className="space-y-1">
+                              {g.listingOptimization.bullets.map((b: string, i: number) => (
+                                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                                  <span className="text-green-500 shrink-0">&#x2713;</span>{b}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {g.listingOptimization.images?.length > 0 && (
+                          <div className="card p-3">
+                            <div className="text-xs text-gray-500 font-semibold mb-2">Image Strategy</div>
+                            <ul className="space-y-1">
+                              {g.listingOptimization.images.map((img: string, i: number) => (
+                                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                                  <span className="text-blue-500 shrink-0">🖼</span>{img}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {g.listingOptimization.video && (
+                          <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-800">
+                            <span className="font-semibold">Video: </span>{g.listingOptimization.video}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing */}
+                  {g.pricingStrategy && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">💰 Pricing Strategy</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {Object.entries(g.pricingStrategy as Record<string, string>).map(([key, val]) => (
+                          <div key={key} className="card p-3">
+                            <div className="text-xs text-gray-400 capitalize mb-1">{key}</div>
+                            <p className="text-sm text-gray-700">{val}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Launch Sequence */}
+                  {g.launchSequence?.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">🗓 Launch Sequence</div>
+                      <div className="relative">
+                        <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200" />
+                        <div className="space-y-3">
+                          {g.launchSequence.map((step: any, i: number) => (
+                            <div key={i} className="flex gap-4 pl-10 relative">
+                              <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm" />
+                              <div className="card p-3 flex-1">
+                                <div className="text-xs font-bold text-green-700 mb-0.5">{step.week}</div>
+                                <p className="text-sm text-gray-700">{step.action}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PPC */}
+                  {g.ppcStrategy && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📢 PPC Strategy</div>
+                      <div className="card p-4 space-y-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="font-semibold text-gray-700">Budget:</span>
+                          <span className="text-green-700 font-medium">{g.ppcStrategy.budget}</span>
+                        </div>
+                        {g.ppcStrategy.acos && (
+                          <p className="text-sm text-gray-600">{g.ppcStrategy.acos}</p>
+                        )}
+                        {g.ppcStrategy.campaigns?.length > 0 && (
+                          <ul className="space-y-1">
+                            {g.ppcStrategy.campaigns.map((c: string, i: number) => (
+                              <li key={i} className="text-sm text-gray-700 flex gap-2">
+                                <span className="text-green-500 shrink-0">&#x2713;</span>{c}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Monthly Milestones */}
+                  {g.monthlyMilestones?.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">🎯 Monthly Milestones</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {g.monthlyMilestones.map((m: any) => (
+                          <div key={m.month} className="card p-3">
+                            <div className="text-xs font-bold text-green-700 mb-1">Month {m.month}</div>
+                            <p className="text-xs text-gray-600">{m.goal}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Review Strategy */}
+                  {g.reviewStrategy?.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">⭐ Review Strategy</div>
+                      <ul className="space-y-2">
+                        {g.reviewStrategy.map((tip: string, i: number) => (
+                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                            <span className="text-amber-400 shrink-0">★</span>{tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
       {/* ── Recommendation ── */}
       {tab === 'Recommendation' && (
         <div className="card p-4 sm:p-8">
@@ -387,6 +787,12 @@ export default function OpportunityDetailPage() {
           )}
         </div>
       )}
+      <SupplierProfileDrawer
+        supplierId={drawerSupplier}
+        open={!!drawerSupplier}
+        onClose={() => setDrawerSupplier(null)}
+        context={{ productTitle: opp.product?.title, opportunityId: id }}
+      />
     </div>
   );
 }

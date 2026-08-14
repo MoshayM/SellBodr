@@ -95,6 +95,23 @@ const TABLES = [
     userId TEXT, email TEXT, name TEXT, type TEXT NOT NULL,
     expiresAt INTEGER NOT NULL, createdAt INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS "SupplierOutreach" (
+    id TEXT PRIMARY KEY, supplierId TEXT NOT NULL, userId TEXT NOT NULL,
+    opportunityId TEXT, channel TEXT NOT NULL,
+    subject TEXT, messageBody TEXT,
+    status TEXT DEFAULT 'sent',
+    createdAt INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "AdCampaignDraft" (
+    id TEXT PRIMARY KEY, opportunityId TEXT NOT NULL,
+    content TEXT DEFAULT '{}',
+    createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "GrowthPlaybook" (
+    id TEXT PRIMARY KEY, opportunityId TEXT UNIQUE NOT NULL,
+    content TEXT DEFAULT '{}',
+    createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 // Columns added to existing tables — SQLite has no ALTER TABLE ADD COLUMN IF NOT EXISTS,
@@ -142,6 +159,25 @@ const MIGRATIONS = [
   `ALTER TABLE "Score" ADD COLUMN marketplaceFit REAL DEFAULT 0`,
   // Marketplace — updatedAt column
   `ALTER TABLE "Marketplace" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  // SourcingCandidate — supplier contact + profile fields
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN contactEmail TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN contactPhone TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN contactWhatsapp TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN address TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN city TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN state TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN country TEXT DEFAULT 'India'`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN latitude REAL`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN longitude REAL`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN certifications TEXT DEFAULT '[]'`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN rating REAL`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN reviewCount INTEGER DEFAULT 0`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN companyType TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN yearEstablished INTEGER`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN employeeCount TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN annualTurnover TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN verifiedBadge INTEGER DEFAULT 0`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN description TEXT`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {

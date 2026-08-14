@@ -63,6 +63,8 @@ export const api = {
     recalculate: (id: string, data: any) => request<any>(`/opportunities/${id}/profit/recalculate`, { method: 'POST', body: JSON.stringify(data) }),
     getKeywords: (id: string) => request<any>(`/opportunities/${id}/keywords`),
     refresh: (id: string) => request<any>(`/opportunities/${id}/refresh`, { method: 'POST', body: '{}' }),
+    generateAds: (id: string) => request<any>(`/opportunities/${id}/ads`, { method: 'POST', body: '{}' }),
+    generateGrowth: (id: string) => request<any>(`/opportunities/${id}/growth`, { method: 'POST', body: '{}' }),
   },
   billing: {
     getSubscription: () => request<any>('/billing/subscription'),
@@ -79,6 +81,12 @@ export const api = {
   },
   suppliers: {
     list: () => request<any[]>('/suppliers'),
+    getProfile: (id: string) => request<any>(`/suppliers/${id}`),
+    getOutreach: (id: string) => request<any[]>(`/suppliers/${id}/outreach`),
+    logOutreach: (id: string, data: { channel: string; subject?: string; messageBody?: string; opportunityId?: string }) =>
+      request<any>(`/suppliers/${id}/outreach`, { method: 'POST', body: JSON.stringify(data) }),
+    generateRfq: (id: string) =>
+      request<any>(`/suppliers/${id}/rfq`, { method: 'POST', body: '{}' }),
   },
   passkeys: {
     list: () => request<any[]>('/passkeys'),
