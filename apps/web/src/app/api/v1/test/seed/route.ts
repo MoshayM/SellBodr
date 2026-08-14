@@ -74,7 +74,10 @@ export async function POST(req: NextRequest) {
       const seedSearchId = 'seed-' + opportunityId;
       const grossMinor = saleMinor - landedMinor;
       const roiPct = srcMinor > 0 ? Math.round((netMinor / srcMinor) * 1000) / 10 : 0;
-      const imgUrl = `https://picsum.photos/seed/${productId.slice(0, 10)}/400/300`;
+      const raw = (p.title || p.category || 'product').toLowerCase().replace(/[^a-z\s]/g, '');
+      const keywords = raw.split(/\s+/).filter((w: string) => w.length > 2 && !['and','the','for','with','set'].includes(w)).slice(0, 3).join(',') || 'product';
+      const lock = parseInt(productId.replace(/-/g, '').slice(0, 8), 16) % 10000;
+      const imgUrl = `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
       await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [productId, p.title, p.category, p.description, imgUrl, ts, ts] });
       await db.execute({ sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`, args: [opportunityId, seedSearchId, productId, marketplaceId, rec, conf, ts, ts] });
       await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, p.scores.demand, p.scores.competition, p.scores.margin, p.scores.trend, p.scores.shipping, p.scores.marketplaceFit, p.scores.saturation, ts, ts] });

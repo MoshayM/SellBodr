@@ -50,8 +50,14 @@ export async function GET(req: NextRequest) {
       const fees    = Number(r.pmFees   ?? 0);
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
-      // Derive imageUrl from productId if the column is empty (pre-fix rows)
-      const imageUrl = (r.pImageUrl as string) || `https://picsum.photos/seed/${String(r.pId).slice(0, 10)}/400/300`;
+      // Derive a keyword-relevant imageUrl from title/category if the column is empty
+      const storedUrl = (r.pImageUrl as string) || '';
+      const imageUrl = storedUrl || (() => {
+        const raw = (String(r.pTitle || r.pCategory || 'product')).toLowerCase().replace(/[^a-z\s]/g, '');
+        const keywords = raw.split(/\s+/).filter((w: string) => w.length > 2 && !['and','the','for','with','set'].includes(w)).slice(0, 3).join(',') || 'product';
+        const lock = parseInt(String(r.pId).replace(/-/g, '').slice(0, 8), 16) % 10000;
+        return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
+      })();
 
       return {
         id: r.id, status: r.status, recommendation: r.recommendation,

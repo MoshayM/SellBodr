@@ -45,8 +45,16 @@ interface AiProduct {
   };
 }
 
-function productImageUrl(productId: string): string {
-  return `https://picsum.photos/seed/${productId.slice(0, 10)}/400/300`;
+function productImageUrl(productId: string, title: string, category: string): string {
+  // Use product keywords so the image is relevant to the product
+  const raw = (title || category || 'product').toLowerCase();
+  // Take first 3 meaningful words, strip special chars, join with comma for loremflickr multi-keyword
+  const keywords = raw.replace(/[^a-z\s]/g, '').split(/\s+/)
+    .filter(w => w.length > 2 && !['and','the','for','with','set','from'].includes(w))
+    .slice(0, 3).join(',') || 'product';
+  // Lock keeps the image stable per product (deterministic from productId)
+  const lock = parseInt(productId.replace(/-/g, '').slice(0, 8), 16) % 10000;
+  return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
 }
 
 function supplierName(category: string, idx: number): string {
@@ -159,7 +167,7 @@ Return a JSON array only. No prose, no markdown.`;
       const netMinor = saleMinor - landedMinor - feeMinor;
       const marginPct = saleMinor > 0 ? (netMinor / saleMinor) * 100 : 0;
 
-      const imgUrl = productImageUrl(productId);
+      const imgUrl = productImageUrl(productId, p.title, p.category ?? '');
       await db.execute({
         sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), imgUrl, ts, ts],
