@@ -112,6 +112,23 @@ const MIGRATIONS = [
   `ALTER TABLE "Search" ADD COLUMN filters TEXT NOT NULL DEFAULT '{}'`,
   `ALTER TABLE "Search" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Search" ADD COLUMN startedAt INTEGER DEFAULT 0`,
+  // SourcingCandidate — supplierName added after initial table creation
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN supplierName TEXT`,
+  // ProfitModel — column renames (new names added alongside old ones)
+  `ALTER TABLE "ProfitModel" ADD COLUMN productCostMinor INTEGER DEFAULT 0`,
+  `ALTER TABLE "ProfitModel" ADD COLUMN marketplaceFeesMinor INTEGER DEFAULT 0`,
+  `ALTER TABLE "ProfitModel" ADD COLUMN roiPct REAL DEFAULT 0`,
+  `ALTER TABLE "ProfitModel" ADD COLUMN landedCostMinor INTEGER DEFAULT 0`,
+  `ALTER TABLE "ProfitModel" ADD COLUMN grossProfitMinor INTEGER DEFAULT 0`,
+  `ALTER TABLE "ProfitModel" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  // Opportunity — searchId and updatedAt required by search pipeline
+  `ALTER TABLE "Opportunity" ADD COLUMN searchId TEXT`,
+  `ALTER TABLE "Opportunity" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  // Score — updatedAt required by search pipeline
+  `ALTER TABLE "Score" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Score" ADD COLUMN marketplaceFit REAL DEFAULT 0`,
+  // Marketplace — updatedAt column
+  `ALTER TABLE "Marketplace" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
