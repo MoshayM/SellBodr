@@ -45,10 +45,20 @@ interface AiProduct {
   };
 }
 
+function getUserId(req: NextRequest): string {
+  try {
+    const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+    if (!token) return '';
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+    return String(payload.sub ?? payload.userId ?? '');
+  } catch { return ''; }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const marketplace: string = body.marketplace || 'amazon_us';
+    const userId = getUserId(req);
 
     const db = getDb();
     await ensureSchema(db);
@@ -57,8 +67,8 @@ export async function POST(req: NextRequest) {
     const now = Date.now();
 
     await db.execute({
-      sql: `INSERT INTO "Search" (id, marketplace, status, opportunityCount, createdAt) VALUES (?, ?, 'running', 0, ?)`,
-      args: [searchId, marketplace, now],
+      sql: `INSERT INTO "Search" (id, userId, marketplace, status, opportunityCount, createdAt) VALUES (?, ?, ?, 'running', 0, ?)`,
+      args: [searchId, userId, marketplace, now],
     });
 
     // Derive readable marketplace name and current date context for trend-aware prompt

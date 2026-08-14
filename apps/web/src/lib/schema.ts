@@ -64,7 +64,7 @@ const TABLES = [
     createdAt INTEGER NOT NULL DEFAULT 0
   )`,
   `CREATE TABLE IF NOT EXISTS "Search" (
-    id TEXT PRIMARY KEY, marketplace TEXT NOT NULL,
+    id TEXT PRIMARY KEY, userId TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL,
     status TEXT DEFAULT 'running', opportunityCount INTEGER DEFAULT 0,
     errorMessage TEXT, createdAt INTEGER NOT NULL DEFAULT 0,
     completedAt INTEGER DEFAULT 0
@@ -99,6 +99,7 @@ const MIGRATIONS = [
   `ALTER TABLE "ProviderKey" ADD COLUMN keyValue TEXT DEFAULT ''`,
   `ALTER TABLE "ProviderKey" ADD COLUMN maskedKey TEXT DEFAULT ''`,
   `ALTER TABLE "Product" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Search" ADD COLUMN userId TEXT NOT NULL DEFAULT ''`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
