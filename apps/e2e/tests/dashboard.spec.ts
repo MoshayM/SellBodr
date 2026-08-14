@@ -18,7 +18,7 @@ async function runNewSearch(page: Page) {
   }
 
   // Wait for react-query invalidation + refetch to populate the table
-  await expect(page.locator('tbody tr').first().locator('.font-medium')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('tbody tr').first().locator('.font-medium').first()).toBeVisible({ timeout: 15_000 });
 }
 
 async function ensureHasOpportunities(page: Page) {
