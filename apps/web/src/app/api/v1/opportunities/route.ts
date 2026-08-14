@@ -43,6 +43,32 @@ export async function GET(req: NextRequest) {
       args,
     });
 
+    const oppIds = result.rows.map(r => r.id as string).filter(Boolean);
+
+    // Fetch sourcing candidates (supplier prices) for all opportunities in one query
+    let suppliersMap: Record<string, any[]> = {};
+    if (oppIds.length > 0) {
+      try {
+        const candResult = await db.execute({
+          sql: `SELECT opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility FROM "SourcingCandidate" WHERE opportunityId IN (${oppIds.map(() => '?').join(',')}) ORDER BY productCostMinor ASC`,
+          args: oppIds,
+        });
+        for (const c of candResult.rows) {
+          const oid = c.opportunityId as string;
+          if (!suppliersMap[oid]) suppliersMap[oid] = [];
+          suppliersMap[oid].push({
+            name:        c.supplierName,
+            source:      c.source,
+            url:         c.sourceUrl,
+            costMinor:   Number(c.productCostMinor ?? 0),
+            moq:         Number(c.moq ?? 0),
+            leadDays:    Number(c.leadTimeDays ?? 0),
+            feasibility: c.feasibility,
+          });
+        }
+      } catch { /* SourcingCandidate table may not exist yet */ }
+    }
+
     const rows = result.rows.map(r => {
       const src     = Number(r.pmSrc    ?? 0);
       const sale    = Number(r.pmSale   ?? 0);
@@ -50,7 +76,6 @@ export async function GET(req: NextRequest) {
       const fees    = Number(r.pmFees   ?? 0);
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
-      // Derive a keyword-relevant imageUrl from title/category if the column is empty
       const storedUrl = (r.pImageUrl as string) || '';
       const imageUrl = storedUrl || (() => {
         const raw = (String(r.pTitle || r.pCategory || 'product')).toLowerCase().replace(/[^a-z\s]/g, '');
@@ -59,43 +84,52 @@ export async function GET(req: NextRequest) {
         return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
       })();
 
+      const currency = (r.pmCurrency ?? r.mCurrency ?? 'USD') as string;
+
+      // Marketplace-specific fee schedule approximations
+      const mpCode = (r.mCode ?? '') as string;
+      const referralPct = mpCode.startsWith('etsy') ? 6.5 : mpCode.startsWith('temu') ? 8 : mpCode.startsWith('walmart') ? 8 : 15;
+      const referralFee = Math.round(sale * referralPct / 100);
+      const fbaFee      = Math.round(fees - referralFee > 0 ? fees - referralFee : fees * 0.5);
+      const adSpend     = Math.round(sale * 0.05);
+
       return {
         id: r.id, status: r.status, recommendation: r.recommendation,
         confidence: r.confidence, createdAt: r.oCreatedAt,
-        product: {
-          id: r.pId, title: r.pTitle, category: r.pCategory, imageUrl,
-        },
-        marketplace: {
-          id: r.mId, code: r.mCode, country: r.mCountry, currency: r.mCurrency,
-        },
+        product: { id: r.pId, title: r.pTitle, category: r.pCategory, imageUrl },
+        marketplace: { id: r.mId, code: r.mCode, country: r.mCountry, currency: r.mCurrency },
         score: r.sOpp != null ? {
           opportunity: r.sOpp, demand: r.sDemand, competition: r.sComp,
           margin: r.sMargin, trend: r.sTrend, shipping: r.sShipping, saturation: r.sSat,
         } : null,
         profitModel: r.pmNet != null ? {
-          productCostMinor:    src,
-          salePriceMinor:      sale,
-          landedCostMinor:     landed,
+          currency,
+          productCostMinor:     src,
+          salePriceMinor:       sale,
+          landedCostMinor:      landed,
           marketplaceFeesMinor: fees,
-          grossProfitMinor:    Number(r.pmGross ?? 0),
-          netProfitMinor:      net,
-          netMarginPct:        Number(r.pmMargin ?? 0),
-          roiPct:              Number(r.pmRoi ?? 0),
-          currency:            r.pmCurrency ?? 'USD',
-          // Derived breakdown of landed cost overhead
-          intlShippingMinor:   Math.round(overhead * 0.60),
-          packagingCostMinor:  Math.round(overhead * 0.25),
-          dutyMinor:           Math.round(overhead * 0.15),
-          // Derived fee breakdown
-          fbaFeeMinor:         Math.round(fees * 0.5),
-          referralFeeMinor:    Math.round(fees * 0.5),
-          // Estimated ad spend (5% of sale)
-          adCostMinor:         Math.round(sale * 0.05),
-          // Calculated metrics
-          breakevenUnits:      net > 0 ? Math.ceil(50000 / net) : 999,
-          monthlyProfitMinor:  net * 50,
-          annualProfitMinor:   net * 600,
+          grossProfitMinor:     Number(r.pmGross ?? 0),
+          netProfitMinor:       net,
+          netMarginPct:         Number(r.pmMargin ?? 0),
+          roiPct:               Number(r.pmRoi ?? 0),
+          // Landed cost breakdown
+          intlShippingMinor:    Math.round(overhead * 0.60),
+          packagingCostMinor:   Math.round(overhead * 0.25),
+          dutyMinor:            Math.round(overhead * 0.15),
+          // Fee breakdown (marketplace-specific)
+          referralFeeMinor:     referralFee,
+          fbaFeeMinor:          fbaFee,
+          referralPct,
+          adCostMinor:          adSpend,
+          // Totals including ads
+          totalCostMinor:       landed + fees + adSpend,
+          trueNetMinor:         sale - landed - fees - adSpend,
+          // Projections (assuming 50 units/month initial)
+          breakevenUnits:       net > 0 ? Math.ceil(50000 / net) : 999,
+          monthlyProfitMinor:   net * 50,
+          annualProfitMinor:    net * 600,
         } : null,
+        suppliers: suppliersMap[r.id as string] ?? [],
       };
     });
 

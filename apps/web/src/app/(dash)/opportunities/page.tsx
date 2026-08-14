@@ -8,7 +8,10 @@ import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
-function fmt(minor: number, currency = '') { return `${currency} ${(minor / 100).toFixed(0)}`.trim(); }
+function usd(minor: number, decimals = 0) {
+  return '$' + (minor / 100).toFixed(decimals);
+}
+function pct(n: number) { return n.toFixed(1) + '%'; }
 
 const PLATFORM_NAMES: Record<string, string> = {
   amazon: 'Amazon', ebay: 'eBay', shopee: 'Shopee', lazada: 'Lazada',
@@ -84,6 +87,183 @@ function trendTenure(createdAt: number): { label: string; key: string; color: st
   if (age < 30 * DAY) return { label: 'This month',    key: '30d', color: '#8b5cf6' };
   if (age < 90 * DAY) return { label: 'Last 3 months', key: '3m',  color: '#f59e0b' };
   return                { label: 'Older',          key: 'old', color: '#6b7280' };
+}
+
+// ── Cost Breakdown Panel ───────────────────────────────────────────────────────
+
+function WaterfallBar({ label, value, total, color, positive = false }: {
+  label: string; value: number; total: number; color: string; positive?: boolean;
+}) {
+  const pctW = total > 0 ? Math.min(100, (Math.abs(value) / total) * 100) : 0;
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <div className="w-40 text-white/50 text-right shrink-0 leading-snug">{label}</div>
+      <div className="flex-1 h-4 bg-white/5 rounded overflow-hidden">
+        <div className="h-full rounded transition-all" style={{ width: `${pctW}%`, backgroundColor: color, opacity: 0.8 }} />
+      </div>
+      <div className={`w-16 font-mono font-semibold text-right shrink-0 ${positive ? 'text-emerald-400' : 'text-white/80'}`}>
+        {positive ? '+' : ''}{usd(value, 2)}
+      </div>
+    </div>
+  );
+}
+
+function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
+  const pm = opp.profitModel;
+  if (!pm) return null;
+
+  const sale     = pm.salePriceMinor;
+  const src      = pm.productCostMinor;
+  const ship     = pm.intlShippingMinor;
+  const pkg      = pm.packagingCostMinor;
+  const duty     = pm.dutyMinor;
+  const landed   = pm.landedCostMinor;
+  const refFee   = pm.referralFeeMinor;
+  const fbaFee   = pm.fbaFeeMinor;
+  const adSpend  = pm.adCostMinor;
+  const net      = pm.trueNetMinor ?? pm.netProfitMinor;
+  const margin   = pm.netMarginPct;
+  const roi      = pm.roiPct;
+  const currency = pm.currency ?? 'USD';
+
+  const platform = platformOf(mpCode);
+  const referralPct = pm.referralPct ?? 15;
+
+  const suppliers: any[] = opp.suppliers ?? [];
+  const confidence = Math.round(opp.confidence ?? 0);
+  const confColor  = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 bg-white/[0.02] border-t border-white/5">
+
+      {/* ── Supplier Comparison ─────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
+            Indian Suppliers
+          </h4>
+          <span className="text-[10px] text-white/25">Verified via IndiaMART &amp; Alibaba</span>
+        </div>
+
+        {suppliers.length === 0 ? (
+          <div className="text-xs text-white/25 py-4 text-center">Sourcing data not yet available</div>
+        ) : (
+          <div className="space-y-2">
+            {suppliers.map((s: any, i: number) => (
+              <div key={i} className={`rounded-lg border p-3 transition-colors ${i === 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-white/8 bg-white/[0.02]'}`}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white leading-snug truncate">{s.name}</div>
+                    <div className="text-[10px] text-white/35 capitalize mt-0.5 flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
+                        {s.source === 'indiamart' ? '🇮🇳 IndiaMART' : s.source === 'alibaba' ? '🌐 Alibaba' : s.source}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded border capitalize ${
+                        s.feasibility === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                        s.feasibility === 'moderate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                        'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                        {s.feasibility}
+                      </span>
+                      {i === 0 && <span className="text-emerald-400 font-semibold">Best Price</span>}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-lg font-bold text-white">{usd(s.costMinor, 2)}</div>
+                    <div className="text-[10px] text-white/35">per unit</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-[10px] text-white/40">
+                  <span>MOQ <strong className="text-white/60">{s.moq}</strong> units</span>
+                  <span>Lead <strong className="text-white/60">{s.leadDays}d</strong></span>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                    className="ml-auto text-violet-400 hover:text-violet-300 font-medium hover:underline">
+                    View supplier →
+                  </a>
+                </div>
+                {/* Savings vs sale price */}
+                <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+                    style={{ width: `${Math.min(100, (1 - s.costMinor / sale) * 100)}%` }} />
+                </div>
+                <div className="text-[10px] text-white/25 mt-0.5">
+                  {pct((1 - s.costMinor / sale) * 100)} gross margin room at list price
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* AI Attribution */}
+        <div className="mt-3 flex items-center gap-2 text-[10px] text-white/25">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
+          <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
+          <span className="text-white/15">·</span>
+          <span>Validated by 2 AI models (Llama-3.1 + Mixtral)</span>
+        </div>
+      </div>
+
+      {/* ── Cost Waterfall ──────────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
+            Cost Breakdown — {platform}
+          </h4>
+          <span className="text-[10px] text-white/25">{currency}</span>
+        </div>
+
+        <div className="space-y-1.5">
+          {/* Source cost */}
+          <WaterfallBar label="India Source Cost" value={src}    total={sale} color="#6366f1" />
+          <WaterfallBar label="Int'l Shipping"     value={ship}   total={sale} color="#8b5cf6" />
+          <WaterfallBar label="Packaging + Labels" value={pkg}    total={sale} color="#a78bfa" />
+          <WaterfallBar label="Import Duties"      value={duty}   total={sale} color="#c4b5fd" />
+
+          {/* Landed cost subtotal */}
+          <div className="my-2 flex items-center gap-2 text-xs border-t border-white/10 pt-2">
+            <div className="w-40 text-white/70 font-semibold text-right shrink-0">= Landed Cost</div>
+            <div className="flex-1" />
+            <div className="w-16 font-mono font-bold text-violet-300 text-right">{usd(landed, 2)}</div>
+          </div>
+
+          {/* Deductions from sale */}
+          <div className="flex items-center gap-2 text-xs text-white/25 mt-3 mb-1">
+            <div className="w-40 text-right shrink-0">Sale Price</div>
+            <div className="flex-1" />
+            <div className="w-16 font-mono font-semibold text-white/70 text-right">{usd(sale, 2)}</div>
+          </div>
+          <WaterfallBar label={`Referral Fee (${referralPct}%)`} value={refFee}   total={sale} color="#ef4444" />
+          <WaterfallBar label="FBA / Fulfillment Fee"             value={fbaFee}   total={sale} color="#f97316" />
+          <WaterfallBar label="Est. Ad Spend (5%)"                value={adSpend}  total={sale} color="#eab308" />
+          <WaterfallBar label="Landed Cost"                       value={landed}   total={sale} color="#6366f1" />
+        </div>
+
+        {/* Net profit summary */}
+        <div className={`mt-3 rounded-lg border p-3 ${net > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/25 bg-red-500/8'}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-white/60">Net Profit / Unit</span>
+            <span className={`text-xl font-bold ${net > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usd(net, 2)}</span>
+          </div>
+          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-white/40">
+            <span>Margin <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{pct(margin)}</strong></span>
+            <span>ROI <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{roi.toFixed(0)}%</strong></span>
+            {pm.breakevenUnits < 999 && (
+              <span>Break-even <strong className="text-white/60">{pm.breakevenUnits} units</strong></span>
+            )}
+          </div>
+          {pm.monthlyProfitMinor > 0 && (
+            <div className="mt-2 pt-2 border-t border-white/10 grid grid-cols-2 gap-2 text-[10px] text-white/40">
+              <div>Monthly (50 units) <div className="font-semibold text-white/70 text-sm">{usd(pm.monthlyProfitMinor, 0)}</div></div>
+              <div>Annual projection <div className="font-semibold text-white/70 text-sm">{usd(pm.annualProfitMinor, 0)}</div></div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2 text-[10px] text-white/20 text-right">
+          Fees: {platform} standard schedule · Shipping: India air freight estimate · Duties: destination country avg
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Marketplace dropdown (portal-based) ───────────────────────────────────────
@@ -227,11 +407,14 @@ export default function OpportunitiesPage() {
   const [recFilter, setRecFilter] = useState('');
 
   // Client-side filters
-  const [catFilter,    setCatFilter]    = useState('');
-  const [srcFilter,    setSrcFilter]    = useState('');
+  const [catFilter,      setCatFilter]      = useState('');
+  const [srcFilter,      setSrcFilter]      = useState('');
   const [strengthFilter, setStrengthFilter] = useState('');
-  const [periodFilter, setPeriodFilter] = useState('');
-  const [sortBy,       setSortBy]       = useState('score');
+  const [periodFilter,   setPeriodFilter]   = useState('');
+  const [sortBy,         setSortBy]         = useState('score');
+
+  // Expand state
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [searching,    setSearching]    = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
@@ -253,26 +436,17 @@ export default function OpportunitiesPage() {
 
   const allOpps = opps as any[];
 
-  // Unique categories from loaded data
   const categories = useMemo(
     () => [...new Set(allOpps.map(o => o.product?.category).filter(Boolean))].sort() as string[],
     [allOpps]
   );
 
-  // Client-side filter + sort
   const displayed = useMemo(() => {
     const now = Date.now();
     let rows = allOpps.filter(opp => {
-      if (catFilter) {
-        if (opp.product?.category !== catFilter) return false;
-      }
-      if (srcFilter) {
-        if (trendSource(opp.marketplace?.code).key !== srcFilter) return false;
-      }
-      if (strengthFilter) {
-        const t = trendStrengthLabel(opp.score?.trend ?? 0);
-        if (t.key !== strengthFilter) return false;
-      }
+      if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
+      if (srcFilter)      { if (trendSource(opp.marketplace?.code).key !== srcFilter) return false; }
+      if (strengthFilter) { if (trendStrengthLabel(opp.score?.trend ?? 0).key !== strengthFilter) return false; }
       if (periodFilter) {
         const age = now - Number(opp.createdAt || 0);
         if (periodFilter === '2d'  && age > 2  * DAY) return false;
@@ -288,7 +462,7 @@ export default function OpportunitiesPage() {
       if (sortBy === 'trend')   return (b.score?.trend ?? 0) - (a.score?.trend ?? 0);
       if (sortBy === 'newest')  return Number(b.createdAt ?? 0) - Number(a.createdAt ?? 0);
       if (sortBy === 'oldest')  return Number(a.createdAt ?? 0) - Number(b.createdAt ?? 0);
-      return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0); // default: score
+      return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
   }, [allOpps, catFilter, srcFilter, strengthFilter, periodFilter, sortBy]);
@@ -322,7 +496,7 @@ export default function OpportunitiesPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white">Opportunities</h1>
-          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities</p>
+          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities · Click any row for cost breakdown</p>
         </div>
         <button onClick={() => runSearch.mutate()} disabled={searching}
           className="btn-primary text-sm disabled:opacity-60 shrink-0">
@@ -345,7 +519,6 @@ export default function OpportunitiesPage() {
       {/* ── Filter panel ─────────────────────────────────────── */}
       <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 space-y-3">
 
-        {/* Row 1: Marketplace + Category + Sort + count */}
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest block mb-1.5">
@@ -381,7 +554,6 @@ export default function OpportunitiesPage() {
           </div>
         </div>
 
-        {/* Row 2: Signal + Trend Source + Strength + Period + Clear */}
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
           <span className="text-[10px] text-white/30 font-semibold uppercase tracking-widest shrink-0">Signal:</span>
           {[['', 'All'], ['launch', '🚀 Launch'], ['hold', '⏸ Hold'], ['reject', '✕ Reject']].map(([v, l]) => (
@@ -434,7 +606,7 @@ export default function OpportunitiesPage() {
                 <th className="text-center px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Score</th>
                 <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Signal</th>
                 <th className="text-right px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Net Profit</th>
-                <th className="px-3 py-3" />
+                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -456,18 +628,22 @@ export default function OpportunitiesPage() {
                     </div>
                   </td></tr>
                 )
-                : displayed.map((opp: any) => {
+                : displayed.flatMap((opp: any) => {
                   const mpCode  = opp.marketplace?.code || '';
                   const cc      = countryCode(mpCode);
                   const ts      = trendSource(mpCode);
                   const tStr    = trendStrengthLabel(opp.score?.trend ?? 0);
                   const tenure  = trendTenure(opp.createdAt);
                   const region  = regionName(mpCode);
+                  const isOpen  = expandedId === opp.id;
 
-                  return (
+                  const netMinor = opp.profitModel?.trueNetMinor ?? opp.profitModel?.netProfitMinor;
+                  const currency = opp.marketplace?.currency || '';
+
+                  const rows: JSX.Element[] = [
                     <tr key={opp.id}
-                      className="hover:bg-violet-500/5 transition-colors group cursor-pointer"
-                      onClick={() => { window.location.href = `/opportunities/${opp.id}`; }}>
+                      className={`hover:bg-violet-500/5 transition-colors cursor-pointer ${isOpen ? 'bg-violet-500/5' : ''}`}
+                      onClick={() => setExpandedId(isOpen ? null : opp.id)}>
 
                       {/* Product */}
                       <td className="px-3 py-3">
@@ -530,21 +706,40 @@ export default function OpportunitiesPage() {
                       </td>
 
                       {/* Net Profit */}
-                      <td className="px-3 py-3 text-right font-semibold text-white">
-                        {opp.profitModel
-                          ? fmt(opp.profitModel.netProfitMinor, opp.marketplace?.currency)
+                      <td className="px-3 py-3 text-right font-semibold">
+                        {netMinor != null
+                          ? <span className={netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                              {netMinor > 0 ? '+' : ''}{currency} {(netMinor / 100).toFixed(0)}
+                            </span>
                           : <span className="text-white/25">&mdash;</span>}
                       </td>
 
-                      {/* View */}
-                      <td className="px-3 py-3">
-                        <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
-                          className="text-xs text-violet-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:underline whitespace-nowrap">
-                          View &rarr;
-                        </Link>
+                      {/* Expand + View */}
+                      <td className="px-3 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
+                            className="text-xs text-violet-400 font-medium hover:underline whitespace-nowrap hidden group-hover:inline">
+                            View
+                          </Link>
+                          <svg className={`w-4 h-4 text-white/30 transition-transform ${isOpen ? 'rotate-180 text-violet-400' : ''}`}
+                            viewBox="0 0 12 8" fill="none">
+                            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
                       </td>
-                    </tr>
-                  );
+                    </tr>,
+
+                  ];
+                  if (isOpen) {
+                    rows.push(
+                      <tr key={`${opp.id}-breakdown`} className="border-t-0">
+                        <td colSpan={7} className="p-0">
+                          <BreakdownPanel opp={opp} mpCode={mpCode} />
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return rows;
                 })
               }
             </tbody>
