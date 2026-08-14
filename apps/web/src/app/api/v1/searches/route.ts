@@ -370,7 +370,9 @@ export async function POST(req: NextRequest) {
         { name: supplierName(c.title, c.category, 3), source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(c.title.slice(0, 40))}`, pct: 0.88, moq: 100, lead: 35, feas: 'easy' },
       ];
       for (const s of cands) {
-        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, s.name, s.source, s.url, Math.round(srcMinor * s.pct), s.moq, s.lead, s.feas, ts] });
+        const scId = crypto.randomUUID();
+        // supplierId: legacy NOT NULL column; updatedAt: required NOT NULL with no default
+        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, supplierId, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [scId, scId, opportunityId, s.name, s.source, s.url, Math.round(srcMinor * s.pct), s.moq, s.lead, s.feas, ts, ts] });
       }
 
       count++;

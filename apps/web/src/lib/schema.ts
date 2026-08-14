@@ -58,10 +58,11 @@ const TABLES = [
   )`,
   `CREATE TABLE IF NOT EXISTS "SourcingCandidate" (
     id TEXT PRIMARY KEY, opportunityId TEXT NOT NULL,
+    supplierId TEXT DEFAULT '',
     supplierName TEXT, source TEXT DEFAULT 'indiamart', sourceUrl TEXT,
     productCostMinor INTEGER DEFAULT 0, moq INTEGER DEFAULT 1,
     leadTimeDays INTEGER DEFAULT 30, feasibility TEXT DEFAULT 'moderate',
-    createdAt INTEGER NOT NULL DEFAULT 0
+    createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
   `CREATE TABLE IF NOT EXISTS "Search" (
     id TEXT PRIMARY KEY, userId TEXT NOT NULL DEFAULT '',
@@ -142,8 +143,12 @@ const MIGRATIONS = [
   `ALTER TABLE "Search" ADD COLUMN filters TEXT NOT NULL DEFAULT '{}'`,
   `ALTER TABLE "Search" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Search" ADD COLUMN startedAt INTEGER DEFAULT 0`,
-  // SourcingCandidate — supplierName added after initial table creation
+  // SourcingCandidate — columns added after initial table creation
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN supplierId TEXT DEFAULT ''`,
   `ALTER TABLE "SourcingCandidate" ADD COLUMN supplierName TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN source TEXT DEFAULT 'indiamart'`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN sourceUrl TEXT`,
+  `ALTER TABLE "SourcingCandidate" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
   // ProfitModel — column renames (new names added alongside old ones)
   `ALTER TABLE "ProfitModel" ADD COLUMN productCostMinor INTEGER DEFAULT 0`,
   `ALTER TABLE "ProfitModel" ADD COLUMN marketplaceFeesMinor INTEGER DEFAULT 0`,
