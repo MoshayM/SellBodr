@@ -1,5 +1,5 @@
 // SellBodr Service Worker — PWA offline support
-const CACHE_NAME = 'sellbodr-v1';
+const CACHE_NAME = 'sellbodr-v2';
 const STATIC_ASSETS = [
   '/',
   '/login',

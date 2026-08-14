@@ -118,9 +118,7 @@ export default function LandingPage() {
         className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 glass border-b border-white/5"
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <span className="text-white font-black text-sm">S</span>
-          </div>
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow-lg shadow-violet-500/30" />
           <span className="font-bold text-lg text-white">SellBodr</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
@@ -388,9 +386,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/5 py-10 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-              <span className="text-white font-black text-xs">S</span>
-            </div>
+            <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg" />
             <span className="font-bold text-white">SellBodr</span>
           </div>
           <p className="text-white/25 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>
