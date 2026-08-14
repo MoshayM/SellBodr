@@ -13,18 +13,48 @@ const PLANS = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep]       = useState<'plan' | 'form'>('plan');
-  const [plan, setPlan]       = useState('pro');
-  const [form, setForm]       = useState({ name: '', email: '', password: '', confirm: '' });
-  const [showPw, setShowPw]   = useState(false);
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
+  const [step, setStep]           = useState<'plan' | 'form'>('plan');
+  const [plan, setPlan]           = useState('pro');
+  const [form, setForm]           = useState({ name: '', email: '', password: '', confirm: '' });
+  const [showPw, setShowPw]       = useState(false);
+  const [usePassword, setUsePassword] = useState(false);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
 
   function setField(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => { setForm(f => ({ ...f, [field]: e.target.value })); setError(''); };
   }
 
-  async function submit(e: FormEvent) {
+  async function registerWithPasskey() {
+    if (!form.name.trim()) { setError('Please enter your name'); return; }
+    if (!form.email.trim()) { setError('Please enter your email'); return; }
+    setError(''); setPasskeyLoading(true);
+    try {
+      const beginData = await api.passkeys.registerBegin(form.email.trim(), form.name.trim());
+      const { challengeId, ...options } = beginData;
+
+      const { startRegistration } = await import('@simplewebauthn/browser');
+      const attResp = await startRegistration(options);
+
+      const auth = await api.passkeys.registerComplete(
+        challengeId,
+        form.name.trim(),
+        attResp,
+        `${form.name.trim()}'s Organisation`,
+      ) as any;
+      saveAuth(auth);
+      router.push('/opportunities');
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        setError('Passkey setup was cancelled. You can use a password instead.');
+      } else {
+        setError(err?.message || 'Passkey setup failed. Please try again or use a password.');
+      }
+    } finally { setPasskeyLoading(false); }
+  }
+
+  async function registerWithPassword(e: FormEvent) {
     e.preventDefault();
     if (form.password !== form.confirm) { setError('Passwords do not match'); return; }
     if (form.password.length < 8) { setError('Password must be at least 8 characters'); return; }
@@ -40,11 +70,9 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#020817] flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Ambient background */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-600/8 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 mb-10">
         <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 rounded-xl shadow-lg shadow-violet-500/40" />
         <span className="text-white font-bold text-xl">SellBodr</span>
@@ -52,7 +80,7 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-3xl">
 
-        {/* ── Step indicator ────────────────────────────────── */}
+        {/* Step indicator */}
         <div className="flex items-center justify-center gap-3 mb-8">
           {['Choose plan', 'Create account'].map((label, i) => {
             const isActive = (i === 0 && step === 'plan') || (i === 1 && step === 'form');
@@ -73,7 +101,7 @@ export default function RegisterPage() {
           })}
         </div>
 
-        {/* ── Step 1 — Pick a plan ─────────────────────────── */}
+        {/* Step 1 — Pick a plan */}
         {step === 'plan' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="text-center mb-8">
@@ -86,8 +114,7 @@ export default function RegisterPage() {
                   key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   className={`relative glass-card rounded-2xl p-5 text-left transition-all duration-200 border-2 ${
                     plan === p.id ? (p.highlight ? 'border-violet-500 shadow-lg shadow-violet-500/25' : 'border-violet-400/60') : p.color
-                  }`}
-                >
+                  }`}>
                   {p.highlight && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-3 py-0.5 rounded-full">
                       POPULAR
@@ -121,18 +148,19 @@ export default function RegisterPage() {
           </motion.div>
         )}
 
-        {/* ── Step 2 — Account details ─────────────────────── */}
+        {/* Step 2 — Account details */}
         {step === 'form' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-black text-white mb-2">Create your account</h2>
               <p className="text-white/40 text-sm">
-                {PLANS.find(p2 => p2.id === plan)?.name} plan · {' '}
+                {PLANS.find(p2 => p2.id === plan)?.name} plan ·{' '}
                 <button onClick={() => setStep('plan')} className="text-violet-400 hover:text-violet-300 transition-colors">Change plan</button>
               </p>
             </div>
 
-            <form onSubmit={submit} className="space-y-4" noValidate>
+            {/* Name + Email always shown */}
+            <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Full name</label>
                 <input type="text" value={form.name} onChange={setField('name')} required autoComplete="name" placeholder="Jane Smith" className="input-dark" />
@@ -141,19 +169,6 @@ export default function RegisterPage() {
                 <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
                 <input type="email" value={form.email} onChange={setField('email')} required autoComplete="email" inputMode="email" placeholder="you@example.com" className="input-dark" />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Password</label>
-                <div className="relative">
-                  <input type={showPw ? 'text' : 'password'} value={form.password} onChange={setField('password')} required autoComplete="new-password" minLength={8} placeholder="Min 8 characters" className="input-dark pr-12" />
-                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
-                    {showPw ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Confirm password</label>
-                <input type="password" value={form.confirm} onChange={setField('confirm')} required autoComplete="new-password" placeholder="Repeat password" className="input-dark" />
-              </div>
 
               {error && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
@@ -161,16 +176,67 @@ export default function RegisterPage() {
                 </motion.div>
               )}
 
-              <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
-                    Creating account...
-                  </span>
-                ) : 'Create account →'}
-              </motion.button>
+              {!usePassword ? (
+                <>
+                  {/* Primary: Passkey */}
+                  <motion.button
+                    type="button"
+                    onClick={registerWithPasskey}
+                    disabled={passkeyLoading || loading}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                    className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+                    {passkeyLoading ? (
+                      <>
+                        <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full block shrink-0" />
+                        Setting up passkey…
+                      </>
+                    ) : (
+                      <>
+                        <FingerprintIcon className="w-5 h-5 shrink-0" />
+                        Create account with Passkey
+                      </>
+                    )}
+                  </motion.button>
+                  <p className="text-center text-white/25 text-xs -mt-1">
+                    Uses your device fingerprint, Face ID or PIN — no password needed
+                  </p>
+                  <button type="button" onClick={() => { setUsePassword(true); setError(''); }}
+                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors">
+                    Use a password instead →
+                  </button>
+                </>
+              ) : (
+                <form onSubmit={registerWithPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Password</label>
+                    <div className="relative">
+                      <input type={showPw ? 'text' : 'password'} value={form.password} onChange={setField('password')} required autoComplete="new-password" minLength={8} placeholder="Min 8 characters" className="input-dark pr-12" />
+                      <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
+                        {showPw ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Confirm password</label>
+                    <input type="password" value={form.confirm} onChange={setField('confirm')} required autoComplete="new-password" placeholder="Repeat password" className="input-dark" />
+                  </div>
+                  <motion.button type="submit" disabled={loading || passkeyLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                    className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 disabled:opacity-60 disabled:cursor-not-allowed">
+                    {loading ? (
+                      <span className="flex items-center gap-2 justify-center">
+                        <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
+                        Creating account...
+                      </span>
+                    ) : 'Create account →'}
+                  </motion.button>
+                  <button type="button" onClick={() => { setUsePassword(false); setError(''); }}
+                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors">
+                    ← Use passkey instead
+                  </button>
+                </form>
+              )}
 
               <p className="text-center text-white/25 text-xs">
                 By creating an account you agree to our{' '}
@@ -178,7 +244,7 @@ export default function RegisterPage() {
                 {' '}and{' '}
                 <Link href="/privacy" className="text-white/40 hover:text-white/60 transition-colors">Privacy Policy</Link>
               </p>
-            </form>
+            </div>
 
             <p className="text-center text-white/35 text-sm mt-6">
               Already have an account?{' '}
@@ -188,5 +254,19 @@ export default function RegisterPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function FingerprintIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+      <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+      <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+      <path d="M2 12a10 10 0 0 1 18-6" />
+      <path d="M2 17c1 0 1.5-.5 2-1s1-1 2-1 1.5.5 2 1 1 1 2 1 1.5-.5 2-1 1-1 2-1" />
+      <path d="M20 11c0 2-1.5 6.5-3 8" />
+      <path d="M6 11a6 6 0 0 1 12 0c0 1.5 0 3-.5 5" />
+    </svg>
   );
 }

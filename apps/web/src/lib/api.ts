@@ -80,6 +80,19 @@ export const api = {
   suppliers: {
     list: () => request<any[]>('/suppliers'),
   },
+  passkeys: {
+    list: () => request<any[]>('/passkeys'),
+    delete: (id: string) => request<{ success: boolean }>(`/passkeys/${id}`, { method: 'DELETE' }),
+    rename: (id: string, name: string) => request<any>(`/passkeys/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+    registerBegin: (email?: string, name?: string) =>
+      request<any>('/auth/passkey/register/begin', { method: 'POST', body: JSON.stringify({ email, name }) }),
+    registerComplete: (challengeId: string, name: string, response: any, orgName?: string) =>
+      request<any>('/auth/passkey/register/complete', { method: 'POST', body: JSON.stringify({ challengeId, name, orgName, response }) }),
+    loginBegin: (email?: string) =>
+      request<any>('/auth/passkey/login/begin', { method: 'POST', body: JSON.stringify({ email }) }),
+    loginComplete: (challengeId: string, response: any) =>
+      request<any>('/auth/passkey/login/complete', { method: 'POST', body: JSON.stringify({ challengeId, response }) }),
+  },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
       request<{ success: boolean }>('/settings/change-password', { method: 'POST', body: JSON.stringify(data) }),

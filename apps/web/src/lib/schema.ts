@@ -82,6 +82,19 @@ const TABLES = [
     positioning TEXT DEFAULT '', createdAt INTEGER NOT NULL DEFAULT 0,
     updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS "Passkey" (
+    id TEXT PRIMARY KEY, userId TEXT NOT NULL,
+    credentialId TEXT UNIQUE NOT NULL, publicKey TEXT NOT NULL,
+    counter INTEGER NOT NULL DEFAULT 0, deviceType TEXT DEFAULT 'singleDevice',
+    backedUp INTEGER DEFAULT 0, transports TEXT DEFAULT '[]',
+    name TEXT DEFAULT 'Passkey',
+    createdAt INTEGER NOT NULL DEFAULT 0, lastUsedAt INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS "WebAuthnChallenge" (
+    id TEXT PRIMARY KEY, challenge TEXT UNIQUE NOT NULL,
+    userId TEXT, email TEXT, name TEXT, type TEXT NOT NULL,
+    expiresAt INTEGER NOT NULL, createdAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 // Columns added to existing tables — SQLite has no ALTER TABLE ADD COLUMN IF NOT EXISTS,

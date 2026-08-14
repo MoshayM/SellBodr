@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, FormEvent } from 'react';
+import { motion } from 'framer-motion';
 import { api, getUser } from '@/lib/api';
 
-type Tab = 'ai-keys' | 'password' | 'marketplaces' | 'guide';
+type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide';
 
 const PROVIDERS = [
   { id: 'groq',      label: 'Groq',        hint: 'Llama 3, Mixtral (fast inference)', docsUrl: 'https://console.groq.com/keys',                placeholder: 'gsk_...'          },
@@ -44,7 +45,7 @@ export default function SettingsPage() {
   const TABS: { key: Tab; label: string; icon: string }[] = [
     { key: 'ai-keys',      label: 'AI Provider Keys', icon: '🔑' },
     { key: 'marketplaces', label: 'Marketplaces',      icon: '🛒' },
-    { key: 'password',     label: 'Password',          icon: '🔒' },
+    { key: 'security',     label: 'Security',          icon: '🛡️' },
     { key: 'guide',        label: 'User Guide',        icon: '📖' },
   ];
 
@@ -71,7 +72,7 @@ export default function SettingsPage() {
 
       {tab === 'ai-keys'      && <AiProviderKeysTab />}
       {tab === 'marketplaces' && <MarketplacesTab />}
-      {tab === 'password'     && <PasswordTab />}
+      {tab === 'security'     && <SecurityTab />}
       {tab === 'guide'        && <UserGuideTab />}
     </div>
   );
@@ -459,9 +460,162 @@ function UserGuideTab() {
   );
 }
 
-// ── Password ──────────────────────────────────────────────────────────────────
+// ── Security (Passkeys + Password) ────────────────────────────────────────────
 
-function PasswordTab() {
+function SecurityTab() {
+  return (
+    <div className="space-y-8">
+      <PasskeysSection />
+      <div className="border-t border-white/10 pt-8">
+        <h3 className="text-sm font-semibold text-white mb-1">Password</h3>
+        <p className="text-xs text-white/40 mb-4">Change your account password. Passkey users can set a password as a backup.</p>
+        <PasswordForm />
+      </div>
+    </div>
+  );
+}
+
+function PasskeysSection() {
+  const [passkeys, setPasskeys]   = useState<any[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [adding, setAdding]       = useState(false);
+  const [error, setError]         = useState('');
+  const [renameId, setRenameId]   = useState('');
+  const [renameName, setRenameName] = useState('');
+  const [deleteId, setDeleteId]   = useState('');
+
+  function loadPasskeys() {
+    setLoading(true);
+    api.passkeys.list()
+      .then(rows => setPasskeys(rows))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }
+  useEffect(() => { loadPasskeys(); }, []);
+
+  async function handleAdd() {
+    setError(''); setAdding(true);
+    try {
+      const beginData = await api.passkeys.registerBegin();
+      const { challengeId, ...options } = beginData;
+      const { startRegistration } = await import('@simplewebauthn/browser');
+      const attResp = await startRegistration(options);
+      const deviceName = `Passkey ${new Date().toLocaleDateString()}`;
+      await api.passkeys.registerComplete(challengeId, deviceName, attResp);
+      loadPasskeys();
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        setError('Passkey setup was cancelled.');
+      } else {
+        setError(err?.message || 'Failed to add passkey.');
+      }
+    } finally { setAdding(false); }
+  }
+
+  async function handleDelete(id: string) {
+    setDeleteId(id); setError('');
+    try {
+      await api.passkeys.delete(id);
+      setPasskeys(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      setError(err?.message || 'Failed to delete passkey.');
+    } finally { setDeleteId(''); }
+  }
+
+  async function handleRename(id: string) {
+    if (!renameName.trim()) return;
+    try {
+      await api.passkeys.rename(id, renameName.trim());
+      setPasskeys(prev => prev.map(p => p.id === id ? { ...p, name: renameName.trim() } : p));
+      setRenameId('');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to rename passkey.');
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Passkeys</h3>
+          <p className="text-xs text-white/40 mt-0.5">Sign in with fingerprint, Face ID, PIN, or a hardware security key.</p>
+        </div>
+        <button onClick={handleAdd} disabled={adding}
+          className="btn-primary text-sm py-2 min-h-0 disabled:opacity-60 flex items-center gap-2">
+          {adding ? (
+            <>
+              <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
+              Adding…
+            </>
+          ) : '+ Add Passkey'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2 mb-3">{error}</div>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8 text-white/30 text-sm">Loading passkeys…</div>
+      ) : passkeys.length === 0 ? (
+        <div className="card-dark rounded-xl p-6 text-center">
+          <div className="text-3xl mb-2">🔑</div>
+          <p className="text-sm text-white/50 mb-1">No passkeys registered</p>
+          <p className="text-xs text-white/30">Add a passkey to sign in with your fingerprint, Face ID, or device PIN.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {passkeys.map(pk => (
+            <div key={pk.id} className="card-dark rounded-xl px-4 py-3 flex items-center gap-3">
+              <div className="text-xl shrink-0">
+                {pk.deviceType === 'multiDevice' ? '☁️' : '📱'}
+              </div>
+              <div className="flex-1 min-w-0">
+                {renameId === pk.id ? (
+                  <div className="flex gap-2">
+                    <input
+                      autoFocus value={renameName}
+                      onChange={e => setRenameName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleRename(pk.id); if (e.key === 'Escape') setRenameId(''); }}
+                      className="flex-1 px-2 py-1 bg-white/5 border border-violet-500 rounded text-sm text-white focus:outline-none"
+                    />
+                    <button onClick={() => handleRename(pk.id)} className="text-xs text-violet-400 hover:text-violet-300">Save</button>
+                    <button onClick={() => setRenameId('')} className="text-xs text-white/40 hover:text-white/60">Cancel</button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white truncate">{String(pk.name)}</span>
+                    {pk.backedUp && <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded">synced</span>}
+                  </div>
+                )}
+                <div className="text-xs text-white/30 mt-0.5">
+                  Added {pk.createdAt ? new Date(Number(pk.createdAt)).toLocaleDateString() : '—'}
+                  {pk.lastUsedAt ? ` · Last used ${new Date(Number(pk.lastUsedAt)).toLocaleDateString()}` : ''}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => { setRenameId(pk.id); setRenameName(String(pk.name)); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors text-sm"
+                  title="Rename">✏️</button>
+                <button
+                  onClick={() => handleDelete(pk.id)}
+                  disabled={deleteId === pk.id}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                  title="Remove passkey">
+                  {deleteId === pk.id ? '…' : '🗑'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PasswordForm() {
   const [form, setForm]     = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError]   = useState('');
