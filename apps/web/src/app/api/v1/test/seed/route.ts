@@ -74,10 +74,21 @@ export async function POST(req: NextRequest) {
       const seedSearchId = 'seed-' + opportunityId;
       const grossMinor = saleMinor - landedMinor;
       const roiPct = srcMinor > 0 ? Math.round((netMinor / srcMinor) * 1000) / 10 : 0;
-      await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`, args: [productId, p.title, p.category, p.description, ts, ts] });
+      const imgUrl = `https://picsum.photos/seed/${productId.slice(0, 10)}/400/300`;
+      await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [productId, p.title, p.category, p.description, imgUrl, ts, ts] });
       await db.execute({ sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`, args: [opportunityId, seedSearchId, productId, marketplaceId, rec, conf, ts, ts] });
       await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, p.scores.demand, p.scores.competition, p.scores.margin, p.scores.trend, p.scores.shipping, p.scores.marketplaceFit, p.scores.saturation, ts, ts] });
       await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landedMinor, feeMinor, grossMinor, netMinor, Math.round(marginPct * 10) / 10, roiPct, ts, ts] });
+
+      // Sourcing candidates
+      const srcBases = ['Exports India', 'Traders Pvt Ltd'];
+      const cands = [
+        { name: `${p.category} ${srcBases[0]}`, source: 'indiamart', url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(p.title)}`, costM: srcMinor, moq: 50, lead: 21, feas: 'moderate' },
+        { name: `${p.category} ${srcBases[1]}`, source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(p.title.slice(0,40))}`, costM: Math.round(srcMinor * 0.88), moq: 100, lead: 35, feas: 'easy' },
+      ];
+      for (const c of cands) {
+        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, c.name, c.source, c.url, c.costM, c.moq, c.lead, c.feas, ts] });
+      }
 
       count++;
     }

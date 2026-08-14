@@ -77,6 +77,9 @@ export const api = {
     update: (id: string, data: any) => request<any>(`/marketplaces/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id: string) => request<{ success: boolean }>(`/marketplaces/${id}`, { method: 'DELETE' }),
   },
+  suppliers: {
+    list: () => request<any[]>('/suppliers'),
+  },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
       request<{ success: boolean }>('/settings/change-password', { method: 'POST', body: JSON.stringify(data) }),

@@ -45,6 +45,19 @@ interface AiProduct {
   };
 }
 
+function productImageUrl(productId: string): string {
+  return `https://picsum.photos/seed/${productId.slice(0, 10)}/400/300`;
+}
+
+function supplierName(category: string, idx: number): string {
+  const bases = ['Exports India', 'Traders Pvt Ltd', 'Manufacturing Co', 'Industries Ltd', 'Handicrafts'];
+  return `${category || 'Product'} ${bases[idx % bases.length]}`;
+}
+
+function indiamartSearchUrl(title: string): string {
+  return `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(title.slice(0, 60))}`;
+}
+
 function getUserId(req: NextRequest): string {
   try {
     const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
@@ -146,9 +159,10 @@ Return a JSON array only. No prose, no markdown.`;
       const netMinor = saleMinor - landedMinor - feeMinor;
       const marginPct = saleMinor > 0 ? (netMinor / saleMinor) * 100 : 0;
 
+      const imgUrl = productImageUrl(productId);
       await db.execute({
-        sql: `INSERT INTO "Product" (id, title, category, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), ts, ts],
+        sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), imgUrl, ts, ts],
       });
       await db.execute({
         sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`,
@@ -164,6 +178,18 @@ Return a JSON array only. No prose, no markdown.`;
         sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`,
         args: [profitId, opportunityId, sourceMinor, saleMinor, landedMinor, feeMinor, grossMinor, netMinor, Math.round(marginPct * 10) / 10, roiPct, ts, ts],
       });
+
+      // Insert 2 sourcing candidates per product
+      const candidateData = [
+        { name: supplierName(p.category, 0), source: 'indiamart', url: indiamartSearchUrl(p.title), costPct: 1.0, moq: 50, lead: 21, feas: 'moderate' },
+        { name: supplierName(p.category, 1), source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(p.title.slice(0,40))}`, costPct: 0.9, moq: 100, lead: 35, feas: 'easy' },
+      ];
+      for (const c of candidateData) {
+        await db.execute({
+          sql: `INSERT INTO "SourcingCandidate" (id, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [crypto.randomUUID(), opportunityId, c.name, c.source, c.url, Math.round(sourceMinor * c.costPct), c.moq, c.lead, c.feas, ts],
+        });
+      }
 
       count++;
     }

@@ -31,23 +31,16 @@ function FeasibilityBadge({ level }: { level: string }) {
 }
 
 export default function SuppliersPage() {
-  const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => api.opportunities.list({}),
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: () => api.suppliers.list(),
   });
-
-  const rows: any[] = [];
-  for (const opp of (opps as any[])) {
-    for (const sc of (opp.sourcingCandidates || [])) {
-      rows.push({ ...sc, opp });
-    }
-  }
 
   if (isLoading) return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Suppliers</h1>
-        <p className="text-sm text-white/40 mt-0.5 leading-snug">Sourcing candidates ranked by landed cost and feasibility</p>
+        <p className="text-sm text-white/40 mt-0.5">Sourcing candidates ranked by landed cost and feasibility</p>
       </div>
       <div className="space-y-3">
         {[1,2,3].map(i => (
@@ -62,26 +55,25 @@ export default function SuppliersPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Suppliers</h1>
-        <p className="text-sm text-white/40 mt-0.5 leading-snug">
-          Sourcing candidates ranked by landed cost and feasibility
+        <p className="text-sm text-white/40 mt-0.5">
+          Sourcing candidates ranked by cost · {(rows as any[]).length} suppliers found
         </p>
       </div>
 
-      {rows.length === 0 ? (
+      {(rows as any[]).length === 0 ? (
         <div className="card-dark rounded-xl p-12 sm:p-16 text-center">
           <div className="text-5xl mb-4">🏭</div>
           <p className="font-semibold text-white mb-1">No suppliers found yet</p>
-          <p className="text-sm text-white/40 mb-5">Discover supplier candidates by running a product search</p>
+          <p className="text-sm text-white/40 mb-5">Run a product search to discover Indian supplier candidates</p>
           <Link href="/opportunities" className="btn-primary text-sm">Find Suppliers →</Link>
         </div>
       ) : (
         <>
           {/* Mobile cards */}
           <div className="sm:hidden space-y-3">
-            {rows.map((sc: any) => (
+            {(rows as any[]).map((sc: any) => (
               <div key={sc.id} className="card-dark rounded-xl p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
@@ -96,18 +88,16 @@ export default function SuppliersPage() {
                     ) : (
                       <div className="font-semibold text-white text-sm leading-snug">{sc.supplier?.name}</div>
                     )}
-                    <div className="mt-1.5">
-                      <SourceBadge source={sc.supplier?.source} />
-                    </div>
+                    <div className="mt-1.5"><SourceBadge source={sc.supplier?.source} /></div>
                   </div>
                   <FeasibilityBadge level={sc.feasibility} />
                 </div>
-                <div className="text-xs text-white/40 mb-3 leading-snug truncate">{sc.opp.product?.title}</div>
+                <div className="text-xs text-white/40 mb-3 leading-snug truncate">{sc.opp?.product?.title}</div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'Cost', value: `₹${minor(sc.productCostMinor)}` },
-                    { label: 'MOQ',  value: sc.moq },
-                    { label: 'Lead', value: `${sc.leadTimeDays}d` },
+                    { label: 'Cost (₹)', value: minor(sc.productCostMinor) },
+                    { label: 'MOQ',      value: sc.moq },
+                    { label: 'Lead',     value: `${sc.leadTimeDays}d` },
                   ].map(({ label, value }) => (
                     <div key={label} className="bg-white/5 rounded-lg px-2 py-2 text-center">
                       <div className="text-[10px] leading-none text-white/30 mb-1">{label}</div>
@@ -115,6 +105,12 @@ export default function SuppliersPage() {
                     </div>
                   ))}
                 </div>
+                {sc.opp?.id && (
+                  <Link href={`/opportunities/${sc.opp.id}`}
+                    className="block mt-3 text-xs text-center text-violet-400 hover:underline font-medium">
+                    View Opportunity →
+                  </Link>
+                )}
               </div>
             ))}
           </div>
@@ -125,7 +121,7 @@ export default function SuppliersPage() {
               <table className="w-full text-sm min-w-[640px]">
                 <thead className="bg-white/5 border-b border-white/10">
                   <tr>
-                    {['Supplier','Source','Product','Cost (INR)','MOQ','Lead','Feasibility',''].map((h, i) => (
+                    {['Supplier', 'Source', 'Product', 'Cost (INR)', 'MOQ', 'Lead Time', 'Feasibility', ''].map((h, i) => (
                       <th key={i} className={`px-4 py-3.5 font-semibold text-xs text-white/40 uppercase tracking-wide ${i >= 3 && i <= 5 ? 'text-right' : i === 6 ? 'text-center' : 'text-left'}`}>
                         {h}
                       </th>
@@ -133,7 +129,7 @@ export default function SuppliersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {rows.map((sc: any) => (
+                  {(rows as any[]).map((sc: any) => (
                     <tr key={sc.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-3.5">
                         {sc.supplier?.sourceUrl ? (
@@ -145,24 +141,22 @@ export default function SuppliersPage() {
                             </svg>
                           </a>
                         ) : (
-                          <span className="font-medium text-white leading-snug">{sc.supplier?.name}</span>
+                          <span className="font-medium text-white">{sc.supplier?.name}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5">
-                        <SourceBadge source={sc.supplier?.source} />
-                      </td>
-                      <td className="px-4 py-3.5 text-xs text-white/50 max-w-[200px] truncate leading-snug">{sc.opp.product?.title}</td>
+                      <td className="px-4 py-3.5"><SourceBadge source={sc.supplier?.source} /></td>
+                      <td className="px-4 py-3.5 text-xs text-white/50 max-w-[200px] truncate">{sc.opp?.product?.title}</td>
                       <td className="px-4 py-3.5 text-right text-white/80 font-medium">{minor(sc.productCostMinor)}</td>
                       <td className="px-4 py-3.5 text-right text-white/80">{sc.moq}</td>
                       <td className="px-4 py-3.5 text-right text-white/80">{sc.leadTimeDays}d</td>
-                      <td className="px-4 py-3.5 text-center">
-                        <FeasibilityBadge level={sc.feasibility} />
-                      </td>
+                      <td className="px-4 py-3.5 text-center"><FeasibilityBadge level={sc.feasibility} /></td>
                       <td className="px-4 py-3.5">
-                        <Link href={`/opportunities/${sc.opp.id}`}
-                          className="text-xs text-violet-400 hover:underline whitespace-nowrap font-medium">
-                          View →
-                        </Link>
+                        {sc.opp?.id && (
+                          <Link href={`/opportunities/${sc.opp.id}`}
+                            className="text-xs text-violet-400 hover:underline whitespace-nowrap font-medium">
+                            View →
+                          </Link>
+                        )}
                       </td>
                     </tr>
                   ))}

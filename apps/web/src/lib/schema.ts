@@ -75,6 +75,13 @@ const TABLES = [
     id TEXT PRIMARY KEY, provider TEXT UNIQUE NOT NULL, encryptedKey TEXT NOT NULL,
     createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS "ListingAsset" (
+    id TEXT PRIMARY KEY, opportunityId TEXT UNIQUE NOT NULL,
+    seoTitle TEXT DEFAULT '', bullets TEXT DEFAULT '[]',
+    description TEXT DEFAULT '', keywords TEXT DEFAULT '{}',
+    positioning TEXT DEFAULT '', createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 // Columns added to existing tables — SQLite has no ALTER TABLE ADD COLUMN IF NOT EXISTS,
