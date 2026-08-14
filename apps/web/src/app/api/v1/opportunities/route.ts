@@ -50,12 +50,14 @@ export async function GET(req: NextRequest) {
       const fees    = Number(r.pmFees   ?? 0);
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
+      // Derive imageUrl from productId if the column is empty (pre-fix rows)
+      const imageUrl = (r.pImageUrl as string) || `https://picsum.photos/seed/${String(r.pId).slice(0, 10)}/400/300`;
 
       return {
         id: r.id, status: r.status, recommendation: r.recommendation,
         confidence: r.confidence, createdAt: r.oCreatedAt,
         product: {
-          id: r.pId, title: r.pTitle, category: r.pCategory, imageUrl: r.pImageUrl,
+          id: r.pId, title: r.pTitle, category: r.pCategory, imageUrl,
         },
         marketplace: {
           id: r.mId, code: r.mCode, country: r.mCountry, currency: r.mCurrency,

@@ -2,7 +2,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import Image from 'next/image';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getMarketplaceDef, getMarketplaceSearchUrl } from '@/lib/marketplace';
@@ -24,6 +23,20 @@ function MarketplaceBadge({ code, href }: { code: string; href: string }) {
       </svg>
     </a>
   );
+}
+
+function trendSource(code: string): { icon: string; label: string; color: string } {
+  if (!code) return { icon: '📊', label: 'Market Trend', color: '#7c3aed' };
+  if (code.startsWith('tiktok'))  return { icon: '📱', label: 'TikTok Viral', color: '#ff2d55' };
+  if (code.startsWith('etsy'))    return { icon: '🎨', label: 'Etsy Curated', color: '#f1641e' };
+  if (code.startsWith('amazon'))  return { icon: '🔍', label: 'Amazon Search', color: '#ff9900' };
+  if (code.startsWith('ebay'))    return { icon: '🔍', label: 'eBay Search', color: '#0064d2' };
+  if (code.startsWith('walmart')) return { icon: '💲', label: 'Walmart Value', color: '#0071ce' };
+  if (code.startsWith('temu'))    return { icon: '💲', label: 'Temu Value', color: '#ff6900' };
+  if (code.startsWith('shopee') || code.startsWith('lazada')) return { icon: '🌏', label: 'SEA Trend', color: '#ee4d2d' };
+  if (code.startsWith('noon'))    return { icon: '🌙', label: 'Noon ME', color: '#ffcc00' };
+  if (code.startsWith('flipkart') || code.startsWith('meesho')) return { icon: '🇮🇳', label: 'India Trend', color: '#047bd5' };
+  return { icon: '📊', label: 'Market Trend', color: '#7c3aed' };
 }
 
 function ImagePlaceholder({ title, category }: { title?: string; category?: string }) {
@@ -51,18 +64,23 @@ function ProductCard({ opp }: { opp: any }) {
   const listingHref = product.marketplaceUrl || getMarketplaceSearchUrl(marketplace.code, product.title);
   const m          = getMarketplaceDef(marketplace.code);
   const showImage  = !!product.imageUrl && !imgError;
+  const ts         = trendSource(marketplace.code);
 
   return (
     <div className="card-dark rounded-xl overflow-hidden flex flex-col hover:border-violet-500/30 transition-all duration-200 hover:shadow-lg hover:shadow-violet-500/10">
-      <div className="relative w-full h-44 bg-white/5 flex-shrink-0">
+      <div className="relative w-full h-44 bg-white/5 flex-shrink-0 overflow-hidden">
         {showImage ? (
-          <Image src={product.imageUrl} alt={product.title ?? 'Product'} fill
-            className="object-cover" onError={() => setImgError(true)}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            unoptimized />
+          // plain img tag — bypasses Next.js image domain restrictions
+          <img src={product.imageUrl} alt={product.title ?? 'Product'}
+            className="w-full h-full object-cover" onError={() => setImgError(true)} />
         ) : (
           <ImagePlaceholder title={product.title} category={product.category} />
         )}
+        {/* Trend source badge — top-left */}
+        <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] leading-none font-semibold px-2 py-1 rounded-full backdrop-blur-sm bg-black/50 border border-white/10"
+          style={{ color: ts.color }}>
+          {ts.icon} {ts.label}
+        </span>
         {opp.confidence >= 85 && (
           <span className="absolute top-2 right-2 flex items-center gap-0.5 bg-green-500 text-white text-[9px] leading-none font-bold px-1.5 py-1 rounded-full shadow">
             <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
