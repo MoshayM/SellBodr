@@ -193,13 +193,35 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
           </div>
         )}
 
-        {/* AI Attribution */}
-        <div className="mt-3 flex items-center gap-2 text-[10px] text-white/25">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
-          <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
-          <span className="text-white/15">·</span>
-          <span>Validated by 2 AI models (Llama-3.1 + Mixtral)</span>
-        </div>
+        {/* AI Attribution — parse consensus from stored product description */}
+        {(() => {
+          const desc = (opp.product?.description ?? '') as string;
+          const consensusMatch = desc.match(/Consensus: ([^|]+)/);
+          const consensusText  = consensusMatch ? consensusMatch[1].trim() : null;
+          const providerCount  = consensusText ? consensusText.split('+').length : 1;
+          return (
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center gap-2 text-[10px] text-white/25">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
+                <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
+                {providerCount > 1 && (
+                  <>
+                    <span className="text-white/15">·</span>
+                    <span className="text-emerald-500/60 font-medium">✓ {providerCount} models agreed</span>
+                  </>
+                )}
+              </div>
+              {consensusText && (
+                <div className="text-[10px] text-white/20 pl-3.5">
+                  Discovery: {consensusText} · Validation: independent model
+                </div>
+              )}
+              {!consensusText && (
+                <div className="text-[10px] text-white/20 pl-3.5">AI analysis · confidence may be lower without multi-model consensus</div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Cost Waterfall ──────────────────────────────────────────────────── */}

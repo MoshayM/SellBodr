@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
-import { groqJSON, MODELS } from '@/lib/ai/gateway';
+import { callAllProviders, callBestValidator, titleSimilarity, Provider } from '@/lib/ai/gateway';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -13,8 +13,8 @@ function oppScore(s: Record<string, number>): number {
   let base = s.demand * W.demand + s.margin * W.margin + s.competition * W.competition +
              s.trend * W.trend + s.marketplaceFit * W.marketplaceFit + s.shipping * W.shipping +
              s.saturation * W.saturation;
-  if (s.margin < 30)       base = Math.min(base, 49);
-  if (s.shipping < 25)     base = Math.min(base, 55);
+  if (s.margin < 30)         base = Math.min(base, 49);
+  if (s.shipping < 25)       base = Math.min(base, 55);
   if (s.marketplaceFit < 30) base = Math.min(base, 45);
   return Math.round(Math.min(100, Math.max(0, base)));
 }
@@ -25,7 +25,7 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── Image URL (keyword-based via loremflickr) ─────────────────────────────────
+// ── Image URL (keyword-based loremflickr) ────────────────────────────────────
 function productImageUrl(productId: string, title: string, category: string): string {
   const raw = (title || category || 'product').toLowerCase();
   const keywords = raw.replace(/[^a-z\s]/g, '').split(/\s+/)
@@ -35,41 +35,40 @@ function productImageUrl(productId: string, title: string, category: string): st
   return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
 }
 
-// ── Realistic Indian supplier names with city clusters ────────────────────────
+// ── Supplier name with Indian city clusters ───────────────────────────────────
 const CITY_MAP: Record<string, string[]> = {
-  'home decor':      ['Moradabad', 'Jodhpur', 'Jaipur'],
-  'handicraft':      ['Jaipur', 'Agra', 'Varanasi'],
-  'textile':         ['Surat', 'Tiruppur', 'Ludhiana'],
-  'fashion':         ['Surat', 'Mumbai', 'Kolkata'],
-  'health':          ['Mumbai', 'Ahmedabad', 'Pune'],
-  'beauty':          ['Mumbai', 'Kannauj', 'Bangalore'],
-  'electronics':     ['Noida', 'Chennai', 'Hyderabad'],
-  'food':            ['Delhi', 'Amritsar', 'Pune'],
-  'sports':          ['Jalandhar', 'Meerut', 'Ludhiana'],
-  'fitness':         ['Jalandhar', 'Meerut', 'Ludhiana'],
-  'kitchenware':     ['Moradabad', 'Delhi', 'Mumbai'],
-  'jewellery':       ['Jaipur', 'Surat', 'Mumbai'],
-  'jewelry':         ['Jaipur', 'Surat', 'Mumbai'],
-  'leather':         ['Agra', 'Kanpur', 'Chennai'],
-  'wood':            ['Jodhpur', 'Saharanpur', 'Nagpur'],
-  'marble':          ['Rajasthan', 'Agra', 'Udaipur'],
+  'home decor':  ['Moradabad', 'Jodhpur', 'Jaipur'],
+  'handicraft':  ['Jaipur', 'Agra', 'Varanasi'],
+  'textile':     ['Surat', 'Tiruppur', 'Ludhiana'],
+  'fashion':     ['Surat', 'Mumbai', 'Kolkata'],
+  'health':      ['Mumbai', 'Ahmedabad', 'Pune'],
+  'beauty':      ['Mumbai', 'Kannauj', 'Bangalore'],
+  'electronics': ['Noida', 'Chennai', 'Hyderabad'],
+  'food':        ['Delhi', 'Amritsar', 'Pune'],
+  'sports':      ['Jalandhar', 'Meerut', 'Ludhiana'],
+  'fitness':     ['Jalandhar', 'Meerut', 'Ludhiana'],
+  'kitchen':     ['Moradabad', 'Delhi', 'Mumbai'],
+  'jewellery':   ['Jaipur', 'Surat', 'Mumbai'],
+  'jewelry':     ['Jaipur', 'Surat', 'Mumbai'],
+  'leather':     ['Agra', 'Kanpur', 'Chennai'],
+  'wood':        ['Jodhpur', 'Saharanpur', 'Nagpur'],
 };
 const SUFFIXES = ['Exports Pvt Ltd', 'Industries Ltd', 'Trading Co', 'Crafts Pvt Ltd', 'Manufacturers', 'International'];
-const PLATFORMS = [
-  { source: 'indiamart', suffix: 0 },
-  { source: 'alibaba',   suffix: 3 },
-];
 
 function supplierCity(category: string): string {
   const cat = (category || '').toLowerCase();
   for (const [key, cities] of Object.entries(CITY_MAP)) {
-    if (cat.includes(key)) return cities[Math.floor(Math.random() * cities.length)];
+    if (cat.includes(key)) {
+      const idx = Math.abs(cat.charCodeAt(0) + cat.length) % cities.length;
+      return cities[idx];
+    }
   }
-  return ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata'][Math.floor(Math.random() * 5)];
+  const fallbacks = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata'];
+  return fallbacks[Math.abs((category || '').charCodeAt(0) ?? 0) % fallbacks.length];
 }
 
 function supplierName(title: string, category: string, idx: number): string {
-  const city = supplierCity(category);
+  const city    = supplierCity(category);
   const keyword = (title || category || 'Product').split(' ').slice(0, 2).join(' ');
   return `${city} ${keyword} ${SUFFIXES[idx % SUFFIXES.length]}`;
 }
@@ -85,35 +84,172 @@ function getUserId(req: NextRequest): string {
 
 // ── AI types ──────────────────────────────────────────────────────────────────
 
-interface Stage1Product {
-  title: string;
-  category: string;
-  description: string;
-  sourcePriceUSD: number;
-  salePriceUSD: number;
-  evidenceBasis: string;    // WHY this product — referenced trend signals, seasonality, demand drivers
-  indiaManufacturing: 'easy' | 'moderate' | 'hard';
+interface AiCandidate {
+  title:               string;
+  category:            string;
+  description:         string;
+  sourcePriceUSD:      number;
+  salePriceUSD:        number;
+  evidenceBasis:       string;
+  indiaManufacturing:  'easy' | 'moderate' | 'hard';
   scores: {
     demand: number; competition: number; margin: number;
     trend: number; marketplaceFit: number; shipping: number; saturation: number;
   };
 }
 
-interface Stage2Verdict {
-  title: string;           // matches stage1 product title for pairing
-  validationScore: number; // 0-100: how credible/realistic is this opportunity
-  adjustedConfidence: number; // 50-95: final confidence percentage
-  flags: string[];         // any red flags found (e.g. "competition likely understated")
-  verdict: 'pass' | 'reject';
+interface MergedCandidate extends AiCandidate {
+  providerCount: number;
+  providerNames: string[];
+  avgQuality:    number;
+  scoreVariance: number;
+}
+
+interface ValidationVerdict {
+  title:              string;
+  validationScore:    number;
+  adjustedConfidence: number;
+  flags:              string[];
+  verdict:            'pass' | 'reject';
+}
+
+// ── Ensemble helpers ──────────────────────────────────────────────────────────
+
+function mergeProviderResults(
+  providerResults: Array<{ provider: Provider; result: AiCandidate[] }>
+): MergedCandidate[] {
+  const groups: Array<{ candidates: AiCandidate[]; providers: Provider[] }> = [];
+
+  for (const { provider, result } of providerResults) {
+    if (!Array.isArray(result)) continue;
+    for (const candidate of result) {
+      if (!candidate?.title) continue;
+      const existing = groups.find(g =>
+        g.candidates.some(c => titleSimilarity(c.title, candidate.title) >= 0.4)
+      );
+      if (existing) {
+        existing.candidates.push(candidate);
+        existing.providers.push(provider);
+      } else {
+        groups.push({ candidates: [candidate], providers: [provider] });
+      }
+    }
+  }
+
+  return groups.map(group => {
+    const totalQ   = group.providers.reduce((s, p) => s + p.quality, 0);
+    const wavg     = (f: string) =>
+      group.candidates.reduce((s, c, i) => s + (c as any).scores[f] * group.providers[i].quality, 0) / totalQ;
+    const demands  = group.candidates.map(c => c.scores.demand);
+    const mean     = demands.reduce((a, b) => a + b, 0) / demands.length;
+    const variance = demands.length > 1
+      ? demands.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / demands.length : 0;
+    const bestIdx  = group.providers.reduce((bi, p, i) => p.quality > group.providers[bi].quality ? i : bi, 0);
+    return {
+      ...group.candidates[bestIdx],
+      scores: {
+        demand:         Math.round(wavg('demand')),
+        competition:    Math.round(wavg('competition')),
+        margin:         Math.round(wavg('margin')),
+        trend:          Math.round(wavg('trend')),
+        marketplaceFit: Math.round(wavg('marketplaceFit')),
+        shipping:       Math.round(wavg('shipping')),
+        saturation:     Math.round(wavg('saturation')),
+      },
+      providerCount:  group.providers.length,
+      providerNames:  [...new Set(group.providers.map(p => p.name))],
+      avgQuality:     totalQ / group.providers.length,
+      scoreVariance:  Math.round(variance),
+    };
+  });
+}
+
+function consensusConfidence(c: MergedCandidate, validationScore: number): number {
+  const baseQ          = Math.round(c.avgQuality * 90);
+  const consensusBonus = (c.providerCount - 1) * 8;
+  const variancePenalty = c.scoreVariance > 200 ? -10 : 0;
+  const raw = (baseQ + consensusBonus + variancePenalty) * (validationScore / 100);
+  return Math.min(95, Math.max(45, Math.round(raw)));
+}
+
+// ── Prompts ───────────────────────────────────────────────────────────────────
+
+function discoveryPrompt(mpName: string, today: string, month: string, year: number): string {
+  return `You are a cross-border eCommerce data analyst specialising in India-to-global exports. Today: ${today} (${month} ${year}).
+
+Find exactly 10 products with HIGH opportunity on ${mpName} RIGHT NOW.
+
+Criteria:
+- Strong search/purchase demand on ${mpName} in ${month} ${year}
+- India manufacturing advantage (cost, craftsmanship, raw material access)
+- Price gap: India source cost ≪ platform sale price after fees
+- Not yet oversaturated on ${mpName}
+
+For EACH product return:
+{
+  "title": "specific product name (not generic)",
+  "category": "product category",
+  "description": "2 sentences — what it is and why buyers want it now",
+  "sourcePriceUSD": <realistic India source cost USD>,
+  "salePriceUSD": <realistic ${mpName} sale price USD>,
+  "evidenceBasis": "specific signals — seasonal demand, rising social mentions, supply gap vs China, etc.",
+  "indiaManufacturing": "easy|moderate|hard",
+  "scores": {
+    "demand": <0-100 buyer demand>,
+    "competition": <0-100, 100=low competition>,
+    "margin": <0-100 profit quality>,
+    "trend": <0-100 trend strength right now>,
+    "marketplaceFit": <0-100 platform suitability>,
+    "shipping": <0-100 ease of shipping from India>,
+    "saturation": <0-100, 100=not yet saturated>
+  }
+}
+
+CALIBRATION: 50-70=average. 70-85=strong. 85+=exceptional only.
+Never assign 90+ without unmistakable evidence. Source price must be ≥40% below sale price.
+Return JSON array only. No markdown.`;
+}
+
+function validationPrompt(mpName: string, month: string, year: number, candidates: MergedCandidate[]): string {
+  return `You are a critical eCommerce analyst. Challenge and validate these AI-generated product opportunities for ${mpName} in ${month} ${year}.
+
+For each candidate assess:
+1. Does India ACTUALLY manufacture this competitively?
+2. Are demand/competition/margin scores realistic?
+3. Is the price spread plausible after marketplace fees + FBA + shipping?
+4. Is this a genuine current trend or generic filler?
+
+Note: products with agreedByProviders > 1 had independent model consensus — give them appropriate benefit of the doubt.
+
+Candidates:
+${JSON.stringify(candidates.map(c => ({
+  title: c.title, category: c.category,
+  sourcePriceUSD: c.sourcePriceUSD, salePriceUSD: c.salePriceUSD,
+  scores: c.scores, evidenceBasis: c.evidenceBasis,
+  indiaManufacturing: c.indiaManufacturing,
+  agreedByProviders: c.providerCount,
+})), null, 2)}
+
+For EACH output:
+{
+  "title": "<exact title from input>",
+  "validationScore": <0-100 realism/plausibility>,
+  "adjustedConfidence": <50-95 user-facing confidence %>,
+  "flags": ["concern if any — empty array if clean"],
+  "verdict": "pass|reject"
+}
+
+Pass ≤8 total. Prefer diverse categories. Reject: implausible price spreads, India can't make it, inflated scores.
+Return JSON array only.`;
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
-    const body       = await req.json().catch(() => ({}));
-    const marketplace: string = body.marketplace || 'amazon_us';
-    const userId     = getUserId(req);
+    const body        = await req.json().catch(() => ({}));
+    const marketplace = (body.marketplace || 'amazon_us') as string;
+    const userId      = getUserId(req);
 
     const db = getDb();
     await ensureSchema(db);
@@ -130,179 +266,131 @@ export async function POST(req: NextRequest) {
       args: [searchId, userId, marketplace, now, now],
     });
 
-    // ── Stage 1: Discovery (FLASH — fast, high throughput) ────────────────────
-    // Asks for evidence-based reasoning so the model must justify each score.
-    const stage1Prompt = `You are a cross-border eCommerce data analyst. Today is ${today} (${month} ${year}).
+    // ── Stage 1: Parallel multi-provider discovery ────────────────────────────
+    const discMsgs = [
+      { role: 'system' as const, content: 'Return only valid JSON arrays. No markdown, no explanation.' },
+      { role: 'user'   as const, content: discoveryPrompt(mpName, today, month, year) },
+    ];
 
-Identify exactly 12 India-sourced products with STRONG cross-border opportunity on ${mpName} RIGHT NOW in ${month} ${year}.
-
-Base each pick on:
-- Seasonal demand peaks for ${month} in the target region
-- Rising search/social trends on ${mpName} platform
-- India manufacturing advantage (cost, craftsmanship, raw material access)
-- Current supply gaps on ${mpName}
-
-For EACH product output a JSON object:
-{
-  "title": "specific product name",
-  "category": "product category",
-  "description": "2-sentence product description",
-  "sourcePriceUSD": <realistic India sourcing cost, USD>,
-  "salePriceUSD": <realistic ${mpName} sale price, USD>,
-  "evidenceBasis": "cite specific trend signals — e.g. 'Diwali gifting season drives demand in Sep-Oct; brass home decor from Moradabad competes with Chinese imports at 40% lower cost'",
-  "indiaManufacturing": "easy|moderate|hard",
-  "scores": {
-    "demand": <0-100>,        // actual search/buy volume this month
-    "competition": <0-100>,   // 100=low competition on ${mpName}
-    "margin": <0-100>,        // profit margin quality
-    "trend": <0-100>,         // 100=strongly rising trend right now
-    "marketplaceFit": <0-100>,// suitability for ${mpName} rules + buyers
-    "shipping": <0-100>,      // 100=easy to ship from India
-    "saturation": <0-100>     // 100=not yet saturated
-  }
-}
-
-STRICT rules:
-- Do NOT assign 90+ scores unless the evidence clearly justifies it
-- sourcePriceUSD must be at least 40% below salePriceUSD after fees
-- Only include products that India genuinely manufactures competitively
-- Be CALIBRATED: use scores 50-75 for average, 75-90 for strong, 90+ only for exceptional
-
-Return a JSON array only. No markdown, no explanation.`;
-
-    let stage1: Stage1Product[] = [];
+    let providerResults: Array<{ provider: Provider; result: AiCandidate[] }> = [];
     try {
-      stage1 = await groqJSON<Stage1Product[]>(MODELS.FLASH, [
-        { role: 'system', content: 'Return only valid JSON arrays. No markdown, no explanation.' },
-        { role: 'user',   content: stage1Prompt },
-      ], { maxTokens: 3000 });
-    } catch (aiErr) {
-      await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage=?, updatedAt=? WHERE id=?`, args: [String(aiErr).slice(0, 500), Date.now(), searchId] });
-      return NextResponse.json({ error: 'AI pipeline stage 1 failed', searchId }, { status: 502 });
+      providerResults = await callAllProviders<AiCandidate[]>(discMsgs, { maxTokens: 3000 });
+    } catch (err) {
+      await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage=?, updatedAt=? WHERE id=?`, args: [String(err).slice(0, 400), Date.now(), searchId] });
+      return NextResponse.json({ error: String(err), searchId }, { status: 502 });
     }
 
-    if (!Array.isArray(stage1) || stage1.length === 0) {
-      await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage='No candidates from stage 1', updatedAt=? WHERE id=?`, args: [Date.now(), searchId] });
-      return NextResponse.json({ error: 'No products returned', searchId }, { status: 502 });
+    if (providerResults.length === 0) {
+      await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage='All AI providers failed', updatedAt=? WHERE id=?`, args: [Date.now(), searchId] });
+      return NextResponse.json({ error: 'No AI providers responded — set GROQ_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY', searchId }, { status: 502 });
     }
 
-    // ── Stage 2: Validation (BALANCED — critical reasoning) ───────────────────
-    // Independent model acts as a skeptical analyst to catch hallucinations.
-    const stage2Prompt = `You are a critical eCommerce market analyst reviewing AI-generated product opportunities for ${mpName} in ${month} ${year}.
+    // ── Stage 2: Merge + consensus scoring ────────────────────────────────────
+    const merged = mergeProviderResults(providerResults);
+    merged.sort((a, b) => b.providerCount - a.providerCount || b.avgQuality - a.avgQuality);
+    const top24 = merged.slice(0, 24);
 
-Below are ${stage1.length} product candidates. Your job is to CRITICALLY VALIDATE each one:
-1. Is this product actually manufactured competitively in India? (flag if not)
-2. Are the scores realistic? (flag if demand/competition/margin look inflated)
-3. Is the source-to-sale price spread realistic after shipping + fees? (flag if not)
-4. Is this a genuine ${month} ${year} trend or a generic evergreen pick?
+    // ── Stage 3: Cross-model validation ───────────────────────────────────────
+    const valMsgs = [
+      { role: 'system' as const, content: 'Return only valid JSON arrays. No markdown, no explanation.' },
+      { role: 'user'   as const, content: validationPrompt(mpName, month, year, top24) },
+    ];
 
-Products to validate:
-${JSON.stringify(stage1.map(p => ({ title: p.title, category: p.category, sourcePriceUSD: p.sourcePriceUSD, salePriceUSD: p.salePriceUSD, scores: p.scores, evidenceBasis: p.evidenceBasis, indiaManufacturing: p.indiaManufacturing })), null, 2)}
+    let verdicts: ValidationVerdict[] = [];
+    let validatorName = 'conservative-fallback';
 
-For EACH product return:
-{
-  "title": "<exact title from input>",
-  "validationScore": <0-100, your confidence this is a real opportunity>,
-  "adjustedConfidence": <50-95, final confidence percentage for the user to see>,
-  "flags": ["list of concerns, empty array if none"],
-  "verdict": "pass|reject"
-}
+    const valResult = await callBestValidator<ValidationVerdict[]>(
+      providerResults.map(r => r.provider.id),
+      valMsgs,
+      { maxTokens: 2000 },
+    );
 
-Reject products that: have implausible price spreads, India cannot realistically manufacture, or have clearly inflated scores.
-Pass at most 8 products. Prefer diversity of categories.
-
-Return a JSON array only.`;
-
-    let stage2: Stage2Verdict[] = [];
-    try {
-      stage2 = await groqJSON<Stage2Verdict[]>(MODELS.BALANCED, [
-        { role: 'system', content: 'Return only valid JSON arrays. No markdown, no explanation.' },
-        { role: 'user',   content: stage2Prompt },
-      ], { maxTokens: 2000 });
-    } catch {
-      // If stage 2 fails, fall back to stage 1 results with moderate confidence
-      stage2 = stage1.map(p => ({ title: p.title, validationScore: 65, adjustedConfidence: 65, flags: [], verdict: 'pass' as const }));
+    if (valResult && Array.isArray(valResult.result)) {
+      verdicts      = valResult.result;
+      validatorName = valResult.provider.name;
+    } else {
+      verdicts = top24.map(c => ({
+        title: c.title, validationScore: 60, adjustedConfidence: 62,
+        flags: ['Validation unavailable — conservative defaults applied'], verdict: 'pass' as const,
+      }));
     }
 
-    // Pair verdicts with stage1 products
-    const verdictMap = new Map(stage2.map(v => [v.title.toLowerCase().trim(), v]));
-    const validated = stage1
-      .map(p => {
-        const v = verdictMap.get(p.title.toLowerCase().trim()) ?? { validationScore: 50, adjustedConfidence: 58, flags: [], verdict: 'pass' as const };
-        return { ...p, validation: v };
+    // ── Stage 4: Final selection ──────────────────────────────────────────────
+    const verdictMap = new Map(verdicts.map(v => [v.title.toLowerCase().trim(), v]));
+    const finalList  = top24
+      .map(c => {
+        const v = verdictMap.get(c.title.toLowerCase().trim()) ?? {
+          validationScore: 55, adjustedConfidence: 60, flags: [], verdict: 'pass' as const,
+        };
+        return { ...c, verdict: v, finalConfidence: consensusConfidence(c, v.validationScore) };
       })
-      .filter(p => p.validation.verdict !== 'reject' && p.validation.validationScore >= 50)
-      .sort((a, b) => b.validation.validationScore - a.validation.validationScore)
+      .filter(c => c.verdict.verdict !== 'reject' && c.verdict.validationScore >= 50)
+      .sort((a, b) => b.finalConfidence - a.finalConfidence || b.providerCount - a.providerCount)
       .slice(0, 8);
 
-    if (validated.length === 0) {
-      await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage='All products rejected by validation', updatedAt=? WHERE id=?`, args: [Date.now(), searchId] });
-      return NextResponse.json({ error: 'No products passed validation', searchId }, { status: 502 });
-    }
-
-    // Find marketplace row
+    // ── Persist to DB ─────────────────────────────────────────────────────────
     const mpRow = await db.execute({ sql: `SELECT id FROM "Marketplace" WHERE code=? LIMIT 1`, args: [marketplace] });
-    const marketplaceId: string = mpRow.rows[0]?.id as string ?? '';
+    const marketplaceId = mpRow.rows[0]?.id as string ?? '';
 
     let count = 0;
-    for (const p of validated) {
-      if (!p.title) continue;
+    for (const c of finalList) {
+      if (!c.title) continue;
 
       const productId     = crypto.randomUUID();
       const opportunityId = crypto.randomUUID();
-      const scoreId       = crypto.randomUUID();
-      const profitId      = crypto.randomUUID();
       const ts            = Date.now();
+      const oScore        = oppScore(c.scores);
+      const rec           = recommend(oScore, c.scores.margin);
 
-      const scores      = p.scores ?? { demand: 60, competition: 60, margin: 60, trend: 60, marketplaceFit: 60, shipping: 60, saturation: 60 };
-      const oScore      = oppScore(scores);
-      const rec         = recommend(oScore, scores.margin);
-      // Use validated confidence instead of simple score-based mapping
-      const conf        = Math.min(95, Math.max(45, p.validation.adjustedConfidence));
+      const srcMinor  = Math.round((c.sourcePriceUSD ?? 10) * 100);
+      const saleMinor = Math.round((c.salePriceUSD  ?? 30) * 100);
+      const feeMinor  = Math.round(saleMinor * 0.15);
+      const overhead  = Math.round(srcMinor * 0.30);
+      const landed    = srcMinor + overhead;
+      const net       = saleMinor - landed - feeMinor;
+      const margin    = saleMinor > 0 ? (net / saleMinor) * 100 : 0;
+      const roi       = srcMinor  > 0 ? (net / srcMinor)  * 100 : 0;
 
-      const sourceMinor   = Math.round((p.sourcePriceUSD ?? 10) * 100);
-      const saleMinor     = Math.round((p.salePriceUSD  ?? 30) * 100);
-      const feeMinor      = Math.round(saleMinor * 0.15);
-      const shippingMinor = Math.round(sourceMinor * 0.30);
-      const landedMinor   = sourceMinor + shippingMinor;
-      const netMinor      = saleMinor - landedMinor - feeMinor;
-      const marginPct     = saleMinor > 0 ? (netMinor / saleMinor) * 100 : 0;
-      const grossMinor    = saleMinor - landedMinor;
-      const roiPct        = sourceMinor > 0 ? Math.round((netMinor / sourceMinor) * 1000) / 10 : 0;
+      const imgUrl = productImageUrl(productId, c.title, c.category ?? '');
 
-      const imgUrl = productImageUrl(productId, p.title, p.category ?? '');
+      const desc = [
+        c.description ?? '',
+        `Evidence: ${c.evidenceBasis ?? 'Multi-model market analysis'}`,
+        c.providerCount > 1 ? `Consensus: ${c.providerNames.join(' + ')}` : '',
+        c.verdict.flags.length ? `Note: ${c.verdict.flags.join('; ')}` : '',
+      ].filter(Boolean).join(' | ').slice(0, 1000);
 
-      // Include evidence basis and validation flags in description for UI display
-      const fullDesc = [
-        p.description ?? '',
-        `Evidence: ${p.evidenceBasis ?? 'AI market analysis'}`,
-        p.validation.flags.length > 0 ? `Note: ${p.validation.flags.join('; ')}` : '',
-      ].filter(Boolean).join(' | ');
+      await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [productId, c.title.slice(0, 200), (c.category ?? '').slice(0, 100), desc, imgUrl, ts, ts] });
+      await db.execute({ sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`, args: [opportunityId, searchId, productId, marketplaceId, rec, c.finalConfidence, ts, ts] });
+      await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, c.scores.demand, c.scores.competition, c.scores.margin, c.scores.trend, c.scores.shipping, c.scores.marketplaceFit, c.scores.saturation, ts, ts] });
+      await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landed, feeMinor, saleMinor - landed, net, Math.round(margin * 10) / 10, Math.round(roi * 10) / 10, ts, ts] });
 
-      await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, imageUrl, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), fullDesc.slice(0, 1000), imgUrl, ts, ts] });
-      await db.execute({ sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`, args: [opportunityId, searchId, productId, marketplaceId, rec, conf, ts, ts] });
-      await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [scoreId, opportunityId, oScore, scores.demand, scores.competition, scores.margin, scores.trend, scores.shipping, scores.marketplaceFit, scores.saturation, ts, ts] });
-      await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [profitId, opportunityId, sourceMinor, saleMinor, landedMinor, feeMinor, grossMinor, netMinor, Math.round(marginPct * 10) / 10, roiPct, ts, ts] });
-
-      // Sourcing candidates with realistic Indian city-based names
       const cands = [
-        { name: supplierName(p.title, p.category, 0), source: 'indiamart', url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(p.title.slice(0, 60))}`, costPct: 1.0, moq: 50,  lead: 21, feas: p.indiaManufacturing === 'easy' ? 'easy' : 'moderate' },
-        { name: supplierName(p.title, p.category, 3), source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(p.title.slice(0, 40))}`, costPct: 0.88, moq: 100, lead: 35, feas: 'easy' },
+        { name: supplierName(c.title, c.category, 0), source: 'indiamart', url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(c.title.slice(0, 60))}`, pct: 1.00, moq: 50,  lead: 21, feas: c.indiaManufacturing === 'easy' ? 'easy' : 'moderate' },
+        { name: supplierName(c.title, c.category, 3), source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(c.title.slice(0, 40))}`, pct: 0.88, moq: 100, lead: 35, feas: 'easy' },
       ];
-      for (const c of cands) {
-        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, c.name, c.source, c.url, Math.round(sourceMinor * c.costPct), c.moq, c.lead, c.feas, ts] });
+      for (const s of cands) {
+        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, s.name, s.source, s.url, Math.round(srcMinor * s.pct), s.moq, s.lead, s.feas, ts] });
       }
 
       count++;
     }
 
-    const completedTs = Date.now();
-    await db.execute({ sql: `UPDATE "Search" SET status='complete', opportunityCount=?, completedAt=?, updatedAt=? WHERE id=?`, args: [count, completedTs, completedTs, searchId] });
+    const doneTs = Date.now();
+    await db.execute({ sql: `UPDATE "Search" SET status='complete', opportunityCount=?, completedAt=?, updatedAt=? WHERE id=?`, args: [count, doneTs, doneTs, searchId] });
 
     return NextResponse.json({
       searchId, status: 'complete', count,
-      pipeline: `${stage1.length} candidates → ${validated.length} validated → ${count} saved`,
-      models: [MODELS.FLASH, MODELS.BALANCED],
+      pipeline: {
+        discovery:  `${providerResults.length} providers → ${merged.length} unique candidates`,
+        consensus:  `${merged.filter(m => m.providerCount > 1).length} multi-provider agreements`,
+        validation: `Validated by ${validatorName}`,
+        saved:      `${count}/${top24.length} passed`,
+      },
+      providers: {
+        discovery: providerResults.map(r => ({ name: r.provider.name, count: Array.isArray(r.result) ? r.result.length : 0 })),
+        validator: validatorName,
+      },
     });
 
   } catch (err) {
