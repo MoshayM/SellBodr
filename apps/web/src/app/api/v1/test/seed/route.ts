@@ -71,10 +71,13 @@ export async function POST(req: NextRequest) {
       const netMinor = saleMinor - landedMinor - feeMinor;
       const marginPct = saleMinor > 0 ? (netMinor / saleMinor) * 100 : 0;
 
+      const seedSearchId = 'seed-' + opportunityId;
+      const grossMinor = saleMinor - landedMinor;
+      const roiPct = srcMinor > 0 ? Math.round((netMinor / srcMinor) * 1000) / 10 : 0;
       await db.execute({ sql: `INSERT INTO "Product" (id, title, category, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`, args: [productId, p.title, p.category, p.description, ts, ts] });
-      await db.execute({ sql: `INSERT INTO "Opportunity" (id, productId, marketplaceId, status, recommendation, confidence, createdAt) VALUES (?, ?, ?, 'active', ?, ?, ?)`, args: [opportunityId, productId, marketplaceId, rec, conf, ts] });
-      await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, scoreVersion, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2.0.0', ?)`, args: [crypto.randomUUID(), opportunityId, oScore, p.scores.demand, p.scores.competition, p.scores.margin, p.scores.trend, p.scores.shipping, p.scores.marketplaceFit, p.scores.saturation, ts] });
-      await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, sourcePriceMinor, salePriceMinor, landedCostMinor, marketplaceFeeMinor, netProfitMinor, netMarginPct, roi, currency, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landedMinor, feeMinor, netMinor, Math.round(marginPct * 10) / 10, srcMinor > 0 ? Math.round((netMinor / srcMinor) * 1000) / 10 : 0, ts] });
+      await db.execute({ sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`, args: [opportunityId, seedSearchId, productId, marketplaceId, rec, conf, ts, ts] });
+      await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, p.scores.demand, p.scores.competition, p.scores.margin, p.scores.trend, p.scores.shipping, p.scores.marketplaceFit, p.scores.saturation, ts, ts] });
+      await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landedMinor, feeMinor, grossMinor, netMinor, Math.round(marginPct * 10) / 10, roiPct, ts, ts] });
 
       count++;
     }

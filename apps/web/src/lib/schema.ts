@@ -64,10 +64,12 @@ const TABLES = [
     createdAt INTEGER NOT NULL DEFAULT 0
   )`,
   `CREATE TABLE IF NOT EXISTS "Search" (
-    id TEXT PRIMARY KEY, userId TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL,
-    status TEXT DEFAULT 'running', opportunityCount INTEGER DEFAULT 0,
-    errorMessage TEXT, createdAt INTEGER NOT NULL DEFAULT 0,
-    completedAt INTEGER DEFAULT 0
+    id TEXT PRIMARY KEY, userId TEXT NOT NULL DEFAULT '',
+    filters TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'queued', startedAt INTEGER DEFAULT 0,
+    completedAt INTEGER DEFAULT 0, createdAt INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL DEFAULT 0,
+    errorMessage TEXT, opportunityCount INTEGER DEFAULT 0, marketplace TEXT
   )`,
   `CREATE TABLE IF NOT EXISTS "ProviderKey" (
     id TEXT PRIMARY KEY, provider TEXT UNIQUE NOT NULL, encryptedKey TEXT NOT NULL,
@@ -100,6 +102,9 @@ const MIGRATIONS = [
   `ALTER TABLE "ProviderKey" ADD COLUMN maskedKey TEXT DEFAULT ''`,
   `ALTER TABLE "Product" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE "Search" ADD COLUMN userId TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE "Search" ADD COLUMN filters TEXT NOT NULL DEFAULT '{}'`,
+  `ALTER TABLE "Search" ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Search" ADD COLUMN startedAt INTEGER DEFAULT 0`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
@@ -121,10 +126,10 @@ export async function ensureSchema(db: Client): Promise<void> {
     const now = Date.now();
     await db.batch(
       MARKETPLACES.map(mp => ({
-        sql: `INSERT OR IGNORE INTO "Marketplace" (id, code, country, currency, feeSchedule, active, createdAt)
-              VALUES (?, ?, ?, ?, ?, 1, ?)`,
+        sql: `INSERT OR IGNORE INTO "Marketplace" (id, code, country, currency, feeSchedule, active, createdAt, updatedAt)
+              VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
         args: [crypto.randomUUID(), mp.code, mp.country, mp.currency,
-               JSON.stringify({ referralPct: mp.ref, fbaFeeMinor: mp.fba }), now],
+               JSON.stringify({ referralPct: mp.ref, fbaFeeMinor: mp.fba }), now, now],
       })),
       'write'
     );

@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
     const now = Date.now();
 
     await db.execute({
-      sql: `INSERT INTO "Search" (id, userId, marketplace, status, opportunityCount, createdAt) VALUES (?, ?, ?, 'running', 0, ?)`,
-      args: [searchId, userId, marketplace, now],
+      sql: `INSERT INTO "Search" (id, userId, marketplace, filters, status, opportunityCount, createdAt, updatedAt) VALUES (?, ?, ?, '{}', 'running', 0, ?, ?)`,
+      args: [searchId, userId, marketplace, now, now],
     });
 
     // Derive readable marketplace name and current date context for trend-aware prompt
@@ -106,16 +106,16 @@ Return a JSON array only. No prose, no markdown.`;
       ], { maxTokens: 1400 });
     } catch (aiErr) {
       await db.execute({
-        sql: `UPDATE "Search" SET status='failed', errorMessage=? WHERE id=?`,
-        args: [String(aiErr).slice(0, 500), searchId],
+        sql: `UPDATE "Search" SET status='failed', errorMessage=?, updatedAt=? WHERE id=?`,
+        args: [String(aiErr).slice(0, 500), Date.now(), searchId],
       });
       return NextResponse.json({ error: 'AI pipeline failed', searchId }, { status: 502 });
     }
 
     if (!Array.isArray(products) || products.length === 0) {
       await db.execute({
-        sql: `UPDATE "Search" SET status='failed', errorMessage='No products returned' WHERE id=?`,
-        args: [searchId],
+        sql: `UPDATE "Search" SET status='failed', errorMessage='No products returned', updatedAt=? WHERE id=?`,
+        args: [Date.now(), searchId],
       });
       return NextResponse.json({ error: 'No products returned', searchId }, { status: 502 });
     }
@@ -151,24 +151,27 @@ Return a JSON array only. No prose, no markdown.`;
         args: [productId, p.title.slice(0, 200), (p.category ?? '').slice(0, 100), (p.description ?? '').slice(0, 500), ts, ts],
       });
       await db.execute({
-        sql: `INSERT INTO "Opportunity" (id, productId, marketplaceId, status, recommendation, confidence, createdAt) VALUES (?, ?, ?, 'active', ?, ?, ?)`,
-        args: [opportunityId, productId, marketplaceId, rec, conf, ts],
+        sql: `INSERT INTO "Opportunity" (id, searchId, productId, marketplaceId, status, recommendation, confidence, createdAt, updatedAt) VALUES (?, ?, ?, ?, 'scored', ?, ?, ?, ?)`,
+        args: [opportunityId, searchId, productId, marketplaceId, rec, conf, ts, ts],
       });
       await db.execute({
-        sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, scoreVersion, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '2.0.0', ?)`,
-        args: [scoreId, opportunityId, oScore, scores.demand, scores.competition, scores.margin, scores.trend, scores.shipping, scores.marketplaceFit, scores.saturation, ts],
+        sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [scoreId, opportunityId, oScore, scores.demand, scores.competition, scores.margin, scores.trend, scores.shipping, scores.marketplaceFit, scores.saturation, ts, ts],
       });
+      const grossMinor = saleMinor - landedMinor;
+      const roiPct = sourceMinor > 0 ? Math.round((netMinor / sourceMinor) * 1000) / 10 : 0;
       await db.execute({
-        sql: `INSERT INTO "ProfitModel" (id, opportunityId, sourcePriceMinor, salePriceMinor, landedCostMinor, marketplaceFeeMinor, netProfitMinor, netMarginPct, roi, currency, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?)`,
-        args: [profitId, opportunityId, sourceMinor, saleMinor, landedMinor, feeMinor, netMinor, Math.round(marginPct * 10) / 10, sourceMinor > 0 ? Math.round((netMinor / sourceMinor) * 1000) / 10 : 0, ts],
+        sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`,
+        args: [profitId, opportunityId, sourceMinor, saleMinor, landedMinor, feeMinor, grossMinor, netMinor, Math.round(marginPct * 10) / 10, roiPct, ts, ts],
       });
 
       count++;
     }
 
+    const completedTs = Date.now();
     await db.execute({
-      sql: `UPDATE "Search" SET status='complete', opportunityCount=?, completedAt=? WHERE id=?`,
-      args: [count, Date.now(), searchId],
+      sql: `UPDATE "Search" SET status='complete', opportunityCount=?, completedAt=?, updatedAt=? WHERE id=?`,
+      args: [count, completedTs, completedTs, searchId],
     });
 
     return NextResponse.json({ searchId, status: 'complete', count });
