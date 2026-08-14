@@ -32,6 +32,15 @@ export function PWAInstallBanner() {
     const isIOSDevice = /iPhone|iPad|iPod/.test(ua) && !(window as any).MSStream;
     if (isIOSDevice) { setIsIOS(true); return; }
 
+    // beforeinstallprompt fires before React hydrates — captured globally in layout.tsx
+    const captured = (window as any).__pwaInstallPrompt as BeforeInstallPromptEvent | null;
+    if (captured) {
+      (window as any).__pwaInstallPrompt = null;
+      setPrompt(captured);
+      return;
+    }
+
+    // Fallback: listen in case event hasn't fired yet
     const handler = (e: Event) => {
       e.preventDefault();
       setPrompt(e as BeforeInstallPromptEvent);

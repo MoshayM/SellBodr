@@ -39,19 +39,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>
       <body>
-        <Providers>{children}</Providers>
         <script dangerouslySetInnerHTML={{ __html: `
+          window.__pwaInstallPrompt = null;
+          window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            window.__pwaInstallPrompt = e;
+          });
           if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                console.warn('SW registration failed:', err);
+              });
             });
           }
         `}} />
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
