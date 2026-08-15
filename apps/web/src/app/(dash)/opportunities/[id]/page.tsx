@@ -11,6 +11,57 @@ const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition
 
 function minor(v: number) { return (v / 100).toFixed(2); }
 
+// Leaflet map rendered inside an iframe srcDoc — no package install needed, no SSR issues
+function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
+  const pins = candidates
+    .filter((sc: any) => sc.latitude && sc.longitude)
+    .map((sc: any) => ({
+      lat: Number(sc.latitude), lon: Number(sc.longitude),
+      name: sc.supplierName || sc.supplier?.name || '',
+      city: sc.city || '',
+      country: sc.country || 'India',
+      source: (sc.supplier?.source || sc.source || '').replace(/-/g, ' '),
+      isIndia: (sc.country || 'India') === 'India',
+      costRaw: sc.productCostMinor || 0,
+    }));
+
+  if (pins.length === 0) return null;
+
+  const html = `<!DOCTYPE html><html><head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+<style>body{margin:0;padding:0;font-family:sans-serif}#map{height:100vh;width:100%}</style>
+</head><body><div id="map"></div><script>
+const map=L.map('map',{zoomControl:true,attributionControl:false}).setView([25,95],2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const pins=${JSON.stringify(pins)};
+pins.forEach(function(p,i){
+  const color=p.isIndia?'#10b981':'#6366f1';
+  const icon=L.divIcon({
+    html:'<div style="background:'+color+';color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)">'+(i+1)+'<\/div>',
+    iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-15],className:''
+  });
+  const label=p.isIndia?'<span style="color:#10b981;font-weight:700">India Priority<\/span>':'<span style="color:#6366f1">Global Alternative<\/span>';
+  L.marker([p.lat,p.lon],{icon}).addTo(map).bindPopup(
+    '<b>'+p.name+'<\/b><br>'+label+'<br>'+p.city+(p.city?', ':'')+p.country+'<br><small>via '+p.source+'<\/small>'
+  );
+});
+if(pins.length>1){
+  try{map.fitBounds(L.latLngBounds(pins.map(function(p){return[p.lat,p.lon]})),{padding:[30,30],maxZoom:7});}catch(e){}
+}
+<\/script></body></html>`;
+
+  return (
+    <iframe
+      srcDoc={html}
+      className="w-full border-0"
+      style={{ height: 260 }}
+      title="Supplier Locations"
+      sandbox="allow-scripts"
+    />
+  );
+}
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -93,7 +144,12 @@ export default function OpportunityDetailPage() {
                 src={opp.product.imageUrl}
                 alt={opp.product.title}
                 className="w-full h-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).src = `https://image.pollinations.ai/prompt/${encodeURIComponent('product photo ' + (opp.product?.title || 'product') + ' white background')}?width=128&height=128&nologo=true&seed=1`; }}
+                onError={e => {
+                  const el = e.target as HTMLImageElement;
+                  el.onerror = null;
+                  const q = encodeURIComponent((opp.product?.title || 'product').split(' ').slice(0, 4).join(','));
+                  el.src = `https://source.unsplash.com/128x128/?${q}`;
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📦</div>
@@ -192,64 +248,140 @@ export default function OpportunityDetailPage() {
       {/* ── Suppliers ── */}
       {tab === 'Suppliers' && (
         <div className="space-y-3">
+          {/* Global supplier map */}
+          {opp.sourcingCandidates?.some((sc: any) => sc.latitude && sc.longitude) && (
+            <div className="card overflow-hidden">
+              <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-700">🌍 Global Supplier Map</span>
+                <span className="text-xs text-gray-400">India suppliers prioritised</span>
+              </div>
+              <GlobalSupplierMap candidates={opp.sourcingCandidates} />
+            </div>
+          )}
+
+          {/* Supplier table */}
           <div className="card overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <span className="font-semibold text-gray-800">Sourcing Candidates</span>
-              <span className="text-xs text-gray-400">Click a row to view full profile &amp; contact</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-800">Sourcing Candidates</span>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">India First</span>
+              </div>
+              <span className="text-xs text-gray-400">Click a row to view profile &amp; contact</span>
             </div>
             {(opp.sourcingCandidates?.length === 0 || !opp.sourcingCandidates) ? (
               <div className="p-8 text-center text-gray-400">No suppliers found</div>
             ) : (
               <div className="table-scroll">
-                <table className="w-full text-sm min-w-[600px]">
+                <table className="w-full text-sm min-w-[700px]">
                   <thead className="bg-gray-50 text-xs text-gray-600">
                     <tr>
                       <th className="text-left px-4 py-2.5">Supplier</th>
-                      <th className="text-left px-4 py-2.5">Source</th>
-                      <th className="text-right px-4 py-2.5">Cost (INR)</th>
+                      <th className="text-left px-4 py-2.5">Country</th>
+                      <th className="text-left px-4 py-2.5">Platform</th>
+                      <th className="text-right px-4 py-2.5">Unit Cost</th>
+                      <th className="text-center px-4 py-2.5">Trust</th>
                       <th className="text-right px-4 py-2.5">MOQ</th>
-                      <th className="text-right px-4 py-2.5">Lead Time</th>
-                      <th className="text-center px-4 py-2.5">Feasibility</th>
+                      <th className="text-right px-4 py-2.5">Lead</th>
+                      <th className="text-center px-4 py-2.5">Ease</th>
                       <th className="text-center px-4 py-2.5">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {opp.sourcingCandidates?.map((sc: any) => (
-                      <tr key={sc.id} className="hover:bg-green-50/40 cursor-pointer transition-colors"
-                        onClick={() => setDrawerSupplier(sc.id)}>
-                        <td className="px-4 py-3">
-                          <span className="font-medium text-gray-900">{sc.supplier?.name || sc.supplierName}</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs uppercase text-gray-500">{sc.supplier?.source}</td>
-                        <td className="px-4 py-3 text-right font-mono">₹{minor(sc.productCostMinor)}</td>
-                        <td className="px-4 py-3 text-right">{sc.moq}</td>
-                        <td className="px-4 py-3 text-right">{sc.leadTimeDays}d</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            sc.feasibility === 'easy' ? 'bg-green-100 text-green-700' :
-                            sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>{sc.feasibility}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={e => { e.stopPropagation(); setDrawerSupplier(sc.id); }}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap">
-                            View &amp; Contact
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {opp.sourcingCandidates?.map((sc: any, idx: number) => {
+                      const isIndia = (sc.country || 'India') === 'India';
+                      const flag = isIndia ? '🇮🇳' : sc.country === 'China' ? '🇨🇳' : sc.country === 'Hong Kong' ? '🇭🇰' : sc.country === 'United States' ? '🇺🇸' : '🌐';
+                      const trustPct = Math.round((Number(sc.rating) || 4.0) / 5 * 100);
+                      const costLabel = isIndia ? `₹${minor(sc.productCostMinor)}` : `$${((sc.productCostMinor || 0) / 100).toFixed(2)}`;
+                      return (
+                        <tr key={sc.id} className={`cursor-pointer transition-colors ${isIndia ? 'hover:bg-green-50/50 bg-green-50/20' : 'hover:bg-gray-50/60'}`}
+                          onClick={() => setDrawerSupplier(sc.id)}>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              {isIndia && idx === 0 && (
+                                <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-bold shrink-0">BEST</span>
+                              )}
+                              <span className="font-medium text-gray-900 leading-tight">{sc.supplier?.name || sc.supplierName}</span>
+                            </div>
+                            {sc.city && <div className="text-xs text-gray-400 mt-0.5">📍 {sc.city}</div>}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="flex items-center gap-1.5 text-sm">
+                              <span className="text-lg leading-none">{flag}</span>
+                              <span className="text-xs text-gray-600">{sc.country || 'India'}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs uppercase tracking-wide text-gray-500 font-mono">
+                            {(sc.supplier?.source || sc.source || '').replace(/-/g, ' ')}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-gray-800">{costLabel}</td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${trustPct}%`, background: trustPct >= 80 ? '#10b981' : trustPct >= 60 ? '#f59e0b' : '#ef4444' }}/>
+                              </div>
+                              <span className="text-[10px] text-gray-500">{trustPct}%</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right text-gray-700">{sc.moq}</td>
+                          <td className="px-4 py-3 text-right text-gray-600">{sc.leadTimeDays}d</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              sc.feasibility === 'easy' ? 'bg-green-100 text-green-700' :
+                              sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>{sc.feasibility}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button onClick={e => { e.stopPropagation(); setDrawerSupplier(sc.id); }}
+                              className="text-xs px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap">
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
           </div>
+
+          {/* Cost comparison bar */}
+          {opp.sourcingCandidates?.length > 1 && (() => {
+            const costs = opp.sourcingCandidates.map((sc: any) => sc.productCostMinor || 0);
+            const maxCost = Math.max(...costs);
+            return (
+              <div className="card p-4">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Price Comparison</div>
+                <div className="space-y-2">
+                  {opp.sourcingCandidates.map((sc: any) => {
+                    const isIndia = (sc.country || 'India') === 'India';
+                    const pct = maxCost > 0 ? (sc.productCostMinor / maxCost) * 100 : 0;
+                    const flag = isIndia ? '🇮🇳' : sc.country === 'China' ? '🇨🇳' : sc.country === 'Hong Kong' ? '🇭🇰' : '🌐';
+                    return (
+                      <div key={sc.id} className="flex items-center gap-2 text-xs">
+                        <span className="w-4 text-base leading-none">{flag}</span>
+                        <span className="w-28 truncate text-gray-600">{(sc.supplier?.source || sc.source || '').replace(/-/g, ' ')}</span>
+                        <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                          <div className={`h-full rounded transition-all ${isIndia ? 'bg-green-500' : 'bg-indigo-400'}`}
+                            style={{ width: `${pct}%` }}/>
+                        </div>
+                        <span className="w-16 text-right font-mono font-semibold text-gray-700">
+                          {isIndia ? `₹${minor(sc.productCostMinor)}` : `$${((sc.productCostMinor||0)/100).toFixed(2)}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="card p-4 flex items-start gap-3 text-sm text-gray-600 bg-blue-50/50 border-blue-100">
             <span className="text-xl shrink-0">💡</span>
             <div>
               <span className="font-semibold text-gray-800">Negotiation tip: </span>
-              Contact 2–3 suppliers simultaneously. Reference competitor prices and mention long-term volume to unlock 15–25% below the listed rate.
+              Contact 2–3 suppliers simultaneously. India suppliers offer craftsmanship advantage — use global prices as leverage to negotiate 15–25% below listed rate.
             </div>
           </div>
         </div>

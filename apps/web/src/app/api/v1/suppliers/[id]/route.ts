@@ -7,6 +7,22 @@ export const dynamic = 'force-dynamic';
 
 const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
 
+// Trust score by platform (0-100)
+const SOURCE_TRUST: Record<string, number> = {
+  indiamart: 85, tradeindia: 78, exportersindia: 72,
+  alibaba: 92, dhgate: 68, 'made-in-china': 74, globalsources: 88,
+  faire: 90, europages: 80,
+};
+
+// Global city→country for non-India suppliers
+const GLOBAL_CITY_COUNTRY: Record<string, { state: string; country: string; lat: number; lon: number }> = {
+  'Guangzhou': { state: 'Guangdong', country: 'China',     lat: 23.1291, lon: 113.2644 },
+  'Shenzhen':  { state: 'Guangdong', country: 'China',     lat: 22.5431, lon: 114.0579 },
+  'Shanghai':  { state: 'Shanghai',  country: 'China',     lat: 31.2304, lon: 121.4737 },
+  'Yiwu':      { state: 'Zhejiang',  country: 'China',     lat: 29.3064, lon: 120.0644 },
+  'Hong Kong': { state: '',          country: 'Hong Kong', lat: 22.3193, lon: 114.1694 },
+};
+
 const CITY_STATE: Record<string, string> = {
   Jaipur: 'Rajasthan', Moradabad: 'Uttar Pradesh', Jodhpur: 'Rajasthan',
   Surat: 'Gujarat', Tiruppur: 'Tamil Nadu', Ludhiana: 'Punjab',
@@ -37,10 +53,17 @@ function h(seed: string, mod: number): number {
 
 function generateProfile(sc: Record<string, unknown>) {
   const id = String(sc.id);
+  // Use stored city/country if available (global suppliers have these set at insert time)
+  const storedCity = String(sc.city || '');
+  const storedCountry = String(sc.country || 'India');
+  const isIndia = storedCountry === 'India' || !storedCity;
+
   const nameParts = String(sc.supplierName || '').split(' ');
-  const city = CITY_STATE[nameParts[0]] ? nameParts[0] : 'Delhi';
-  const state = CITY_STATE[city] || 'Delhi';
-  const coords = CITY_COORDS[city];
+  const city = storedCity || (CITY_STATE[nameParts[0]] ? nameParts[0] : 'Delhi');
+  const state = isIndia ? (CITY_STATE[city] || 'Delhi') : (GLOBAL_CITY_COUNTRY[city]?.state || '');
+  const country = isIndia ? 'India' : storedCountry;
+  const globalGeo = GLOBAL_CITY_COUNTRY[city];
+  const coords = isIndia ? CITY_COORDS[city] : (globalGeo ? [globalGeo.lat, globalGeo.lon] as [number,number] : null);
 
   const rating = +(3.8 + h(id, 12) * 0.1).toFixed(1);
   const reviewCount = 20 + h(id + 'r', 180);
@@ -64,10 +87,10 @@ function generateProfile(sc: Record<string, unknown>) {
   if (h(id + 'brc', 4) < 1) certs.push('BRC Certified');
 
   const verifiedBadge = h(id + 'v', 3) < 1 ? 1 : 0;
-  const description = `Established in ${yearEstablished}, we are a leading ${companyType.toLowerCase()} based in ${city}, ${state}. We specialize in high-quality products for global markets with competitive pricing and reliable delivery.`;
+  const description = `Established in ${yearEstablished}, we are a leading ${companyType.toLowerCase()} based in ${city}${state ? ', ' + state : ''}, ${country}. We specialize in high-quality products for global markets with competitive pricing and reliable delivery.`;
 
   return {
-    city, state, country: 'India',
+    city, state, country,
     latitude: coords?.[0] ?? null, longitude: coords?.[1] ?? null,
     contactEmail, contactPhone, contactWhatsapp: contactPhone,
     rating, reviewCount, yearEstablished,
@@ -146,6 +169,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       yearEstablished: sc.yearEstablished, employeeCount: sc.employeeCount,
       annualTurnover: sc.annualTurnover, companyType: sc.companyType,
       verifiedBadge: Boolean(sc.verifiedBadge), description: sc.description,
+      trustScore: SOURCE_TRUST[String(sc.source || 'indiamart')] ?? 75,
       outreachCount,
       product: { title: sc.pTitle, category: sc.pCategory },
       marketplace: { code: sc.mCode, country: sc.mCountry, currency: sc.mCurrency },

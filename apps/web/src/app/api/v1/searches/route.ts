@@ -25,13 +25,24 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── AI image via Pollinations.ai — free, no key, deterministic seed ──────────
-function productImageUrl(productId: string, title: string, category: string): string {
-  const subject = [title, category].filter(Boolean).join(', ').slice(0, 120);
-  const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
-  const seed = parseInt(productId.replace(/-/g, '').slice(0, 8), 16) % 999983;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
+// ── Product image: Unsplash Source API — real photos, no AI hallucination ────
+function productImageUrl(_productId: string, title: string, category: string): string {
+  const words = [...title.split(' ').slice(0, 4), category.replace(/_/g, ' ').split(' ')[0]]
+    .filter(Boolean).map(w => w.toLowerCase());
+  return `https://source.unsplash.com/400x300/?${encodeURIComponent(words.join(','))}`;
 }
+
+// ── Indian city coordinates (for map pins) ────────────────────────────────────
+const INDIAN_CITY_COORDS: Record<string, [number, number]> = {
+  Jaipur: [26.9124, 75.7873], Moradabad: [28.8386, 78.7733], Jodhpur: [26.2389, 73.0243],
+  Surat: [21.1702, 72.8311], Tiruppur: [11.1085, 77.3411], Ludhiana: [30.9010, 75.8573],
+  Mumbai: [19.0760, 72.8777], Ahmedabad: [23.0225, 72.5714], Kannauj: [27.0566, 79.9245],
+  Bangalore: [12.9716, 77.5946], Noida: [28.5355, 77.3910], Chennai: [13.0827, 80.2707],
+  Hyderabad: [17.3850, 78.4867], Delhi: [28.6139, 77.2090], Agra: [27.1767, 78.0081],
+  Varanasi: [25.3176, 82.9739], Jalandhar: [31.3260, 75.5762], Meerut: [28.9845, 77.7064],
+  Amritsar: [31.6340, 74.8723], Kanpur: [26.4499, 80.3319], Pune: [18.5204, 73.8567],
+  Kolkata: [22.5726, 88.3639], Nagpur: [21.1458, 79.0882],
+};
 
 // ── Supplier name with Indian city clusters ───────────────────────────────────
 const CITY_MAP: Record<string, string[]> = {
@@ -376,14 +387,25 @@ export async function POST(req: NextRequest) {
       await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, c.scores.demand, c.scores.competition, c.scores.margin, c.scores.trend, c.scores.shipping, c.scores.marketplaceFit, c.scores.saturation, ts, ts] });
       await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landed, feeMinor, saleMinor - landed, net, Math.round(margin * 10) / 10, Math.round(roi * 10) / 10, ts, ts] });
 
+      // Global sourcing candidates — India first (priority), then cheapest global alternatives
+      const city1 = supplierCity(c.category);
+      const altCities = Object.values(CITY_MAP).flat().filter(ci => ci !== city1);
+      const city2 = altCities[(c.title.length + 7) % altCities.length] || 'Mumbai';
+      const coords1 = INDIAN_CITY_COORDS[city1] ?? [28.6139, 77.2090];
+      const coords2 = INDIAN_CITY_COORDS[city2] ?? [19.0760, 72.8777];
+      const kw = c.title.split(' ').slice(0, 2).join(' ');
       const cands = [
-        { name: supplierName(c.title, c.category, 0), source: 'indiamart', url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(c.title.slice(0, 60))}`, pct: 1.00, moq: 50,  lead: 21, feas: c.indiaManufacturing === 'easy' ? 'easy' : 'moderate' },
-        { name: supplierName(c.title, c.category, 3), source: 'alibaba',   url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(c.title.slice(0, 40))}`, pct: 0.88, moq: 100, lead: 35, feas: 'easy' },
+        // ─ India (sorted first — same cost basis, craftsmanship advantage) ─
+        { name: supplierName(c.title, c.category, 0), source: 'indiamart',     url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(c.title.slice(0, 60))}`,                                                            pct: 1.00, moq: 50,  lead: 21, feas: c.indiaManufacturing === 'easy' ? 'easy' : 'moderate', city: city1, country: 'India',     lat: coords1[0], lon: coords1[1], rating: 4.4, verified: 1 },
+        { name: supplierName(c.title, c.category, 3), source: 'tradeindia',    url: `https://www.tradeindia.com/search/${encodeURIComponent(c.title.slice(0, 50))}/`,                                                                 pct: 1.06, moq: 100, lead: 26, feas: 'moderate',                                                   city: city2, country: 'India',     lat: coords2[0], lon: coords2[1], rating: 4.0, verified: 0 },
+        // ─ Global alternatives (sorted by cost after India) ─────────────────
+        { name: `${kw} Global Manufacturing Co., Ltd`,                          source: 'alibaba',       url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(c.title.slice(0, 40))}`,                           pct: 0.80, moq: 100, lead: 35, feas: 'easy',                                                       city: 'Guangzhou', country: 'China',     lat: 23.13, lon: 113.26, rating: 4.6, verified: 1 },
+        { name: `${kw} Direct Wholesale`,                                        source: 'dhgate',        url: `https://www.dhgate.com/wholesale/search.do?act=search&searchkey=${encodeURIComponent(c.title.slice(0, 40))}`,           pct: 0.72, moq: 20,  lead: 28, feas: 'easy',                                                       city: 'Yiwu',      country: 'China',     lat: 29.31, lon: 120.06, rating: 3.9, verified: 0 },
+        { name: `Global ${kw} Exports Ltd`,                                      source: 'globalsources', url: `https://www.globalsources.com/gsol/I/Search?keyword=${encodeURIComponent(c.title.slice(0, 40))}`,                      pct: 0.85, moq: 200, lead: 38, feas: 'moderate',                                                   city: 'Hong Kong', country: 'Hong Kong', lat: 22.32, lon: 114.17, rating: 4.3, verified: 1 },
       ];
       for (const s of cands) {
         const scId = crypto.randomUUID();
-        // supplierId: legacy NOT NULL column; updatedAt: required NOT NULL with no default
-        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, supplierId, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [scId, scId, opportunityId, s.name, s.source, s.url, Math.round(srcMinor * s.pct), s.moq, s.lead, s.feas, ts, ts] });
+        await db.execute({ sql: `INSERT INTO "SourcingCandidate" (id, supplierId, opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, city, country, latitude, longitude, rating, verifiedBadge, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [scId, scId, opportunityId, s.name, s.source, s.url, Math.round(srcMinor * s.pct), s.moq, s.lead, s.feas, s.city, s.country, s.lat, s.lon, s.rating, s.verified, ts, ts] });
       }
 
       count++;

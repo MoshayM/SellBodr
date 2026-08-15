@@ -50,13 +50,14 @@ export async function GET(req: NextRequest) {
     if (oppIds.length > 0) {
       try {
         const candResult = await db.execute({
-          sql: `SELECT opportunityId, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility FROM "SourcingCandidate" WHERE opportunityId IN (${oppIds.map(() => '?').join(',')}) ORDER BY productCostMinor ASC`,
+          sql: `SELECT opportunityId, id, supplierName, source, sourceUrl, productCostMinor, moq, leadTimeDays, feasibility, city, country, latitude, longitude, rating, verifiedBadge FROM "SourcingCandidate" WHERE opportunityId IN (${oppIds.map(() => '?').join(',')}) ORDER BY CASE WHEN country = 'India' THEN 0 ELSE 1 END ASC, productCostMinor ASC`,
           args: oppIds,
         });
         for (const c of candResult.rows) {
           const oid = c.opportunityId as string;
           if (!suppliersMap[oid]) suppliersMap[oid] = [];
           suppliersMap[oid].push({
+            id:          c.id,
             name:        c.supplierName,
             source:      c.source,
             url:         c.sourceUrl,
@@ -64,6 +65,12 @@ export async function GET(req: NextRequest) {
             moq:         Number(c.moq ?? 0),
             leadDays:    Number(c.leadTimeDays ?? 0),
             feasibility: c.feasibility,
+            city:        c.city,
+            country:     c.country || 'India',
+            latitude:    c.latitude,
+            longitude:   c.longitude,
+            rating:      Number(c.rating ?? 4.0),
+            verifiedBadge: Boolean(c.verifiedBadge),
           });
         }
       } catch { /* SourcingCandidate table may not exist yet */ }
@@ -77,12 +84,10 @@ export async function GET(req: NextRequest) {
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
       const storedUrl = (r.pImageUrl as string) || '';
-      const needsImage = !storedUrl || storedUrl.includes('loremflickr.com') || storedUrl.includes('picsum.photos');
+      const needsImage = !storedUrl || storedUrl.includes('loremflickr.com') || storedUrl.includes('picsum.photos') || storedUrl.includes('pollinations.ai');
       const imageUrl = needsImage ? (() => {
-        const subject = [String(r.pTitle || ''), String(r.pCategory || '')].filter(Boolean).join(', ').slice(0, 120);
-        const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
-        const seed = parseInt(String(r.pId).replace(/-/g, '').slice(0, 8), 16) % 999983;
-        return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
+        const words = [...String(r.pTitle || '').split(' ').slice(0, 4), String(r.pCategory || '').replace(/_/g, ' ').split(' ')[0]].filter(Boolean).map(w => w.toLowerCase());
+        return `https://source.unsplash.com/400x300/?${encodeURIComponent(words.join(','))}`;
       })() : storedUrl;
 
       const currency = (r.pmCurrency ?? r.mCurrency ?? 'USD') as string;

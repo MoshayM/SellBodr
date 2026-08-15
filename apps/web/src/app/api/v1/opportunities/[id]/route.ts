@@ -37,7 +37,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
     // Sourcing candidates
     const sc = await db.execute({
-      sql: `SELECT * FROM "SourcingCandidate" WHERE opportunityId = ? ORDER BY productCostMinor ASC`,
+      sql: `SELECT * FROM "SourcingCandidate" WHERE opportunityId = ? ORDER BY CASE WHEN country = 'India' THEN 0 ELSE 1 END ASC, productCostMinor ASC`,
       args: [params.id],
     });
 
@@ -49,12 +49,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       scoreVersion: row.sVersion ?? '2.0.0',
       product: (() => {
         const stored = String(row.pImageUrl || '');
-        const needsImage = !stored || stored.includes('loremflickr.com') || stored.includes('picsum.photos');
+        const needsImage = !stored || stored.includes('loremflickr.com') || stored.includes('picsum.photos') || stored.includes('pollinations.ai');
         const imageUrl = needsImage ? (() => {
-          const subject = [String(row.pTitle || ''), String(row.pCategory || '')].filter(Boolean).join(', ').slice(0, 120);
-          const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
-          const seed = parseInt(String(row.pId).replace(/-/g, '').slice(0, 8), 16) % 999983;
-          return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
+          const words = [...String(row.pTitle || '').split(' ').slice(0, 4), String(row.pCategory || '').replace(/_/g, ' ').split(' ')[0]].filter(Boolean).map(w => w.toLowerCase());
+          return `https://source.unsplash.com/400x300/?${encodeURIComponent(words.join(','))}`;
         })() : stored;
         return { id: row.pId, title: row.pTitle, category: row.pCategory, imageUrl, description: row.pDesc };
       })(),
@@ -76,6 +74,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         id: s.id, supplierName: s.supplierName, source: s.source, sourceUrl: s.sourceUrl,
         productCostMinor: s.productCostMinor, moq: s.moq, leadTimeDays: s.leadTimeDays,
         feasibility: s.feasibility,
+        city: s.city, country: s.country || 'India',
+        latitude: s.latitude, longitude: s.longitude,
+        rating: Number(s.rating ?? 4.0), verifiedBadge: Boolean(s.verifiedBadge),
         supplier: { name: s.supplierName, source: s.source, sourceUrl: s.sourceUrl },
       })),
     });
