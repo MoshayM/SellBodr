@@ -89,19 +89,164 @@ function trendTenure(createdAt: number): { label: string; key: string; color: st
   return                { label: 'Older',          key: 'old', color: '#6b7280' };
 }
 
-// ── Waterfall bar (profitability tab) ────────────────────────────────────────
+// ── Graphical profit waterfall chart (profitability tab) ─────────────────────
 
-function WaterfallBar({ label, value, total, color }: {
-  label: string; value: number; total: number; color: string;
-}) {
-  const pctW = total > 0 ? Math.min(100, (Math.abs(value) / total) * 100) : 0;
+function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: string; platform: string }) {
+  const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+  const fmt = (v: number) => `${sym}${(Math.abs(v) / 100).toFixed(2)}`;
+
+  const sale     = Number(pm.salePriceMinor    ?? 0);
+  const src      = Number(pm.productCostMinor  ?? 0);
+  const ship     = Number(pm.intlShippingMinor ?? 0);
+  const pkg      = Number(pm.packagingCostMinor ?? 0);
+  const duty     = Number(pm.dutyMinor         ?? 0);
+  const refFee   = Number(pm.referralFeeMinor  ?? 0);
+  const fbaFee   = Number(pm.fbaFeeMinor       ?? 0);
+  const ads      = Number(pm.adCostMinor       ?? 0);
+  const net      = Number(pm.trueNetMinor ?? pm.netProfitMinor ?? 0);
+  const margin   = Number(pm.netMarginPct ?? 0);
+  const roi      = Number(pm.roiPct ?? 0);
+  const breakeven = Number(pm.breakevenUnits ?? (net > 0 ? Math.ceil(50000 / net) : 999));
+  const monthly  = Number(pm.monthlyProfitMinor ?? net * 50);
+  const referralPct = Number(pm.referralPct ?? 15);
+
+  type StepType = 'income' | 'cost' | 'result';
+  const allSteps: { key: string; label: string; value: number; color: string; type: StepType }[] = [
+    { key: 'sale', label: 'Sale Price',  value: sale,   color: '#7c3aed', type: 'income' },
+    { key: 'src',  label: 'Source',      value: src,    color: '#ef4444', type: 'cost'   },
+    { key: 'ship', label: 'Shipping',    value: ship,   color: '#f97316', type: 'cost'   },
+    { key: 'pkg',  label: 'Packaging',   value: pkg,    color: '#f59e0b', type: 'cost'   },
+    { key: 'duty', label: 'Duties',      value: duty,   color: '#d97706', type: 'cost'   },
+    { key: 'ref',  label: `Ref ${referralPct}%`, value: refFee, color: '#dc2626', type: 'cost' },
+    { key: 'fba',  label: 'FBA',         value: fbaFee, color: '#b91c1c', type: 'cost'   },
+    { key: 'ads',  label: 'Ads (5%)',    value: ads,    color: '#78716c', type: 'cost'   },
+    { key: 'net',  label: 'Net Profit',  value: net,    color: net >= 0 ? '#10b981' : '#ef4444', type: 'result' },
+  ];
+  const steps = allSteps.filter(s => s.key === 'sale' || s.key === 'net' || s.value > 0);
+  const n = steps.length;
+
+  const W = 560, H = 196;
+  const pad = { t: 24, r: 4, b: 40, l: 4 };
+  const chartW = W - pad.l - pad.r;
+  const chartH = H - pad.t - pad.b;
+  const pitch = chartW / n;
+  const barW = pitch * 0.72;
+  const scale = sale > 0 ? chartH / sale : 1;
+
+  let remaining = sale;
+  const rects = steps.map((step, i) => {
+    const cx = pad.l + i * pitch + pitch / 2;
+    const x  = cx - barW / 2;
+    let y: number, h: number;
+    if (step.type === 'income') {
+      y = pad.t;
+      h = chartH;
+    } else if (step.type === 'cost') {
+      const offset = sale - remaining;
+      y = pad.t + offset * scale;
+      h = Math.min(step.value * scale, chartH - offset * scale);
+      remaining = Math.max(0, remaining - step.value);
+    } else {
+      const netH = Math.max(0, net) * scale;
+      y = pad.t + chartH - netH;
+      h = netH;
+    }
+    return { ...step, x, y, h: Math.max(h, 2), cx };
+  });
+
+  const connectors = rects.slice(0, -1).map((r, i) => {
+    const next = rects[i + 1];
+    const cy = r.type === 'income' ? r.y : r.y + r.h;
+    return { x1: r.x + barW, y1: cy, x2: next.x, y2: cy };
+  });
+
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <div className="w-40 text-white/50 text-right shrink-0 leading-snug">{label}</div>
-      <div className="flex-1 h-3 bg-white/5 rounded overflow-hidden">
-        <div className="h-full rounded" style={{ width: `${pctW}%`, backgroundColor: color, opacity: 0.85 }} />
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+          Profit Waterfall — {platform}
+        </span>
+        <div className="flex items-center gap-3">
+          {([['#7c3aed', 'Revenue'], ['#ef4444', 'Costs'], ['#10b981', 'Net Profit']] as [string, string][]).map(([c, l]) => (
+            <span key={l} className="flex items-center gap-1 text-[9px] text-white/30">
+              <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: c }} />
+              {l}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="w-14 font-mono font-semibold text-right shrink-0 text-white/80">{usd(value, 2)}</div>
+
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
+        {/* Baseline */}
+        <line x1={pad.l} y1={pad.t + chartH} x2={W - pad.r} y2={pad.t + chartH}
+          stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
+
+        {/* Connector lines */}
+        {connectors.map((c, i) => (
+          <line key={i} x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y1}
+            stroke="rgba(255,255,255,0.18)" strokeWidth={0.75} strokeDasharray="3,2" />
+        ))}
+
+        {/* Bars */}
+        {rects.map(r => {
+          const isShort = r.h < 18;
+          return (
+            <g key={r.key}>
+              {/* Bar body */}
+              <rect x={r.x} y={r.y} width={barW} height={r.h} fill={r.color}
+                opacity={r.type === 'result' ? 1 : 0.82} rx={3} />
+              {/* Top highlight edge */}
+              <rect x={r.x + 1} y={r.y + 1} width={barW - 2} height={2.5}
+                fill="rgba(255,255,255,0.18)" rx={1.5} />
+
+              {/* Value label — inside bar if tall enough, above if short */}
+              {isShort ? (
+                <text x={r.cx} y={r.y - 4} textAnchor="middle" fontSize={7.5}
+                  fill="rgba(255,255,255,0.55)" fontFamily="monospace">
+                  {fmt(r.value)}
+                </text>
+              ) : (
+                <text x={r.cx} y={r.y + r.h / 2 + 4} textAnchor="middle" fontSize={8.5}
+                  fill="rgba(255,255,255,0.9)" fontWeight="bold" fontFamily="monospace">
+                  {fmt(r.value)}
+                </text>
+              )}
+
+              {/* X-axis label */}
+              <text x={r.cx} y={H - pad.b + 14} textAnchor="middle" fontSize={8.5}
+                fill={r.type === 'result' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.38)'}>
+                {r.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+        {([
+          { label: 'Net / Unit',   val: fmt(net),                  ok: net >= 0,      big: true  },
+          { label: 'Net Margin',   val: `${margin.toFixed(1)}%`,   ok: margin >= 15,  big: false },
+          { label: 'ROI',          val: `${roi.toFixed(0)}%`,      ok: roi >= 0,      big: false },
+          { label: 'Break-even',   val: `${Math.min(breakeven, 999)} units`, ok: breakeven < 200, big: false },
+        ] as { label: string; val: string; ok: boolean; big: boolean }[]).map(({ label, val, ok, big }) => (
+          <div key={label} className={`rounded-lg border p-2.5 ${
+            big
+              ? ok ? 'border-emerald-500/30 bg-emerald-500/8' : 'border-red-500/30 bg-red-500/8'
+              : 'border-white/8 bg-white/[0.025]'
+          }`}>
+            <div className="text-[9px] text-white/30 mb-0.5">{label}</div>
+            <div className={`font-bold text-sm leading-tight ${ok ? 'text-emerald-400' : 'text-red-400'}`}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {monthly > 0 && (
+        <div className="mt-2 flex items-center justify-between text-[10px] text-white/25 px-0.5">
+          <span>Est. monthly (50 units): <strong className="text-emerald-400/60">{fmt(monthly)}</strong></span>
+          <span>{currency} · {platform} standard fees</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -213,25 +358,13 @@ function ResearchTab({ opp }: { opp: any }) {
 
 function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
   const [tab, setTab] = useState<'research' | 'suppliers' | 'profit'>('research');
-  const pm = opp.profitModel;
-  const sale        = pm?.salePriceMinor ?? 0;
-  const src         = pm?.productCostMinor ?? 0;
-  const ship        = pm?.intlShippingMinor ?? 0;
-  const pkg         = pm?.packagingCostMinor ?? 0;
-  const duty        = pm?.dutyMinor ?? 0;
-  const landed      = pm?.landedCostMinor ?? 0;
-  const refFee      = pm?.referralFeeMinor ?? 0;
-  const fbaFee      = pm?.fbaFeeMinor ?? 0;
-  const adSpend     = pm?.adCostMinor ?? 0;
-  const net         = pm?.trueNetMinor ?? pm?.netProfitMinor ?? 0;
-  const margin      = pm?.netMarginPct ?? 0;
-  const roi         = pm?.roiPct ?? 0;
-  const currency    = pm?.currency ?? 'USD';
-  const platform    = platformOf(mpCode);
-  const referralPct = pm?.referralPct ?? 15;
+  const pm           = opp.profitModel;
+  const sale         = pm?.salePriceMinor ?? 0;
+  const currency     = pm?.currency ?? 'USD';
+  const platform     = platformOf(mpCode);
   const suppliers: any[] = opp.suppliers ?? [];
-  const confidence  = Math.round(opp.confidence ?? 0);
-  const confColor   = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
+  const confidence   = Math.round(opp.confidence ?? 0);
+  const confColor    = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
 
   const PANEL_TABS = [
     { key: 'research' as const,   label: '📊 Research' },
@@ -333,53 +466,7 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
 
       {/* ── Profitability tab ── */}
       {tab === 'profit' && pm && (
-        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Cost Breakdown — {platform}</h4>
-            <div className="space-y-1.5">
-              <WaterfallBar label="India Source Cost"   value={src}    total={sale} color="#6366f1" />
-              <WaterfallBar label="Int'l Shipping"      value={ship}   total={sale} color="#8b5cf6" />
-              <WaterfallBar label="Packaging + Labels"  value={pkg}    total={sale} color="#a78bfa" />
-              <WaterfallBar label="Import Duties"       value={duty}   total={sale} color="#c4b5fd" />
-              <div className="my-2 flex items-center gap-2 text-xs border-t border-white/10 pt-2">
-                <div className="w-40 text-white/70 font-semibold text-right shrink-0">= Landed Cost</div>
-                <div className="flex-1" />
-                <div className="w-14 font-mono font-bold text-violet-300 text-right">{usd(landed, 2)}</div>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/25 mt-3 mb-1">
-                <div className="w-40 text-right shrink-0">Sale Price</div>
-                <div className="flex-1" />
-                <div className="w-14 font-mono font-semibold text-white/70 text-right">{usd(sale, 2)}</div>
-              </div>
-              <WaterfallBar label={`Referral (${referralPct}%)`} value={refFee}  total={sale} color="#ef4444" />
-              <WaterfallBar label="FBA / Fulfillment"             value={fbaFee}  total={sale} color="#f97316" />
-              <WaterfallBar label="Est. Ad Spend (5%)"           value={adSpend} total={sale} color="#eab308" />
-              <WaterfallBar label="Landed Cost"                   value={landed}  total={sale} color="#6366f1" />
-            </div>
-          </div>
-          <div>
-            <div className={`rounded-lg border p-4 ${net > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/25 bg-red-500/8'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white/60">Net Profit / Unit</span>
-                <span className={`text-2xl font-bold ${net > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usd(net, 2)}</span>
-              </div>
-              <div className="flex gap-4 text-[10px] text-white/40 mb-3">
-                <span>Margin <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{pct(margin)}</strong></span>
-                <span>ROI <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{roi.toFixed(0)}%</strong></span>
-                {pm.breakevenUnits < 999 && <span>Break-even <strong className="text-white/60">{pm.breakevenUnits} units</strong></span>}
-              </div>
-              {pm.monthlyProfitMinor > 0 && (
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-white/40 pt-3 border-t border-white/10">
-                  <div>Monthly (50 units)<div className="font-semibold text-white/70 text-sm mt-0.5">{usd(pm.monthlyProfitMinor, 0)}</div></div>
-                  <div>Annual projection<div className="font-semibold text-white/70 text-sm mt-0.5">{usd(pm.annualProfitMinor, 0)}</div></div>
-                </div>
-              )}
-            </div>
-            <p className="mt-2 text-[10px] text-white/20">
-              Fees: {platform} standard · Shipping: India air freight · Duties: destination avg · {currency}
-            </p>
-          </div>
-        </div>
+        <ProfitWaterfallChart pm={pm} currency={currency} platform={platform} />
       )}
       {tab === 'profit' && !pm && (
         <div className="p-6 text-center text-xs text-white/30">No profitability data for this opportunity</div>
