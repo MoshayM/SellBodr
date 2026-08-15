@@ -30,16 +30,22 @@ function NavItem({ href, label, icon, badge, onClick }: { href: string; label: s
   const active  = path === href || path.startsWith(href + '/');
   return (
     <Link href={href} onClick={onClick}
-      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group select-none ${
         active
-          ? 'bg-gradient-to-r from-violet-600/20 to-indigo-600/10 text-white border border-violet-500/20'
+          ? 'text-white'
           : 'text-white/45 hover:text-white hover:bg-white/5'
-      }`}>
-      {active && <motion.div layoutId="sidebar-pill" className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-600/15 to-indigo-600/8 border border-violet-500/20" />}
-      <span className="text-base relative z-10">{icon}</span>
+      }`}
+      style={active ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.6), 0 2px 12px rgba(124,58,237,0.15)' } : undefined}>
+      {active && (
+        <motion.div layoutId="sidebar-pill"
+          className="absolute inset-0 rounded-xl border border-violet-500/25"
+          style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(99,102,241,0.10) 100%)' }} />
+      )}
+      <span className={`text-base relative z-10 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>{icon}</span>
       <span className="relative z-10">{label}</span>
       {badge && (
-        <span className="ml-auto relative z-10 text-[10px] leading-none font-bold px-1.5 py-1 rounded-md bg-violet-600 text-white">
+        <span className="ml-auto relative z-10 text-[10px] leading-none font-bold px-1.5 py-1 rounded-md animate-badge-launch"
+          style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' }}>
           {badge}
         </span>
       )}
@@ -209,10 +215,10 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             const active = path === href || path.startsWith(href + '/');
             return (
               <Link key={href} href={href}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${active ? 'text-violet-400' : 'text-white/30 active:text-white/60'}`}>
-                <span className={`text-xl leading-none transition-transform ${active ? 'scale-110' : ''}`}>{icon}</span>
-                <span className="text-[10px] font-medium leading-none">{label}</span>
-                {active && <div className="w-1 h-1 rounded-full bg-violet-400 mt-0.5" />}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative ${active ? 'text-violet-300' : 'text-white/30 active:text-white/60'}`}>
+                {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ boxShadow: '0 0 8px rgba(124,58,237,0.6)' }} />}
+                <span className={`text-xl leading-none transition-transform duration-200 ${active ? 'scale-115' : ''}`}>{icon}</span>
+                <span className={`text-[10px] font-semibold leading-none ${active ? 'text-violet-300' : ''}`}>{label}</span>
               </Link>
             );
           })}

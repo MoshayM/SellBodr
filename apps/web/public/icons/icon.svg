@@ -1,42 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
-    <!-- Main gradient: saffron-orange (India) → deep violet (global/tech) -->
-    <linearGradient id="g1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#f97316"/>
-      <stop offset="55%" stop-color="#7c3aed"/>
-      <stop offset="100%" stop-color="#4338ca"/>
+    <!-- Arrow gradient: orange (upper-right) → magenta → violet (lower-left) -->
+    <linearGradient id="g" x1="74" y1="18" x2="26" y2="82" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#ff6420"/>
+      <stop offset="48%"  stop-color="#d63fa8"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
     </linearGradient>
-    <!-- Subtle inner glow -->
-    <radialGradient id="glow" cx="30%" cy="25%" r="60%">
-      <stop offset="0%" stop-color="#fdba74" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#fdba74" stop-opacity="0"/>
+    <!-- Background: deep dark navy with subtle purple tint -->
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#180840"/>
+      <stop offset="100%" stop-color="#040c20"/>
+    </linearGradient>
+    <!-- Subtle glow behind arrows -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="48%">
+      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
   <!-- Rounded square background -->
-  <rect width="100" height="100" rx="22" fill="url(#g1)"/>
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+  <!-- Inner glow -->
   <rect width="100" height="100" rx="22" fill="url(#glow)"/>
 
-  <!--
-    The mark: two stacked arrowhead-capped paths forming a stylised "S" / trade-flow symbol.
-    Top arc: source (India, lower-left) → global (upper-right) with outbound arrow
-    Bottom arc: feedback loop, inbound, mirrored
-    Combined they read as the letter S and suggest bidirectional cross-border flow.
-  -->
+  <!-- Upper arc: lower-left → upper-right, tangent at end points upper-right -->
+  <path d="M 22 63 C 18 28, 58 30, 72 21"
+    stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Upper arrowhead at (72,21), pointing upper-right -->
+  <polyline points="68,32 72,21 61,20"
+    stroke="url(#g)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-  <!-- Top arc: curves from left to upper-right, arrow pointing out -->
-  <!-- Bezier from (20,58) curving up-right to (72,28) -->
-  <path d="M 20 58 C 20 35, 50 22, 72 28"
-        stroke="white" stroke-width="9" stroke-linecap="round" fill="none" stroke-opacity="0.95"/>
-  <!-- Arrowhead at (72,28) pointing upper-right -->
-  <polyline points="58,20 72,28 65,43"
-            stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.95"/>
-
-  <!-- Bottom arc: mirrors, curves from right to lower-left, arrow pointing inward -->
-  <!-- Bezier from (80,42) curving down-left to (28,72) -->
-  <path d="M 80 42 C 80 65, 50 78, 28 72"
-        stroke="white" stroke-width="9" stroke-linecap="round" fill="none" stroke-opacity="0.95"/>
-  <!-- Arrowhead at (28,72) pointing lower-left -->
-  <polyline points="42,80 28,72 35,57"
-            stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.95"/>
+  <!-- Lower arc: upper-right → lower-left, tangent at end points lower-left -->
+  <path d="M 78 37 C 82 72, 42 70, 28 79"
+    stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Lower arrowhead at (28,79), pointing lower-left -->
+  <polyline points="32,68 28,79 39,80"
+    stroke="url(#g)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

@@ -95,6 +95,37 @@ body {
   50%       { border-color: rgba(124,58,237,0.8); }
 }
 
+@keyframes badge-launch {
+  0%,100% { box-shadow: 0 0 10px rgba(16,185,129,0.3), 0 0 20px rgba(16,185,129,0.12); }
+  50%     { box-shadow: 0 0 18px rgba(16,185,129,0.5), 0 0 36px rgba(16,185,129,0.2); }
+}
+@keyframes badge-hold {
+  0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.25), 0 0 20px rgba(245,158,11,0.1); }
+  50%     { box-shadow: 0 0 16px rgba(245,158,11,0.45), 0 0 32px rgba(245,158,11,0.2); }
+}
+@keyframes badge-reject {
+  0%,100% { box-shadow: 0 0 8px rgba(239,68,68,0.2); }
+  50%     { box-shadow: 0 0 14px rgba(239,68,68,0.38); }
+}
+
+@keyframes tab-glow {
+  0%,100% { box-shadow: 0 0 12px rgba(124,58,237,0.35); }
+  50%     { box-shadow: 0 0 22px rgba(124,58,237,0.6); }
+}
+@keyframes bar-fill {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes row-rise {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-1px) scale(1.002); }
+}
+@keyframes chip-pop {
+  0%  { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100%{ transform: scale(1); }
+}
+
 /* ── Animation utility classes ────────────────────────── */
 
 .animate-float-a   { animation: float-a 6s ease-in-out infinite; }
@@ -105,7 +136,12 @@ body {
 .animate-slide-up  { animation: slide-up 0.6s ease both; }
 .animate-fade-in   { animation: fade-in 0.5s ease both; }
 .animate-scale-in  { animation: scale-in 0.4s ease both; }
-.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-spin-slow   { animation: spin-slow 20s linear infinite; }
+.animate-badge-launch { animation: badge-launch 2.5s ease-in-out infinite; }
+.animate-badge-hold   { animation: badge-hold   3s   ease-in-out infinite; }
+.animate-badge-reject { animation: badge-reject 3.5s ease-in-out infinite; }
+.animate-tab-glow     { animation: tab-glow     2s   ease-in-out infinite; }
+.animate-bar-fill     { animation: bar-fill 0.6s cubic-bezier(0.22,1,0.36,1) both; }
 .animate-gradient  {
   background-size: 300% 300%;
   animation: gradient-shift 6s ease infinite;
@@ -176,19 +212,44 @@ body {
 
   .btn-primary {
     @apply bg-gradient-to-r from-violet-600 to-indigo-600
-           hover:from-violet-500 hover:to-indigo-500
-           active:from-violet-700 active:to-indigo-700
            text-white px-6 py-3 rounded-xl font-semibold
-           transition-all duration-200 shadow-lg shadow-violet-500/25
-           min-h-[48px] inline-flex items-center justify-center gap-2;
+           inline-flex items-center justify-center gap-2 min-h-[48px]
+           select-none;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.35), 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: transform 0.18s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.18s ease, background 0.18s ease;
+    transform: translateY(0) scale(1);
   }
+  .btn-primary:hover {
+    @apply from-violet-500 to-indigo-500;
+    box-shadow: 0 8px 25px rgba(124,58,237,0.5), 0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+    transform: translateY(-2px) scale(1.01);
+  }
+  .btn-primary:active {
+    @apply from-violet-700 to-indigo-700;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.25), inset 0 1px 3px rgba(0,0,0,0.3);
+    transform: translateY(1px) scale(0.99);
+  }
+
   .btn-secondary {
-    @apply bg-white/5 hover:bg-white/10 active:bg-white/15
-           text-white border border-white/10 hover:border-white/20
+    @apply bg-white/5 text-white border border-white/10
            px-6 py-3 rounded-xl font-semibold
-           transition-all duration-200
-           min-h-[48px] inline-flex items-center justify-center gap-2;
+           inline-flex items-center justify-center gap-2 min-h-[48px]
+           select-none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: transform 0.18s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    transform: translateY(0) scale(1);
   }
+  .btn-secondary:hover {
+    @apply bg-white/10 border-white/20;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    transform: translateY(-2px) scale(1.01);
+  }
+  .btn-secondary:active {
+    @apply bg-white/15;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25), inset 0 1px 3px rgba(0,0,0,0.2);
+    transform: translateY(1px) scale(0.99);
+  }
+
   .btn-primary-light {
     @apply bg-gradient-to-r from-violet-600 to-indigo-600
            hover:from-violet-500 hover:to-indigo-500
@@ -198,6 +259,57 @@ body {
   }
   .card { @apply bg-white rounded-2xl border border-gray-100 shadow-sm; }
   .card-dark { @apply glass-card rounded-2xl; }
+
+  /* ── Tab pill navigation ───────────────────────────────── */
+  .tab-pill-bar {
+    @apply flex items-center gap-1 p-1 rounded-xl;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .tab-pill {
+    @apply relative px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 select-none;
+    color: rgba(255,255,255,0.4);
+  }
+  .tab-pill:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+  .tab-pill.active {
+    @apply text-white;
+    background: linear-gradient(135deg, rgba(124,58,237,0.35) 0%, rgba(99,102,241,0.25) 100%);
+    border: 1px solid rgba(124,58,237,0.35);
+    box-shadow: 0 2px 12px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: tab-glow 2.5s ease-in-out infinite;
+  }
+
+  /* ── Filter chip pills ─────────────────────────────────── */
+  .chip {
+    @apply px-3 py-1.5 rounded-lg text-xs font-medium border whitespace-nowrap cursor-pointer select-none;
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.09);
+    color: rgba(255,255,255,0.5);
+    transition: all 0.18s cubic-bezier(0.175,0.885,0.32,1.275);
+    transform: scale(1);
+  }
+  .chip:hover {
+    background: rgba(124,58,237,0.12);
+    border-color: rgba(124,58,237,0.28);
+    color: rgba(196,181,253,0.9);
+    transform: scale(1.03);
+  }
+  .chip.active {
+    background: linear-gradient(135deg, rgba(124,58,237,0.28) 0%, rgba(99,102,241,0.2) 100%);
+    border-color: rgba(124,58,237,0.45);
+    color: #c4b5fd;
+    box-shadow: 0 2px 10px rgba(124,58,237,0.2);
+    transform: scale(1.04);
+  }
+
+  /* ── 3D card hover ─────────────────────────────────────── */
+  .card-3d {
+    transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.25s ease;
+  }
+  .card-3d:hover {
+    transform: translateY(-3px) scale(1.005);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 4px 12px rgba(124,58,237,0.1);
+  }
 
   .input-dark {
     @apply w-full bg-white/5 border border-white/10

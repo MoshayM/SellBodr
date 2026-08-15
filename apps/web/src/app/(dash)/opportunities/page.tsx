@@ -95,11 +95,13 @@ function trendTenure(createdAt: number): { label: string; key: string; color: st
 function ScoreBar({ label, value }: { label: string; value: number }) {
   const v = Math.round(value);
   const color = v >= 70 ? '#10b981' : v >= 45 ? '#f59e0b' : '#ef4444';
+  const glow  = v >= 70 ? 'rgba(16,185,129,0.45)' : v >= 45 ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)';
   return (
     <div className="flex items-center gap-2 text-[11px]">
       <span className="w-[90px] text-white/45 text-right shrink-0 leading-tight">{label}</span>
       <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, backgroundColor: color }} />
+        <div className="h-full rounded-full animate-bar-fill"
+          style={{ width: `${v}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, boxShadow: `0 0 6px ${glow}` }} />
       </div>
       <span className="w-6 font-bold shrink-0 tabular-nums" style={{ color }}>{v}</span>
     </div>
@@ -196,7 +198,7 @@ function ResearchTab({ opp }: { opp: any }) {
 // ── Breakdown panel — tabbed: Research | Suppliers | Profitability ─────────────
 
 function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
-  const [tab, setTab] = useState<'research' | 'suppliers'>('research');
+  const [tab, setTab] = useState<'research' | 'suppliers' | 'profit'>('research');
   const pm          = opp.profitModel;
   const sale        = pm?.salePriceMinor ?? 0;
   const suppliers: any[] = opp.suppliers ?? [];
@@ -206,29 +208,233 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
   const PANEL_TABS = [
     { key: 'research' as const,   label: '📊 Research' },
     { key: 'suppliers' as const,  label: '🏭 Suppliers' },
+    { key: 'profit' as const,     label: '💰 Profitability' },
   ];
 
   return (
     <div className="bg-white/[0.015] border-t border-white/5">
-      {/* Tab bar */}
-      <div className="flex items-center border-b border-white/5 px-2">
-        {PANEL_TABS.map(t => (
-          <button key={t.key}
-            onClick={e => { e.stopPropagation(); setTab(t.key); }}
-            className={`px-4 py-2.5 text-xs font-semibold tracking-wide transition-colors border-b-2 -mb-px whitespace-nowrap ${
-              tab === t.key ? 'border-violet-500 text-violet-300' : 'border-transparent text-white/35 hover:text-white/60'
-            }`}>
-            {t.label}
-          </button>
-        ))}
+      {/* Tab bar — pill style */}
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
+        <div className="tab-pill-bar flex-1">
+          {PANEL_TABS.map(t => (
+            <button key={t.key}
+              onClick={e => { e.stopPropagation(); setTab(t.key); }}
+              className={`tab-pill${tab === t.key ? ' active' : ''}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
         <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
-          className="ml-auto text-[10px] text-violet-400/50 hover:text-violet-400 font-medium hover:underline px-3 py-2.5 transition-colors shrink-0">
+          className="shrink-0 text-[10px] text-violet-400/50 hover:text-violet-300 font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/20">
           Full Report →
         </Link>
       </div>
 
       {/* ── Research tab ── */}
       {tab === 'research' && <ResearchTab opp={opp} />}
+
+      {/* ── Profitability tab ── */}
+      {tab === 'profit' && (() => {
+        if (!pm) return <div className="p-6 text-center text-white/30 text-xs">No profitability data</div>;
+        const src       = Number(pm.productCostMinor   ?? 0);
+        const saleP     = Number(pm.salePriceMinor     ?? 0);
+        const landed    = Number(pm.landedCostMinor    ?? 0);
+        const ship      = Number(pm.intlShippingMinor  ?? 0);
+        const pkg       = Number(pm.packagingCostMinor ?? 0);
+        const dutyAmt   = Number(pm.dutyMinor          ?? 0);
+        const refFee    = Number(pm.referralFeeMinor   ?? 0);
+        const refPct    = Number(pm.referralPct        ?? 15);
+        const fbaFee    = Number(pm.fbaFeeMinor        ?? 0);
+        const adSpend   = Number(pm.adCostMinor        ?? 0);
+        const trueNet   = Number(pm.trueNetMinor       ?? pm.netProfitMinor ?? 0);
+        const netMargin = Number(pm.netMarginPct       ?? 0);
+        const roi       = Number(pm.roiPct             ?? 0);
+        const breakeven = Number(pm.breakevenUnits     ?? (trueNet > 0 ? Math.ceil(5000 / trueNet) : 999));
+        const monthly50 = Number(pm.monthlyProfitMinor ?? trueNet * 50);
+        const annual50  = Number(pm.annualProfitMinor  ?? monthly50 * 12);
+        const currency  = pm.currency || 'USD';
+        const platform  = mpCode.split('_')[0].charAt(0).toUpperCase() + mpCode.split('_')[0].slice(1) || 'Marketplace';
+        const sym       = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+        const f = (v: number, d = 2) => `${sym}${(Math.abs(v) / 100).toFixed(d)}`;
+        const allRows = [
+          { label: 'Sale Price',      value: saleP,             positive: true,  grad: 'linear-gradient(90deg,#10b981,#34d399)',  glow: 'rgba(16,185,129,0.5)',  isSubtotal: false, isNet: false },
+          { label: 'Source Cost',     value: src,               positive: false, grad: 'linear-gradient(270deg,#818cf8,#6366f1)', glow: 'rgba(99,102,241,0.5)',  isSubtotal: false, isNet: false },
+          { label: "Int'l Ship.",     value: ship,              positive: false, grad: 'linear-gradient(270deg,#a78bfa,#7c3aed)', glow: 'rgba(124,58,237,0.45)', isSubtotal: false, isNet: false },
+          { label: 'Packaging',       value: pkg,               positive: false, grad: 'linear-gradient(270deg,#c4b5fd,#8b5cf6)', glow: 'rgba(139,92,246,0.4)',  isSubtotal: false, isNet: false },
+          { label: 'Import Duty',     value: dutyAmt,           positive: false, grad: 'linear-gradient(270deg,#ddd6fe,#a78bfa)', glow: 'rgba(167,139,250,0.35)',isSubtotal: false, isNet: false },
+          { label: '= Landed',        value: landed,            positive: false, grad: 'linear-gradient(270deg,#818cf8,#4f46e5)', glow: 'rgba(79,70,229,0.5)',   isSubtotal: true,  isNet: false },
+          { label: `Ref. ${refPct}%`, value: refFee,            positive: false, grad: 'linear-gradient(270deg,#f87171,#ef4444)', glow: 'rgba(239,68,68,0.5)',   isSubtotal: false, isNet: false },
+          { label: 'FBA / Fulfil.',   value: fbaFee,            positive: false, grad: 'linear-gradient(270deg,#fb923c,#f97316)', glow: 'rgba(249,115,22,0.45)', isSubtotal: false, isNet: false },
+          { label: 'Ad Spend 5%',     value: adSpend,           positive: false, grad: 'linear-gradient(270deg,#fbbf24,#eab308)', glow: 'rgba(234,179,8,0.45)',  isSubtotal: false, isNet: false },
+          { label: 'Net Profit',      value: Math.abs(trueNet), positive: trueNet >= 0,
+            grad: trueNet >= 0 ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(270deg,#f87171,#ef4444)',
+            glow: trueNet >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)',
+            isSubtotal: false, isNet: true },
+        ].filter(r => r.value > 0);
+        const maxDivRef = Math.max(saleP, landed, Math.abs(trueNet), 1);
+
+
+        return (
+          <div className="p-4 space-y-3">
+
+            {/* ── DIVERGING COST BREAKDOWN ── */}
+            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              {/* Header */}
+              <div className="flex items-center mb-2">
+                <div className="flex-1 text-right pr-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-red-400/60">← Costs</span>
+                </div>
+                <div className="w-[76px] shrink-0 text-center">
+                  <div className="text-[9px] font-bold uppercase tracking-wide text-white/40">{platform}</div>
+                  <div className="text-[7px] text-white/20 mt-px">Cost Breakdown</div>
+                </div>
+                <div className="flex-1 pl-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400/60">Revenue →</span>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-4 mb-3">
+                {([
+                  { c: 'rgba(99,102,241,0.75)',  label: 'Sourcing' },
+                  { c: 'rgba(239,68,68,0.75)',   label: 'Fees' },
+                  { c: 'rgba(16,185,129,0.75)',  label: 'Revenue / Profit' },
+                ] as {c:string;label:string}[]).map(({ c, label }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm" style={{ background: c }} />
+                    <span className="text-[8px] text-white/35">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Diverging rows */}
+              <div className="space-y-[3px]">
+                {allRows.map((r) => {
+                  const pct = Math.min(92, (r.value / maxDivRef) * 100);
+                  const rowH = r.isNet ? 26 : r.isSubtotal ? 22 : 18;
+                  const barH = r.isNet ? 'h-3' : r.isSubtotal ? 'h-2.5' : 'h-2';
+                  return (
+                    <div key={r.label}>
+                      {r.isSubtotal && (
+                        <div className="h-px my-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)' }} />
+                      )}
+                      {r.isNet && (
+                        <div className="h-px my-1.5" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)' }} />
+                      )}
+                      <div className="flex items-center" style={{ height: rowH }}>
+                        {/* Left half — costs, bar grows rightward from axis */}
+                        <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0"
+                          style={{ borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                          {!r.positive && (
+                            <>
+                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                                -{f(r.value)}
+                              </span>
+                              <div className={`${barH} rounded-l-full flex-shrink-0`}
+                                style={{ width: `${pct}%`, background: r.grad, boxShadow: `0 0 5px ${r.glow}` }} />
+                            </>
+                          )}
+                        </div>
+
+                        {/* Center — label at zero axis */}
+                        <div className="w-[76px] shrink-0 flex items-center justify-center px-1">
+                          <span className={`text-center leading-tight ${r.isNet ? 'text-[10px] font-bold text-white/90' : r.isSubtotal ? 'text-[9px] font-semibold text-indigo-400' : 'text-[9px] text-white/45'}`}>
+                            {r.label}
+                          </span>
+                        </div>
+
+                        {/* Right half — revenue/profit, bar grows leftward from axis */}
+                        <div className="flex-1 flex items-center justify-start gap-1.5 min-w-0"
+                          style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                          {r.positive && (
+                            <>
+                              <div className={`${barH} rounded-r-full flex-shrink-0`}
+                                style={{ width: `${pct}%`, background: r.grad, boxShadow: `0 0 5px ${r.glow}` }} />
+                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                                +{f(r.value)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── UNIFIED METRICS ── */}
+            <div className="grid grid-cols-6 gap-2">
+
+              {/* Hero: Net Profit / Unit */}
+              <div className="col-span-2 rounded-xl p-3 flex flex-col justify-between"
+                style={{
+                  background: trueNet >= 0
+                    ? 'linear-gradient(135deg,rgba(16,185,129,0.1) 0%,rgba(16,185,129,0.03) 100%)'
+                    : 'linear-gradient(135deg,rgba(239,68,68,0.1) 0%,rgba(239,68,68,0.03) 100%)',
+                  border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
+                }}>
+                <div className="text-[9px] font-semibold text-white/35 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className={`text-3xl font-black tabular-nums leading-none my-1.5 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                  style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
+                  {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${trueNet >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                    Margin {netMargin.toFixed(1)}%
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${roi >= 20 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                    ROI {roi.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Total Cost / Unit */}
+              <div className="rounded-xl p-3 text-center flex flex-col justify-between"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Total Cost / Unit</div>
+                <div className="text-xl font-bold text-red-400 tabular-nums my-1">
+                  {f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}
+                </div>
+                <div className="text-[9px] text-white/20">all-in landed</div>
+              </div>
+
+              {/* Break-even */}
+              <div className="rounded-xl p-3 text-center flex flex-col justify-between"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Break-even</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>
+                  {Math.min(breakeven, 999)}
+                </div>
+                <div className="text-[9px] text-white/20">units to profit</div>
+              </div>
+
+              {/* Monthly · 50u */}
+              <div className="rounded-xl p-3 text-center flex flex-col justify-between"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Monthly</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
+                  {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
+                </div>
+                <div className="text-[9px] text-white/20">est. · 50 units</div>
+              </div>
+
+              {/* Annual · 50u */}
+              <div className="rounded-xl p-3 text-center flex flex-col justify-between"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Annual</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
+                  style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>
+                  {annual50 < 0 ? '-' : ''}{sym}{(Math.abs(annual50) / 100).toFixed(0)}
+                </div>
+                <div className="text-[9px] text-white/20">est. · 50 units</div>
+              </div>
+
+            </div>
+
+          </div>
+        );
+      })()}
 
       {/* ── Suppliers tab ── */}
       {tab === 'suppliers' && (
@@ -405,19 +611,7 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
   );
 }
 
-// ── Small pill filter ─────────────────────────────────────────────────────────
-
-function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick}
-      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium leading-none transition-colors whitespace-nowrap ${
-        active ? 'bg-violet-600 text-white' : 'bg-white/5 border border-white/10 text-white/55 hover:text-white hover:bg-white/10'}`}>
-      {label}
-    </button>
-  );
-}
-
-// ── Select pill ───────────────────────────────────────────────────────────────
+// ── Filter select style ───────────────────────────────────────────────────────
 
 const SEL = 'bg-white/5 border border-white/10 hover:border-white/20 text-xs text-white/60 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 [&>option]:bg-[#0d1225] cursor-pointer transition-colors min-h-[34px]';
 
@@ -554,67 +748,46 @@ export default function OpportunitiesPage() {
         </div>
       )}
 
-      {/* ── Filter panel ─────────────────────────────────────── */}
-      <div className="card-dark rounded-xl p-3 sm:p-4 mb-4 space-y-3">
+      {/* ── Filter bar ─────────────────────────────────────── */}
+      <div className="card-dark rounded-xl border border-white/8 p-3 mb-4">
+        <div className="flex flex-wrap items-center gap-2">
 
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest block mb-1.5">
-              Marketplace{!mktLoading && <span className="ml-1 font-normal text-white/25">({(marketplaces as any[]).length})</span>}
-            </label>
-            <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
-              onChange={v => setMpFilter(v)} loading={mktLoading} />
-          </div>
+          {/* Marketplace */}
+          <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
+            onChange={v => setMpFilter(v)} loading={mktLoading} />
 
-          {categories.length > 0 && (
-            <div>
-              <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Category</label>
-              <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SEL}>
-                <option value="">All Categories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          )}
+          {/* Category */}
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SEL}>
+            <option value="">All Categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
 
-          <div>
-            <label className="text-[10px] font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Sort by</label>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={SEL}>
-              <option value="score">⭐ AI Score</option>
-              <option value="profit">💰 Net Profit</option>
-              <option value="trend">📈 Trend Strength</option>
-              <option value="newest">🕐 Newest First</option>
-              <option value="oldest">🕐 Oldest First</option>
-            </select>
-          </div>
+          {/* Signal */}
+          <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
+            <option value="">All Signals</option>
+            <option value="launch">🚀 Launch</option>
+            <option value="hold">⏸ Hold</option>
+            <option value="reject">✕ Reject</option>
+          </select>
 
-          <div className="ml-auto text-xs text-white/30 self-end pb-1.5">
-            {displayed.length} of {allOpps.length} result{allOpps.length !== 1 ? 's' : ''}
-          </div>
-        </div>
+          {/* Trend source */}
+          <select value={srcFilter} onChange={e => setSrcFilter(e.target.value)} className={SEL}>
+            <option value="">All Trends</option>
+            <option value="search">🔍 Search</option>
+            <option value="social">📱 Social</option>
+            <option value="curated">🎨 Curated</option>
+            <option value="value">💲 Value</option>
+          </select>
 
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-white/5">
-          <span className="text-[10px] text-white/30 font-semibold uppercase tracking-widest shrink-0">Signal:</span>
-          {[['', 'All'], ['launch', '🚀 Launch'], ['hold', '⏸ Hold'], ['reject', '✕ Reject']].map(([v, l]) => (
-            <Pill key={v} label={l} active={recFilter === v} onClick={() => setRecFilter(v)} />
-          ))}
+          {/* Trend strength */}
+          <select value={strengthFilter} onChange={e => setStrengthFilter(e.target.value)} className={SEL}>
+            <option value="">All Channels</option>
+            <option value="hot">🔥 Hot</option>
+            <option value="rising">📈 Rising</option>
+            <option value="stable">➡️ Stable</option>
+          </select>
 
-          <div className="w-px h-4 bg-white/10 mx-1 shrink-0" />
-
-          <span className="text-[10px] text-white/30 font-semibold uppercase tracking-widest shrink-0">Trend:</span>
-          {[['', 'All Sources'], ['search', '🔍 Search'], ['social', '📱 Social'], ['curated', '🎨 Curated'], ['value', '💲 Value']].map(([v, l]) => (
-            <Pill key={v} label={l} active={srcFilter === v} onClick={() => setSrcFilter(v)} />
-          ))}
-
-          <div className="w-px h-4 bg-white/10 mx-1 shrink-0" />
-
-          <span className="text-[10px] text-white/30 font-semibold uppercase tracking-widest shrink-0">Strength:</span>
-          {[['', 'All'], ['hot', '🔥 Hot'], ['rising', '📈 Rising'], ['stable', '➡️ Stable']].map(([v, l]) => (
-            <Pill key={v} label={l} active={strengthFilter === v} onClick={() => setStrengthFilter(v)} />
-          ))}
-
-          <div className="w-px h-4 bg-white/10 mx-1 shrink-0" />
-
-          <span className="text-[10px] text-white/30 font-semibold uppercase tracking-widest shrink-0">Period:</span>
+          {/* Period */}
           <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className={SEL}>
             <option value="">All Time</option>
             <option value="2d">Last 2 days</option>
@@ -623,12 +796,28 @@ export default function OpportunitiesPage() {
             <option value="3m">Last 3 months</option>
           </select>
 
-          {hasClientFilters && (
-            <button onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); }}
-              className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 ml-1">
-              Clear ✕
-            </button>
-          )}
+          {/* Sort */}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={SEL}>
+            <option value="score">⭐ Best Score</option>
+            <option value="profit">💰 Most Profit</option>
+            <option value="trend">📈 Trending</option>
+            <option value="newest">🕐 Newest</option>
+            <option value="oldest">🕐 Oldest</option>
+          </select>
+
+          {/* Clear + count */}
+          <div className="ml-auto flex items-center gap-2.5">
+            {hasClientFilters && (
+              <button onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); }}
+                className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20">
+                Clear ✕
+              </button>
+            )}
+            <span className="text-xs text-white/30 whitespace-nowrap">
+              {displayed.length} of {allOpps.length} result{allOpps.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
         </div>
       </div>
 
@@ -680,7 +869,8 @@ export default function OpportunitiesPage() {
 
                   const rows: JSX.Element[] = [
                     <tr key={opp.id}
-                      className={`hover:bg-violet-500/5 transition-colors cursor-pointer ${isOpen ? 'bg-violet-500/5' : ''}`}
+                      style={isOpen ? { background: 'linear-gradient(90deg,rgba(124,58,237,0.07) 0%,rgba(124,58,237,0.03) 100%)', boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.5)' } : undefined}
+                      className="transition-all duration-200 cursor-pointer hover:bg-violet-500/[0.06]"
                       onClick={() => setExpandedId(isOpen ? null : opp.id)}>
 
                       {/* Product */}
@@ -757,12 +947,18 @@ export default function OpportunitiesPage() {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : opp.id); }}
-                            className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                            style={isOpen ? {
+                              background: 'linear-gradient(135deg,rgba(124,58,237,0.3) 0%,rgba(99,102,241,0.2) 100%)',
+                              borderColor: 'rgba(124,58,237,0.45)',
+                              color: '#c4b5fd',
+                              boxShadow: '0 2px 10px rgba(124,58,237,0.22)',
+                            } : undefined}
+                            className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap border select-none transition-all duration-200 ${
                               isOpen
-                                ? 'bg-violet-500/25 text-violet-300 border border-violet-500/30'
-                                : 'bg-white/5 text-white/45 border border-white/10 hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/25'
+                                ? 'border-violet-500/45'
+                                : 'bg-white/5 text-white/50 border-white/10 hover:bg-violet-500/12 hover:text-violet-300 hover:border-violet-500/25 hover:shadow-[0_2px_8px_rgba(124,58,237,0.18)]'
                             }`}>
-                            {isOpen ? 'Close' : '📊 Research'}
+                            {isOpen ? '✕ Close' : '📊 Research'}
                           </button>
                         </div>
                       </td>

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
@@ -147,11 +147,130 @@ function ProfitBar({ label, value, total, color }: { label: string; value: numbe
   const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
   return (
     <div className="flex items-center gap-3 text-sm">
-      <div className="w-36 text-gray-500 text-right shrink-0 text-xs">{label}</div>
-      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+      <div className="w-36 text-white/40 text-right shrink-0 text-xs">{label}</div>
+      <div className="flex-1 h-4 bg-white/8 rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <div className="w-16 font-mono font-semibold text-gray-700 text-right text-xs">{usdD(value)}</div>
+      <div className="w-16 font-mono font-semibold text-white/80 text-right text-xs">{usdD(value)}</div>
+    </div>
+  );
+}
+
+// ── 3D Profit Waterfall Chart ──────────────────────────────────────────────────
+function ProfitWaterfallChart3D({ sale, src, ship, pkg, dutyAmt, refFee, fbaFee, adSpend, trueNet, netMargin, roi, breakeven, monthly50, platform, currency }: {
+  sale: number; src: number; ship: number; pkg: number; dutyAmt: number;
+  refFee: number; fbaFee: number; adSpend: number; trueNet: number;
+  netMargin: number; roi: number; breakeven: number; monthly50: number;
+  platform: string; currency: string;
+}) {
+  const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+  const f = (v: number, d = 2) => `${sym}${(Math.abs(v) / 100).toFixed(d)}`;
+  const totalCost = src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend;
+
+  const segments = [
+    { label: ['Sale', 'Price'],    value: sale,              up: true,          color: '#7c3aed', shade: '#5b21b6' },
+    { label: ['Source', 'Cost'],   value: src,               up: false,         color: '#ef4444', shade: '#991b1b' },
+    { label: ["Int'l", 'Ship.'],   value: ship,              up: false,         color: '#f97316', shade: '#c2410c' },
+    { label: ['Pkg +', 'Label'],   value: pkg,               up: false,         color: '#f59e0b', shade: '#b45309' },
+    { label: ['Import', 'Duty'],   value: dutyAmt,           up: false,         color: '#eab308', shade: '#a16207' },
+    { label: ['Referral', 'Fee'],  value: refFee,            up: false,         color: '#ec4899', shade: '#9d174d' },
+    { label: ['FBA /', 'Fulfil.'], value: fbaFee,            up: false,         color: '#e879f9', shade: '#a21caf' },
+    { label: ['Ad', 'Spend'],      value: adSpend,           up: false,         color: '#fb7185', shade: '#be123c' },
+    { label: ['Net', 'Profit'],    value: Math.abs(trueNet), up: trueNet >= 0,  color: trueNet >= 0 ? '#22c55e' : '#ef4444', shade: trueNet >= 0 ? '#15803d' : '#991b1b' },
+  ].filter(s => s.value > 0);
+
+  const MAX_H = 110;
+  const maxVal = Math.max(...segments.map(s => s.value), 1);
+
+  const kpis = [
+    { label: 'Net / Unit',  value: `${trueNet < 0 ? '-' : ''}${f(Math.abs(trueNet))}`, pos: trueNet >= 0 },
+    { label: 'Total Cost',  value: f(totalCost),                                         pos: false },
+    { label: 'Net Margin',  value: `${netMargin.toFixed(1)}%`,                           pos: netMargin >= 15 },
+    { label: 'ROI',         value: `${roi.toFixed(0)}%`,                                 pos: roi >= 20 },
+    { label: 'Break-even',  value: `${Math.min(breakeven, 999)} units`,                  pos: breakeven < 200 },
+  ];
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a0e1e 0%, #0f172a 100%)' }}>
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <div className="text-[9px] uppercase tracking-[0.2em] text-violet-400/60 mb-0.5 font-semibold">Profit Waterfall</div>
+            <div className="text-sm font-bold text-white">{platform.toUpperCase()}</div>
+          </div>
+          <div className="flex gap-3 flex-wrap justify-end">
+            {([['#7c3aed','▲ Revenue'],['#ef4444','▼ Costs'],['#22c55e','▲ Profit']] as [string,string][]).map(([c,l]) => (
+              <div key={l} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: c }} />
+                <span className="text-[9px] text-white/40">{l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-1 mb-1" style={{ height: `${MAX_H * 2 + 2}px` }}>
+          {segments.map((seg, i) => {
+            const barH = Math.max(6, Math.round((seg.value / maxVal) * MAX_H));
+            return (
+              <div key={i} className="flex flex-col flex-1 min-w-0" style={{ height: `${MAX_H * 2 + 2}px` }}>
+                <div className="flex flex-col justify-end" style={{ height: `${MAX_H}px` }}>
+                  {seg.up && (
+                    <div className="relative" style={{ height: `${barH}px` }}>
+                      <div className="absolute inset-0 rounded-t-sm" style={{ backgroundColor: seg.color, boxShadow: `0 0 10px ${seg.color}50` }} />
+                      <div className="absolute top-0 right-0 bottom-0 w-[3px] opacity-40 rounded-tr-sm"
+                        style={{ backgroundColor: seg.shade, transform: 'skewY(-6deg) translateX(1.5px)' }} />
+                      <div className="absolute left-0 right-0 h-[3px] -top-[2px] opacity-50"
+                        style={{ backgroundColor: seg.color, transform: 'skewX(-10deg)' }} />
+                    </div>
+                  )}
+                </div>
+                <div className="w-full h-[2px] bg-white/10" />
+                <div className="flex flex-col justify-start" style={{ height: `${MAX_H}px` }}>
+                  {!seg.up && (
+                    <div className="relative" style={{ height: `${barH}px` }}>
+                      <div className="absolute inset-0 rounded-b-sm" style={{ backgroundColor: seg.color, boxShadow: `0 0 10px ${seg.color}50` }} />
+                      <div className="absolute bottom-0 right-0 top-0 w-[3px] opacity-40 rounded-br-sm"
+                        style={{ backgroundColor: seg.shade, transform: 'skewY(6deg) translateX(1.5px)' }} />
+                      <div className="absolute left-0 right-0 h-[3px] -bottom-[2px] opacity-50"
+                        style={{ backgroundColor: seg.color, transform: 'skewX(10deg)' }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex gap-1 mb-5">
+          {segments.map((seg, i) => (
+            <div key={i} className="flex-1 min-w-0 text-center">
+              {seg.label.map((line, j) => (
+                <div key={j} className="text-[7px] text-white/35 leading-[1.3]">{line}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-5 gap-2 border-t border-white/8 pt-4">
+          {kpis.map(({ label, value, pos }) => (
+            <div key={label} className="text-center">
+              <div className="text-[8px] text-white/35 mb-0.5 leading-snug">{label}</div>
+              <div className={`text-xs font-bold ${pos ? 'text-emerald-400' : 'text-red-400'}`}>{value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-xl p-3 flex items-center justify-between"
+          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)' }}>
+          <div>
+            <div className="text-[9px] text-white/40">Est. Monthly Profit</div>
+            <div className="text-[8px] text-white/25">50 units / month</div>
+          </div>
+          <div className={`text-lg font-bold ${monthly50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -211,7 +330,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="text-xs px-2.5 py-1 rounded-lg border border-gray-200 text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all">
+      className="text-xs px-2.5 py-1 rounded-lg border border-white/10 text-white/35 hover:text-white/80 hover:bg-white/5 transition-all">
       {copied ? '✓ Copied' : 'Copy'}
     </button>
   );
@@ -219,8 +338,12 @@ function CopyButton({ text }: { text: string }) {
 
 export default function OpportunityDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = Array.isArray(params.id) ? params.id[0] : (params.id as string);
-  const [tab, setTab] = useState('Overview');
+  const [tab, setTab] = useState(() => {
+    const t = searchParams.get('tab');
+    return TABS.includes(t || '') ? (t as string) : 'Overview';
+  });
   const [genLoading, setGenLoading] = useState(false);
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
 
@@ -261,10 +384,10 @@ export default function OpportunityDetailPage() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-48">
-      <div className="animate-spin text-3xl text-green-600">&#x27F3;</div>
+      <div className="animate-spin text-3xl text-green-400">&#x27F3;</div>
     </div>
   );
-  if (!opp) return <div className="card p-8 text-center text-gray-500">Opportunity not found</div>;
+  if (!opp) return <div className="card-dark p-8 text-center text-white/40">Opportunity not found</div>;
 
   const score = opp.score || {};
   const profit = opp.profitModel;
@@ -281,9 +404,10 @@ export default function OpportunityDetailPage() {
   return (
     <div>
       {/* Header card */}
-      <div className="card p-4 sm:p-6 mb-5">
+      <div className="card-dark p-4 sm:p-6 mb-5">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-          <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-gray-100 shrink-0 relative">
+          <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-white/8 shrink-0 relative"
+            style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.3)' }}>
             {opp.product?.imageUrl ? (
               <img
                 src={opp.product.imageUrl}
@@ -297,23 +421,25 @@ export default function OpportunityDetailPage() {
                 }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📦</div>
+              <div className="w-full h-full flex items-center justify-center text-white/30 text-4xl">📦</div>
             )}
           </div>
           <div className="shrink-0">
             <ScoreGauge score={score.opportunity || 0} size="lg" label="Opportunity Score" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 leading-snug">{opp.product?.title}</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-white mb-1 leading-snug">{opp.product?.title}</h1>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{opp.marketplace?.code?.toUpperCase()}</span>
-              <span className="text-xs text-gray-400">{opp.product?.category?.replace(/_/g, ' ')}</span>
-              <span className="text-xs text-gray-400">v{opp.scoreVersion}</span>
+              <span className="text-xs bg-violet-500/15 border border-violet-500/25 text-violet-300 px-2.5 py-1 rounded-lg font-mono font-semibold">
+                {opp.marketplace?.code?.toUpperCase()}
+              </span>
+              <span className="text-xs text-white/40 capitalize">{opp.product?.category?.replace(/_/g, ' ')}</span>
+              <span className="text-[10px] text-white/25 font-mono">v{opp.scoreVersion}</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
               {profit && (
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-sm font-semibold text-emerald-400">
                   Net: {opp.marketplace?.currency} {minor(profit.netProfitMinor)}/unit
                 </span>
               )}
@@ -323,29 +449,26 @@ export default function OpportunityDetailPage() {
             onClick={() => { setGenLoading(true); genAssets.mutate(); }}
             disabled={genLoading}
             className="btn-primary text-sm disabled:opacity-50 w-full sm:w-auto whitespace-nowrap">
-            {genLoading ? '&#x27F3; Generating…' : '&#x2728; Generate Launch Assets'}
+            {genLoading ? '⟳ Generating…' : '✨ Generate Launch Assets'}
           </button>
         </div>
 
         {/* Sub-scores row */}
-        <div className="flex gap-2 sm:gap-3 mt-4 flex-wrap">
+        <div className="flex gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/5 flex-wrap">
           {sub.map(({ label, value }) => (
             <div key={label} className="text-center">
-              <div className="text-xs text-gray-500 mb-1">{label}</div>
+              <div className="text-[10px] text-white/35 mb-1">{label}</div>
               <ScoreBadge score={value || 0} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Scrollable tab bar */}
+      {/* Scrollable tab bar — pill style */}
       <div className="scroll-tabs mb-5 -mx-3 sm:mx-0 px-3 sm:px-0">
-        <div className="flex border-b border-gray-200 min-w-max">
+        <div className="tab-pill-bar min-w-max">
           {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                tab === t ? 'border-green-600 text-green-700' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`tab-pill${tab === t ? ' active' : ''}`}>{t}</button>
           ))}
         </div>
       </div>
@@ -354,11 +477,11 @@ export default function OpportunityDetailPage() {
       {tab === 'Overview' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {sub.map(({ label, value }) => (
-            <div key={label} className="card p-4 flex items-center gap-3">
+            <div key={label} className="card-dark p-4 flex items-center gap-3">
               <ScoreGauge score={value || 0} size="sm" />
               <div>
-                <div className="text-sm font-medium text-gray-700">{label}</div>
-                <div className="text-xs text-gray-400">{(value || 0) >= 70 ? 'Strong' : (value || 0) >= 40 ? 'Moderate' : 'Weak'}</div>
+                <div className="text-sm font-medium text-white/80">{label}</div>
+                <div className="text-xs text-white/35">{(value || 0) >= 70 ? 'Strong' : (value || 0) >= 40 ? 'Moderate' : 'Weak'}</div>
               </div>
             </div>
           ))}
@@ -374,8 +497,8 @@ export default function OpportunityDetailPage() {
         return (
           <div className="space-y-4">
             {/* Market scores */}
-            <div className="card p-4 sm:p-5">
-              <h2 className="font-semibold text-gray-800 mb-3">Market Intelligence</h2>
+            <div className="card-dark p-4 sm:p-5">
+              <h2 className="font-semibold text-white mb-3">Market Intelligence</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Demand',     val: Math.round(score.demand || 0), unit: '/100' },
@@ -383,105 +506,105 @@ export default function OpportunityDetailPage() {
                   { label: 'Mkt Fit',    val: Math.round(score.marketplaceFit || 0), unit: '/100' },
                   { label: 'Saturation', val: Math.round(score.saturation || 0), unit: '/100' },
                 ].map(s => (
-                  <div key={s.label} className="rounded-xl bg-gray-50 p-3 text-center">
-                    <div className="text-[11px] text-gray-400 mb-1">{s.label}</div>
-                    <div className={`font-bold text-xl ${s.val >= 70 ? 'text-emerald-700' : s.val >= 45 ? 'text-amber-600' : 'text-red-600'}`}>{s.val}<span className="text-xs font-normal text-gray-400">{s.unit}</span></div>
+                  <div key={s.label} className="rounded-xl bg-white/5 p-3 text-center">
+                    <div className="text-[11px] text-white/35 mb-1">{s.label}</div>
+                    <div className={`font-bold text-xl ${s.val >= 70 ? 'text-emerald-400' : s.val >= 45 ? 'text-amber-400' : 'text-red-600'}`}>{s.val}<span className="text-xs font-normal text-white/35">{s.unit}</span></div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Product Classification */}
-            <div className="card p-4 sm:p-5">
+            <div className="card-dark p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">🏷️</span>
-                <h3 className="font-semibold text-gray-800">Product Classification &amp; GST</h3>
+                <h3 className="font-semibold text-white">Product Classification &amp; GST</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-3">
                   <div className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">HSN Code (India)</div>
-                  <div className="font-bold text-indigo-700 text-2xl font-mono">{trade.hsn}</div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">Use 8-digit for Shipping Bill</div>
+                  <div className="font-bold text-indigo-300 text-2xl font-mono">{trade.hsn}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">Use 8-digit for Shipping Bill</div>
                 </div>
-                <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-3">
+                <div className="rounded-xl border border-purple-500/20 bg-purple-500/10 p-3">
                   <div className="text-[10px] font-semibold text-purple-400 uppercase tracking-wider mb-1">HS Code (International)</div>
-                  <div className="font-bold text-purple-700 text-2xl font-mono">{trade.hs6}</div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">WCO 6-digit standard</div>
+                  <div className="font-bold text-purple-300 text-2xl font-mono">{trade.hs6}</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">WCO 6-digit standard</div>
                 </div>
-                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
                   <div className="text-[10px] font-semibold text-amber-500 uppercase tracking-wider mb-1">GST Rate (India)</div>
-                  <div className="font-bold text-amber-700 text-2xl">{trade.gst}%</div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">Exports: 0% (zero-rated)</div>
+                  <div className="font-bold text-amber-300 text-2xl">{trade.gst}%</div>
+                  <div className="text-[10px] text-white/40 mt-0.5">Exports: 0% (zero-rated)</div>
                 </div>
               </div>
-              <div className="rounded-xl bg-gray-50 px-4 py-3 mb-3">
-                <span className="text-[10px] text-gray-400">Customs Chapter · </span>
-                <span className="text-sm font-medium text-gray-700">{trade.chapter}</span>
+              <div className="rounded-xl bg-white/5 px-4 py-3 mb-3">
+                <span className="text-[10px] text-white/35">Customs Chapter · </span>
+                <span className="text-sm font-medium text-white/80">{trade.chapter}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.dgft === 'Free' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.dgft === 'Free' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-300'}`}>
                   DGFT: {trade.dgft} to Export
                 </span>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.rodtep ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.rodtep ? 'bg-blue-500/15 text-blue-300' : 'bg-white/8 text-white/40'}`}>
                   RoDTEP: {trade.rodtep ? 'Eligible ✓' : 'Not Eligible'}
                 </span>
-                <span className="text-xs px-3 py-1 rounded-full font-medium bg-violet-100 text-violet-700">IEC Mandatory</span>
+                <span className="text-xs px-3 py-1 rounded-full font-medium bg-violet-100 text-violet-300">IEC Mandatory</span>
               </div>
             </div>
 
             {/* Import Duties at destination */}
-            <div className="card p-4 sm:p-5">
+            <div className="card-dark p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">🌍</span>
-                <h3 className="font-semibold text-gray-800">Import Duties — {mpCountry}</h3>
+                <h3 className="font-semibold text-white">Import Duties — {mpCountry}</h3>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4">
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4">
                   <div className="text-[10px] font-semibold text-rose-400 uppercase tracking-wider mb-1">Import Duty Rate</div>
-                  <div className="font-bold text-rose-700 text-3xl">{duty.pct}%</div>
-                  <div className="text-[10px] text-gray-500 mt-1">On CIF value at customs</div>
+                  <div className="font-bold text-rose-300 text-3xl">{duty.pct}%</div>
+                  <div className="text-[10px] text-white/40 mt-1">On CIF value at customs</div>
                 </div>
-                <div className="rounded-xl border border-sky-100 bg-sky-50/40 p-4">
+                <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
                   <div className="text-[10px] font-semibold text-sky-500 uppercase tracking-wider mb-1">De Minimis Threshold</div>
-                  <div className="font-bold text-sky-700 text-xl mt-1">{duty.threshold}</div>
-                  <div className="text-[10px] text-gray-500 mt-1">Below this → no duty charged</div>
+                  <div className="font-bold text-sky-300 text-xl mt-1">{duty.threshold}</div>
+                  <div className="text-[10px] text-white/40 mt-1">Below this → no duty charged</div>
                 </div>
               </div>
               {duty.compliance.length > 0 && (
                 <div className="mb-4">
-                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Compliance Required</div>
+                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Compliance Required</div>
                   <div className="flex flex-wrap gap-2">
                     {duty.compliance.map((c: string) => (
-                      <span key={c} className="text-xs bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-lg">{c}</span>
+                      <span key={c} className="text-xs bg-amber-500/10 border border-amber-500/25 text-amber-300 px-2.5 py-1 rounded-lg">{c}</span>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3.5 text-sm text-blue-800">
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-sm text-blue-200">
                 💡 {duty.notes}
               </div>
             </div>
 
             {/* Export Documents */}
-            <div className="card p-4 sm:p-5">
+            <div className="card-dark p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">📄</span>
-                <h3 className="font-semibold text-gray-800">Export from India — Documents Checklist</h3>
+                <h3 className="font-semibold text-white">Export from India — Documents Checklist</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 mb-4">
                 {EXPORT_DOCS_BASE.map(doc => (
-                  <div key={doc} className="flex items-start gap-2 text-sm text-gray-700">
+                  <div key={doc} className="flex items-start gap-2 text-sm text-white/80">
                     <span className="text-emerald-500 mt-0.5 shrink-0 font-bold">✓</span>{doc}
                   </div>
                 ))}
                 {extraDocs.map(doc => (
-                  <div key={doc} className="flex items-start gap-2 text-sm text-gray-700">
+                  <div key={doc} className="flex items-start gap-2 text-sm text-white/80">
                     <span className="text-amber-500 mt-0.5 shrink-0 font-bold">★</span>{doc}
-                    <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 px-1.5 rounded">category-specific</span>
+                    <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 rounded">category-specific</span>
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl bg-violet-50 border border-violet-100 p-4 space-y-2 text-sm text-violet-900">
+              <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-4 space-y-2 text-sm text-violet-200">
                 <div><strong>IEC (Import Export Code)</strong> — Mandatory for all exports. Apply at dgft.gov.in — one-time fee ₹500.</div>
                 <div><strong>AD Code</strong> — Register your bank's Authorized Dealer code with customs to receive foreign remittance.</div>
                 <div><strong>LUT / Bond</strong> — File Letter of Undertaking annually to export under zero-rated GST without upfront payment.</div>
@@ -497,9 +620,9 @@ export default function OpportunityDetailPage() {
           {/* Global supplier map */}
           {opp.sourcingCandidates?.some((sc: any) => sc.latitude && sc.longitude) && (
             <div className="card overflow-hidden">
-              <div className="p-3 border-b border-gray-100 flex items-center gap-2">
-                <span className="text-sm font-semibold text-gray-700">🌍 Global Supplier Map</span>
-                <span className="text-xs text-gray-400">India suppliers prioritised</span>
+              <div className="p-3 border-b border-white/8 flex items-center gap-2">
+                <span className="text-sm font-semibold text-white/80">🌍 Global Supplier Map</span>
+                <span className="text-xs text-white/35">India suppliers prioritised</span>
               </div>
               <GlobalSupplierMap candidates={opp.sourcingCandidates} />
             </div>
@@ -507,19 +630,19 @@ export default function OpportunityDetailPage() {
 
           {/* Supplier table */}
           <div className="card overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 border-b border-white/8 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-800">Sourcing Candidates</span>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">India First</span>
+                <span className="font-semibold text-white">Sourcing Candidates</span>
+                <span className="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded-full font-medium">India First</span>
               </div>
-              <span className="text-xs text-gray-400">Click a row to view profile &amp; contact</span>
+              <span className="text-xs text-white/35">Click a row to view profile &amp; contact</span>
             </div>
             {(opp.sourcingCandidates?.length === 0 || !opp.sourcingCandidates) ? (
-              <div className="p-8 text-center text-gray-400">No suppliers found</div>
+              <div className="p-8 text-center text-white/35">No suppliers found</div>
             ) : (
               <div className="table-scroll">
                 <table className="w-full text-sm min-w-[700px]">
-                  <thead className="bg-gray-50 text-xs text-gray-600">
+                  <thead className="bg-white/5 text-xs text-white/55">
                     <tr>
                       <th className="text-left px-4 py-2.5">Supplier</th>
                       <th className="text-left px-4 py-2.5">Country</th>
@@ -539,42 +662,42 @@ export default function OpportunityDetailPage() {
                       const trustPct = Math.round((Number(sc.rating) || 4.0) / 5 * 100);
                       const costLabel = isIndia ? `₹${minor(sc.productCostMinor)}` : `$${((sc.productCostMinor || 0) / 100).toFixed(2)}`;
                       return (
-                        <tr key={sc.id} className={`cursor-pointer transition-colors ${isIndia ? 'hover:bg-green-50/50 bg-green-50/20' : 'hover:bg-gray-50/60'}`}
+                        <tr key={sc.id} className={`cursor-pointer transition-colors ${isIndia ? 'hover:bg-emerald-500/8 bg-emerald-500/5' : 'hover:bg-white/[0.06]'}`}
                           onClick={() => setDrawerSupplier(sc.id)}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {isIndia && idx === 0 && (
                                 <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-bold shrink-0">BEST</span>
                               )}
-                              <span className="font-medium text-gray-900 leading-tight">{sc.supplier?.name || sc.supplierName}</span>
+                              <span className="font-medium text-white leading-tight">{sc.supplier?.name || sc.supplierName}</span>
                             </div>
-                            {sc.city && <div className="text-xs text-gray-400 mt-0.5">📍 {sc.city}</div>}
+                            {sc.city && <div className="text-xs text-white/35 mt-0.5">📍 {sc.city}</div>}
                           </td>
                           <td className="px-4 py-3">
                             <span className="flex items-center gap-1.5 text-sm">
                               <span className="text-lg leading-none">{flag}</span>
-                              <span className="text-xs text-gray-600">{sc.country || 'India'}</span>
+                              <span className="text-xs text-white/55">{sc.country || 'India'}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs uppercase tracking-wide text-gray-500 font-mono">
+                          <td className="px-4 py-3 text-xs uppercase tracking-wide text-white/40 font-mono">
                             {(sc.supplier?.source || sc.source || '').replace(/-/g, ' ')}
                           </td>
-                          <td className="px-4 py-3 text-right font-mono font-semibold text-gray-800">{costLabel}</td>
+                          <td className="px-4 py-3 text-right font-mono font-semibold text-white">{costLabel}</td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex flex-col items-center gap-0.5">
-                              <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
                                 <div className="h-full rounded-full" style={{ width: `${trustPct}%`, background: trustPct >= 80 ? '#10b981' : trustPct >= 60 ? '#f59e0b' : '#ef4444' }}/>
                               </div>
-                              <span className="text-[10px] text-gray-500">{trustPct}%</span>
+                              <span className="text-[10px] text-white/40">{trustPct}%</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-700">{sc.moq}</td>
-                          <td className="px-4 py-3 text-right text-gray-600">{sc.leadTimeDays}d</td>
+                          <td className="px-4 py-3 text-right text-white/80">{sc.moq}</td>
+                          <td className="px-4 py-3 text-right text-white/55">{sc.leadTimeDays}d</td>
                           <td className="px-4 py-3 text-center">
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                              sc.feasibility === 'easy' ? 'bg-green-100 text-green-700' :
-                              sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-700' :
-                              'bg-red-100 text-red-700'
+                              sc.feasibility === 'easy' ? 'bg-green-500/15 text-green-400' :
+                              sc.feasibility === 'moderate' ? 'bg-amber-100 text-amber-300' :
+                              'bg-red-500/15 text-red-300'
                             }`}>{sc.feasibility}</span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -597,8 +720,8 @@ export default function OpportunityDetailPage() {
             const costs = opp.sourcingCandidates.map((sc: any) => sc.productCostMinor || 0);
             const maxCost = Math.max(...costs);
             return (
-              <div className="card p-4">
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Price Comparison</div>
+              <div className="card-dark p-4">
+                <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Price Comparison</div>
                 <div className="space-y-2">
                   {opp.sourcingCandidates.map((sc: any) => {
                     const isIndia = (sc.country || 'India') === 'India';
@@ -607,12 +730,12 @@ export default function OpportunityDetailPage() {
                     return (
                       <div key={sc.id} className="flex items-center gap-2 text-xs">
                         <span className="w-4 text-base leading-none">{flag}</span>
-                        <span className="w-28 truncate text-gray-600">{(sc.supplier?.source || sc.source || '').replace(/-/g, ' ')}</span>
-                        <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                        <span className="w-28 truncate text-white/55">{(sc.supplier?.source || sc.source || '').replace(/-/g, ' ')}</span>
+                        <div className="flex-1 h-4 bg-white/8 rounded overflow-hidden">
                           <div className={`h-full rounded transition-all ${isIndia ? 'bg-green-500' : 'bg-indigo-400'}`}
                             style={{ width: `${pct}%` }}/>
                         </div>
-                        <span className="w-16 text-right font-mono font-semibold text-gray-700">
+                        <span className="w-16 text-right font-mono font-semibold text-white/80">
                           {isIndia ? `₹${minor(sc.productCostMinor)}` : `$${((sc.productCostMinor||0)/100).toFixed(2)}`}
                         </span>
                       </div>
@@ -623,10 +746,10 @@ export default function OpportunityDetailPage() {
             );
           })()}
 
-          <div className="card p-4 flex items-start gap-3 text-sm text-gray-600 bg-blue-50/50 border-blue-100">
+          <div className="card-dark p-4 flex items-start gap-3 text-sm text-white/55 bg-blue-500/10 border-blue-500/20">
             <span className="text-xl shrink-0">💡</span>
             <div>
-              <span className="font-semibold text-gray-800">Negotiation tip: </span>
+              <span className="font-semibold text-white">Negotiation tip: </span>
               Contact 2–3 suppliers simultaneously. India suppliers offer craftsmanship advantage — use global prices as leverage to negotiate 15–25% below listed rate.
             </div>
           </div>
@@ -636,7 +759,7 @@ export default function OpportunityDetailPage() {
       {/* ── Profitability ── */}
       {tab === 'Profitability' && (() => {
         const pm = profit;
-        if (!pm) return <div className="card p-8 text-center text-gray-400">No profitability data for this opportunity</div>;
+        if (!pm) return <div className="card-dark p-8 text-center text-white/35">No profitability data for this opportunity</div>;
         const mpCodeStr = opp.marketplace?.code || '';
         const platform  = mpCodeStr.split('_')[0].charAt(0).toUpperCase() + mpCodeStr.split('_')[0].slice(1) || 'Marketplace';
         const currency  = pm.currency || 'USD';
@@ -658,26 +781,33 @@ export default function OpportunityDetailPage() {
         const breakeven = trueNet > 0 ? Math.ceil(5000 / trueNet) : 999;
         const monthly50 = trueNet * 50;
         const annual50  = monthly50 * 12;
+        const profitForChart = {
+          salePriceMinor: sale, productCostMinor: src, packagingCostMinor: pkg,
+          intlShippingMinor: ship, dutyMinor: dutyAmt, fbaFeeMinor: fbaFee,
+          referralFeeMinor: refFee, adCostMinor: adSpend, netProfitMinor: trueNet,
+          roiPct: roi, netMarginPct: netMargin, breakevenUnits: breakeven,
+          monthlyProfitMinor: monthly50, annualProfitMinor: annual50,
+        };
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Cost breakdown */}
-              <div className="card p-5">
-                <h3 className="font-semibold text-gray-800 mb-4">Cost Breakdown — {platform}</h3>
+              <div className="card-dark p-5">
+                <h3 className="font-semibold text-white mb-4">Cost Breakdown — {platform}</h3>
                 <div className="space-y-2.5">
                   <ProfitBar label="India Source Cost"  value={src}    total={sale} color="#6366f1" />
                   <ProfitBar label="Int'l Shipping"     value={ship}   total={sale} color="#8b5cf6" />
                   <ProfitBar label="Packaging + Labels" value={pkg}    total={sale} color="#a78bfa" />
                   <ProfitBar label="Import Duties"      value={dutyAmt} total={sale} color="#c4b5fd" />
-                  <div className="flex items-center gap-3 text-xs border-t border-gray-100 pt-2 mt-1">
-                    <div className="w-36 text-gray-600 font-semibold text-right shrink-0">= Landed Cost</div>
+                  <div className="flex items-center gap-3 text-xs border-t border-white/8 pt-2 mt-1">
+                    <div className="w-36 text-white/55 font-semibold text-right shrink-0">= Landed Cost</div>
                     <div className="flex-1" />
                     <div className="w-16 font-mono font-bold text-indigo-600 text-right">{usdD(landed)}</div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mt-3 mb-1">
+                  <div className="flex items-center gap-3 text-xs text-white/35 mt-3 mb-1">
                     <div className="w-36 text-right shrink-0">Sale Price</div>
                     <div className="flex-1" />
-                    <div className="w-16 font-mono font-semibold text-gray-600 text-right">{usdD(sale)}</div>
+                    <div className="w-16 font-mono font-semibold text-white/55 text-right">{usdD(sale)}</div>
                   </div>
                   <ProfitBar label={`Referral (${refPct}%)`} value={refFee}  total={sale} color="#ef4444" />
                   <ProfitBar label="FBA / Fulfillment"        value={fbaFee}  total={sale} color="#f97316" />
@@ -687,44 +817,51 @@ export default function OpportunityDetailPage() {
               </div>
               {/* Net profit summary */}
               <div className="space-y-3">
-                <div className={`card p-5 ${trueNet > 0 ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/40'}`}>
+                <div className={`card-dark p-5 ${trueNet > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/20 bg-red-500/10'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-600">Net Profit / Unit</span>
+                    <span className="text-sm font-medium text-white/55">Net Profit / Unit</span>
                     <span className={`text-3xl font-bold ${trueNet > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                       {trueNet < 0 ? '-' : ''}{usdD(Math.abs(trueNet))}
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 text-xs text-center py-3 border-t border-b border-gray-100 mb-3">
+                  <div className="grid grid-cols-3 gap-3 text-xs text-center py-3 border-t border-b border-white/8 mb-3">
                     <div>
-                      <div className="text-gray-400 mb-0.5">Net Margin</div>
+                      <div className="text-white/35 mb-0.5">Net Margin</div>
                       <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{pctD(netMargin)}</div>
                     </div>
                     <div>
-                      <div className="text-gray-400 mb-0.5">ROI</div>
+                      <div className="text-white/35 mb-0.5">ROI</div>
                       <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{roi.toFixed(0)}%</div>
                     </div>
                     <div>
-                      <div className="text-gray-400 mb-0.5">Break-even</div>
-                      <div className="font-bold text-sm text-gray-700">{Math.min(breakeven, 999)} units</div>
+                      <div className="text-white/35 mb-0.5">Break-even</div>
+                      <div className="font-bold text-sm text-white/80">{Math.min(breakeven, 999)} units</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="rounded-lg bg-white/70 p-3 text-center">
-                      <div className="text-gray-400 mb-1">Monthly (50 units)</div>
-                      <div className="font-bold text-gray-800 text-base">{usdD(Math.abs(monthly50), 0)}</div>
+                      <div className="text-white/35 mb-1">Monthly (50 units)</div>
+                      <div className="font-bold text-white text-base">{usdD(Math.abs(monthly50), 0)}</div>
                     </div>
                     <div className="rounded-lg bg-white/70 p-3 text-center">
-                      <div className="text-gray-400 mb-1">Annual projection</div>
-                      <div className="font-bold text-gray-800 text-base">{usdD(Math.abs(annual50), 0)}</div>
+                      <div className="text-white/35 mb-1">Annual projection</div>
+                      <div className="font-bold text-white text-base">{usdD(Math.abs(annual50), 0)}</div>
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination avg · {currency}</p>
+                <p className="text-xs text-white/35 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination avg · {currency}</p>
               </div>
             </div>
-            {/* Waterfall visualization */}
-            <div className="card p-4 sm:p-5">
-              <ProfitWaterfall profit={pm} currency={currency} />
+            {/* 3D animated waterfall (yy.PNG) */}
+            <ProfitWaterfallChart3D
+              sale={sale} src={src} ship={ship} pkg={pkg} dutyAmt={dutyAmt}
+              refFee={refFee} fbaFee={fbaFee} adSpend={adSpend} trueNet={trueNet}
+              netMargin={netMargin} roi={roi} breakeven={breakeven}
+              monthly50={monthly50} platform={platform} currency={currency}
+            />
+            {/* Recharts waterfall + key metrics (Cap.PNG content) */}
+            <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0a0e1e 0%, #0f172a 100%)' }}>
+              <ProfitWaterfall profit={profitForChart} currency={currency} />
             </div>
           </div>
         );
@@ -732,21 +869,21 @@ export default function OpportunityDetailPage() {
 
       {/* ── Competition ── */}
       {tab === 'Competition' && (
-        <div className="card p-4 sm:p-6 space-y-4">
-          <h2 className="font-semibold text-gray-800">Competition Analysis</h2>
+        <div className="card-dark p-4 sm:p-6 space-y-4">
+          <h2 className="font-semibold text-white">Competition Analysis</h2>
           <div className="grid grid-cols-2 gap-3">
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Competition Score</div>
-              <div className="text-2xl font-bold text-gray-800">{Math.round(score.competition || 0)}/100</div>
-              <div className="text-xs text-gray-400 mt-1">Higher = less competition</div>
+            <div className="card-dark p-4">
+              <div className="text-xs text-white/40 mb-1">Competition Score</div>
+              <div className="text-2xl font-bold text-white">{Math.round(score.competition || 0)}/100</div>
+              <div className="text-xs text-white/35 mt-1">Higher = less competition</div>
             </div>
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Saturation Score</div>
-              <div className="text-2xl font-bold text-gray-800">{Math.round(score.saturation || 0)}/100</div>
-              <div className="text-xs text-gray-400 mt-1">Higher = less saturated</div>
+            <div className="card-dark p-4">
+              <div className="text-xs text-white/40 mb-1">Saturation Score</div>
+              <div className="text-2xl font-bold text-white">{Math.round(score.saturation || 0)}/100</div>
+              <div className="text-xs text-white/35 mt-1">Higher = less saturated</div>
             </div>
           </div>
-          <div className="p-4 bg-blue-50 rounded-xl text-sm text-blue-800">
+          <div className="p-4 bg-blue-500/10 rounded-xl text-sm text-blue-200">
             Full competitor teardown available once marketplace connectors are configured.
           </div>
         </div>
@@ -757,43 +894,43 @@ export default function OpportunityDetailPage() {
         <div className="space-y-4">
           {listing ? (
             <>
-              <div className="card p-4 sm:p-5">
+              <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">SEO Title</div>
+                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">SEO Title</div>
                   <CopyButton text={listing.seoTitle || ''} />
                 </div>
-                <div className="font-semibold text-gray-900">{listing.seoTitle}</div>
+                <div className="font-semibold text-white">{listing.seoTitle}</div>
               </div>
-              <div className="card p-4 sm:p-5">
+              <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Bullets</div>
+                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">Bullets</div>
                   <CopyButton text={(JSON.parse(listing.bullets || '[]') as string[]).join('\n')} />
                 </div>
                 <ul className="space-y-2">
                   {(JSON.parse(listing.bullets || '[]') as string[]).map((b, i) => (
-                    <li key={i} className="text-sm text-gray-700 flex gap-2">
+                    <li key={i} className="text-sm text-white/80 flex gap-2">
                       <span className="text-green-500 shrink-0">&#x2713;</span>{b}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="card p-4 sm:p-5">
+              <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Description</div>
+                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">Description</div>
                   <CopyButton text={listing.description || ''} />
                 </div>
-                <div className="text-sm text-gray-700 leading-relaxed">{listing.description}</div>
+                <div className="text-sm text-white/80 leading-relaxed">{listing.description}</div>
               </div>
               {keywords && (
-                <div className="card p-4 sm:p-5">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Keywords</div>
+                <div className="card-dark p-4 sm:p-5">
+                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Keywords</div>
                   <div className="space-y-3">
                     {Object.entries(keywords as Record<string, any>).map(([k, vals]) => (
                       <div key={k}>
-                        <div className="text-xs font-semibold text-gray-500 capitalize mb-1.5">{k}</div>
+                        <div className="text-xs font-semibold text-white/40 capitalize mb-1.5">{k}</div>
                         <div className="flex flex-wrap gap-1.5">
                           {(Array.isArray(vals) ? vals : []).map((kw: string, i: number) => (
-                            <span key={i} className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full">{kw}</span>
+                            <span key={i} className="text-xs bg-green-500/8 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">{kw}</span>
                           ))}
                         </div>
                       </div>
@@ -803,9 +940,9 @@ export default function OpportunityDetailPage() {
               )}
             </>
           ) : (
-            <div className="card p-8 sm:p-12 text-center">
+            <div className="card-dark p-8 sm:p-12 text-center">
               <div className="text-3xl mb-3">📝</div>
-              <p className="text-gray-500 text-sm">Click &ldquo;Generate Launch Assets&rdquo; to create listing copy</p>
+              <p className="text-white/40 text-sm">Click &ldquo;Generate Launch Assets&rdquo; to create listing copy</p>
             </div>
           )}
         </div>
@@ -814,11 +951,11 @@ export default function OpportunityDetailPage() {
       {/* ── Ads ── */}
       {tab === 'Ads' && (
         <div className="space-y-4">
-          <div className="card p-4 sm:p-6">
+          <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-semibold text-gray-800">Ad Campaign Generator</h2>
-                <p className="text-xs text-gray-500 mt-0.5">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
+                <h2 className="font-semibold text-white">Ad Campaign Generator</h2>
+                <p className="text-xs text-white/40 mt-0.5">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
               </div>
               <button onClick={() => genAds.mutate()} disabled={genAds.isPending}
                 className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
@@ -829,11 +966,11 @@ export default function OpportunityDetailPage() {
             {!genAds.data && !genAds.isPending && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {['Facebook', 'Instagram', 'YouTube', 'Google'].map(p => (
-                  <div key={p} className="card p-4 text-center opacity-50">
+                  <div key={p} className="card-dark p-4 text-center opacity-50">
                     <div className="text-2xl mb-1">
                       {p === 'Facebook' ? '🔵' : p === 'Instagram' ? '🟣' : p === 'YouTube' ? '🔴' : '🟢'}
                     </div>
-                    <div className="text-sm font-medium text-gray-600">{p}</div>
+                    <div className="text-sm font-medium text-white/55">{p}</div>
                   </div>
                 ))}
               </div>
@@ -842,8 +979,8 @@ export default function OpportunityDetailPage() {
             {genAds.isPending && (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="animate-spin text-3xl text-green-600 mb-3">&#x27F3;</div>
-                  <p className="text-sm text-gray-500">Crafting your ad campaigns…</p>
+                  <div className="animate-spin text-3xl text-green-400 mb-3">&#x27F3;</div>
+                  <p className="text-sm text-white/40">Crafting your ad campaigns…</p>
                 </div>
               </div>
             )}
@@ -854,32 +991,32 @@ export default function OpportunityDetailPage() {
                 <div className="space-y-4">
                   {/* Facebook */}
                   {ads.facebook && (
-                    <div className="border border-blue-100 rounded-xl overflow-hidden">
-                      <div className="bg-blue-50 px-4 py-2.5 flex items-center gap-2">
+                    <div className="border border-blue-500/20 rounded-xl overflow-hidden">
+                      <div className="bg-blue-500/10 px-4 py-2.5 flex items-center gap-2">
                         <span className="text-lg">🔵</span>
-                        <span className="font-semibold text-blue-800 text-sm">Facebook</span>
+                        <span className="font-semibold text-blue-200 text-sm">Facebook</span>
                       </div>
                       <div className="p-4 space-y-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase">Headline</span>
+                            <span className="text-xs font-semibold text-white/35 uppercase">Headline</span>
                             <CopyButton text={ads.facebook.headline} />
                           </div>
-                          <p className="text-sm font-semibold text-gray-800">{ads.facebook.headline}</p>
+                          <p className="text-sm font-semibold text-white">{ads.facebook.headline}</p>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase">Primary Text</span>
+                            <span className="text-xs font-semibold text-white/35 uppercase">Primary Text</span>
                             <CopyButton text={ads.facebook.primaryText} />
                           </div>
-                          <p className="text-sm text-gray-700 whitespace-pre-line">{ads.facebook.primaryText}</p>
+                          <p className="text-sm text-white/80 whitespace-pre-line">{ads.facebook.primaryText}</p>
                         </div>
                         <div className="flex flex-wrap gap-3 text-xs">
-                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">CTA: {ads.facebook.cta}</span>
-                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">{ads.facebook.dailyBudget}</span>
+                          <span className="bg-blue-500/15 text-blue-300 px-2 py-1 rounded">CTA: {ads.facebook.cta}</span>
+                          <span className="bg-white/8 text-white/55 px-2 py-1 rounded">{ads.facebook.dailyBudget}</span>
                         </div>
                         {ads.facebook.audience && (
-                          <div className="bg-gray-50 rounded-lg p-2.5 text-xs text-gray-600">
+                          <div className="bg-white/5 rounded-lg p-2.5 text-xs text-white/55">
                             <span className="font-semibold">Audience: </span>{ads.facebook.audience}
                           </div>
                         )}
@@ -889,29 +1026,29 @@ export default function OpportunityDetailPage() {
 
                   {/* Instagram */}
                   {ads.instagram && (
-                    <div className="border border-purple-100 rounded-xl overflow-hidden">
-                      <div className="bg-purple-50 px-4 py-2.5 flex items-center gap-2">
+                    <div className="border border-purple-500/20 rounded-xl overflow-hidden">
+                      <div className="bg-purple-500/10 px-4 py-2.5 flex items-center gap-2">
                         <span className="text-lg">🟣</span>
-                        <span className="font-semibold text-purple-800 text-sm">Instagram</span>
+                        <span className="font-semibold text-purple-300 text-sm">Instagram</span>
                       </div>
                       <div className="p-4 space-y-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase">Caption</span>
+                            <span className="text-xs font-semibold text-white/35 uppercase">Caption</span>
                             <CopyButton text={ads.instagram.caption} />
                           </div>
-                          <p className="text-sm text-gray-700">{ads.instagram.caption}</p>
+                          <p className="text-sm text-white/80">{ads.instagram.caption}</p>
                         </div>
                         {ads.instagram.reelHook && (
                           <div>
-                            <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Reel Hook</div>
-                            <p className="text-sm text-gray-700 italic">{ads.instagram.reelHook}</p>
+                            <div className="text-xs font-semibold text-white/35 uppercase mb-1">Reel Hook</div>
+                            <p className="text-sm text-white/80 italic">{ads.instagram.reelHook}</p>
                           </div>
                         )}
                         {ads.instagram.hashtags?.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {ads.instagram.hashtags.map((tag: string, i: number) => (
-                              <span key={i} className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{tag}</span>
+                              <span key={i} className="text-xs text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full">{tag}</span>
                             ))}
                           </div>
                         )}
@@ -921,26 +1058,26 @@ export default function OpportunityDetailPage() {
 
                   {/* YouTube */}
                   {ads.youtube && (
-                    <div className="border border-red-100 rounded-xl overflow-hidden">
-                      <div className="bg-red-50 px-4 py-2.5 flex items-center gap-2">
+                    <div className="border border-red-500/20 rounded-xl overflow-hidden">
+                      <div className="bg-red-500/10 px-4 py-2.5 flex items-center gap-2">
                         <span className="text-lg">🔴</span>
-                        <span className="font-semibold text-red-800 text-sm">YouTube</span>
+                        <span className="font-semibold text-red-300 text-sm">YouTube</span>
                       </div>
                       <div className="p-4 space-y-3">
                         {ads.youtube.title && (
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-semibold text-gray-400 uppercase">Video Title</span>
+                              <span className="text-xs font-semibold text-white/35 uppercase">Video Title</span>
                               <CopyButton text={ads.youtube.title} />
                             </div>
-                            <p className="text-sm font-semibold text-gray-800">{ads.youtube.title}</p>
+                            <p className="text-sm font-semibold text-white">{ads.youtube.title}</p>
                           </div>
                         )}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {[['Hook (0–5s)', ads.youtube.hook], ['Body', ads.youtube.body], ['CTA', ads.youtube.cta]].map(([label, text]) => text && (
-                            <div key={label as string} className="bg-gray-50 rounded-lg p-2.5">
-                              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">{label as string}</div>
-                              <p className="text-xs text-gray-700">{text as string}</p>
+                            <div key={label as string} className="bg-white/5 rounded-lg p-2.5">
+                              <div className="text-xs font-semibold text-white/35 uppercase mb-1">{label as string}</div>
+                              <p className="text-xs text-white/80">{text as string}</p>
                             </div>
                           ))}
                         </div>
@@ -950,26 +1087,26 @@ export default function OpportunityDetailPage() {
 
                   {/* Google */}
                   {ads.google && (
-                    <div className="border border-green-100 rounded-xl overflow-hidden">
-                      <div className="bg-green-50 px-4 py-2.5 flex items-center gap-2">
+                    <div className="border border-green-500/20 rounded-xl overflow-hidden">
+                      <div className="bg-green-500/8 px-4 py-2.5 flex items-center gap-2">
                         <span className="text-lg">🟢</span>
-                        <span className="font-semibold text-green-800 text-sm">Google Shopping / Search</span>
+                        <span className="font-semibold text-green-400 text-sm">Google Shopping / Search</span>
                       </div>
                       <div className="p-4 space-y-3">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[ads.google.headline1, ads.google.headline2, ads.google.headline3].filter(Boolean).map((h: string, i) => (
-                            <div key={i} className="bg-gray-50 rounded p-2">
-                              <div className="text-xs text-gray-400 mb-0.5">H{i + 1}</div>
-                              <p className="text-sm font-semibold text-gray-800">{h}</p>
+                            <div key={i} className="bg-white/5 rounded p-2">
+                              <div className="text-xs text-white/35 mb-0.5">H{i + 1}</div>
+                              <p className="text-sm font-semibold text-white">{h}</p>
                             </div>
                           ))}
                         </div>
                         {ads.google.keywords?.length > 0 && (
                           <div>
-                            <div className="text-xs font-semibold text-gray-400 uppercase mb-1.5">Target Keywords</div>
+                            <div className="text-xs font-semibold text-white/35 uppercase mb-1.5">Target Keywords</div>
                             <div className="flex flex-wrap gap-1.5">
                               {ads.google.keywords.map((kw: string, i: number) => (
-                                <span key={i} className="text-xs bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full">{kw}</span>
+                                <span key={i} className="text-xs bg-green-500/8 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">{kw}</span>
                               ))}
                             </div>
                           </div>
@@ -980,11 +1117,11 @@ export default function OpportunityDetailPage() {
 
                   {/* Tips */}
                   {ads.tips?.length > 0 && (
-                    <div className="card p-4 bg-amber-50/50 border-amber-100">
-                      <div className="text-xs font-semibold text-amber-700 uppercase mb-2">Pro Tips</div>
+                    <div className="card-dark p-4 bg-amber-500/10 border-amber-500/20">
+                      <div className="text-xs font-semibold text-amber-300 uppercase mb-2">Pro Tips</div>
                       <ul className="space-y-1.5">
                         {ads.tips.map((tip: string, i: number) => (
-                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                          <li key={i} className="text-sm text-white/80 flex gap-2">
                             <span className="text-amber-500 shrink-0">&#x2022;</span>{tip}
                           </li>
                         ))}
@@ -1001,11 +1138,11 @@ export default function OpportunityDetailPage() {
       {/* ── Growth ── */}
       {tab === 'Growth' && (
         <div className="space-y-4">
-          <div className="card p-4 sm:p-6">
+          <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-semibold text-gray-800">Growth Playbook</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Personalized strategy for this product &amp; marketplace</p>
+                <h2 className="font-semibold text-white">Growth Playbook</h2>
+                <p className="text-xs text-white/40 mt-0.5">Personalized strategy for this product &amp; marketplace</p>
               </div>
               <button onClick={() => genGrowth.mutate()} disabled={genGrowth.isPending}
                 className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
@@ -1016,7 +1153,7 @@ export default function OpportunityDetailPage() {
             {!genGrowth.data && !genGrowth.isPending && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 opacity-50">
                 {['Quick Wins', 'Listing Optimization', 'Pricing Strategy', 'Review Strategy', 'Launch Sequence', 'PPC Plan'].map(s => (
-                  <div key={s} className="card p-3 text-center text-sm text-gray-500">{s}</div>
+                  <div key={s} className="card-dark p-3 text-center text-sm text-white/40">{s}</div>
                 ))}
               </div>
             )}
@@ -1024,8 +1161,8 @@ export default function OpportunityDetailPage() {
             {genGrowth.isPending && (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="animate-spin text-3xl text-green-600 mb-3">&#x27F3;</div>
-                  <p className="text-sm text-gray-500">Building your growth playbook…</p>
+                  <div className="animate-spin text-3xl text-green-400 mb-3">&#x27F3;</div>
+                  <p className="text-sm text-white/40">Building your growth playbook…</p>
                 </div>
               </div>
             )}
@@ -1037,11 +1174,11 @@ export default function OpportunityDetailPage() {
                   {/* Quick Wins */}
                   {g.quickWins?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">⚡ Quick Wins</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">⚡ Quick Wins</div>
                       <ul className="space-y-2">
                         {g.quickWins.map((w: string, i: number) => (
-                          <li key={i} className="text-sm text-gray-700 flex gap-2 p-2.5 rounded-lg bg-green-50">
-                            <span className="text-green-600 font-bold shrink-0">{i + 1}.</span>{w}
+                          <li key={i} className="text-sm text-white/80 flex gap-2 p-2.5 rounded-lg bg-green-500/8">
+                            <span className="text-green-400 font-bold shrink-0">{i + 1}.</span>{w}
                           </li>
                         ))}
                       </ul>
@@ -1051,20 +1188,20 @@ export default function OpportunityDetailPage() {
                   {/* Listing Optimization */}
                   {g.listingOptimization && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📝 Listing Optimization</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">📝 Listing Optimization</div>
                       <div className="space-y-3">
                         {g.listingOptimization.title && (
-                          <div className="card p-3">
-                            <div className="text-xs text-gray-500 font-semibold mb-1">Title Formula</div>
-                            <p className="text-sm text-gray-700">{g.listingOptimization.title}</p>
+                          <div className="card-dark p-3">
+                            <div className="text-xs text-white/40 font-semibold mb-1">Title Formula</div>
+                            <p className="text-sm text-white/80">{g.listingOptimization.title}</p>
                           </div>
                         )}
                         {g.listingOptimization.bullets?.length > 0 && (
-                          <div className="card p-3">
-                            <div className="text-xs text-gray-500 font-semibold mb-2">Bullet Framework</div>
+                          <div className="card-dark p-3">
+                            <div className="text-xs text-white/40 font-semibold mb-2">Bullet Framework</div>
                             <ul className="space-y-1">
                               {g.listingOptimization.bullets.map((b: string, i: number) => (
-                                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                                <li key={i} className="text-sm text-white/80 flex gap-2">
                                   <span className="text-green-500 shrink-0">&#x2713;</span>{b}
                                 </li>
                               ))}
@@ -1072,11 +1209,11 @@ export default function OpportunityDetailPage() {
                           </div>
                         )}
                         {g.listingOptimization.images?.length > 0 && (
-                          <div className="card p-3">
-                            <div className="text-xs text-gray-500 font-semibold mb-2">Image Strategy</div>
+                          <div className="card-dark p-3">
+                            <div className="text-xs text-white/40 font-semibold mb-2">Image Strategy</div>
                             <ul className="space-y-1">
                               {g.listingOptimization.images.map((img: string, i: number) => (
-                                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                                <li key={i} className="text-sm text-white/80 flex gap-2">
                                   <span className="text-blue-500 shrink-0">🖼</span>{img}
                                 </li>
                               ))}
@@ -1084,7 +1221,7 @@ export default function OpportunityDetailPage() {
                           </div>
                         )}
                         {g.listingOptimization.video && (
-                          <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-800">
+                          <div className="bg-amber-500/10 rounded-lg p-3 text-sm text-amber-800">
                             <span className="font-semibold">Video: </span>{g.listingOptimization.video}
                           </div>
                         )}
@@ -1095,12 +1232,12 @@ export default function OpportunityDetailPage() {
                   {/* Pricing */}
                   {g.pricingStrategy && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">💰 Pricing Strategy</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">💰 Pricing Strategy</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {Object.entries(g.pricingStrategy as Record<string, string>).map(([key, val]) => (
-                          <div key={key} className="card p-3">
-                            <div className="text-xs text-gray-400 capitalize mb-1">{key}</div>
-                            <p className="text-sm text-gray-700">{val}</p>
+                          <div key={key} className="card-dark p-3">
+                            <div className="text-xs text-white/35 capitalize mb-1">{key}</div>
+                            <p className="text-sm text-white/80">{val}</p>
                           </div>
                         ))}
                       </div>
@@ -1110,16 +1247,16 @@ export default function OpportunityDetailPage() {
                   {/* Launch Sequence */}
                   {g.launchSequence?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">🗓 Launch Sequence</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">🗓 Launch Sequence</div>
                       <div className="relative">
-                        <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200" />
+                        <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
                         <div className="space-y-3">
                           {g.launchSequence.map((step: any, i: number) => (
                             <div key={i} className="flex gap-4 pl-10 relative">
-                              <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm" />
-                              <div className="card p-3 flex-1">
-                                <div className="text-xs font-bold text-green-700 mb-0.5">{step.week}</div>
-                                <p className="text-sm text-gray-700">{step.action}</p>
+                              <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-green-500 border-2 border-[#0a0e1e] shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                              <div className="card-dark p-3 flex-1">
+                                <div className="text-xs font-bold text-green-400 mb-0.5">{step.week}</div>
+                                <p className="text-sm text-white/80">{step.action}</p>
                               </div>
                             </div>
                           ))}
@@ -1131,19 +1268,19 @@ export default function OpportunityDetailPage() {
                   {/* PPC */}
                   {g.ppcStrategy && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📢 PPC Strategy</div>
-                      <div className="card p-4 space-y-3">
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">📢 PPC Strategy</div>
+                      <div className="card-dark p-4 space-y-3">
                         <div className="flex items-center gap-2 text-sm">
-                          <span className="font-semibold text-gray-700">Budget:</span>
-                          <span className="text-green-700 font-medium">{g.ppcStrategy.budget}</span>
+                          <span className="font-semibold text-white/80">Budget:</span>
+                          <span className="text-green-400 font-medium">{g.ppcStrategy.budget}</span>
                         </div>
                         {g.ppcStrategy.acos && (
-                          <p className="text-sm text-gray-600">{g.ppcStrategy.acos}</p>
+                          <p className="text-sm text-white/55">{g.ppcStrategy.acos}</p>
                         )}
                         {g.ppcStrategy.campaigns?.length > 0 && (
                           <ul className="space-y-1">
                             {g.ppcStrategy.campaigns.map((c: string, i: number) => (
-                              <li key={i} className="text-sm text-gray-700 flex gap-2">
+                              <li key={i} className="text-sm text-white/80 flex gap-2">
                                 <span className="text-green-500 shrink-0">&#x2713;</span>{c}
                               </li>
                             ))}
@@ -1156,12 +1293,12 @@ export default function OpportunityDetailPage() {
                   {/* Monthly Milestones */}
                   {g.monthlyMilestones?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">🎯 Monthly Milestones</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">🎯 Monthly Milestones</div>
                       <div className="grid grid-cols-2 gap-2">
                         {g.monthlyMilestones.map((m: any) => (
-                          <div key={m.month} className="card p-3">
-                            <div className="text-xs font-bold text-green-700 mb-1">Month {m.month}</div>
-                            <p className="text-xs text-gray-600">{m.goal}</p>
+                          <div key={m.month} className="card-dark p-3">
+                            <div className="text-xs font-bold text-green-400 mb-1">Month {m.month}</div>
+                            <p className="text-xs text-white/55">{m.goal}</p>
                           </div>
                         ))}
                       </div>
@@ -1171,10 +1308,10 @@ export default function OpportunityDetailPage() {
                   {/* Review Strategy */}
                   {g.reviewStrategy?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">⭐ Review Strategy</div>
+                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">⭐ Review Strategy</div>
                       <ul className="space-y-2">
                         {g.reviewStrategy.map((tip: string, i: number) => (
-                          <li key={i} className="text-sm text-gray-700 flex gap-2">
+                          <li key={i} className="text-sm text-white/80 flex gap-2">
                             <span className="text-amber-400 shrink-0">★</span>{tip}
                           </li>
                         ))}
@@ -1190,12 +1327,12 @@ export default function OpportunityDetailPage() {
 
       {/* ── Recommendation ── */}
       {tab === 'Recommendation' && (
-        <div className="card p-4 sm:p-8">
+        <div className="card-dark p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6">
             <ScoreGauge score={score.opportunity || 0} size="lg" label="Opportunity Score" />
             <div>
               <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
-              <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+              <p className="text-sm text-white/55 mt-3 leading-relaxed">
                 {opp.recommendation === 'launch'
                   ? 'Strong opportunity — all key metrics exceed thresholds. Recommended to proceed with launch.'
                   : opp.recommendation === 'hold'
@@ -1204,19 +1341,19 @@ export default function OpportunityDetailPage() {
               </p>
             </div>
           </div>
-          <div className="border-t border-gray-100 pt-4">
-            <div className="text-sm font-medium text-gray-700 mb-3">Score Breakdown</div>
+          <div className="border-t border-white/8 pt-4">
+            <div className="text-sm font-medium text-white/80 mb-3">Score Breakdown</div>
             <div className="space-y-2.5">
               {sub.map(({ label, value }) => (
                 <div key={label} className="flex items-center gap-3">
-                  <div className="w-20 text-xs text-gray-500 text-right shrink-0">{label}</div>
-                  <div className="flex-1 bg-gray-100 rounded-full h-2">
+                  <div className="w-20 text-xs text-white/40 text-right shrink-0">{label}</div>
+                  <div className="flex-1 bg-white/8 rounded-full h-2">
                     <div className="h-2 rounded-full transition-all" style={{
                       width: `${value || 0}%`,
                       backgroundColor: (value || 0) >= 70 ? '#16a34a' : (value || 0) >= 40 ? '#d97706' : '#dc2626',
                     }} />
                   </div>
-                  <div className="w-8 text-xs font-bold text-gray-700 shrink-0">{Math.round(value || 0)}</div>
+                  <div className="w-8 text-xs font-bold text-white/80 shrink-0">{Math.round(value || 0)}</div>
                 </div>
               ))}
             </div>
@@ -1226,9 +1363,9 @@ export default function OpportunityDetailPage() {
 
       {/* ── Report ── */}
       {tab === 'Report' && (
-        <div className="card p-4 sm:p-6">
+        <div className="card-dark p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-800">Opportunity Report</h2>
+            <h2 className="font-semibold text-white">Opportunity Report</h2>
             <button onClick={() => genReport.mutate()}
               disabled={genReport.isPending}
               className="btn-primary text-sm disabled:opacity-50">
@@ -1239,21 +1376,21 @@ export default function OpportunityDetailPage() {
             <div className="space-y-3">
               {Object.entries(((genReport.data as any).content || {}) as Record<string, any>).map(([key, val]) => (
                 <div key={key}>
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5">{key.replace(/_/g, ' ')}</div>
+                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-1.5">{key.replace(/_/g, ' ')}</div>
                   {typeof val === 'string' ? (
-                    <p className="text-sm text-gray-700 leading-relaxed">{val}</p>
+                    <p className="text-sm text-white/80 leading-relaxed">{val}</p>
                   ) : Array.isArray(val) ? (
                     <ul className="space-y-1">{(val as any[]).map((v, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex gap-2"><span className="text-green-500 shrink-0">&#x2022;</span>{String(v)}</li>
+                      <li key={i} className="text-sm text-white/80 flex gap-2"><span className="text-green-500 shrink-0">&#x2022;</span>{String(v)}</li>
                     ))}</ul>
                   ) : (
-                    <p className="text-sm text-gray-700">{JSON.stringify(val)}</p>
+                    <p className="text-sm text-white/80">{JSON.stringify(val)}</p>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-400">
+            <div className="p-8 text-center text-white/35">
               <div className="text-3xl mb-2">📊</div>
               <p className="text-sm">Generate a full opportunity report with all data</p>
             </div>
