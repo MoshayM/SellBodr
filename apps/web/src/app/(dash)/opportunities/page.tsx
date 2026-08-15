@@ -876,10 +876,14 @@ export default function OpportunitiesPage() {
                       {/* Product */}
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0 relative">
                             {opp.product?.imageUrl
                               ? <img src={opp.product.imageUrl} alt={opp.product.title}
-                                  className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                  loading="lazy" decoding="async" width="40" height="40"
+                                  className="w-full h-full object-cover"
+                                  onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                                  style={{ opacity: 0, transition: 'opacity 0.25s ease' }}
+                                  onError={e => { (e.target as HTMLImageElement).parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div>'; }} />
                               : <div className="w-full h-full flex items-center justify-center text-base">🎯</div>}
                           </div>
                           <div className="min-w-0">

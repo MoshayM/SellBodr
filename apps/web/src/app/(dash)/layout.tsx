@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,58 +7,136 @@ import { clearAuth, getUser } from '@/lib/api';
 import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 
-const NAV = [
-  { href: '/opportunities',  label: 'Opportunities',  icon: '🎯', badge: null },
-  { href: '/research',       label: 'Research',        icon: '🔬', badge: null },
-  { href: '/suppliers',      label: 'Suppliers',       icon: '🏭', badge: null },
-  { href: '/marketplace',    label: 'Marketplace',     icon: '🛒', badge: null },
-  { href: '/profitability',  label: 'Profitability',   icon: '💰', badge: null },
-  { href: '/listing',        label: 'AI Listing',      icon: '📝', badge: 'NEW' },
-  { href: '/recommendation', label: 'Recommendation',  icon: '🤖', badge: null },
-  { href: '/reports',        label: 'Reports',         icon: '📊', badge: null },
-  { href: '/settings',       label: 'Settings',        icon: '⚙️', badge: null },
+const ALL_PAGES = [
+  { href: '/opportunities',  label: 'Opportunities',  icon: '🎯', desc: 'AI-scored cross-border products' },
+  { href: '/research',       label: 'Research',        icon: '🔬', desc: 'Deep market intelligence & trends' },
+  { href: '/suppliers',      label: 'Suppliers',       icon: '🏭', desc: 'India supplier sourcing database' },
+  { href: '/marketplace',    label: 'Marketplace',     icon: '🛒', desc: 'Compare 76+ global marketplaces' },
+  { href: '/profitability',  label: 'Profitability',   icon: '💰', desc: 'Full landed-cost profit model' },
+  { href: '/listing',        label: 'AI Listing',      icon: '📝', desc: 'Generate SEO-optimised listings', badge: 'NEW' },
+  { href: '/recommendation', label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
+  { href: '/reports',        label: 'Reports',         icon: '📊', desc: 'Export and analyse your data' },
+  { href: '/settings',       label: 'Settings',        icon: '⚙️', desc: 'Account & preferences' },
 ];
 
-const BOTTOM_NAV = [
-  { href: '/opportunities',  label: 'Scout',    icon: '🎯' },
-  { href: '/research',       label: 'Research', icon: '🔬' },
-  { href: '/marketplace',    label: 'Markets',  icon: '🛒' },
-  { href: '/recommendation', label: 'AI',       icon: '🤖' },
-];
-
-function NavItem({ href, label, icon, badge, onClick }: { href: string; label: string; icon: string; badge?: string | null; onClick?: () => void }) {
-  const path    = usePathname();
-  const active  = path === href || path.startsWith(href + '/');
+function SearchIcon() {
   return (
-    <Link href={href} onClick={onClick}
-      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group select-none ${
-        active
-          ? 'text-white'
-          : 'text-white/45 hover:text-white hover:bg-white/5'
-      }`}
-      style={active ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.6), 0 2px 12px rgba(124,58,237,0.15)' } : undefined}>
-      {active && (
-        <motion.div layoutId="sidebar-pill"
-          className="absolute inset-0 rounded-xl border border-violet-500/25"
-          style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(99,102,241,0.10) 100%)' }} />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+  );
+}
+
+function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const router   = useRouter();
+  const path     = usePathname();
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) { setQuery(''); setTimeout(() => inputRef.current?.focus(), 60); }
+  }, [open]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+    if (open) window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  const results = query.trim()
+    ? ALL_PAGES.filter(p =>
+        p.label.toLowerCase().includes(query.toLowerCase()) ||
+        p.desc.toLowerCase().includes(query.toLowerCase()))
+    : ALL_PAGES;
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            onClick={onClose} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 450 }}
+            className="fixed top-[72px] left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
+            <div className="bg-[#0E1628] border border-white/12 rounded-2xl shadow-2xl overflow-hidden"
+              style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(124,58,237,0.14)' }}>
+
+              {/* Search input */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8">
+                <span className="text-white/35 shrink-0"><SearchIcon /></span>
+                <input ref={inputRef} value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search pages, features..."
+                  className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none" />
+                <kbd className="text-white/25 text-[10px] border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
+              </div>
+
+              {/* Results */}
+              <div className="py-1.5 max-h-[min(340px,60vh)] overflow-y-auto scrollbar-dark">
+                {results.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-sm text-white/30">No results for &ldquo;{query}&rdquo;</div>
+                ) : (
+                  <>
+                    <div className="px-4 pt-1.5 pb-1 text-[9px] font-semibold text-white/25 uppercase tracking-widest">
+                      {query ? 'Results' : 'All pages'}
+                    </div>
+                    {results.map(p => {
+                      const active = path === p.href || path.startsWith(p.href + '/');
+                      return (
+                        <button key={p.href}
+                          onClick={() => { router.push(p.href); onClose(); }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left group ${
+                            active ? 'bg-violet-500/10' : 'hover:bg-white/5 active:bg-white/8'
+                          }`}>
+                          <span className="text-xl w-8 shrink-0 text-center">{p.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-sm font-medium transition-colors ${active ? 'text-violet-300' : 'text-white/75 group-hover:text-white'}`}>
+                              {p.label}
+                              {'badge' in p && p.badge && (
+                                <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                                  style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
+                                  {p.badge}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-white/28 leading-tight mt-0.5">{p.desc}</div>
+                          </div>
+                          {active
+                            ? <span className="text-violet-400/60 text-xs shrink-0">active</span>
+                            : <span className="text-white/15 text-xs shrink-0 group-hover:text-white/30 transition-colors">→</span>}
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+
+              <div className="px-4 py-2 border-t border-white/6 flex items-center gap-4 text-[10px] text-white/20">
+                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">↑↓</kbd> navigate</span>
+                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">↵</kbd> open</span>
+                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">⌘K</kbd> toggle</span>
+              </div>
+            </div>
+          </motion.div>
+        </>
       )}
-      <span className={`text-base relative z-10 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>{icon}</span>
-      <span className="relative z-10">{label}</span>
-      {badge && (
-        <span className="ml-auto relative z-10 text-[10px] leading-none font-bold px-1.5 py-1 rounded-md animate-badge-launch"
-          style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' }}>
-          {badge}
-        </span>
-      )}
-    </Link>
+    </AnimatePresence>
   );
 }
 
 export default function DashLayout({ children }: { children: React.ReactNode }) {
-  const router    = useRouter();
-  const path      = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser]         = useState<{ name?: string; role?: string } | null>(null);
+  const router = useRouter();
+  const path   = usePathname();
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -68,87 +146,124 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => { setMenuOpen(false); }, [path]);
 
+  /* Close user dropdown on outside click */
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [userMenuOpen]);
+
+  /* Global ⌘K shortcut */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   function logout() { clearAuth(); router.push('/login'); }
 
-  const initials = user?.name ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : 'U';
-  const pageName = NAV.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
+  const initials  = user?.name
+    ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'U';
+  const pageName  = ALL_PAGES.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
+  const isHome    = path === '/opportunities' || path.startsWith('/opportunities/');
 
   return (
-    <div className="flex h-screen bg-[#020817] overflow-hidden">
+    <div className="min-h-screen bg-[#020817] flex flex-col">
 
-      {/* ── Desktop sidebar (lg+) ──────────────────────────────── */}
-      <aside className="hidden lg:flex w-60 xl:w-64 bg-[#0A0F1E] border-r border-white/5 flex-col shrink-0">
+      {/* ────────────────────────────────────────────────────────────
+          Top navigation bar — always visible on all devices
+      ──────────────────────────────────────────────────────────── */}
+      <header
+        className="fixed top-0 inset-x-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 glass border-b border-white/5"
+        style={{ height: 'calc(56px + env(safe-area-inset-top, 0px))', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
         {/* Logo */}
-        <div className="px-4 h-16 border-b border-white/5 flex items-center">
-          <Link href="/opportunities" className="flex items-center gap-2.5 group">
-            <div className="relative shrink-0">
-              <img src="/icons/icon.svg" alt="SellBodr"
-                className="w-9 h-9 rounded-xl transition-transform duration-200 group-hover:scale-105"
-                style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50), 0 1px 3px rgba(0,0,0,0.5)' }} />
+        <Link href="/opportunities" className="flex items-center gap-2.5 shrink-0 group" aria-label="SellBodr home">
+          <img src="/icons/icon.svg" alt="SellBodr"
+            className="w-8 h-8 rounded-xl transition-transform duration-200 group-hover:scale-105 shrink-0"
+            style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50), 0 1px 3px rgba(0,0,0,0.5)' }} />
+          <div className="hidden sm:block">
+            <div className="text-[14px] font-black tracking-tight leading-none"
+              style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              SellBodr
             </div>
-            <div>
-              <div className="text-[15px] font-black tracking-tight leading-none"
-                style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                SellBodr
-              </div>
-              <div className="text-[9px] font-semibold text-white/28 uppercase tracking-[0.18em] mt-0.5 leading-none">
-                eCommerce Intelligence
-              </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Search (future) */}
-        <div className="px-3 pt-4 pb-2">
-          <div className="flex items-center gap-2 bg-white/4 hover:bg-white/6 border border-white/6 rounded-xl px-3 py-2 text-sm text-white/30 cursor-text transition-colors">
-            <span>🔍</span>
-            <span className="text-xs">Search everything...</span>
-            <span className="ml-auto text-[10px] leading-none glass rounded px-1.5 py-1 border border-white/8">⌘K</span>
-          </div>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 px-3 pb-3 space-y-0.5 overflow-y-auto scrollbar-dark">
-          <div className="text-[10px] font-semibold text-white/20 uppercase tracking-widest px-3 py-2 mt-2">Main</div>
-          {NAV.slice(0, 5).map(n => <NavItem key={n.href} {...n} />)}
-          <div className="text-[10px] font-semibold text-white/20 uppercase tracking-widest px-3 py-2 mt-3">Tools</div>
-          {NAV.slice(5).map(n => <NavItem key={n.href} {...n} />)}
-        </nav>
-
-        {/* User section */}
-        <div className="px-3 pb-3 border-t border-white/5 pt-3">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/4 transition-colors group mb-1">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs flex-shrink-0">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-white/80 truncate">{user?.name ?? 'User'}</div>
-              <div className="text-[10px] text-white/30 capitalize">{user?.role ?? 'member'} · Pro</div>
+            <div className="text-[8px] font-semibold text-white/28 uppercase tracking-[0.18em] leading-none mt-0.5">
+              eCommerce Intelligence
             </div>
           </div>
-          <button onClick={logout}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all duration-200 min-h-[40px]">
-            <span>↩</span><span>Sign out</span>
+        </Link>
+
+        {/* Page title — mobile only, between logo and actions */}
+        <span className="sm:hidden text-sm font-semibold text-white/65 truncate flex-1 min-w-0 pl-1">{pageName}</span>
+
+        {/* Search bar — desktop (md+) */}
+        <div className="hidden md:flex flex-1 justify-center max-w-xl">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.07] border border-white/8 hover:border-white/14 rounded-xl px-4 py-2 text-xs text-white/35 transition-all duration-200 w-full max-w-md group"
+            aria-label="Search (⌘K)">
+            <span className="text-white/30 group-hover:text-white/45 transition-colors"><SearchIcon /></span>
+            <span className="flex-1 text-left">Search everything...</span>
+            <kbd className="text-[10px] glass rounded px-1.5 py-1 border border-white/8 font-mono text-white/25">⌘K</kbd>
           </button>
         </div>
-      </aside>
 
-      {/* ── Mobile top bar ─────────────────────────────────────── */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 glass border-b border-white/5 flex items-center px-3 gap-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shrink-0"
-            style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }} />
-          <span className="text-sm font-bold text-white truncate">{pageName}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Link href="/settings" aria-label="Settings"
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-white/40 hover:bg-white/5 active:bg-white/10 transition-colors text-base">
-            ⚙️
-          </Link>
-          <button onClick={() => setMenuOpen(true)} aria-label="Menu"
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-white/40 hover:bg-white/5 active:bg-white/10 transition-colors">
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+        {/* Right actions */}
+        <div className="ml-auto sm:ml-0 flex items-center gap-1">
+
+          {/* Mobile search icon */}
+          <button onClick={() => setSearchOpen(true)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-white/40 hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
+            aria-label="Search">
+            <SearchIcon />
+          </button>
+
+          {/* User avatar + dropdown */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setUserMenuOpen(v => !v)}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs transition-transform duration-150 hover:scale-105 active:scale-95 touch-manipulation"
+              aria-label="User menu" aria-expanded={userMenuOpen}>
+              {initials}
+            </button>
+            <AnimatePresence>
+              {userMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.94, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: -6 }}
+                  transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+                  className="absolute right-0 top-11 bg-[#0E1628] border border-white/10 rounded-xl p-1.5 min-w-[192px] z-50"
+                  style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.55)' }}>
+                  <div className="px-3 py-2 border-b border-white/8 mb-1">
+                    <div className="text-xs font-semibold text-white/80 truncate">{user?.name ?? 'User'}</div>
+                    <div className="text-[10px] text-white/30 capitalize">{user?.role ?? 'member'} · Pro</div>
+                  </div>
+                  <Link href="/settings" onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                    <span>⚙️</span><span>Settings</span>
+                  </Link>
+                  <button onClick={logout}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/8 rounded-lg transition-all min-h-[40px]">
+                    <span>↩</span><span>Sign out</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Mobile "More" button */}
+          <button onClick={() => setMenuOpen(true)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-white/40 hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
+            aria-label="Navigation menu">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
               <rect width="18" height="2" rx="1" fill="currentColor"/>
               <rect y="6" width="14" height="2" rx="1" fill="currentColor"/>
               <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
@@ -157,27 +272,34 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
 
-      {/* ── Mobile slide-in menu ────────────────────────────────── */}
+      {/* ────────────────────────────────────────────────────────────
+          Command palette — all devices
+      ──────────────────────────────────────────────────────────── */}
+      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* ────────────────────────────────────────────────────────────
+          Mobile slide-in drawer — right side, md and below
+      ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-              className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
-            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="lg:hidden fixed inset-y-0 left-0 z-50 w-72 bg-[#0A0F1E] border-r border-white/5 flex flex-col shadow-2xl">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)} />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="md:hidden fixed inset-y-0 right-0 z-50 w-[280px] sm:w-72 bg-[#0A0F1E] border-l border-white/5 flex flex-col shadow-2xl"
+              style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
-              {/* Header */}
+              {/* Drawer header */}
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shrink-0"
-                    style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }} />
-                  <span className="text-sm font-black tracking-tight"
-                    style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                    SellBodr
-                  </span>
-                </div>
+                <span className="text-sm font-bold text-white/60">All pages</span>
                 <button onClick={() => setMenuOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:bg-white/5 text-xl">
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-white/40 hover:bg-white/5 text-xl touch-manipulation"
+                  aria-label="Close menu">
                   &times;
                 </button>
               </div>
@@ -189,21 +311,42 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white truncate">{user?.name ?? 'User'}</div>
-                  <div className="text-xs text-white/30 capitalize">{user?.role ?? 'member'} · Pro plan</div>
+                  <div className="text-xs text-white/30 capitalize">{user?.role ?? 'member'} · Pro</div>
                 </div>
               </div>
 
-              {/* Nav */}
-              <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5">
-                {NAV.map(n => <NavItem key={n.href} {...n} onClick={() => setMenuOpen(false)} />)}
+              {/* Page list */}
+              <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
+                {ALL_PAGES.map(p => {
+                  const active = path === p.href || path.startsWith(p.href + '/');
+                  return (
+                    <Link key={p.href} href={p.href} onClick={() => setMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        active ? 'text-white' : 'text-white/45 hover:text-white hover:bg-white/5'
+                      }`}
+                      style={active ? {
+                        background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(99,102,241,0.10) 100%)',
+                        boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.6)',
+                      } : undefined}>
+                      <span className="text-base w-6 text-center shrink-0">{p.icon}</span>
+                      <span className="flex-1 truncate">{p.label}</span>
+                      {'badge' in p && p.badge && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
+                          style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
+                          {p.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </nav>
 
               {/* Sign out */}
-              <div className="px-3 pb-3 border-t border-white/5 pt-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              <div className="px-3 pt-3 border-t border-white/5"
+                style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                 <button onClick={logout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all">
-                  <span className="text-base">↩</span>
-                  Sign out
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
+                  <span>↩</span><span>Sign out</span>
                 </button>
               </div>
             </motion.div>
@@ -211,10 +354,13 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         )}
       </AnimatePresence>
 
-      {/* ── Main content ────────────────────────────────────────── */}
+      {/* ────────────────────────────────────────────────────────────
+          Main content area
+      ──────────────────────────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-dark">
-        <div className="pt-14 pb-24 lg:pt-0 lg:pb-0 min-h-full">
-          <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8">
+        <div className="min-h-full"
+          style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="md:pb-6 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8">
             {children}
           </div>
         </div>
@@ -223,26 +369,50 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       <PWAInstallBanner />
       <CurrencyWidget />
 
-      {/* ── Mobile bottom nav ───────────────────────────────────── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 glass border-t border-white/5"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      {/* ────────────────────────────────────────────────────────────
+          Mobile bottom tab bar — md and below only
+      ──────────────────────────────────────────────────────────── */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 glass border-t border-white/5"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        aria-label="Bottom navigation">
         <div className="flex items-stretch h-16">
-          {BOTTOM_NAV.map(({ href, label, icon }) => {
-            const active = path === href || path.startsWith(href + '/');
-            return (
-              <Link key={href} href={href}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative ${active ? 'text-violet-300' : 'text-white/30 active:text-white/60'}`}>
-                {active && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ boxShadow: '0 0 8px rgba(124,58,237,0.6)' }} />}
-                <span className={`text-xl leading-none transition-transform duration-200 ${active ? 'scale-115' : ''}`}>{icon}</span>
-                <span className={`text-[10px] font-semibold leading-none ${active ? 'text-violet-300' : ''}`}>{label}</span>
-              </Link>
-            );
-          })}
-          <button onClick={() => setMenuOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors">
-            <span className="text-xl leading-none">☰</span>
+
+          {/* Home — Opportunities */}
+          <Link href="/opportunities"
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
+              isHome ? 'text-violet-300' : 'text-white/30 active:text-white/60'
+            }`}>
+            {isHome && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                style={{ boxShadow: '0 0 8px rgba(124,58,237,0.6)' }} />
+            )}
+            <span className={`text-[22px] leading-none transition-transform duration-200 ${isHome ? 'scale-110' : ''}`}>🎯</span>
+            <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-violet-300' : ''}`}>Scout</span>
+          </Link>
+
+          {/* Search */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
+            aria-label="Search">
+            <span className="text-white/35"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+            <span className="text-[10px] font-medium leading-none">Search</span>
+          </button>
+
+          {/* More */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
+            aria-label="More pages">
+            <svg width="20" height="16" viewBox="0 0 20 16" fill="none" aria-hidden="true">
+              <rect width="20" height="2" rx="1" fill="currentColor"/>
+              <rect y="7" width="16" height="2" rx="1" fill="currentColor"/>
+              <rect y="14" width="20" height="2" rx="1" fill="currentColor"/>
+            </svg>
             <span className="text-[10px] font-medium leading-none">More</span>
           </button>
+
         </div>
       </nav>
     </div>

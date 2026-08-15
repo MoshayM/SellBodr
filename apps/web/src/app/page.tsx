@@ -117,10 +117,20 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 glass border-b border-white/5"
       >
-        <div className="flex items-center gap-2.5">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow-lg shadow-violet-500/30" />
-          <span className="font-bold text-lg text-white">SellBodr</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <img src="/icons/icon.svg" alt="SellBodr"
+            className="w-8 h-8 rounded-xl transition-transform duration-200 group-hover:scale-105"
+            style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50)' }} />
+          <div>
+            <div className="text-[14px] font-black tracking-tight leading-none"
+              style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              SellBodr
+            </div>
+            <div className="hidden sm:block text-[8px] font-semibold text-white/28 uppercase tracking-[0.18em] leading-none mt-0.5">
+              eCommerce Intelligence
+            </div>
+          </div>
+        </Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
           <a href="#features" className="hover:text-white transition-colors">Features</a>
           <a href="#how" className="hover:text-white transition-colors">How it works</a>
@@ -391,8 +401,8 @@ export default function LandingPage() {
           </div>
           <p className="text-white/25 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>
           <div className="flex items-center gap-6 text-sm text-white/40">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign in</Link>
           </div>
         </div>

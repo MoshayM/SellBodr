@@ -94,9 +94,10 @@ export default function TermsPage() {
           </Section>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-white/10 flex gap-6 text-xs text-white/30">
-          <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy Policy</Link>
-          <Link href="/login" className="hover:text-white/50 transition-colors">Back to Login</Link>
+        <div className="mt-12 pt-6 border-t border-white/10 flex flex-wrap gap-6 text-xs text-white/30">
+          <Link href="/privacy" className="hover:text-white/60 transition-colors">Privacy Policy</Link>
+          <Link href="/login" className="hover:text-white/60 transition-colors">Sign in</Link>
+          <Link href="/" className="hover:text-white/60 transition-colors">← Back to SellBodr</Link>
         </div>
       </div>
     </div>
