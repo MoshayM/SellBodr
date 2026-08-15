@@ -111,7 +111,7 @@ function WaterfallBar({ label, value, total, color }: {
 function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: string; platform: string }) {
   const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
   const fmt  = (v: number) => `${sym}${(Math.abs(v) / 100).toFixed(2)}`;
-  const fmtN = (v: number) => `${v < 0 ? '-' : ''}${sym}${(Math.abs(v) / 100).toFixed(2)}`;
+  const fmtN = (v: number) => `${v < 0 ? '-' : '+'}${sym}${(Math.abs(v) / 100).toFixed(2)}`;
 
   const sale    = Number(pm.salePriceMinor    ?? 0);
   const src     = Number(pm.productCostMinor  ?? 0);
@@ -129,8 +129,9 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const referralPct = Number(pm.referralPct ?? 15);
 
   const totalCosts = src + ship + pkg + duty + refFee + fbaFee + ads;
-  const isLoss  = net < 0;
-  const maxVal  = Math.max(sale, totalCosts, 1);
+  const isLoss = net < 0;
+  // Scale: largest of sale or source fills the chart height (correct proportions for both cases)
+  const singleMax = Math.max(sale, src, 1);
 
   type StepType = 'income' | 'cost' | 'result';
   interface Step { key: string; label: string; value: number; color: string; glow: string; type: StepType }
@@ -152,16 +153,18 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const steps = allSteps.filter(s => s.key === 'sale' || s.key === 'net' || s.value > 0);
   const n = steps.length;
 
-  // Layout constants (px, used as %)
-  const CHART_H = 156;
-  const LOSS_H  = isLoss ? 48 : 0;
+  // Layout: CHART_H scales to the largest single bar; loss zone is dynamic
+  const CHART_H = 144;
+  const scale   = CHART_H / singleMax;
+  // How far cost bars cascade below the zero line (when totalCosts > sale)
+  const overflowPx = Math.max(0, totalCosts - sale) * scale;
+  const LOSS_H  = isLoss ? Math.min(60, Math.max(36, overflowPx * 0.5)) : 0;
   const TOTAL_H = CHART_H + LOSS_H;
-  const scale   = CHART_H / maxVal;
-  const pitchPct = 100 / n;
+  const pitchPct    = 100 / n;
   const barWidthPct = pitchPct * 0.70;
-  const gapPct = (pitchPct - barWidthPct) / 2;
+  const gapPct      = (pitchPct - barWidthPct) / 2;
 
-  // Build bar positions
+  // Build bar positions — height uses ACTUAL value (not capped at remaining)
   let remaining = sale;
   const bars = steps.map((step, i) => {
     const leftPct = i * pitchPct + gapPct;
@@ -172,35 +175,35 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
       top = CHART_H - sale * scale;
       h   = sale * scale;
     } else if (step.type === 'cost') {
-      const from = remaining;
-      const to   = Math.max(0, remaining - step.value);
-      top = CHART_H - from * scale;
-      h   = (from - to) * scale;
-      remaining = to;
+      top = CHART_H - Math.max(0, remaining) * scale;
+      // Actual cost height — bar may extend below CHART_H; clipped by container overflow:hidden
+      h   = Math.min(step.value * scale, TOTAL_H - top);
+      remaining = Math.max(0, remaining - step.value);
     } else {
       if (!isLoss) {
-        // profit bar from bottom up
         h   = Math.max(net * scale, 2);
         top = CHART_H - h;
       } else {
-        // loss bar drops below the zero line
         growDown = true;
         top = CHART_H;
-        h   = Math.min(Math.abs(net) * scale * (LOSS_H / Math.max(Math.abs(net) * scale, 1)), LOSS_H - 6);
-        h   = Math.max(h, 6);
+        h   = Math.max(Math.min(Math.abs(net) * scale, LOSS_H - 4), 6);
       }
     }
 
     return { ...step, leftPct, cx, barWidthPct, top, h: Math.max(h, 2), growDown, i };
   });
 
-  // Connector step lines
+  // Connector step lines — clamp cy to CHART_H to avoid upward artifacts in loss zone
   const connectors: { x1: string; x2: string; y: number }[] = [];
   for (let i = 0; i < bars.length - 1; i++) {
     const cur  = bars[i];
     const next = bars[i + 1];
     if (next.growDown) continue;
-    const cy = cur.type === 'income' ? cur.top : cur.top + cur.h;
+    // Clamp connector level to zero line; bars below zero share the zero-line connector
+    const cy = Math.min(
+      cur.type === 'income' ? cur.top : cur.top + cur.h,
+      CHART_H,
+    );
     connectors.push({
       x1: `${cur.leftPct + cur.barWidthPct}%`,
       x2: `${next.leftPct}%`,
@@ -232,8 +235,8 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
         </div>
       </div>
 
-      {/* Chart area */}
-      <div className="relative w-full overflow-visible" style={{height: TOTAL_H + 32}}>
+      {/* Chart area — overflow:hidden clips bars that extend beyond TOTAL_H */}
+      <div className="relative w-full overflow-hidden" style={{height: TOTAL_H + 32}}>
 
         {/* Loss-zone backdrop */}
         {isLoss && (
