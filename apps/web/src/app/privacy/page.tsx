@@ -12,7 +12,8 @@ export default function PrivacyPage() {
       <div className="max-w-2xl mx-auto">
 
         <Link href="/login" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-10">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-6 h-6 rounded-md" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-6 h-6"
+            style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
           SellBodr
         </Link>
 

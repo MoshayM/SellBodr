@@ -119,8 +119,8 @@ export default function LandingPage() {
       >
         <Link href="/" className="flex items-center gap-2.5 group">
           <img src="/icons/icon.svg" alt="SellBodr"
-            className="w-8 h-8 rounded-xl transition-transform duration-200 group-hover:scale-105"
-            style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50)' }} />
+            className="w-9 h-9 transition-transform duration-200 group-hover:scale-110"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.75)) drop-shadow(0 0 3px rgba(219,39,119,0.4))' }} />
           <div>
             <div className="text-[14px] font-black tracking-tight leading-none"
               style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
@@ -396,7 +396,8 @@ export default function LandingPage() {
       <footer className="border-t border-white/5 py-10 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg" />
+            <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7"
+              style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
             <span className="font-bold text-white">SellBodr</span>
           </div>
           <p className="text-white/25 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>

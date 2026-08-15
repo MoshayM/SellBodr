@@ -74,7 +74,8 @@ export default function RegisterPage() {
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-600/8 rounded-full blur-3xl pointer-events-none" />
 
       <Link href="/" className="flex items-center gap-2.5 mb-10">
-        <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 rounded-xl shadow-lg shadow-violet-500/40" />
+        <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9"
+          style={{ filter: 'drop-shadow(0 0 10px rgba(124,58,237,0.85)) drop-shadow(0 0 4px rgba(219,39,119,0.5))' }} />
         <span className="text-white font-bold text-xl">SellBodr</span>
       </Link>
 

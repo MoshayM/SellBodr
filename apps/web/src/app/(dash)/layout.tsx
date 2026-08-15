@@ -203,8 +203,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         {/* Logo */}
         <Link href="/opportunities" className="flex items-center gap-2.5 shrink-0 group" aria-label="SellBodr home">
           <img src="/icons/icon.svg" alt="SellBodr"
-            className="w-8 h-8 rounded-xl transition-transform duration-200 group-hover:scale-105 shrink-0"
-            style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50), 0 1px 3px rgba(0,0,0,0.5)' }} />
+            className="w-9 h-9 transition-transform duration-200 group-hover:scale-110 shrink-0"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.75)) drop-shadow(0 0 3px rgba(219,39,119,0.4))' }} />
           <div className="hidden sm:block">
             <div className="text-[14px] font-black tracking-tight leading-none"
               style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>

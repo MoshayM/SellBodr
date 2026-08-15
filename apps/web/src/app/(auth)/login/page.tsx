@@ -59,7 +59,8 @@ export default function LoginPage() {
         <div className="absolute bottom-1/3 right-0 w-60 h-60 bg-cyan-600/15 rounded-full blur-3xl" />
 
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex items-center gap-3">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 rounded-xl shadow-lg shadow-violet-500/40" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9"
+            style={{ filter: 'drop-shadow(0 0 10px rgba(124,58,237,0.85)) drop-shadow(0 0 4px rgba(219,39,119,0.5))' }} />
           <span className="text-white font-bold text-xl">SellBodr</span>
         </motion.div>
 
@@ -96,7 +97,8 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#020817] via-violet-950/10 to-[#020817] lg:hidden" />
 
         <div className="lg:hidden relative z-10 mb-8 flex items-center gap-2.5">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow shadow-violet-500/30" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8"
+            style={{ filter: 'drop-shadow(0 0 7px rgba(124,58,237,0.7))' }} />
           <span className="text-white font-bold text-lg">SellBodr</span>
         </div>
 
@@ -195,7 +197,8 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-5 p-3 rounded-xl bg-white/[0.03] border border-white/8 flex items-center gap-3">
-            <img src="/icons/icon.svg" alt="" className="w-8 h-8 rounded-lg flex-shrink-0" />
+            <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
+              style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-white/60 leading-snug">Install SellBodr</div>
               <div className="text-[10px] text-white/30 leading-snug mt-0.5">

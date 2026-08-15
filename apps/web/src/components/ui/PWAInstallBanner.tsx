@@ -70,7 +70,8 @@ export function PWAInstallBanner() {
     <div className="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm">
       <div className="glass border border-violet-500/20 rounded-2xl p-4 shadow-2xl shadow-black/60">
         <div className="flex items-start gap-3">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-10 h-10 rounded-xl shadow shadow-violet-500/30 shrink-0 mt-0.5" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-10 h-10 shrink-0 mt-0.5"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.7))' }} />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-bold text-white mb-0.5">Install SellBodr</div>
             {isIOS ? (
