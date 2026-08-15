@@ -9,7 +9,7 @@ async function runNewSearch(page: Page) {
       resp => resp.url().includes('/api/v1/searches') && resp.request().method() === 'POST',
       { timeout: 90_000 }
     ),
-    page.getByRole('button', { name: /New Search/i }).click(),
+    page.getByRole('button', { name: /New Scan/i }).click(),
   ]);
 
   if (!searchResp.ok()) {
@@ -23,7 +23,7 @@ async function runNewSearch(page: Page) {
 
 async function ensureHasOpportunities(page: Page) {
   await page.goto('/opportunities');
-  await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
   const noOpps = await page.getByText('No opportunities yet').isVisible().catch(() => false);
   if (noOpps) {
@@ -48,26 +48,32 @@ async function ensureHasOpportunities(page: Page) {
 test.describe('Opportunity Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/opportunities');
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
   test('shows heading and subtitle', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
-    await expect(page.getByText('AI-ranked cross-border eCommerce opportunities')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/AI-ranked products sourced from India/i)).toBeVisible();
   });
 
-  test('marketplace dropdown shows available count', async ({ page }) => {
-    // Label shows "(76 available)" or "(N available)"
-    await expect(page.getByText(/available\)/)).toBeVisible({ timeout: 10_000 });
+  test('marketplace dropdown is visible and shows selected marketplace', async ({ page }) => {
+    // Marketplace selector button is always visible in the filter bar
+    await expect(
+      page.locator('button').filter({ hasText: /Amazon|Etsy|eBay|Allegro|Walmart|TikTok|Select/i }).first()
+    ).toBeVisible({ timeout: 10_000 });
   });
 
-  test('recommendation filter has All / Launch / Hold / Reject pills', async ({ page }) => {
-    for (const label of ['All', 'Launch', 'Hold', 'Reject']) {
-      await expect(page.locator('button').filter({ hasText: new RegExp(`^[\\S\\s]*${label}[\\S\\s]*$`) }).first()).toBeVisible();
-    }
+  test('signal filter select has Launch / Hold / Reject options', async ({ page }) => {
+    // The Signal select (recommendation filter) has these options
+    const signalSelect = page.locator('select').filter({ hasText: /All Signals|Launch|Hold|Reject/ }).first();
+    await expect(signalSelect).toBeVisible({ timeout: 5_000 });
+    // Options are present in the select
+    await expect(page.locator('option[value="launch"]').first()).toBeAttached();
+    await expect(page.locator('option[value="hold"]').first()).toBeAttached();
+    await expect(page.locator('option[value="reject"]').first()).toBeAttached();
   });
 
-  test('"+ New Search" button runs AI pipeline and populates opportunity table', async ({ page, request }) => {
+  test('"+ New Scan" button runs AI pipeline and populates opportunity table', async ({ page, request }) => {
     // Intercept POST /searches and fulfil with the dev-only seed endpoint (no Groq needed)
     await page.route('**/api/v1/searches', async (route) => {
       if (route.request().method() !== 'POST') { await route.continue(); return; }
@@ -89,21 +95,22 @@ test.describe('Opportunity Dashboard', () => {
 
     const headers = page.locator('thead th');
     await expect(headers.filter({ hasText: 'Product' })).toBeVisible();
-    await expect(headers.filter({ hasText: 'Market' })).toBeVisible();
     await expect(headers.filter({ hasText: 'Score' })).toBeVisible();
-    await expect(headers.filter({ hasText: 'Decision' })).toBeVisible();
+    await expect(headers.filter({ hasText: 'Signal' })).toBeVisible();
     await expect(headers.filter({ hasText: 'Net Profit' })).toBeVisible();
   });
 
-  test('each row has product title and a View link', async ({ page }) => {
+  test('each row has product title and Research button; clicking expands breakdown with Full Report link', async ({ page }) => {
     await ensureHasOpportunities(page);
 
     const firstRow = page.locator('tbody tr').first();
     // Product title in first column
     await expect(firstRow.locator('td').first().locator('.font-medium')).toBeVisible();
-    // View → link is opacity-0 by default, only visible on hover — hover first to reveal it
-    await firstRow.hover();
-    await expect(firstRow.locator('a').filter({ hasText: 'View' })).toBeVisible();
+    // Research button is always visible
+    await expect(firstRow.locator('button').filter({ hasText: /Research/i })).toBeVisible();
+    // Clicking the row expands the BreakdownPanel which contains "Full Report →" link
+    await firstRow.click();
+    await expect(page.locator('a').filter({ hasText: /Full Report/i }).first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('clicking marketplace dropdown opens searchable panel', async ({ page }) => {
@@ -115,21 +122,25 @@ test.describe('Opportunity Dashboard', () => {
     await page.keyboard.press('Escape');
   });
 
-  test('recommendation "Launch" pill filters table', async ({ page }) => {
+  test('signal "Launch" filter shows filtered results', async ({ page }) => {
     await ensureHasOpportunities(page);
 
-    await page.locator('button').filter({ hasText: /🚀.*Launch/ }).click();
+    // Select Launch from Signal dropdown
+    const signalSelect = page.locator('select').filter({ hasText: /All Signals/ }).first();
+    await signalSelect.selectOption('launch');
+
     // After filtering, either a table (with or without rows) or empty state must be visible
     await expect(
-      page.locator('table').or(page.getByText('No opportunities yet'))
+      page.locator('table').or(page.getByText(/No results match|No opportunities/))
     ).toBeVisible({ timeout: 8_000 });
   });
 
-  test('"All" pill resets recommendation filter', async ({ page }) => {
+  test('"All Signals" resets signal filter', async ({ page }) => {
     await ensureHasOpportunities(page);
 
-    await page.locator('button').filter({ hasText: /🚀.*Launch/ }).click();
-    await page.locator('button').filter({ hasText: /^All$/ }).click();
+    const signalSelect = page.locator('select').filter({ hasText: /All Signals/ }).first();
+    await signalSelect.selectOption('launch');
+    await signalSelect.selectOption('');
     await expect(page.locator('table')).toBeVisible({ timeout: 8_000 });
   });
 
@@ -138,9 +149,7 @@ test.describe('Opportunity Dashboard', () => {
     await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
     const noOpps = await page.getByText('No opportunities yet').isVisible().catch(() => false);
     if (noOpps) {
-      // The empty state <p> has "Click + New Search to discover products" — match by regex to avoid
-      // strict-mode violations from other elements that contain "Click" or "New Search" separately
-      await expect(page.getByText(/Click.*New Search/i)).toBeVisible();
+      await expect(page.getByText(/Click.*New.*Scan|New Scan to discover/i)).toBeVisible();
     } else {
       await expect(page.locator('table')).toBeVisible();
     }

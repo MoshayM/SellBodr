@@ -7,7 +7,9 @@ test.describe('Authentication', () => {
   test('login page renders correctly', async ({ page }) => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Sign in/ })).toBeVisible();
+    // Two sign-in buttons exist — check each specifically
+    await expect(page.getByRole('button', { name: /Sign in with Passkey/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Sign in with Password/i })).toBeVisible();
     await expect(page.getByText('SellBodr', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('Sign in to your SellBodr account')).toBeVisible();
   });
@@ -25,6 +27,8 @@ test.describe('Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
     await expect(page.getByPlaceholder('Jane Smith')).toBeVisible();
     await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
+    // Password fields are behind "Use a password instead →" — click to reveal
+    await page.getByText('Use a password instead').click();
     await expect(page.getByPlaceholder('Min 8 characters')).toBeVisible();
     await expect(page.getByPlaceholder('Repeat password')).toBeVisible();
     await expect(page.getByRole('button', { name: /Create account/ })).toBeVisible();
@@ -56,13 +60,15 @@ test.describe('Authentication', () => {
     await page.getByRole('button', { name: /Continue with/ }).first().click();
     await page.getByPlaceholder('Jane Smith').fill('New User');
     await page.getByPlaceholder('you@example.com').fill(email);
+    // Expand password form (passkey-first design hides password fields by default)
+    await page.getByText('Use a password instead').click();
     await page.getByPlaceholder('Min 8 characters').fill('TestPass123!');
     await page.getByPlaceholder('Repeat password').fill('TestPass123!');
     await page.getByRole('button', { name: /Create account/ }).click();
 
     await page.waitForURL('**/opportunities', { timeout: 45_000, waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
-    await expect(page.locator('aside')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
+    await expect(page.locator('header')).toBeVisible();
   });
 
   test('login with valid credentials → redirects to /opportunities', async ({ page }) => {
@@ -70,11 +76,11 @@ test.describe('Authentication', () => {
     await page.goto('/login');
     await page.getByPlaceholder('you@example.com').fill('e2e-fixed@SellBodr.test');
     await page.getByPlaceholder('••••••••').fill('TestPass123!');
-    await page.getByRole('button', { name: /Sign in/ }).click();
+    await page.getByRole('button', { name: /Sign in with Password/i }).click();
 
     // Next.js client-side navigation after login; domcontentloaded avoids waiting for load event
     await page.waitForURL('**/opportunities', { timeout: 60_000, waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
   test('login with wrong password → API returns 401 and stays on /login', async ({ page }) => {
@@ -84,7 +90,7 @@ test.describe('Authentication', () => {
 
     const [loginResponse] = await Promise.all([
       page.waitForResponse(resp => resp.url().includes('/auth/login'), { timeout: 10_000 }),
-      page.getByRole('button', { name: /Sign in/ }).click(),
+      page.getByRole('button', { name: /Sign in with Password/i }).click(),
     ]);
 
     expect(loginResponse.status()).toBe(401);
@@ -99,7 +105,7 @@ test.describe('Authentication', () => {
 
     const [loginResponse] = await Promise.all([
       page.waitForResponse(resp => resp.url().includes('/auth/login'), { timeout: 10_000 }),
-      page.getByRole('button', { name: /Sign in/ }).click(),
+      page.getByRole('button', { name: /Sign in with Password/i }).click(),
     ]);
 
     expect([401, 400, 404]).toContain(loginResponse.status());
@@ -176,30 +182,33 @@ test.describe('Authentication', () => {
   });
 
   test('register → sign out → login (full round-trip)', async ({ page }) => {
+    test.setTimeout(120_000);
     const ts = String(Date.now()).slice(-6);
     const email = `rt-${ts}@e2e.test`;
     const password = 'TestPass123!';
 
-    // Register: step 1 → step 2 → submit
+    // Register: step 1 → step 2 → expand password form → submit
     await page.goto('/register');
     await page.getByRole('button', { name: /Continue with/ }).first().click();
     await page.getByPlaceholder('Jane Smith').fill('Roundtrip User');
     await page.getByPlaceholder('you@example.com').fill(email);
+    await page.getByText('Use a password instead').click();
     await page.getByPlaceholder('Min 8 characters').fill(password);
     await page.getByPlaceholder('Repeat password').fill(password);
     await page.getByRole('button', { name: /Create account/ }).click();
-    await page.waitForURL('**/opportunities', { timeout: 20_000 });
+    await page.waitForURL('**/opportunities', { timeout: 45_000, waitUntil: 'domcontentloaded' });
 
-    // Sign out — use evaluate to bypass any overlay
-    await page.getByRole('button', { name: 'Sign out' }).evaluate((el: HTMLButtonElement) => el.click());
+    // Sign out — open user avatar menu then click Sign out
+    await page.getByRole('button', { name: 'User menu' }).click();
+    await page.getByText('Sign out').click();
     await page.waitForURL('**/login', { timeout: 10_000 });
 
-    // Login with same creds
+    // Login with same creds using password button specifically
     await page.getByPlaceholder('you@example.com').fill(email);
     await page.getByPlaceholder('••••••••').fill(password);
-    await page.getByRole('button', { name: /Sign in/ }).click();
+    await page.getByRole('button', { name: /Sign in with Password/i }).click();
     // Next.js client-side navigation after login can be slow on first visit; 45s covers compilation
     await page.waitForURL('**/opportunities', { timeout: 45_000, waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 });

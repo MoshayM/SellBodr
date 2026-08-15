@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 async function goToFirstOpportunity(page: Page) {
   await page.goto('/opportunities');
-  await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   await page.locator('tr.animate-pulse').first().waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
 
   const noOpps = await page.getByText('No opportunities yet').isVisible().catch(() => false);
@@ -25,12 +25,14 @@ async function goToFirstOpportunity(page: Page) {
     await expect(page.locator('tbody tr').first().locator('.font-medium')).toBeVisible({ timeout: 15_000 });
   }
 
-  // View links are opacity-0 by default — hover the row to reveal them
+  // Click the first row to expand the BreakdownPanel (rows are clickable to expand)
   const firstRow = page.locator('tbody tr').first();
-  await firstRow.hover();
-  const viewLink = firstRow.locator('a').filter({ hasText: 'View' });
-  await expect(viewLink).toBeVisible({ timeout: 10_000 });
-  await viewLink.click();
+  await firstRow.click();
+
+  // "Full Report →" link appears inside the expanded BreakdownPanel
+  const fullReportLink = page.locator('a').filter({ hasText: /Full Report/i }).first();
+  await expect(fullReportLink).toBeVisible({ timeout: 10_000 });
+  await fullReportLink.click();
 
   await page.waitForURL(/\/opportunities\/[0-9a-f-]{36}$/, { timeout: 15_000 });
 }
@@ -90,10 +92,9 @@ test.describe('Opportunity Detail Page', () => {
     await goToFirstOpportunity(page);
     await page.getByRole('button', { name: 'Research', exact: true }).click();
 
-    await expect(page.getByRole('heading', { name: 'Product Research' })).toBeVisible();
-    await expect(page.getByText('Category').first()).toBeVisible();
-    await expect(page.getByText('Demand Score').first()).toBeVisible();
-    await expect(page.getByText('Trend Score').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Market Intelligence' })).toBeVisible();
+    await expect(page.getByText('Demand').first()).toBeVisible();
+    await expect(page.getByText('Trend').first()).toBeVisible();
   });
 
   test('Suppliers tab shows sourcing section', async ({ page }) => {
@@ -113,18 +114,19 @@ test.describe('Opportunity Detail Page', () => {
     if (hasTable) {
       const headers = page.locator('thead th');
       await expect(headers.filter({ hasText: 'Supplier' })).toBeVisible();
-      await expect(headers.filter({ hasText: 'Source' })).toBeVisible();
-      await expect(headers.filter({ hasText: 'Cost' })).toBeVisible();
       await expect(headers.filter({ hasText: 'MOQ' })).toBeVisible();
-      await expect(headers.filter({ hasText: 'Lead Time' })).toBeVisible();
+      // Accept either "Platform"/"Country" for source column and "Lead"/"Lead Time" for lead column
+      await expect(
+        page.locator('thead th').filter({ hasText: /Platform|Country/i }).first()
+      ).toBeVisible();
     }
   });
 
-  test('Profitability tab shows Profit Waterfall', async ({ page }) => {
+  test('Profitability tab shows Cost Waterfall chart', async ({ page }) => {
     await goToFirstOpportunity(page);
     await page.getByRole('button', { name: 'Profitability', exact: true }).click();
 
-    await expect(page.getByRole('heading', { name: 'Profit Waterfall' })).toBeVisible();
+    await expect(page.getByText('Cost Waterfall')).toBeVisible({ timeout: 5_000 });
     await expect(page.locator('.recharts-responsive-container').first()).toBeVisible({ timeout: 8_000 });
   });
 

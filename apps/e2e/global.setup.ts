@@ -66,7 +66,7 @@ setup('create or restore test user session', async ({ page }) => {
   }, authData);
 
   await page.goto('/opportunities');
-  await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible({ timeout: 30_000 });
 
   // Pre-seed opportunities so data-dependent tests don't need to call AI themselves
   const oppsCheck = await page.request.get(`${API}/opportunities?marketplace=amazon_us`, {

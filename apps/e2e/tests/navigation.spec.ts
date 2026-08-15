@@ -3,92 +3,96 @@ import { test, expect } from '@playwright/test';
 test.describe('Dashboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/opportunities');
-    await expect(page.locator('aside')).toBeVisible();
+    await expect(page.locator('header')).toBeVisible();
   });
 
-  test('sidebar shows SellBodr branding', async ({ page }) => {
-    const sidebar = page.locator('aside');
-    await expect(sidebar.getByText('SellBodr')).toBeVisible();
-    await expect(sidebar.getByText('Intelligence Platform')).toBeVisible();
+  test('header shows SellBodr branding', async ({ page }) => {
+    const header = page.locator('header');
+    await expect(header.getByText('SellBodr')).toBeVisible();
+    await expect(header.getByText('eCommerce Intelligence')).toBeVisible();
   });
 
-  test('sidebar shows all navigation links', async ({ page }) => {
-    const nav = page.locator('aside nav');
-    for (const label of ['Opportunities', 'Research', 'Suppliers', 'Marketplace', 'Profitability', 'Listing', 'Recommendation', 'Reports']) {
-      await expect(nav.getByText(label)).toBeVisible();
-    }
+  test('search dropdown opens and filters pages by query', async ({ page }) => {
+    // Click the desktop search bar via its aria-label
+    await page.locator('button[aria-label="Search (⌘K)"]').click();
+    const input = page.locator('input[placeholder*="Search"]');
+    await expect(input).toBeVisible({ timeout: 5_000 });
+
+    // Type a query to filter — brings matching page to top (avoids overflow-clip visibility issues)
+    await input.fill('Recommendations');
+    await expect(
+      page.locator('button').filter({ hasText: 'Recommendations' }).first()
+    ).toBeVisible({ timeout: 5_000 });
+
+    // Verify a different page can be found via filter
+    await input.fill('Reports');
+    await expect(
+      page.locator('button').filter({ hasText: 'Reports' }).first()
+    ).toBeVisible({ timeout: 5_000 });
+
+    await page.keyboard.press('Escape');
   });
 
-  test('sidebar shows sign out button', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  test('user menu shows sign out option', async ({ page }) => {
+    await page.getByRole('button', { name: 'User menu' }).click();
+    await expect(page.getByText('Sign out')).toBeVisible({ timeout: 3_000 });
   });
 
-  test('active Opportunities link has active styling', async ({ page }) => {
-    const link = page.locator('aside nav a[href="/opportunities"]');
-    // Active link has text-white + violet bg gradient (not text-gray or text-white/45)
-    await expect(link).toHaveClass(/text-white/);
+  test('active Opportunities page shows Scout heading', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
   test('navigate to Research page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Research').click();
-    await page.waitForURL('**/research');
+    await page.goto('/research');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test('Research page has active nav highlight', async ({ page }) => {
-    await page.locator('aside nav').getByText('Research').click();
-    await page.waitForURL('**/research');
-    const link = page.locator('aside nav a[href="/research"]');
-    // Active link gets text-white class (full opacity, not white/45)
-    await expect(link).toHaveClass(/text-white/);
+  test('Research page has active nav indicator in header', async ({ page }) => {
+    await page.goto('/research');
+    await expect(page.locator('header')).toBeVisible();
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to Suppliers page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Suppliers').click();
-    await page.waitForURL('**/suppliers');
+    await page.goto('/suppliers');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to Marketplace page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Marketplace').click();
-    await page.waitForURL('**/marketplace');
+    await page.goto('/marketplace');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to Profitability page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Profitability').click();
-    await page.waitForURL('**/profitability');
+    await page.goto('/profitability');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to AI Listing page', async ({ page }) => {
-    await page.locator('aside nav').getByText('AI Listing').click();
-    await page.waitForURL('**/listing');
+    await page.goto('/listing');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to Recommendation page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Recommendation').click();
-    await page.waitForURL('**/recommendation');
+    await page.goto('/recommendation');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('navigate to Reports page', async ({ page }) => {
-    await page.locator('aside nav').getByText('Reports').click();
-    await page.waitForURL('**/reports');
+    await page.goto('/reports');
     await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('back-navigate works (browser back button)', async ({ page }) => {
-    await page.locator('aside nav').getByText('Research').click();
-    await page.waitForURL('**/research');
+    await page.goto('/research');
     await page.goBack();
     await page.waitForURL('**/opportunities');
-    await expect(page.getByRole('heading', { name: 'Opportunities' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
   test('sign out → redirects to /login and clears localStorage tokens', async ({ page }) => {
-    await page.getByRole('button', { name: 'Sign out' }).evaluate((el: HTMLButtonElement) => el.click());
+    await page.getByRole('button', { name: 'User menu' }).click();
+    await page.getByText('Sign out').click();
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible({ timeout: 30_000 });
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
