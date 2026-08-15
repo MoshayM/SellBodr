@@ -165,7 +165,8 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const gapPct      = (pitchPct - barWidthPct) / 2;
 
   // Build bar positions — height uses ACTUAL value (not capped at remaining)
-  let remaining = sale;
+  let remaining = sale;   // tracks balance in the main zone (≥ 0)
+  let lossOffset = 0;     // tracks accumulated px used inside the loss zone
   const bars = steps.map((step, i) => {
     const leftPct = i * pitchPct + gapPct;
     const cx = leftPct + barWidthPct / 2;
@@ -175,13 +176,28 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
       top = CHART_H - sale * scale;
       h   = sale * scale;
     } else if (step.type === 'cost') {
-      top = CHART_H - Math.max(0, remaining) * scale;
-      // Actual cost height — bar may extend below CHART_H; clipped by container overflow:hidden
-      h   = Math.min(step.value * scale, TOTAL_H - top);
-      remaining = Math.max(0, remaining - step.value);
+      if (remaining > 0) {
+        // Bar starts in the main (above-zero) zone
+        top = CHART_H - remaining * scale;
+        const fullH = step.value * scale;
+        h = Math.min(fullH, TOTAL_H - top);
+        remaining = Math.max(0, remaining - step.value);
+        // Track how much of this bar spilled into the loss zone
+        if (top + fullH > CHART_H) {
+          lossOffset = Math.min(top + fullH - CHART_H, LOSS_H);
+        }
+      } else {
+        // Remaining balance is 0 — stack this bar in the loss zone below the previous bar
+        top = CHART_H + lossOffset;
+        h   = Math.min(step.value * scale, TOTAL_H - top);
+        h   = Math.max(h, 0);
+        lossOffset += h;
+      }
     } else {
       if (!isLoss) {
-        h   = Math.max(net * scale, 2);
+        // Anchor net bar exactly where the cascade ended (remaining after all costs)
+        // so there is no visible seam/gap between last cost and net bar
+        h   = Math.max(remaining * scale, 4);
         top = CHART_H - h;
       } else {
         growDown = true;
@@ -193,17 +209,16 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
     return { ...step, leftPct, cx, barWidthPct, top, h: Math.max(h, 2), growDown, i };
   });
 
-  // Connector step lines — clamp cy to CHART_H to avoid upward artifacts in loss zone
+  // Connector step lines
   const connectors: { x1: string; x2: string; y: number }[] = [];
   for (let i = 0; i < bars.length - 1; i++) {
     const cur  = bars[i];
     const next = bars[i + 1];
     if (next.growDown) continue;
-    // Clamp connector level to zero line; bars below zero share the zero-line connector
-    const cy = Math.min(
-      cur.type === 'income' ? cur.top : cur.top + cur.h,
-      CHART_H,
-    );
+    // For income bars the cascade level is the bar's top; for cost bars it's the bottom.
+    // Clamp to CHART_H so connectors never draw into the loss zone.
+    const rawCy = cur.type === 'income' ? cur.top : cur.top + cur.h;
+    const cy    = Math.min(rawCy, CHART_H);
     connectors.push({
       x1: `${cur.leftPct + cur.barWidthPct}%`,
       x2: `${next.leftPct}%`,
