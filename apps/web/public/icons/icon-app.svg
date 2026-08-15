@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <!-- Main vivid gradient: deep violet → hot pink → amber -->
+    <linearGradient id="g" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#7c3aed"/>
+      <stop offset="48%"  stop-color="#db2777"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <!-- 3D depth shadow gradient (dark extrusion layer) -->
+    <linearGradient id="gd" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1e0a3c"/>
+      <stop offset="100%" stop-color="#431407"/>
+    </linearGradient>
+    <!-- Ambient glow behind the arrows -->
+    <radialGradient id="bg-glow" cx="50%" cy="45%" r="48%">
+      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Soft glow filter for the bloom layer -->
+    <filter id="gf" x="-55%" y="-55%" width="210%" height="210%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <!-- ── Black circle background (like Grok icon) ── -->
+  <circle cx="50" cy="50" r="50" fill="#000000"/>
+  <!-- Subtle ambient violet glow in background -->
+  <circle cx="50" cy="50" r="50" fill="url(#bg-glow)"/>
+
+  <!-- Soft glow bloom behind arrows -->
+  <g filter="url(#gf)" opacity="0.55">
+    <path d="M 20 65 C 15 35,53 17,62 19"
+          stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
+    <polygon points="74,22 61,24 63,14" fill="#db2777"/>
+    <path d="M 80 35 C 85 65,47 83,38 81"
+          stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
+    <polygon points="26,78 39,76 37,86" fill="#7c3aed"/>
+  </g>
+
+  <!-- 3D depth extrusion layer (offset +2.5, +3 for depth illusion) -->
+  <g opacity="0.55">
+    <path d="M 22.5 68 C 17.5 38,55.5 20,64.5 22"
+          stroke="url(#gd)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+    <polygon points="76.5,25 63.5,27 65.5,17" fill="url(#gd)"/>
+    <path d="M 82.5 38 C 87.5 68,49.5 86,40.5 84"
+          stroke="url(#gd)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+    <polygon points="28.5,81 41.5,79 39.5,89" fill="url(#gd)"/>
+  </g>
+
+  <!-- ── Main vivid arrows ── -->
+  <path d="M 20 65 C 15 35,53 17,62 19"
+        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+  <polygon points="74,22 61,24 63,14" fill="url(#g)"/>
+  <path d="M 80 35 C 85 65,47 83,38 81"
+        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+  <polygon points="26,78 39,76 37,86" fill="url(#g)"/>
+
+  <!-- Top-face rim highlight (white, 3D top-plane effect) -->
+  <path d="M 20 65 C 15 35,53 17,62 19"
+        stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.25"/>
+  <path d="M 80 35 C 85 65,47 83,38 81"
+        stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.25"/>
+</svg>

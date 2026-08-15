@@ -17,14 +17,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icons/icon.svg',     type: 'image/svg+xml' },
+      { url: '/icons/icon-app.svg', type: 'image/svg+xml' },
       { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
       { url: '/icons/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [
       { url: '/icons/apple-icon-180.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/icons/icon.svg',
+    shortcut: '/icons/icon-app.svg',
   },
   openGraph: {
     title: 'SellBodr — Find Products in India. Sell Globally.',
