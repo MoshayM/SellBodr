@@ -216,7 +216,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Right actions */}
-        <div className="ml-auto sm:ml-0 flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
 
           {/* Mobile search icon */}
           <button onClick={() => setSearchOpen(true)}

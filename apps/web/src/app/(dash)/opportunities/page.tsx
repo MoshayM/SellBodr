@@ -701,6 +701,13 @@ export default function OpportunitiesPage() {
 
   const hasClientFilters = !!(catFilter || srcFilter || strengthFilter || periodFilter);
 
+  // Quick stats for hero
+  const hotCount        = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'hot').length;
+  const risingCount     = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'rising').length;
+  const launchCount     = allOpps.filter(o => (o.recommendation || '').toLowerCase() === 'launch').length;
+  const profitableCount = allOpps.filter(o => (o.profitModel?.trueNetMinor ?? o.profitModel?.netProfitMinor ?? 0) > 0).length;
+  const newThisWeek     = allOpps.filter(o => Date.now() - Number(o.createdAt || 0) < 7 * DAY).length;
+
   const runSearch = useMutation({
     mutationFn: () => {
       setSearchError(''); setSearching(true); setSearchStatus('AI analysing market…');
@@ -724,20 +731,61 @@ export default function OpportunitiesPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Opportunities</h1>
-          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities · Click any row for research, suppliers &amp; profitability</p>
+
+      {/* ── Scout hero ──────────────────────────────────────── */}
+      <div className="mb-5">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            {/* Live pill */}
+            {!isLoading && allOpps.length > 0 && (
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-2.5 py-1 rounded-full tracking-wide uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  {allOpps.length} live
+                </span>
+              </div>
+            )}
+            {/* Headline */}
+            <h1 className="text-[28px] sm:text-[36px] font-black text-white tracking-tight leading-none mb-2">
+              Scout
+            </h1>
+            <p className="text-sm text-white/40 leading-snug max-w-lg">
+              AI-ranked products sourced from India — ready to sell on Amazon, Etsy &amp; 70+ global marketplaces
+            </p>
+          </div>
+
+          {/* Action */}
+          <button onClick={() => runSearch.mutate()} disabled={searching}
+            className="btn-primary text-sm disabled:opacity-60 shrink-0">
+            {searching
+              ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
+              : searchStatus
+              ? <><span className="mr-1">✓</span>{searchStatus}</>
+              : <><span className="text-base mr-1">＋</span>New Scan</>}
+          </button>
         </div>
-        <button onClick={() => runSearch.mutate()} disabled={searching}
-          className="btn-primary text-sm disabled:opacity-60 shrink-0">
-          {searching
-            ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus}</>
-            : searchStatus
-            ? <><span className="mr-1">✓</span>{searchStatus}</>
-            : <><span className="mr-1">+</span>New Search</>}
-        </button>
+
+        {/* Quick-stat chips — clickable filters */}
+        {!isLoading && allOpps.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { icon: '🔥', label: 'Hot', count: hotCount,        color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)',  action: () => setStrengthFilter(strengthFilter === 'hot' ? '' : 'hot') },
+              { icon: '📈', label: 'Rising', count: risingCount,  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', action: () => setStrengthFilter(strengthFilter === 'rising' ? '' : 'rising') },
+              { icon: '🚀', label: 'Launch-ready', count: launchCount, color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', action: () => setRecFilter(recFilter === 'launch' ? '' : 'launch') },
+              { icon: '💰', label: 'Profitable', count: profitableCount, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', action: null },
+              { icon: '🆕', label: 'This week', count: newThisWeek, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', border: 'rgba(6,182,212,0.25)', action: () => setPeriodFilter(periodFilter === '7d' ? '' : '7d') },
+            ].filter(s => s.count > 0).map(s => (
+              <button key={s.label}
+                onClick={s.action ?? undefined}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 ${s.action ? 'hover:scale-105 active:scale-95 cursor-pointer' : 'cursor-default'}`}
+                style={{ color: s.color, background: s.bg, border: `1px solid ${s.border}` }}>
+                <span>{s.icon}</span>
+                <span className="font-black tabular-nums">{s.count}</span>
+                <span className="text-white/50">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {searchError && (
@@ -748,76 +796,79 @@ export default function OpportunitiesPage() {
         </div>
       )}
 
-      {/* ── Filter bar ─────────────────────────────────────── */}
-      <div className="card-dark rounded-xl border border-white/8 p-3 mb-4">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* ── Filter bar — sticky, visually attached to top nav ── */}
+      <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 md:-mx-5 lg:-mx-6 xl:-mx-8 mb-4">
+        <div className="px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 py-2.5 border-b border-white/8 overflow-x-auto scroll-tabs"
+          style={{ background: 'rgba(2,8,23,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+          <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
 
-          {/* Marketplace */}
-          <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
-            onChange={v => setMpFilter(v)} loading={mktLoading} />
+            {/* Marketplace */}
+            <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
+              onChange={v => setMpFilter(v)} loading={mktLoading} />
 
-          {/* Category */}
-          <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SEL}>
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+            {/* Category */}
+            <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SEL}>
+              <option value="">All Categories</option>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
 
-          {/* Signal */}
-          <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
-            <option value="">All Signals</option>
-            <option value="launch">🚀 Launch</option>
-            <option value="hold">⏸ Hold</option>
-            <option value="reject">✕ Reject</option>
-          </select>
+            {/* Signal */}
+            <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
+              <option value="">All Signals</option>
+              <option value="launch">🚀 Launch</option>
+              <option value="hold">⏸ Hold</option>
+              <option value="reject">✕ Reject</option>
+            </select>
 
-          {/* Trend source */}
-          <select value={srcFilter} onChange={e => setSrcFilter(e.target.value)} className={SEL}>
-            <option value="">All Trends</option>
-            <option value="search">🔍 Search</option>
-            <option value="social">📱 Social</option>
-            <option value="curated">🎨 Curated</option>
-            <option value="value">💲 Value</option>
-          </select>
+            {/* Trend source */}
+            <select value={srcFilter} onChange={e => setSrcFilter(e.target.value)} className={SEL}>
+              <option value="">All Trends</option>
+              <option value="search">🔍 Search</option>
+              <option value="social">📱 Social</option>
+              <option value="curated">🎨 Curated</option>
+              <option value="value">💲 Value</option>
+            </select>
 
-          {/* Trend strength */}
-          <select value={strengthFilter} onChange={e => setStrengthFilter(e.target.value)} className={SEL}>
-            <option value="">All Channels</option>
-            <option value="hot">🔥 Hot</option>
-            <option value="rising">📈 Rising</option>
-            <option value="stable">➡️ Stable</option>
-          </select>
+            {/* Trend strength */}
+            <select value={strengthFilter} onChange={e => setStrengthFilter(e.target.value)} className={SEL}>
+              <option value="">All Channels</option>
+              <option value="hot">🔥 Hot</option>
+              <option value="rising">📈 Rising</option>
+              <option value="stable">➡️ Stable</option>
+            </select>
 
-          {/* Period */}
-          <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className={SEL}>
-            <option value="">All Time</option>
-            <option value="2d">Last 2 days</option>
-            <option value="7d">This week</option>
-            <option value="30d">This month</option>
-            <option value="3m">Last 3 months</option>
-          </select>
+            {/* Period */}
+            <select value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} className={SEL}>
+              <option value="">All Time</option>
+              <option value="2d">Last 2 days</option>
+              <option value="7d">This week</option>
+              <option value="30d">This month</option>
+              <option value="3m">Last 3 months</option>
+            </select>
 
-          {/* Sort */}
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={SEL}>
-            <option value="score">⭐ Best Score</option>
-            <option value="profit">💰 Most Profit</option>
-            <option value="trend">📈 Trending</option>
-            <option value="newest">🕐 Newest</option>
-            <option value="oldest">🕐 Oldest</option>
-          </select>
+            {/* Sort */}
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={SEL}>
+              <option value="score">⭐ Best Score</option>
+              <option value="profit">💰 Most Profit</option>
+              <option value="trend">📈 Trending</option>
+              <option value="newest">🕐 Newest</option>
+              <option value="oldest">🕐 Oldest</option>
+            </select>
 
-          {/* Clear + count */}
-          <div className="ml-auto flex items-center gap-2.5">
-            {hasClientFilters && (
-              <button onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); }}
-                className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20">
-                Clear ✕
-              </button>
-            )}
-            <span className="text-xs text-white/30 whitespace-nowrap">
-              {displayed.length} of {allOpps.length} result{allOpps.length !== 1 ? 's' : ''}
-            </span>
+            {/* Clear + count */}
+            <div className="ml-auto flex items-center gap-2.5 pl-2">
+              {hasClientFilters && (
+                <button onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
+                  className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 whitespace-nowrap">
+                  Clear ✕
+                </button>
+              )}
+              <span className="text-xs text-white/30 whitespace-nowrap tabular-nums">
+                {displayed.length}<span className="text-white/20"> / {allOpps.length}</span>
+              </span>
+            </div>
+
           </div>
-
         </div>
       </div>
 
