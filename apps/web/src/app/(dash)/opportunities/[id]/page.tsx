@@ -156,125 +156,6 @@ function ProfitBar({ label, value, total, color }: { label: string; value: numbe
   );
 }
 
-// ── 3D Profit Waterfall Chart ──────────────────────────────────────────────────
-function ProfitWaterfallChart3D({ sale, src, ship, pkg, dutyAmt, refFee, fbaFee, adSpend, trueNet, netMargin, roi, breakeven, monthly50, platform, currency }: {
-  sale: number; src: number; ship: number; pkg: number; dutyAmt: number;
-  refFee: number; fbaFee: number; adSpend: number; trueNet: number;
-  netMargin: number; roi: number; breakeven: number; monthly50: number;
-  platform: string; currency: string;
-}) {
-  const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
-  const f = (v: number, d = 2) => `${sym}${(Math.abs(v) / 100).toFixed(d)}`;
-  const totalCost = src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend;
-
-  const segments = [
-    { label: ['Sale', 'Price'],    value: sale,              up: true,          color: '#7c3aed', shade: '#5b21b6' },
-    { label: ['Source', 'Cost'],   value: src,               up: false,         color: '#ef4444', shade: '#991b1b' },
-    { label: ["Int'l", 'Ship.'],   value: ship,              up: false,         color: '#f97316', shade: '#c2410c' },
-    { label: ['Pkg +', 'Label'],   value: pkg,               up: false,         color: '#f59e0b', shade: '#b45309' },
-    { label: ['Import', 'Duty'],   value: dutyAmt,           up: false,         color: '#eab308', shade: '#a16207' },
-    { label: ['Referral', 'Fee'],  value: refFee,            up: false,         color: '#ec4899', shade: '#9d174d' },
-    { label: ['FBA /', 'Fulfil.'], value: fbaFee,            up: false,         color: '#e879f9', shade: '#a21caf' },
-    { label: ['Ad', 'Spend'],      value: adSpend,           up: false,         color: '#fb7185', shade: '#be123c' },
-    { label: ['Net', 'Profit'],    value: Math.abs(trueNet), up: trueNet >= 0,  color: trueNet >= 0 ? '#22c55e' : '#ef4444', shade: trueNet >= 0 ? '#15803d' : '#991b1b' },
-  ].filter(s => s.value > 0);
-
-  const MAX_H = 110;
-  const maxVal = Math.max(...segments.map(s => s.value), 1);
-
-  const kpis = [
-    { label: 'Net / Unit',  value: `${trueNet < 0 ? '-' : ''}${f(Math.abs(trueNet))}`, pos: trueNet >= 0 },
-    { label: 'Total Cost',  value: f(totalCost),                                         pos: false },
-    { label: 'Net Margin',  value: `${netMargin.toFixed(1)}%`,                           pos: netMargin >= 15 },
-    { label: 'ROI',         value: `${roi.toFixed(0)}%`,                                 pos: roi >= 20 },
-    { label: 'Break-even',  value: `${Math.min(breakeven, 999)} units`,                  pos: breakeven < 200 },
-  ];
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a0e1e 0%, #0f172a 100%)' }}>
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <div className="text-[9px] uppercase tracking-[0.2em] text-violet-400/60 mb-0.5 font-semibold">Profit Waterfall</div>
-            <div className="text-sm font-bold text-white">{platform.toUpperCase()}</div>
-          </div>
-          <div className="flex gap-3 flex-wrap justify-end">
-            {([['#7c3aed','▲ Revenue'],['#ef4444','▼ Costs'],['#22c55e','▲ Profit']] as [string,string][]).map(([c,l]) => (
-              <div key={l} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: c }} />
-                <span className="text-[9px] text-white/40">{l}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-1 mb-1" style={{ height: `${MAX_H * 2 + 2}px` }}>
-          {segments.map((seg, i) => {
-            const barH = Math.max(6, Math.round((seg.value / maxVal) * MAX_H));
-            return (
-              <div key={i} className="flex flex-col flex-1 min-w-0" style={{ height: `${MAX_H * 2 + 2}px` }}>
-                <div className="flex flex-col justify-end" style={{ height: `${MAX_H}px` }}>
-                  {seg.up && (
-                    <div className="relative" style={{ height: `${barH}px` }}>
-                      <div className="absolute inset-0 rounded-t-sm" style={{ backgroundColor: seg.color, boxShadow: `0 0 10px ${seg.color}50` }} />
-                      <div className="absolute top-0 right-0 bottom-0 w-[3px] opacity-40 rounded-tr-sm"
-                        style={{ backgroundColor: seg.shade, transform: 'skewY(-6deg) translateX(1.5px)' }} />
-                      <div className="absolute left-0 right-0 h-[3px] -top-[2px] opacity-50"
-                        style={{ backgroundColor: seg.color, transform: 'skewX(-10deg)' }} />
-                    </div>
-                  )}
-                </div>
-                <div className="w-full h-[2px] bg-white/10" />
-                <div className="flex flex-col justify-start" style={{ height: `${MAX_H}px` }}>
-                  {!seg.up && (
-                    <div className="relative" style={{ height: `${barH}px` }}>
-                      <div className="absolute inset-0 rounded-b-sm" style={{ backgroundColor: seg.color, boxShadow: `0 0 10px ${seg.color}50` }} />
-                      <div className="absolute bottom-0 right-0 top-0 w-[3px] opacity-40 rounded-br-sm"
-                        style={{ backgroundColor: seg.shade, transform: 'skewY(6deg) translateX(1.5px)' }} />
-                      <div className="absolute left-0 right-0 h-[3px] -bottom-[2px] opacity-50"
-                        style={{ backgroundColor: seg.color, transform: 'skewX(10deg)' }} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex gap-1 mb-5">
-          {segments.map((seg, i) => (
-            <div key={i} className="flex-1 min-w-0 text-center">
-              {seg.label.map((line, j) => (
-                <div key={j} className="text-[7px] text-white/35 leading-[1.3]">{line}</div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-5 gap-2 border-t border-white/8 pt-4">
-          {kpis.map(({ label, value, pos }) => (
-            <div key={label} className="text-center">
-              <div className="text-[8px] text-white/35 mb-0.5 leading-snug">{label}</div>
-              <div className={`text-xs font-bold ${pos ? 'text-emerald-400' : 'text-red-400'}`}>{value}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 rounded-xl p-3 flex items-center justify-between"
-          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)' }}>
-          <div>
-            <div className="text-[9px] text-white/40">Est. Monthly Profit</div>
-            <div className="text-[8px] text-white/25">50 units / month</div>
-          </div>
-          <div className={`text-lg font-bold ${monthly50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Leaflet map rendered inside an iframe srcDoc — no package install needed, no SSR issues
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   const pins = candidates
@@ -468,7 +349,18 @@ export default function OpportunityDetailPage() {
       <div className="scroll-tabs mb-5 -mx-3 sm:mx-0 px-3 sm:px-0">
         <div className="tab-pill-bar min-w-max">
           {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`tab-pill${tab === t ? ' active' : ''}`}>{t}</button>
+            t === 'Report' ? (
+              <button key={t} onClick={() => setTab(t)}
+                className={`tab-pill relative${tab === t ? ' active' : ''}`}
+                style={tab !== t ? { color: 'rgba(251,191,36,0.75)', border: '1px solid rgba(251,191,36,0.25)' } : {}}>
+                {t}
+                {tab !== t && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                )}
+              </button>
+            ) : (
+              <button key={t} onClick={() => setTab(t)} className={`tab-pill${tab === t ? ' active' : ''}`}>{t}</button>
+            )
           ))}
         </div>
       </div>
@@ -619,7 +511,7 @@ export default function OpportunityDetailPage() {
         <div className="space-y-3">
           {/* Global supplier map */}
           {opp.sourcingCandidates?.some((sc: any) => sc.latitude && sc.longitude) && (
-            <div className="card overflow-hidden">
+            <div className="card-dark overflow-hidden">
               <div className="p-3 border-b border-white/8 flex items-center gap-2">
                 <span className="text-sm font-semibold text-white/80">🌍 Global Supplier Map</span>
                 <span className="text-xs text-white/35">India suppliers prioritised</span>
@@ -629,11 +521,12 @@ export default function OpportunityDetailPage() {
           )}
 
           {/* Supplier table */}
-          <div className="card overflow-hidden">
+          <div className="card-dark overflow-hidden">
             <div className="p-4 border-b border-white/8 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-white">Sourcing Candidates</span>
                 <span className="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded-full font-medium">India First</span>
+                <span className="text-xs text-white/30">({opp.sourcingCandidates?.length ?? 0} suppliers)</span>
               </div>
               <span className="text-xs text-white/35">Click a row to view profile &amp; contact</span>
             </div>
@@ -642,20 +535,20 @@ export default function OpportunityDetailPage() {
             ) : (
               <div className="table-scroll">
                 <table className="w-full text-sm min-w-[700px]">
-                  <thead className="bg-white/5 text-xs text-white/55">
+                  <thead className="bg-white/5 text-xs text-white/60 border-b border-white/8">
                     <tr>
-                      <th className="text-left px-4 py-2.5">Supplier</th>
-                      <th className="text-left px-4 py-2.5">Country</th>
-                      <th className="text-left px-4 py-2.5">Platform</th>
-                      <th className="text-right px-4 py-2.5">Unit Cost</th>
-                      <th className="text-center px-4 py-2.5">Trust</th>
-                      <th className="text-right px-4 py-2.5">MOQ</th>
-                      <th className="text-right px-4 py-2.5">Lead</th>
-                      <th className="text-center px-4 py-2.5">Ease</th>
-                      <th className="text-center px-4 py-2.5">Action</th>
+                      <th className="text-left px-4 py-3">Supplier</th>
+                      <th className="text-left px-4 py-3">Country</th>
+                      <th className="text-left px-4 py-3">Platform</th>
+                      <th className="text-right px-4 py-3">Unit Cost</th>
+                      <th className="text-center px-4 py-3">Trust</th>
+                      <th className="text-right px-4 py-3">MOQ</th>
+                      <th className="text-right px-4 py-3">Lead</th>
+                      <th className="text-center px-4 py-3">Ease</th>
+                      <th className="text-center px-4 py-3">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-white/6">
                     {opp.sourcingCandidates?.map((sc: any, idx: number) => {
                       const isIndia = (sc.country || 'India') === 'India';
                       const flag = isIndia ? '🇮🇳' : sc.country === 'China' ? '🇨🇳' : sc.country === 'Hong Kong' ? '🇭🇰' : sc.country === 'United States' ? '🇺🇸' : '🌐';
@@ -839,27 +732,19 @@ export default function OpportunityDetailPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="rounded-lg bg-white/70 p-3 text-center">
-                      <div className="text-white/35 mb-1">Monthly (50 units)</div>
-                      <div className="font-bold text-white text-base">{usdD(Math.abs(monthly50), 0)}</div>
+                    <div className="rounded-lg bg-white/8 border border-white/10 p-3 text-center">
+                      <div className="text-white/45 mb-1">Monthly (50 units)</div>
+                      <div className={`font-bold text-base ${monthly50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usdD(Math.abs(monthly50), 0)}</div>
                     </div>
-                    <div className="rounded-lg bg-white/70 p-3 text-center">
-                      <div className="text-white/35 mb-1">Annual projection</div>
-                      <div className="font-bold text-white text-base">{usdD(Math.abs(annual50), 0)}</div>
+                    <div className="rounded-lg bg-white/8 border border-white/10 p-3 text-center">
+                      <div className="text-white/45 mb-1">Annual projection</div>
+                      <div className={`font-bold text-base ${annual50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usdD(Math.abs(annual50), 0)}</div>
                     </div>
                   </div>
                 </div>
                 <p className="text-xs text-white/35 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination avg · {currency}</p>
               </div>
             </div>
-            {/* 3D animated waterfall (yy.PNG) */}
-            <ProfitWaterfallChart3D
-              sale={sale} src={src} ship={ship} pkg={pkg} dutyAmt={dutyAmt}
-              refFee={refFee} fbaFee={fbaFee} adSpend={adSpend} trueNet={trueNet}
-              netMargin={netMargin} roi={roi} breakeven={breakeven}
-              monthly50={monthly50} platform={platform} currency={currency}
-            />
-            {/* Recharts waterfall + key metrics (Cap.PNG content) */}
             <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0a0e1e 0%, #0f172a 100%)' }}>
               <ProfitWaterfall profit={profitForChart} currency={currency} />
             </div>

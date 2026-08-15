@@ -34,4 +34,14 @@ export class ListingController {
   getReviewInsights(@Request() req: any, @Param('id') id: string) {
     return this.svc.getReviewInsights(id, req.user.sub);
   }
+
+  @Post('opportunities/:id/ads')
+  generateAds(@Request() req: any, @Param('id') id: string) {
+    return this.svc.generateAds(id, req.user.sub);
+  }
+
+  @Post('opportunities/:id/growth')
+  generateGrowth(@Request() req: any, @Param('id') id: string) {
+    return this.svc.generateGrowth(id, req.user.sub);
+  }
 }

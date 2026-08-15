@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/uuid": "^11.0.0"
+    "@types/uuid": "^11.0.0",
+    "sharp": "^0.35.3"
   }
 }

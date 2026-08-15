@@ -238,3 +238,42 @@
   Page :  http://localhost:3000/marketplace
 
 ======================================================================
+
+
+
+
+
+
+
+Live Currency Converter — What's in it
+
+Access: A floating 💱 Live FX button sits on every dashboard page (bottom-right desktop, above mobile nav)
+
+20 currencies covering all major cross-border eCommerce markets:
+USD · GBP · EUR · INR · AUD · CAD · SGD · AED · JPY · CNY · SAR · MYR · BRL · MXN · PLN · SEK · NOK · KRW · THB · ZAR
+
+UX features:
+
+┌──────────────┬───────────────────────────────────────────────────────────────────┐
+│   Feature    │                              Detail                               │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Live rates   │ European Central Bank via Frankfurter — zero API key needed       │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Auto-refresh │ Every 60 seconds, with manual refresh button                      │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Any → any    │ Type an amount, pick base currency, all 19 cards update instantly │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Swap base    │ Tap any currency card to make it the new source currency          │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Rate label   │ Each card shows 1 ₹ = $0.0120 for quick reference                 │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Status dot   │ Green (fresh) · Amber pulse (fetching) · Red (cached, offline)    │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Animation    │ Framer Motion spring — slides up on mobile, scales in on desktop  │
+├──────────────┼───────────────────────────────────────────────────────────────────┤
+│ Dismiss      │ Escape key, backdrop click, or ✕ button                           │
+└──────────────┴───────────────────────────────────────────────────────────────────┘
+
+
+
+

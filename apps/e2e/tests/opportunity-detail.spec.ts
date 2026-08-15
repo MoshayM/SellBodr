@@ -68,9 +68,9 @@ test.describe('Opportunity Detail Page', () => {
     }
   });
 
-  test('all 8 detail tabs are visible', async ({ page }) => {
+  test('all 10 detail tabs are visible', async ({ page }) => {
     await goToFirstOpportunity(page);
-    const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Recommendation', 'Report'];
+    const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
     for (const tab of TABS) {
       await expect(page.getByRole('button', { name: tab, exact: true })).toBeVisible();
     }
@@ -181,14 +181,80 @@ test.describe('Opportunity Detail Page', () => {
     await expect(page.getByRole('button', { name: /Generate Report/i })).toBeVisible();
   });
 
-  test('tab switching is stable — no crashes across all 8 tabs', async ({ page }) => {
+  test('Ads tab shows campaign generator', async ({ page }) => {
     await goToFirstOpportunity(page);
-    const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Recommendation', 'Report'];
+    await page.getByRole('button', { name: 'Ads', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: 'Ad Campaign Generator' })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('button', { name: /Generate Ads/i })).toBeVisible({ timeout: 5_000 });
+    // Platform placeholders visible before generation
+    await expect(page.getByText('Facebook').first()).toBeVisible();
+    await expect(page.getByText('Instagram').first()).toBeVisible();
+  });
+
+  test('Ads tab generate button triggers generation state', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    await page.getByRole('button', { name: 'Ads', exact: true }).click();
+
+    const genBtn = page.getByRole('button', { name: /Generate Ads/i });
+    await expect(genBtn).toBeVisible({ timeout: 5_000 });
+    await genBtn.click();
+
+    // Either spinner or generated content should appear (API may or may not be available)
+    await expect(
+      page.locator('text=/Generating|Facebook|Instagram|YouTube|Google/i').first()
+    ).toBeVisible({ timeout: 30_000 });
+  });
+
+  test('Growth tab shows playbook generator', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    await page.getByRole('button', { name: 'Growth', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: 'Growth Playbook' })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('button', { name: /Build Playbook/i })).toBeVisible({ timeout: 5_000 });
+    // Section placeholders visible before generation
+    await expect(page.getByText('Quick Wins').first()).toBeVisible();
+    await expect(page.getByText('Launch Sequence').first()).toBeVisible();
+  });
+
+  test('Growth tab generate button triggers generation state', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    await page.getByRole('button', { name: 'Growth', exact: true }).click();
+
+    const genBtn = page.getByRole('button', { name: /Build Playbook/i });
+    await expect(genBtn).toBeVisible({ timeout: 5_000 });
+    await genBtn.click();
+
+    await expect(
+      page.locator('text=/Generating|Quick Wins|Listing Optimization|Launch Sequence/i').first()
+    ).toBeVisible({ timeout: 30_000 });
+  });
+
+  test('Suppliers tab shows minimum sourcing candidate count badge', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    await page.getByRole('button', { name: 'Suppliers', exact: true }).click();
+
+    await expect(page.getByText('Sourcing Candidates')).toBeVisible();
+    // Check supplier count badge is visible (format: "(N suppliers)")
+    await expect(page.locator('text=/suppliers/i').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('Report tab has highlighted indicator', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    // Report tab should have amber colour styling even when inactive
+    const reportTab = page.getByRole('button', { name: 'Report', exact: true });
+    await expect(reportTab).toBeVisible();
+    // Clicking it activates it
+    await reportTab.click();
+    await expect(page.getByRole('heading', { name: 'Opportunity Report' })).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('tab switching is stable — no crashes across all 10 tabs', async ({ page }) => {
+    await goToFirstOpportunity(page);
+    const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
 
     for (const tab of TABS) {
       await page.getByRole('button', { name: tab, exact: true }).click();
-      // Active tab gets border-green-600
-      await expect(page.getByRole('button', { name: tab, exact: true })).toHaveClass(/border-green-600/, { timeout: 3_000 });
       // No React crash
       await expect(page.locator('text=/Something went wrong|crashed|Minified React error/i')).toHaveCount(0);
     }

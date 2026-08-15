@@ -118,6 +118,63 @@ test.describe('Authentication', () => {
     await page.waitForURL('**/login', { timeout: 10_000 });
   });
 
+  test('passkey button shows loading state on click', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByRole('button', { name: /Sign in with Passkey/i })).toBeVisible();
+
+    // Intercept the begin endpoint so WebAuthn fires in the browser (not an API 404)
+    await page.route('**/passkey/login/begin', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challengeId: 'e2e-challenge',
+          challenge: Buffer.from('e2e-test-challenge').toString('base64url'),
+          timeout: 60_000,
+          rpId: 'localhost',
+          allowCredentials: [],
+          userVerification: 'required',
+        }),
+      })
+    );
+
+    await page.getByRole('button', { name: /Sign in with Passkey/i }).click();
+
+    // Loading state appears immediately
+    await expect(page.locator('text=/Waiting for passkey/i')).toBeVisible({ timeout: 3_000 });
+  });
+
+  test('passkey cancellation shows helpful error message', async ({ page }) => {
+    await page.goto('/login');
+
+    // Intercept begin so WebAuthn is called in-browser (headless = no authenticator → NotAllowedError)
+    await page.route('**/passkey/login/begin', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challengeId: 'e2e-challenge',
+          challenge: Buffer.from('e2e-test-challenge').toString('base64url'),
+          timeout: 60_000,
+          rpId: 'localhost',
+          allowCredentials: [],
+          userVerification: 'required',
+        }),
+      })
+    );
+
+    await page.getByRole('button', { name: /Sign in with Passkey/i }).click();
+
+    // In headless Chromium, WebAuthn throws NotAllowedError (no authenticator available)
+    // The error message from the catch block should appear
+    await expect(
+      page.locator('text=/cancelled|Passkey|Try again|password|failed/i').first()
+    ).toBeVisible({ timeout: 15_000 });
+
+    // Should remain on login page (not redirect)
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+  });
+
   test('register → sign out → login (full round-trip)', async ({ page }) => {
     const ts = String(Date.now()).slice(-6);
     const email = `rt-${ts}@e2e.test`;

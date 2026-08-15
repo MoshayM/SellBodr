@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -228,24 +228,42 @@ export default function LoginPage() {
 
           {!isInstalled && (
             installPrompt ? (
-              <button onClick={handleInstall}
-                className="mt-5 w-full p-3 rounded-xl bg-violet-500/8 border border-violet-500/20 hover:bg-violet-500/14 hover:border-violet-500/35 transition-all flex items-center gap-3 text-left touch-manipulation">
-                <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
-                  style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white/70 leading-snug">Install SellBodr App</div>
-                  <div className="text-[10px] text-violet-400/70 leading-snug mt-0.5">Tap to install — works offline, loads instantly</div>
+              <motion.button onClick={handleInstall}
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                className="mt-5 w-full p-3.5 rounded-xl flex items-center gap-3 text-left touch-manipulation group relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(99,102,241,0.07))', border: '1px solid rgba(124,58,237,0.35)', boxShadow: '0 0 20px rgba(124,58,237,0.1)' }}>
+                {/* Shimmer overlay */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.08),transparent)', backgroundSize: '200% 100%' }} />
+                <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)' }}>
+                  <img src="/icons/icon.svg" alt="" className="w-7 h-7"
+                    style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.8))' }} />
+                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-violet-400 animate-pulse" />
                 </div>
-                <span className="text-violet-400 text-xs shrink-0">↓ Install</span>
-              </button>
+                <div className="flex-1 min-w-0 relative">
+                  <div className="text-sm font-bold text-white leading-snug">Install SellBodr App</div>
+                  <div className="text-[11px] text-violet-300/70 leading-snug mt-0.5">Works offline · Loads instantly · No app store needed</div>
+                </div>
+                <div className="relative flex flex-col items-center gap-0.5 shrink-0">
+                  <motion.span
+                    animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                    className="text-violet-300 text-base">↓</motion.span>
+                  <span className="text-[10px] text-violet-400 font-semibold">Install</span>
+                </div>
+              </motion.button>
             ) : isIOS ? (
-              <div className="mt-5 p-3 rounded-xl bg-white/[0.03] border border-white/8 flex items-center gap-3">
-                <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
-                  style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
+              <div className="mt-5 p-3.5 rounded-xl flex items-center gap-3"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                  <img src="/icons/icon.svg" alt="" className="w-7 h-7"
+                    style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white/60 leading-snug">Install on iPhone / iPad</div>
-                  <div className="text-[10px] text-white/30 leading-snug mt-0.5">
-                    Tap <span className="text-white/50">Share ↑</span> then <span className="text-white/50">Add to Home Screen</span> in Safari
+                  <div className="text-sm font-semibold text-white/70 leading-snug">Add to iPhone / iPad</div>
+                  <div className="text-[11px] text-white/40 leading-snug mt-0.5">
+                    In Safari: tap <span className="text-white/60 font-medium">Share ↑</span> → <span className="text-white/60 font-medium">Add to Home Screen</span>
                   </div>
                 </div>
               </div>
