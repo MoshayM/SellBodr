@@ -156,9 +156,11 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   // Layout: CHART_H scales to the largest single bar; loss zone is dynamic
   const CHART_H = 144;
   const scale   = CHART_H / singleMax;
-  // How far cost bars cascade below the zero line (when totalCosts > sale)
-  const overflowPx = Math.max(0, totalCosts - sale) * scale;
-  const LOSS_H  = isLoss ? Math.min(60, Math.max(36, overflowPx * 0.5)) : 0;
+  // Loss zone must be tall enough to stack ALL overflowing cost bars:
+  // source spill (how far src exceeds sale) + every subsequent cost bar
+  const sourceSpillPx = isLoss ? Math.max(0, src - sale) * scale : 0;
+  const otherCostsPx  = (ship + pkg + duty + refFee + fbaFee + ads) * scale;
+  const LOSS_H  = isLoss ? Math.min(220, Math.ceil(sourceSpillPx + otherCostsPx) + 8) : 0;
   const TOTAL_H = CHART_H + LOSS_H;
   const pitchPct    = 100 / n;
   const barWidthPct = pitchPct * 0.70;
