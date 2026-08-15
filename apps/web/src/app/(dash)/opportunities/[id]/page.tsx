@@ -10,6 +10,151 @@ import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDraw
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
 
 function minor(v: number) { return (v / 100).toFixed(2); }
+function usdD(v: number, d = 2) { return '$' + (v / 100).toFixed(d); }
+function pctD(n: number) { return n.toFixed(1) + '%'; }
+
+// ── Trade Intelligence Data ────────────────────────────────────────────────────
+type TradeRow = { hsn: string; hs6: string; chapter: string; gst: number; dgft: string; rodtep: boolean };
+const TRADE_DB: [string, TradeRow][] = [
+  ['home decor',  { hsn: '6304', hs6: '630492', chapter: 'Ch.63 · Made-up Textile Articles', gst: 12, dgft: 'Free', rodtep: true }],
+  ['handicraft',  { hsn: '6913', hs6: '691390', chapter: 'Ch.69 · Decorative Ceramic Articles', gst: 12, dgft: 'Free', rodtep: true }],
+  ['fashion',     { hsn: '6204', hs6: '620462', chapter: "Ch.62 · Women's Garments", gst: 12, dgft: 'Free', rodtep: true }],
+  ['apparel',     { hsn: '6204', hs6: '620462', chapter: 'Ch.62 · Apparel & Clothing', gst: 12, dgft: 'Free', rodtep: true }],
+  ['textile',     { hsn: '6217', hs6: '621790', chapter: 'Ch.62 · Clothing Accessories', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['health',      { hsn: '3004', hs6: '300490', chapter: 'Ch.30 · Pharmaceutical Products', gst: 12, dgft: 'Free', rodtep: false }],
+  ['wellness',    { hsn: '3304', hs6: '330499', chapter: 'Ch.33 · Health Preparations', gst: 18, dgft: 'Free', rodtep: false }],
+  ['skincare',    { hsn: '3304', hs6: '330499', chapter: 'Ch.33 · Skin Care Preparations', gst: 18, dgft: 'Free', rodtep: true }],
+  ['cosmetic',    { hsn: '3305', hs6: '330590', chapter: 'Ch.33 · Cosmetics & Toiletries', gst: 18, dgft: 'Free', rodtep: true }],
+  ['beauty',      { hsn: '3305', hs6: '330590', chapter: 'Ch.33 · Perfumery / Cosmetics', gst: 18, dgft: 'Free', rodtep: true }],
+  ['electron',    { hsn: '8543', hs6: '854370', chapter: 'Ch.85 · Electronic Equipment', gst: 18, dgft: 'Free', rodtep: false }],
+  ['spice',       { hsn: '0910', hs6: '091099', chapter: 'Ch.09 · Spices', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['food',        { hsn: '2106', hs6: '210690', chapter: 'Ch.21 · Food Preparations', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['yoga',        { hsn: '9506', hs6: '950699', chapter: 'Ch.95 · Sports / Yoga Equipment', gst: 12, dgft: 'Free', rodtep: true }],
+  ['fitness',     { hsn: '9506', hs6: '950699', chapter: 'Ch.95 · Fitness Equipment', gst: 12, dgft: 'Free', rodtep: true }],
+  ['sport',       { hsn: '9506', hs6: '950699', chapter: 'Ch.95 · Sports & Recreation', gst: 12, dgft: 'Free', rodtep: true }],
+  ['cookware',    { hsn: '7323', hs6: '732394', chapter: 'Ch.73 · Cooking Utensils', gst: 18, dgft: 'Free', rodtep: true }],
+  ['kitchen',     { hsn: '7323', hs6: '732399', chapter: 'Ch.73 · Steel/Iron Household Articles', gst: 18, dgft: 'Free', rodtep: true }],
+  ['jewel',       { hsn: '7117', hs6: '711790', chapter: 'Ch.71 · Imitation Jewellery', gst: 3,  dgft: 'Free', rodtep: true }],
+  ['jewelry',     { hsn: '7117', hs6: '711790', chapter: 'Ch.71 · Imitation Jewellery', gst: 3,  dgft: 'Free', rodtep: true }],
+  ['leather',     { hsn: '4202', hs6: '420222', chapter: 'Ch.42 · Leather Goods', gst: 18, dgft: 'Free', rodtep: true }],
+  ['bag',         { hsn: '4202', hs6: '420212', chapter: 'Ch.42 · Bags & Travel Articles', gst: 18, dgft: 'Free', rodtep: true }],
+  ['candle',      { hsn: '3406', hs6: '340600', chapter: 'Ch.34 · Candles & Wax Articles', gst: 12, dgft: 'Free', rodtep: true }],
+  ['wood',        { hsn: '4421', hs6: '442190', chapter: 'Ch.44 · Wood Articles', gst: 12, dgft: 'Free', rodtep: true }],
+  ['toy',         { hsn: '9503', hs6: '950300', chapter: 'Ch.95 · Toys & Games', gst: 12, dgft: 'Free', rodtep: true }],
+  ['stationery',  { hsn: '4820', hs6: '482010', chapter: 'Ch.48 · Notebooks & Stationery', gst: 12, dgft: 'Free', rodtep: true }],
+  ['pottery',     { hsn: '6911', hs6: '691110', chapter: 'Ch.69 · Ceramic Tableware', gst: 12, dgft: 'Free', rodtep: true }],
+  ['furniture',   { hsn: '9403', hs6: '940360', chapter: 'Ch.94 · Furniture', gst: 18, dgft: 'Free', rodtep: true }],
+  ['carpet',      { hsn: '5701', hs6: '570110', chapter: 'Ch.57 · Hand-knotted Carpets', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['rug',         { hsn: '5705', hs6: '570500', chapter: 'Ch.57 · Carpets & Floor Coverings', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['lighting',    { hsn: '9405', hs6: '940540', chapter: 'Ch.94 · Lighting Equipment', gst: 12, dgft: 'Free', rodtep: true }],
+  ['lamp',        { hsn: '9405', hs6: '940540', chapter: 'Ch.94 · Lamps & Lighting', gst: 12, dgft: 'Free', rodtep: true }],
+  ['painting',    { hsn: '9701', hs6: '970190', chapter: 'Ch.97 · Paintings & Art', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['art',         { hsn: '9701', hs6: '970110', chapter: 'Ch.97 · Works of Art', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['supplement',  { hsn: '2106', hs6: '210690', chapter: 'Ch.21 · Food Supplements', gst: 18, dgft: 'Free', rodtep: false }],
+  ['herbal',      { hsn: '1211', hs6: '121190', chapter: 'Ch.12 · Plants for Pharma', gst: 5,  dgft: 'Free', rodtep: true }],
+  ['pet',         { hsn: '4201', hs6: '420100', chapter: 'Ch.42 · Pet Accessories', gst: 12, dgft: 'Free', rodtep: true }],
+];
+function lookupTrade(category: string): TradeRow {
+  const cat = (category || '').toLowerCase().replace(/_/g, ' ');
+  for (const [k, v] of TRADE_DB) { if (cat.includes(k)) return v; }
+  return { hsn: '9999', hs6: '999999', chapter: 'General Merchandise', gst: 18, dgft: 'Free', rodtep: true };
+}
+
+type DutyRow = { pct: number; threshold: string; compliance: string[]; notes: string };
+const DUTY_DB: Record<string, Record<string, DutyRow>> = {
+  us: {
+    default:     { pct: 0,    threshold: 'USD $800',   compliance: ['CBP entry >$800', 'ISF filing'],                                          notes: 'No India-US FTA; MFN rates; many India-origin goods duty-free' },
+    textile:     { pct: 12.0, threshold: 'USD $800',   compliance: ['FTC Textile label', "CPSC (children's items)"],                           notes: 'India origin exempt from Section 301; CN origin adds 25%+ tariff' },
+    electronics: { pct: 0,    threshold: 'USD $800',   compliance: ['FCC ID required', 'UL/ETL preferred'],                                    notes: 'Most electronics duty-free under HTS Chapter 84/85' },
+    health:      { pct: 0,    threshold: 'USD $800',   compliance: ['FDA registration', 'cGMP certificate'],                                    notes: 'FDA prior notice 4h before arrival; DSHEA compliance for supplements' },
+    beauty:      { pct: 0,    threshold: 'USD $800',   compliance: ['FDA cosmetics', 'INCI ingredient list'],                                   notes: 'MoCRA 2022: facility registration + product listing recommended' },
+    food:        { pct: 0,    threshold: 'USD $800',   compliance: ['FDA Food Facility reg', 'Nutrition Facts label', 'FSMA FSVP'],            notes: 'Importer needs FSVP plan; organic needs USDA NOP certification' },
+    jewellery:   { pct: 6.5,  threshold: 'USD $800',   compliance: ['CPSC lead/cadmium limits'],                                               notes: 'Imitation: 11%; Fine gold: 5.5%; Fine silver: 3%' },
+    leather:     { pct: 4.5,  threshold: 'USD $800',   compliance: ['CITES (exotic leather)', 'COO label'],                                    notes: 'Handbags: 7.2–16%; Wallets: 8–17.6%' },
+    toy:         { pct: 0,    threshold: 'USD $800',   compliance: ["CPSC children's safety", 'ASTM F963'],                                    notes: "Children's toys need CPSC certification; lead content <90ppm" },
+  },
+  gb: {
+    default:     { pct: 0,    threshold: 'GBP £135',   compliance: ['UK Global Tariff', 'VAT 20% at import'],                                  notes: 'India-UK FTA under negotiation — potential duty reduction soon' },
+    textile:     { pct: 12.0, threshold: 'GBP £135',   compliance: ['UKCA marking', 'REACH compliance'],                                       notes: 'UK DCTS (GSP successor) may reduce duty for India-origin goods' },
+    electronics: { pct: 0,    threshold: 'GBP £135',   compliance: ['UKCA mark mandatory', 'RoHS UK SI 2012/3032'],                            notes: 'CE mark invalid in UK from Jan 2025; UKCA required' },
+    beauty:      { pct: 0,    threshold: 'GBP £135',   compliance: ['UK Cosmetics Reg 2009', 'UK Responsible Person'],                         notes: 'Post-Brexit: separate UK notification from EU CPNP required' },
+    food:        { pct: 0,    threshold: 'GBP £135',   compliance: ['UK FBO registration', 'PPDS allergen labelling'],                         notes: 'SPS checks at GB border; BTOM phased 2024–25' },
+    toy:         { pct: 0,    threshold: 'GBP £135',   compliance: ['UK Toys Safety Regs', 'UKCA mark'],                                       notes: 'EN 71 test reports still recognised; UKCA DoC required' },
+  },
+  de: {
+    default:     { pct: 0,    threshold: 'EUR €150',   compliance: ['EU customs entry', 'VAT 19% at import'],                                  notes: 'IOSS registration needed for DTC sales below €150 to EU consumers' },
+    textile:     { pct: 12.0, threshold: 'EUR €150',   compliance: ['CE mark', 'REACH', 'Eco-design Directive'],                               notes: 'EU GSP+ preferential rate applies for India on many textile codes' },
+    electronics: { pct: 0,    threshold: 'EUR €150',   compliance: ['CE mark mandatory', 'RoHS', 'WEEE registration'],                         notes: 'WEEE producer registration required in each EU member state' },
+    beauty:      { pct: 0,    threshold: 'EUR €150',   compliance: ['EU Cosmetics Reg 1223/2009', 'CPNP notification', 'EU Responsible Person'], notes: 'Single CPNP notification covers all EU countries' },
+    food:        { pct: 0,    threshold: 'EUR €150',   compliance: ['EU FBO notification', 'DE language labels', 'Allergen declaration'],      notes: 'Organic: EU organic logo + control body code required' },
+    toy:         { pct: 4.7,  threshold: 'EUR €150',   compliance: ['CE mark', 'EN 71 test report', 'Technical file'],                        notes: 'EN 71 parts 1–3 mandatory; REACH SVHC chemical check required' },
+  },
+  ca: {
+    default:     { pct: 0,    threshold: 'CAD $20',    compliance: ['CBSA B3 entry form'],                                                     notes: 'De minimis only CAD $20 — most B2C parcels face duties' },
+    textile:     { pct: 18.0, threshold: 'CAD $20',    compliance: ['CCPSA compliance', 'Bilingual EN/FR labels'],                             notes: 'No India-Canada FTA; MFN rates apply; higher than US' },
+    electronics: { pct: 0,    threshold: 'CAD $20',    compliance: ['ISED Canada', 'CSA/UL certification'],                                    notes: 'Radio equipment needs ISED RSP-100 compliance' },
+    food:        { pct: 0,    threshold: 'CAD $20',    compliance: ['CFIA registration', 'Bilingual EN/FR labels'],                            notes: 'Organic: Canada Organic Regime (COR) certification needed' },
+    toy:         { pct: 0,    threshold: 'CAD $20',    compliance: ['Canada Consumer Safety', 'ASTM/EN test reports'],                         notes: 'Hazardous Products Act compliance; bilingual labels required' },
+  },
+  au: {
+    default:     { pct: 5,    threshold: 'AUD $1,000', compliance: ['ABF customs entry', 'GST 10% via LVT'],                                   notes: 'GST collected by marketplace (Amazon AU, eBay AU) for orders <A$1,000' },
+    textile:     { pct: 10.0, threshold: 'AUD $1,000', compliance: ['ACL compliance', 'Care label required'],                                  notes: 'LVT: GST collected at point of sale by platform' },
+    electronics: { pct: 0,    threshold: 'AUD $1,000', compliance: ['RCM mark mandatory', 'ACMA approval for radio'],                         notes: 'Regulatory Compliance Mark (RCM) replaces old A-tick and C-tick' },
+    food:        { pct: 0,    threshold: 'AUD $1,000', compliance: ['FSANZ compliance', 'Import permit (some foods)'],                         notes: 'Biosecurity Act: some foods need import permit; check prohibited list' },
+    toy:         { pct: 0,    threshold: 'AUD $1,000', compliance: ['ACL Product Safety', 'AS/NZS 8124 toys standard'],                        notes: 'Mandatory safety standard for toys; choking hazard rules apply' },
+  },
+};
+function lookupDuty(mpCode: string, category: string): DutyRow {
+  const cc = (mpCode || '').split('_').pop() || 'us';
+  const country = DUTY_DB[cc] ?? DUTY_DB['us'];
+  const cat = (category || '').toLowerCase().replace(/_/g, ' ');
+  const key = cat.includes('textile') || cat.includes('fashion') || cat.includes('apparel') || cat.includes('cloth') ? 'textile'
+    : cat.includes('electron') || cat.includes('gadget') ? 'electronics'
+    : cat.includes('health') || cat.includes('wellness') || cat.includes('supplement') ? 'health'
+    : cat.includes('beauty') || cat.includes('cosmetic') || cat.includes('skincare') ? 'beauty'
+    : cat.includes('food') || cat.includes('spice') || cat.includes('snack') ? 'food'
+    : cat.includes('jewel') || cat.includes('jewelry') ? 'jewellery'
+    : cat.includes('leather') || cat.includes('bag') ? 'leather'
+    : cat.includes('toy') || cat.includes('game') ? 'toy'
+    : 'default';
+  return country[key] ?? country['default'];
+}
+const EXPORT_DOCS_BASE = [
+  'Shipping Bill (filed on ICEGATE)',
+  'Commercial Invoice',
+  'Packing List',
+  'Certificate of Origin (COO)',
+  'AD Code letter (Authorized Dealer bank)',
+  'LUT/Bond — zero-rated GST export',
+];
+const EXPORT_DOCS_EXTRA: Record<string, string[]> = {
+  food:       ['FSSAI Export NOC', 'Phytosanitary Certificate'],
+  health:     ['Drug Controller NOC', 'GMP Certificate'],
+  beauty:     ['CPCB Plastic Rules compliance'],
+  handicraft: ['Handicraft Mark (EPCH)'],
+  textile:    ['Fabric test reports (OEKO-TEX preferred)'],
+};
+function getExtraDocs(category: string): string[] {
+  const cat = (category || '').toLowerCase().replace(/_/g, ' ');
+  for (const [k, docs] of Object.entries(EXPORT_DOCS_EXTRA)) {
+    if (cat.includes(k)) return docs;
+  }
+  return [];
+}
+
+// ── Profit bar for detail page ─────────────────────────────────────────────────
+function ProfitBar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <div className="w-36 text-gray-500 text-right shrink-0 text-xs">{label}</div>
+      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <div className="w-16 font-mono font-semibold text-gray-700 text-right text-xs">{usdD(value)}</div>
+    </div>
+  );
+}
 
 // Leaflet map rendered inside an iframe srcDoc — no package install needed, no SSR issues
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
@@ -221,29 +366,130 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Research ── */}
-      {tab === 'Research' && (
-        <div className="card p-4 sm:p-6 space-y-4">
-          <h2 className="font-semibold text-gray-800">Product Research</h2>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Category</div>
-              <div className="font-medium">{opp.product?.category?.replace(/_/g, ' ')}</div>
+      {tab === 'Research' && (() => {
+        const trade = lookupTrade(opp.product?.category || '');
+        const duty  = lookupDuty(opp.marketplace?.code || '', opp.product?.category || '');
+        const extraDocs = getExtraDocs(opp.product?.category || '');
+        const mpCountry = opp.marketplace?.country || 'United States';
+        return (
+          <div className="space-y-4">
+            {/* Market scores */}
+            <div className="card p-4 sm:p-5">
+              <h2 className="font-semibold text-gray-800 mb-3">Market Intelligence</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Demand',     val: Math.round(score.demand || 0), unit: '/100' },
+                  { label: 'Trend',      val: Math.round(score.trend || 0),  unit: '/100' },
+                  { label: 'Mkt Fit',    val: Math.round(score.marketplaceFit || 0), unit: '/100' },
+                  { label: 'Saturation', val: Math.round(score.saturation || 0), unit: '/100' },
+                ].map(s => (
+                  <div key={s.label} className="rounded-xl bg-gray-50 p-3 text-center">
+                    <div className="text-[11px] text-gray-400 mb-1">{s.label}</div>
+                    <div className={`font-bold text-xl ${s.val >= 70 ? 'text-emerald-700' : s.val >= 45 ? 'text-amber-600' : 'text-red-600'}`}>{s.val}<span className="text-xs font-normal text-gray-400">{s.unit}</span></div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Weight</div>
-              <div className="font-medium">{opp.product?.weightG}g</div>
+
+            {/* Product Classification */}
+            <div className="card p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🏷️</span>
+                <h3 className="font-semibold text-gray-800">Product Classification &amp; GST</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                  <div className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-1">HSN Code (India)</div>
+                  <div className="font-bold text-indigo-700 text-2xl font-mono">{trade.hsn}</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">Use 8-digit for Shipping Bill</div>
+                </div>
+                <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-3">
+                  <div className="text-[10px] font-semibold text-purple-400 uppercase tracking-wider mb-1">HS Code (International)</div>
+                  <div className="font-bold text-purple-700 text-2xl font-mono">{trade.hs6}</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">WCO 6-digit standard</div>
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                  <div className="text-[10px] font-semibold text-amber-500 uppercase tracking-wider mb-1">GST Rate (India)</div>
+                  <div className="font-bold text-amber-700 text-2xl">{trade.gst}%</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">Exports: 0% (zero-rated)</div>
+                </div>
+              </div>
+              <div className="rounded-xl bg-gray-50 px-4 py-3 mb-3">
+                <span className="text-[10px] text-gray-400">Customs Chapter · </span>
+                <span className="text-sm font-medium text-gray-700">{trade.chapter}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.dgft === 'Free' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                  DGFT: {trade.dgft} to Export
+                </span>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.rodtep ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                  RoDTEP: {trade.rodtep ? 'Eligible ✓' : 'Not Eligible'}
+                </span>
+                <span className="text-xs px-3 py-1 rounded-full font-medium bg-violet-100 text-violet-700">IEC Mandatory</span>
+              </div>
             </div>
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Demand Score</div>
-              <div className="font-bold text-green-700">{Math.round(score.demand || 0)}/100</div>
+
+            {/* Import Duties at destination */}
+            <div className="card p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🌍</span>
+                <h3 className="font-semibold text-gray-800">Import Duties — {mpCountry}</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4">
+                  <div className="text-[10px] font-semibold text-rose-400 uppercase tracking-wider mb-1">Import Duty Rate</div>
+                  <div className="font-bold text-rose-700 text-3xl">{duty.pct}%</div>
+                  <div className="text-[10px] text-gray-500 mt-1">On CIF value at customs</div>
+                </div>
+                <div className="rounded-xl border border-sky-100 bg-sky-50/40 p-4">
+                  <div className="text-[10px] font-semibold text-sky-500 uppercase tracking-wider mb-1">De Minimis Threshold</div>
+                  <div className="font-bold text-sky-700 text-xl mt-1">{duty.threshold}</div>
+                  <div className="text-[10px] text-gray-500 mt-1">Below this → no duty charged</div>
+                </div>
+              </div>
+              {duty.compliance.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Compliance Required</div>
+                  <div className="flex flex-wrap gap-2">
+                    {duty.compliance.map((c: string) => (
+                      <span key={c} className="text-xs bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-lg">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="rounded-xl bg-blue-50 border border-blue-100 p-3.5 text-sm text-blue-800">
+                💡 {duty.notes}
+              </div>
             </div>
-            <div className="card p-4">
-              <div className="text-xs text-gray-500 mb-1">Trend Score</div>
-              <div className="font-bold text-green-700">{Math.round(score.trend || 0)}/100</div>
+
+            {/* Export Documents */}
+            <div className="card p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">📄</span>
+                <h3 className="font-semibold text-gray-800">Export from India — Documents Checklist</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 mb-4">
+                {EXPORT_DOCS_BASE.map(doc => (
+                  <div key={doc} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-emerald-500 mt-0.5 shrink-0 font-bold">✓</span>{doc}
+                  </div>
+                ))}
+                {extraDocs.map(doc => (
+                  <div key={doc} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-amber-500 mt-0.5 shrink-0 font-bold">★</span>{doc}
+                    <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 px-1.5 rounded">category-specific</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-xl bg-violet-50 border border-violet-100 p-4 space-y-2 text-sm text-violet-900">
+                <div><strong>IEC (Import Export Code)</strong> — Mandatory for all exports. Apply at dgft.gov.in — one-time fee ₹500.</div>
+                <div><strong>AD Code</strong> — Register your bank's Authorized Dealer code with customs to receive foreign remittance.</div>
+                <div><strong>LUT / Bond</strong> — File Letter of Undertaking annually to export under zero-rated GST without upfront payment.</div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Suppliers ── */}
       {tab === 'Suppliers' && (
@@ -388,12 +634,101 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Profitability ── */}
-      {tab === 'Profitability' && (
-        <div className="card p-4 sm:p-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Profit Waterfall</h2>
-          <ProfitWaterfall profit={profit} currency={opp.marketplace?.currency} />
-        </div>
-      )}
+      {tab === 'Profitability' && (() => {
+        const pm = profit;
+        if (!pm) return <div className="card p-8 text-center text-gray-400">No profitability data for this opportunity</div>;
+        const mpCodeStr = opp.marketplace?.code || '';
+        const platform  = mpCodeStr.split('_')[0].charAt(0).toUpperCase() + mpCodeStr.split('_')[0].slice(1) || 'Marketplace';
+        const currency  = pm.currency || 'USD';
+        const src     = Number(pm.sourcePriceMinor   ?? 0);
+        const sale    = Number(pm.salePriceMinor      ?? 0);
+        const landed  = Number(pm.landedCostMinor     ?? 0);
+        const fees    = Number(pm.marketplaceFeeMinor ?? 0);
+        const overhead = Math.max(0, landed - src);
+        const ship    = Math.round(overhead * 0.60);
+        const pkg     = Math.round(overhead * 0.25);
+        const dutyAmt = Math.round(overhead * 0.15);
+        const refPct  = mpCodeStr.startsWith('etsy') ? 6.5 : mpCodeStr.startsWith('temu') || mpCodeStr.startsWith('walmart') ? 8 : 15;
+        const refFee  = Math.round(sale * refPct / 100);
+        const fbaFee  = Math.round(fees - refFee > 0 ? fees - refFee : fees * 0.5);
+        const adSpend = Math.round(sale * 0.05);
+        const trueNet = sale - landed - fees - adSpend;
+        const netMargin = sale > 0 ? (trueNet / sale) * 100 : 0;
+        const roi       = src > 0 ? (trueNet / src) * 100 : 0;
+        const breakeven = trueNet > 0 ? Math.ceil(5000 / trueNet) : 999;
+        const monthly50 = trueNet * 50;
+        const annual50  = monthly50 * 12;
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Cost breakdown */}
+              <div className="card p-5">
+                <h3 className="font-semibold text-gray-800 mb-4">Cost Breakdown — {platform}</h3>
+                <div className="space-y-2.5">
+                  <ProfitBar label="India Source Cost"  value={src}    total={sale} color="#6366f1" />
+                  <ProfitBar label="Int'l Shipping"     value={ship}   total={sale} color="#8b5cf6" />
+                  <ProfitBar label="Packaging + Labels" value={pkg}    total={sale} color="#a78bfa" />
+                  <ProfitBar label="Import Duties"      value={dutyAmt} total={sale} color="#c4b5fd" />
+                  <div className="flex items-center gap-3 text-xs border-t border-gray-100 pt-2 mt-1">
+                    <div className="w-36 text-gray-600 font-semibold text-right shrink-0">= Landed Cost</div>
+                    <div className="flex-1" />
+                    <div className="w-16 font-mono font-bold text-indigo-600 text-right">{usdD(landed)}</div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-400 mt-3 mb-1">
+                    <div className="w-36 text-right shrink-0">Sale Price</div>
+                    <div className="flex-1" />
+                    <div className="w-16 font-mono font-semibold text-gray-600 text-right">{usdD(sale)}</div>
+                  </div>
+                  <ProfitBar label={`Referral (${refPct}%)`} value={refFee}  total={sale} color="#ef4444" />
+                  <ProfitBar label="FBA / Fulfillment"        value={fbaFee}  total={sale} color="#f97316" />
+                  <ProfitBar label="Est. Ad Spend (5%)"       value={adSpend} total={sale} color="#eab308" />
+                  <ProfitBar label="Landed Cost"              value={landed}  total={sale} color="#6366f1" />
+                </div>
+              </div>
+              {/* Net profit summary */}
+              <div className="space-y-3">
+                <div className={`card p-5 ${trueNet > 0 ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/40'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-gray-600">Net Profit / Unit</span>
+                    <span className={`text-3xl font-bold ${trueNet > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {trueNet < 0 ? '-' : ''}{usdD(Math.abs(trueNet))}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-xs text-center py-3 border-t border-b border-gray-100 mb-3">
+                    <div>
+                      <div className="text-gray-400 mb-0.5">Net Margin</div>
+                      <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{pctD(netMargin)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 mb-0.5">ROI</div>
+                      <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{roi.toFixed(0)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 mb-0.5">Break-even</div>
+                      <div className="font-bold text-sm text-gray-700">{Math.min(breakeven, 999)} units</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-lg bg-white/70 p-3 text-center">
+                      <div className="text-gray-400 mb-1">Monthly (50 units)</div>
+                      <div className="font-bold text-gray-800 text-base">{usdD(Math.abs(monthly50), 0)}</div>
+                    </div>
+                    <div className="rounded-lg bg-white/70 p-3 text-center">
+                      <div className="text-gray-400 mb-1">Annual projection</div>
+                      <div className="font-bold text-gray-800 text-base">{usdD(Math.abs(annual50), 0)}</div>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination avg · {currency}</p>
+              </div>
+            </div>
+            {/* Waterfall visualization */}
+            <div className="card p-4 sm:p-5">
+              <ProfitWaterfall profit={pm} currency={currency} />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Competition ── */}
       {tab === 'Competition' && (
