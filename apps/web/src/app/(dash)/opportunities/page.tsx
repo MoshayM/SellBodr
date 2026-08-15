@@ -128,116 +128,61 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const monthly = Number(pm.monthlyProfitMinor ?? net * 50);
   const referralPct = Number(pm.referralPct ?? 15);
 
-  const totalCosts = src + ship + pkg + duty + refFee + fbaFee + ads;
   const isLoss = net < 0;
-  // Scale: largest of sale or source fills the chart height (correct proportions for both cases)
-  const singleMax = Math.max(sale, src, 1);
 
-  type StepType = 'income' | 'cost' | 'result';
-  interface Step { key: string; label: string; value: number; color: string; glow: string; type: StepType }
+  // Each bar is independent from the zero line:
+  //   positive (sale, net profit) → grows UP from center
+  //   negative (costs, net loss)  → grows DOWN from center
+  interface Step { key: string; label: string; value: number; color: string; glow: string; up: boolean }
   const allSteps: Step[] = [
-    { key: 'sale', label: 'Sale Price', value: sale,   color: '#8b5cf6', glow: '#8b5cf655', type: 'income' },
-    { key: 'src',  label: 'Source',     value: src,    color: '#f43f5e', glow: '#f43f5e55', type: 'cost'   },
-    { key: 'ship', label: 'Shipping',   value: ship,   color: '#fb923c', glow: '#fb923c55', type: 'cost'   },
-    { key: 'pkg',  label: 'Packaging',  value: pkg,    color: '#fbbf24', glow: '#fbbf2455', type: 'cost'   },
-    { key: 'duty', label: 'Duties',     value: duty,   color: '#f59e0b', glow: '#f59e0b55', type: 'cost'   },
-    { key: 'ref',  label: `Ref ${referralPct}%`, value: refFee, color: '#f87171', glow: '#f8717155', type: 'cost' },
-    { key: 'fba',  label: 'FBA',        value: fbaFee, color: '#ef4444', glow: '#ef444455', type: 'cost'   },
-    { key: 'ads',  label: 'Ads 5%',    value: ads,    color: '#94a3b8', glow: '#94a3b855', type: 'cost'   },
+    { key: 'sale', label: 'Sale Price',       value: sale,        color: '#8b5cf6', glow: '#8b5cf655', up: true  },
+    { key: 'src',  label: 'Source',           value: src,         color: '#f43f5e', glow: '#f43f5e55', up: false },
+    { key: 'ship', label: 'Shipping',         value: ship,        color: '#fb923c', glow: '#fb923c55', up: false },
+    { key: 'pkg',  label: 'Packaging',        value: pkg,         color: '#fbbf24', glow: '#fbbf2455', up: false },
+    { key: 'duty', label: 'Duties',           value: duty,        color: '#f59e0b', glow: '#f59e0b55', up: false },
+    { key: 'ref',  label: `Ref ${referralPct}%`, value: refFee,  color: '#f87171', glow: '#f8717155', up: false },
+    { key: 'fba',  label: 'FBA',              value: fbaFee,      color: '#ef4444', glow: '#ef444455', up: false },
+    { key: 'ads',  label: 'Ads 5%',           value: ads,         color: '#94a3b8', glow: '#94a3b855', up: false },
     { key: 'net',  label: isLoss ? 'Net Loss' : 'Net Profit',
       value: Math.abs(net),
       color: isLoss ? '#ef4444' : '#10b981',
       glow:  isLoss ? '#ef444455' : '#10b98155',
-      type: 'result' },
+      up: !isLoss },
   ];
   const steps = allSteps.filter(s => s.key === 'sale' || s.key === 'net' || s.value > 0);
   const n = steps.length;
 
-  // Layout: CHART_H scales to the largest single bar; loss zone is dynamic
-  const CHART_H = 144;
-  const scale   = CHART_H / singleMax;
-  // Loss zone must be tall enough to stack ALL overflowing cost bars:
-  // source spill (how far src exceeds sale) + every subsequent cost bar
-  const sourceSpillPx = isLoss ? Math.max(0, src - sale) * scale : 0;
-  const otherCostsPx  = (ship + pkg + duty + refFee + fbaFee + ads) * scale;
-  const LOSS_H  = isLoss ? Math.min(220, Math.ceil(sourceSpillPx + otherCostsPx) + 8) : 0;
-  const TOTAL_H = CHART_H + LOSS_H;
+  // Symmetric chart: CENTER_H px above zero line + CENTER_H px below
+  const CENTER_H = 120;
+  const TOTAL_H  = CENTER_H * 2;
+
+  // Single scale so bars are proportional to each other across both zones
+  const maxUp   = Math.max(sale, net > 0 ? net : 0, 1);
+  const maxDown = Math.max(src, ship, pkg, duty, refFee, fbaFee, ads, net < 0 ? Math.abs(net) : 0, 1);
+  const scale   = Math.min((CENTER_H * 0.92) / maxUp, (CENTER_H * 0.92) / maxDown);
+
   const pitchPct    = 100 / n;
   const barWidthPct = pitchPct * 0.70;
   const gapPct      = (pitchPct - barWidthPct) / 2;
 
-  // Build bar positions — height uses ACTUAL value (not capped at remaining)
-  let remaining = sale;   // tracks balance in the main zone (≥ 0)
-  let lossOffset = 0;     // tracks accumulated px used inside the loss zone
   const bars = steps.map((step, i) => {
     const leftPct = i * pitchPct + gapPct;
-    const cx = leftPct + barWidthPct / 2;
-    let top: number, h: number, growDown = false;
-
-    if (step.type === 'income') {
-      top = CHART_H - sale * scale;
-      h   = sale * scale;
-    } else if (step.type === 'cost') {
-      if (remaining > 0) {
-        // Bar starts in the main (above-zero) zone
-        top = CHART_H - remaining * scale;
-        const fullH = step.value * scale;
-        h = Math.min(fullH, TOTAL_H - top);
-        remaining = Math.max(0, remaining - step.value);
-        // Track how much of this bar spilled into the loss zone
-        if (top + fullH > CHART_H) {
-          lossOffset = Math.min(top + fullH - CHART_H, LOSS_H);
-        }
-      } else {
-        // Remaining balance is 0 — stack this bar in the loss zone below the previous bar
-        top = CHART_H + lossOffset;
-        h   = Math.min(step.value * scale, TOTAL_H - top);
-        h   = Math.max(h, 0);
-        lossOffset += h;
-      }
-    } else {
-      if (!isLoss) {
-        // Anchor net bar exactly where the cascade ended (remaining after all costs)
-        // so there is no visible seam/gap between last cost and net bar
-        h   = Math.max(remaining * scale, 4);
-        top = CHART_H - h;
-      } else {
-        growDown = true;
-        top = CHART_H;
-        h   = Math.max(Math.min(Math.abs(net) * scale, LOSS_H - 4), 6);
-      }
-    }
-
-    return { ...step, leftPct, cx, barWidthPct, top, h: Math.max(h, 2), growDown, i };
+    const h   = Math.max(step.value * scale, 4);
+    const top = step.up
+      ? CENTER_H - h   // bar tip above the zero line
+      : CENTER_H;      // bar tip at the zero line, hangs down
+    return { ...step, leftPct, barWidthPct, top, h, i };
   });
-
-  // Connector step lines
-  const connectors: { x1: string; x2: string; y: number }[] = [];
-  for (let i = 0; i < bars.length - 1; i++) {
-    const cur  = bars[i];
-    const next = bars[i + 1];
-    if (next.growDown) continue;
-    // For income bars the cascade level is the bar's top; for cost bars it's the bottom.
-    // Clamp to CHART_H so connectors never draw into the loss zone.
-    const rawCy = cur.type === 'income' ? cur.top : cur.top + cur.h;
-    const cy    = Math.min(rawCy, CHART_H);
-    connectors.push({
-      x1: `${cur.leftPct + cur.barWidthPct}%`,
-      x2: `${next.leftPct}%`,
-      y: cy,
-    });
-  }
 
   return (
     <div className="p-4 select-none">
-      {/* CSS keyframes */}
       <style>{`
         @keyframes wf-rise  { from{transform:scaleY(0);opacity:0} to{transform:scaleY(1);opacity:1} }
         @keyframes wf-drop  { from{transform:scaleY(0);opacity:0} to{transform:scaleY(1);opacity:1} }
-        @keyframes wf-fadein{ from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes wf-fadein{ from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      {/* Header row */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">
           Profit Waterfall — {platform}
@@ -252,50 +197,34 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
         </div>
       </div>
 
-      {/* Chart area — overflow:hidden clips bars that extend beyond TOTAL_H */}
-      <div className="relative w-full overflow-hidden" style={{height: TOTAL_H + 32}}>
+      {/* Chart area */}
+      <div className="relative w-full overflow-visible" style={{height: TOTAL_H + 32}}>
 
-        {/* Loss-zone backdrop */}
-        {isLoss && (
-          <div className="absolute left-0 right-0 rounded-b-xl overflow-hidden"
-            style={{top: CHART_H, height: LOSS_H}}>
-            <div className="absolute inset-0" style={{
-              background: 'linear-gradient(180deg,rgba(239,68,68,0.10) 0%,rgba(239,68,68,0.03) 100%)',
-            }}/>
-            {/* animated diagonal stripes for loss zone */}
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'repeating-linear-gradient(135deg,transparent,transparent 6px,rgba(239,68,68,0.3) 6px,rgba(239,68,68,0.3) 7px)',
-            }}/>
-          </div>
-        )}
+        {/* Upper zone (revenue) — subtle green tint */}
+        <div className="absolute left-0 right-0 rounded-t-xl pointer-events-none" style={{
+          top: 0, height: CENTER_H,
+          background: 'linear-gradient(180deg,rgba(16,185,129,0.04) 0%,transparent 100%)',
+        }}/>
 
-        {/* Zero-profit line */}
-        {isLoss && (
-          <div className="absolute left-0 right-0 z-20 flex items-center gap-1"
-            style={{top: CHART_H}}>
-            <div className="flex-1 h-px" style={{
-              background:'repeating-linear-gradient(90deg,rgba(255,255,255,0.30) 0px,rgba(255,255,255,0.30) 6px,transparent 6px,transparent 10px)',
-            }}/>
-            <span className="text-[8px] font-mono text-white/35 bg-black/30 rounded px-1">{sym}0</span>
-          </div>
-        )}
+        {/* Lower zone (cost) — subtle red tint */}
+        <div className="absolute left-0 right-0 rounded-b-xl pointer-events-none" style={{
+          top: CENTER_H, height: CENTER_H,
+          background: 'linear-gradient(180deg,transparent 0%,rgba(239,68,68,0.06) 100%)',
+        }}/>
 
-        {/* Connector step-lines (SVG layer) */}
-        <svg className="absolute inset-0 pointer-events-none" width="100%"
-          height={CHART_H} style={{overflow:'visible'}}>
-          {connectors.map((c,i)=>(
-            <line key={i} x1={c.x1} y1={c.y} x2={c.x2} y2={c.y}
-              stroke="rgba(255,255,255,0.18)" strokeWidth={0.8} strokeDasharray="4,3"/>
-          ))}
-          {/* Baseline */}
-          <line x1="0" y1={CHART_H} x2="100%" y2={CHART_H}
-            stroke="rgba(255,255,255,0.07)" strokeWidth={1}/>
-        </svg>
+        {/* Zero line — always visible */}
+        <div className="absolute left-0 right-0 z-20 flex items-center gap-1"
+          style={{top: CENTER_H}}>
+          <div className="flex-1 h-px" style={{
+            background:'repeating-linear-gradient(90deg,rgba(255,255,255,0.28) 0px,rgba(255,255,255,0.28) 6px,transparent 6px,transparent 10px)',
+          }}/>
+          <span className="text-[8px] font-mono text-white/35 bg-black/30 rounded px-1">{sym}0</span>
+        </div>
 
         {/* Bars */}
         {bars.map((bar) => {
-          const delay = bar.i * 0.055;
-          const origin = bar.growDown ? 'top center' : 'bottom center';
+          const delay   = bar.i * 0.055;
+          const origin  = bar.up ? 'bottom center' : 'top center';
           const isShort = bar.h < 22;
 
           return (
@@ -303,42 +232,35 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
               {/* Value label */}
               <div className="absolute text-center pointer-events-none z-30"
                 style={{
-                  left: `${bar.leftPct}%`,
+                  left:  `${bar.leftPct}%`,
                   width: `${bar.barWidthPct}%`,
-                  top: bar.growDown
-                    ? bar.top + bar.h + 3
-                    : isShort ? bar.top - 13 : bar.top + bar.h / 2 - 5,
-                  fontSize: 7.5,
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  color: bar.type === 'result'
+                  top: bar.up
+                    ? (isShort ? bar.top - 13 : bar.top + bar.h / 2 - 5)
+                    : (isShort ? bar.top + bar.h + 3 : bar.top + bar.h / 2 - 5),
+                  fontSize: 7.5, fontFamily: 'monospace', fontWeight: 700, lineHeight: 1,
+                  color: bar.key === 'net'
                     ? bar.color
-                    : isShort ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.88)',
+                    : isShort ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.88)',
                   textShadow: `0 0 8px ${bar.glow}`,
                   animation: `wf-fadein 0.3s ease-out ${delay + 0.45}s both`,
                 }}>
-                {bar.type === 'result' ? fmtN(net) : fmt(bar.value)}
+                {bar.key === 'net' ? fmtN(net) : fmt(bar.value)}
               </div>
 
               {/* 3-D bar wrapper */}
-              <div className="absolute"
-                style={{
-                  left: `${bar.leftPct}%`,
-                  width: `${bar.barWidthPct}%`,
-                  top: bar.top,
-                  height: bar.h,
-                  transformOrigin: origin,
-                  animation: `${bar.growDown ? 'wf-drop' : 'wf-rise'} 0.52s cubic-bezier(0.34,1.18,0.64,1) ${delay}s both`,
-                  zIndex: bar.type === 'result' ? 10 : 5,
-                }}>
-
-                {/* ── Front face ── */}
+              <div className="absolute" style={{
+                left: `${bar.leftPct}%`, width: `${bar.barWidthPct}%`,
+                top: bar.top, height: bar.h,
+                transformOrigin: origin,
+                animation: `${bar.up ? 'wf-rise' : 'wf-drop'} 0.52s cubic-bezier(0.34,1.18,0.64,1) ${delay}s both`,
+                zIndex: bar.key === 'net' ? 10 : 5,
+              }}>
+                {/* Front face */}
                 <div className="absolute inset-0" style={{
-                  borderRadius: bar.growDown ? '0 0 5px 5px' : '5px 5px 0 0',
-                  background: bar.growDown
-                    ? `linear-gradient(180deg,${bar.color}cc 0%,${bar.color}ff 100%)`
-                    : `linear-gradient(180deg,${bar.color}ff 0%,${bar.color}cc 70%,${bar.color}99 100%)`,
+                  borderRadius: bar.up ? '5px 5px 0 0' : '0 0 5px 5px',
+                  background: bar.up
+                    ? `linear-gradient(180deg,${bar.color}ff 0%,${bar.color}cc 70%,${bar.color}99 100%)`
+                    : `linear-gradient(180deg,${bar.color}cc 0%,${bar.color}ff 100%)`,
                   boxShadow: [
                     `0 0 18px ${bar.glow}`,
                     `inset 0 1px 0 rgba(255,255,255,0.28)`,
@@ -346,56 +268,46 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
                     `3px 3px 0 ${bar.color}44`,
                   ].join(','),
                 }}/>
-
-                {/* ── Shimmer highlight (top strip) ── */}
-                {!bar.growDown && (
-                  <div className="absolute inset-x-0 top-0 opacity-40" style={{
+                {/* Shimmer (up bars only) */}
+                {bar.up && (
+                  <div className="absolute inset-x-0 top-0 opacity-40 pointer-events-none" style={{
                     height: Math.min(bar.h * 0.35, 18),
                     background: 'linear-gradient(180deg,rgba(255,255,255,0.55) 0%,transparent 100%)',
                     borderRadius: '5px 5px 0 0',
-                    pointerEvents: 'none',
                   }}/>
                 )}
-
-                {/* ── Right depth panel (3-D side) ── */}
+                {/* Right depth (3-D side) */}
                 <div className="absolute" style={{
-                  right: -4,
-                  top: bar.growDown ? 0 : 4,
-                  width: 4,
-                  height: bar.growDown ? '100%' : 'calc(100% - 4px)',
+                  right: -4, top: bar.up ? 4 : 0,
+                  width: 4, height: bar.up ? 'calc(100% - 4px)' : '100%',
                   background: `linear-gradient(90deg,${bar.color}aa,${bar.color}33)`,
-                  transform: `skewY(${bar.growDown ? '45' : '-45'}deg)`,
-                  transformOrigin: bar.growDown ? 'bottom left' : 'top left',
+                  transform: `skewY(${bar.up ? '-45' : '45'}deg)`,
+                  transformOrigin: bar.up ? 'top left' : 'bottom left',
                 }}/>
-
-                {/* ── Top/bottom depth panel (3-D face) ── */}
+                {/* Top/bottom depth (3-D face) */}
                 <div className="absolute" style={{
-                  left: 4,
-                  right: 0,
-                  [bar.growDown ? 'bottom' : 'top']: -4,
+                  left: 4, right: 0,
+                  [bar.up ? 'top' : 'bottom']: -4,
                   height: 4,
-                  background: bar.growDown
-                    ? `linear-gradient(180deg,rgba(0,0,0,0.18),transparent)`
-                    : `linear-gradient(180deg,rgba(255,255,255,0.30),rgba(255,255,255,0.06))`,
+                  background: bar.up
+                    ? 'linear-gradient(180deg,rgba(255,255,255,0.30),rgba(255,255,255,0.06))'
+                    : 'linear-gradient(180deg,rgba(0,0,0,0.18),transparent)',
                   transform: 'skewX(-45deg)',
-                  transformOrigin: bar.growDown ? 'top left' : 'bottom left',
+                  transformOrigin: bar.up ? 'bottom left' : 'top left',
                 }}/>
               </div>
 
               {/* Category label */}
-              <div className="absolute text-center pointer-events-none"
-                style={{
-                  left: `${bar.leftPct}%`,
-                  width: `${bar.barWidthPct}%`,
-                  top: TOTAL_H + 5,
-                  fontSize: 8,
-                  fontWeight: bar.type === 'result' ? 700 : 400,
-                  color: bar.type === 'result' ? 'rgba(255,255,255,0.70)' : 'rgba(255,255,255,0.32)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  animation: `wf-fadein 0.3s ease-out ${delay + 0.6}s both`,
-                }}>
+              <div className="absolute text-center pointer-events-none" style={{
+                left:  `${bar.leftPct}%`,
+                width: `${bar.barWidthPct}%`,
+                top: TOTAL_H + 5,
+                fontSize: 8,
+                fontWeight: bar.key === 'net' ? 700 : 400,
+                color: bar.key === 'net' ? 'rgba(255,255,255,0.70)' : 'rgba(255,255,255,0.32)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                animation: `wf-fadein 0.3s ease-out ${delay + 0.6}s both`,
+              }}>
                 {bar.label}
               </div>
             </div>
