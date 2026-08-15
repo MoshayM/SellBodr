@@ -212,14 +212,13 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
           background: 'linear-gradient(180deg,transparent 0%,rgba(239,68,68,0.06) 100%)',
         }}/>
 
-        {/* Zero line — always visible */}
-        <div className="absolute left-0 right-0 z-20 flex items-center gap-1"
-          style={{top: CENTER_H}}>
-          <div className="flex-1 h-px" style={{
-            background:'repeating-linear-gradient(90deg,rgba(255,255,255,0.28) 0px,rgba(255,255,255,0.28) 6px,transparent 6px,transparent 10px)',
-          }}/>
-          <span className="text-[8px] font-mono text-white/35 bg-black/30 rounded px-1">{sym}0</span>
-        </div>
+        {/* Zero line — 1px div pinned exactly at CENTER_H, label floats above */}
+        <div className="absolute left-0 right-0 h-px z-20" style={{
+          top: CENTER_H,
+          background: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.28) 0px,rgba(255,255,255,0.28) 6px,transparent 6px,transparent 10px)',
+        }}/>
+        <span className="absolute right-0 z-20 text-[8px] font-mono text-white/35 bg-black/30 rounded px-1"
+          style={{top: CENTER_H - 10}}>{sym}0</span>
 
         {/* Bars */}
         {bars.map((bar) => {
