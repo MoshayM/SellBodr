@@ -89,201 +89,301 @@ function trendTenure(createdAt: number): { label: string; key: string; color: st
   return                { label: 'Older',          key: 'old', color: '#6b7280' };
 }
 
-// ── Cost Breakdown Panel ───────────────────────────────────────────────────────
+// ── Waterfall bar (profitability tab) ────────────────────────────────────────
 
-function WaterfallBar({ label, value, total, color, positive = false }: {
-  label: string; value: number; total: number; color: string; positive?: boolean;
+function WaterfallBar({ label, value, total, color }: {
+  label: string; value: number; total: number; color: string;
 }) {
   const pctW = total > 0 ? Math.min(100, (Math.abs(value) / total) * 100) : 0;
   return (
     <div className="flex items-center gap-2 text-xs">
       <div className="w-40 text-white/50 text-right shrink-0 leading-snug">{label}</div>
-      <div className="flex-1 h-4 bg-white/5 rounded overflow-hidden">
-        <div className="h-full rounded transition-all" style={{ width: `${pctW}%`, backgroundColor: color, opacity: 0.8 }} />
+      <div className="flex-1 h-3 bg-white/5 rounded overflow-hidden">
+        <div className="h-full rounded" style={{ width: `${pctW}%`, backgroundColor: color, opacity: 0.85 }} />
       </div>
-      <div className={`w-16 font-mono font-semibold text-right shrink-0 ${positive ? 'text-emerald-400' : 'text-white/80'}`}>
-        {positive ? '+' : ''}{usd(value, 2)}
+      <div className="w-14 font-mono font-semibold text-right shrink-0 text-white/80">{usd(value, 2)}</div>
+    </div>
+  );
+}
+
+// ── Score bar (research tab) ──────────────────────────────────────────────────
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const v = Math.round(value);
+  const color = v >= 70 ? '#10b981' : v >= 45 ? '#f59e0b' : '#ef4444';
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <span className="w-[90px] text-white/45 text-right shrink-0 leading-tight">{label}</span>
+      <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, backgroundColor: color }} />
+      </div>
+      <span className="w-6 font-bold shrink-0 tabular-nums" style={{ color }}>{v}</span>
+    </div>
+  );
+}
+
+// ── Research tab (inline per-product AI intelligence) ─────────────────────────
+
+function ResearchTab({ opp }: { opp: any }) {
+  const score = opp.score ?? {};
+  const desc  = String(opp.product?.description ?? '');
+  const parts = desc.split(' | ');
+  const body      = parts[0] ?? '';
+  const evidence  = (parts.find((p: string) => p.startsWith('Evidence:'))  ?? '').replace('Evidence: ',  '');
+  const consensus = (parts.find((p: string) => p.startsWith('Consensus:')) ?? '').replace('Consensus: ', '');
+  const note      = (parts.find((p: string) => p.startsWith('Note:'))      ?? '').replace('Note: ',      '');
+  const conf      = Math.round(opp.confidence ?? 0);
+  const confColor = conf >= 80 ? '#10b981' : conf >= 65 ? '#f59e0b' : '#6b7280';
+  const feasibility = String((opp.suppliers as any[])?.[0]?.feasibility ?? 'moderate');
+  const feasColor   = feasibility === 'easy' ? '#10b981' : feasibility === 'hard' ? '#ef4444' : '#f59e0b';
+  const tStr = trendStrengthLabel(score.trend ?? 0);
+  function sig(v: number) {
+    return { color: v >= 70 ? '#10b981' : v >= 45 ? '#f59e0b' : '#ef4444', label: v >= 70 ? 'Strong' : v >= 45 ? 'Moderate' : 'Weak' };
+  }
+  const signals = [
+    { icon: '📈', label: 'Trend Strength',  val: tStr.label,                                                      color: tStr.color },
+    { icon: '🏭', label: 'India Supply',    val: feasibility.charAt(0).toUpperCase() + feasibility.slice(1),       color: feasColor },
+    { icon: '🚢', label: 'Shipping',        val: sig(score.shipping ?? 0).label,                                   color: sig(score.shipping ?? 0).color },
+    { icon: '🎯', label: 'Mkt Fit',        val: sig(score.marketplaceFit ?? 0).label,                              color: sig(score.marketplaceFit ?? 0).color },
+    { icon: '📊', label: 'Saturation',      val: (score.saturation ?? 0) >= 70 ? 'Low ✓' : (score.saturation ?? 0) >= 45 ? 'Medium' : 'High ⚠', color: sig(score.saturation ?? 0).color },
+  ];
+
+  return (
+    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+
+      {/* Left — score breakdown */}
+      <div>
+        <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-3">Score Breakdown</p>
+        <div className="space-y-2.5">
+          <ScoreBar label="Demand"      value={score.demand       ?? 0} />
+          <ScoreBar label="Competition" value={score.competition  ?? 0} />
+          <ScoreBar label="Margin"      value={score.margin       ?? 0} />
+          <ScoreBar label="Trend"       value={score.trend        ?? 0} />
+          <ScoreBar label="Mkt Fit"     value={score.marketplaceFit ?? 0} />
+          <ScoreBar label="Shipping"    value={score.shipping     ?? 0} />
+          <ScoreBar label="Saturation"  value={score.saturation   ?? 0} />
+        </div>
+        <div className="mt-4 pt-3 border-t border-white/8 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/40 w-[90px] text-right shrink-0">AI Confidence</span>
+            <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+              <div className="h-full rounded-full" style={{ width: `${conf}%`, backgroundColor: confColor }} />
+            </div>
+            <span className="w-6 text-xs font-bold tabular-nums" style={{ color: confColor }}>{conf}%</span>
+          </div>
+          {consensus && (
+            <p className="text-[10px] text-emerald-400/60 pl-2">✓ Consensus: {consensus}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Right — market signals + AI evidence */}
+      <div className="space-y-4">
+        <div>
+          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-2">Market Signals</p>
+          <div className="space-y-2">
+            {signals.map(s => (
+              <div key={s.label} className="flex items-center gap-2 text-xs">
+                <span className="w-5 shrink-0">{s.icon}</span>
+                <span className="text-white/45 flex-1">{s.label}</span>
+                <span className="font-semibold" style={{ color: s.color }}>{s.val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {(body || evidence) && (
+          <div className="pt-3 border-t border-white/8 space-y-2">
+            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">AI Evidence</p>
+            {body && <p className="text-[11px] text-white/55 leading-relaxed">{body}</p>}
+            {evidence && (
+              <div className="text-[10px] text-white/35 bg-white/3 rounded-lg p-2.5 leading-relaxed border border-white/8">
+                📌 {evidence}
+              </div>
+            )}
+            {note && <p className="text-[10px] text-amber-400/60 mt-1">⚠ {note}</p>}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+// ── Breakdown panel — tabbed: Research | Suppliers | Profitability ─────────────
+
 function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
+  const [tab, setTab] = useState<'research' | 'suppliers' | 'profit'>('research');
   const pm = opp.profitModel;
-  if (!pm) return null;
-
-  const sale     = pm.salePriceMinor;
-  const src      = pm.productCostMinor;
-  const ship     = pm.intlShippingMinor;
-  const pkg      = pm.packagingCostMinor;
-  const duty     = pm.dutyMinor;
-  const landed   = pm.landedCostMinor;
-  const refFee   = pm.referralFeeMinor;
-  const fbaFee   = pm.fbaFeeMinor;
-  const adSpend  = pm.adCostMinor;
-  const net      = pm.trueNetMinor ?? pm.netProfitMinor;
-  const margin   = pm.netMarginPct;
-  const roi      = pm.roiPct;
-  const currency = pm.currency ?? 'USD';
-
-  const platform = platformOf(mpCode);
-  const referralPct = pm.referralPct ?? 15;
-
+  const sale        = pm?.salePriceMinor ?? 0;
+  const src         = pm?.productCostMinor ?? 0;
+  const ship        = pm?.intlShippingMinor ?? 0;
+  const pkg         = pm?.packagingCostMinor ?? 0;
+  const duty        = pm?.dutyMinor ?? 0;
+  const landed      = pm?.landedCostMinor ?? 0;
+  const refFee      = pm?.referralFeeMinor ?? 0;
+  const fbaFee      = pm?.fbaFeeMinor ?? 0;
+  const adSpend     = pm?.adCostMinor ?? 0;
+  const net         = pm?.trueNetMinor ?? pm?.netProfitMinor ?? 0;
+  const margin      = pm?.netMarginPct ?? 0;
+  const roi         = pm?.roiPct ?? 0;
+  const currency    = pm?.currency ?? 'USD';
+  const platform    = platformOf(mpCode);
+  const referralPct = pm?.referralPct ?? 15;
   const suppliers: any[] = opp.suppliers ?? [];
-  const confidence = Math.round(opp.confidence ?? 0);
-  const confColor  = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
+  const confidence  = Math.round(opp.confidence ?? 0);
+  const confColor   = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
+
+  const PANEL_TABS = [
+    { key: 'research' as const,   label: '📊 Research' },
+    { key: 'suppliers' as const,  label: '🏭 Suppliers' },
+    { key: 'profit' as const,     label: '💰 Profitability' },
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 bg-white/[0.02] border-t border-white/5">
+    <div className="bg-white/[0.015] border-t border-white/5">
+      {/* Tab bar */}
+      <div className="flex items-center border-b border-white/5 px-2">
+        {PANEL_TABS.map(t => (
+          <button key={t.key}
+            onClick={e => { e.stopPropagation(); setTab(t.key); }}
+            className={`px-4 py-2.5 text-xs font-semibold tracking-wide transition-colors border-b-2 -mb-px whitespace-nowrap ${
+              tab === t.key ? 'border-violet-500 text-violet-300' : 'border-transparent text-white/35 hover:text-white/60'
+            }`}>
+            {t.label}
+          </button>
+        ))}
+        <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
+          className="ml-auto text-[10px] text-violet-400/50 hover:text-violet-400 font-medium hover:underline px-3 py-2.5 transition-colors shrink-0">
+          Full Report →
+        </Link>
+      </div>
 
-      {/* ── Supplier Comparison ─────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
-            Indian Suppliers
-          </h4>
-          <span className="text-[10px] text-white/25">Verified via IndiaMART &amp; Alibaba</span>
-        </div>
+      {/* ── Research tab ── */}
+      {tab === 'research' && <ResearchTab opp={opp} />}
 
-        {suppliers.length === 0 ? (
-          <div className="text-xs text-white/25 py-4 text-center">Sourcing data not yet available</div>
-        ) : (
-          <div className="space-y-2">
-            {suppliers.map((s: any, i: number) => (
-              <div key={i} className={`rounded-lg border p-3 transition-colors ${i === 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-white/8 bg-white/[0.02]'}`}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-white leading-snug truncate">{s.name}</div>
-                    <div className="text-[10px] text-white/35 capitalize mt-0.5 flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
-                        {s.source === 'indiamart' ? '🇮🇳 IndiaMART' : s.source === 'alibaba' ? '🌐 Alibaba' : s.source}
-                      </span>
-                      <span className={`px-1.5 py-0.5 rounded border capitalize ${
-                        s.feasibility === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                        s.feasibility === 'moderate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                        'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                        {s.feasibility}
-                      </span>
-                      {i === 0 && <span className="text-emerald-400 font-semibold">Best Price</span>}
+      {/* ── Suppliers tab ── */}
+      {tab === 'suppliers' && (
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Indian Suppliers</h4>
+            <span className="text-[10px] text-white/25">Via IndiaMART &amp; Alibaba</span>
+          </div>
+          {suppliers.length === 0 ? (
+            <div className="text-xs text-white/25 py-6 text-center">
+              No supplier data yet — run a new search to populate sourcing candidates
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {suppliers.map((s: any, i: number) => (
+                <div key={i} className={`rounded-lg border p-3 ${i === 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-white/8 bg-white/[0.02]'}`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-white truncate">{s.name}</div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-white/35 mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
+                          {s.source === 'indiamart' ? '🇮🇳 IndiaMART' : '🌐 Alibaba'}
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded border capitalize ${
+                          s.feasibility === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                          s.feasibility === 'moderate' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                          'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                          {s.feasibility}
+                        </span>
+                        {i === 0 && <span className="text-emerald-400 font-semibold">Best Price</span>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-lg font-bold text-white">{usd(s.costMinor, 2)}</div>
+                      <div className="text-[10px] text-white/35">per unit</div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-lg font-bold text-white">{usd(s.costMinor, 2)}</div>
-                    <div className="text-[10px] text-white/35">per unit</div>
+                  <div className="flex items-center gap-4 text-[10px] text-white/40">
+                    <span>MOQ <strong className="text-white/60">{s.moq}</strong> units</span>
+                    <span>Lead <strong className="text-white/60">{s.leadDays}d</strong></span>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                      className="ml-auto text-violet-400 hover:text-violet-300 font-medium hover:underline">
+                      View supplier →
+                    </a>
                   </div>
+                  {sale > 0 && (
+                    <>
+                      <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+                          style={{ width: `${Math.min(100, (1 - s.costMinor / sale) * 100)}%` }} />
+                      </div>
+                      <div className="text-[10px] text-white/25 mt-0.5">
+                        {pct((1 - s.costMinor / sale) * 100)} gross margin room
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center gap-4 text-[10px] text-white/40">
-                  <span>MOQ <strong className="text-white/60">{s.moq}</strong> units</span>
-                  <span>Lead <strong className="text-white/60">{s.leadDays}d</strong></span>
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                    className="ml-auto text-violet-400 hover:text-violet-300 font-medium hover:underline">
-                    View supplier →
-                  </a>
-                </div>
-                {/* Savings vs sale price */}
-                <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
-                    style={{ width: `${Math.min(100, (1 - s.costMinor / sale) * 100)}%` }} />
-                </div>
-                <div className="text-[10px] text-white/25 mt-0.5">
-                  {pct((1 - s.costMinor / sale) * 100)} gross margin room at list price
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* AI Attribution — parse consensus from stored product description */}
-        {(() => {
-          const desc = (opp.product?.description ?? '') as string;
-          const consensusMatch = desc.match(/Consensus: ([^|]+)/);
-          const consensusText  = consensusMatch ? consensusMatch[1].trim() : null;
-          const providerCount  = consensusText ? consensusText.split('+').length : 1;
-          return (
-            <div className="mt-3 space-y-1">
-              <div className="flex items-center gap-2 text-[10px] text-white/25">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
-                <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
-                {providerCount > 1 && (
-                  <>
-                    <span className="text-white/15">·</span>
-                    <span className="text-emerald-500/60 font-medium">✓ {providerCount} models agreed</span>
-                  </>
-                )}
-              </div>
-              {consensusText && (
-                <div className="text-[10px] text-white/20 pl-3.5">
-                  Discovery: {consensusText} · Validation: independent model
-                </div>
-              )}
-              {!consensusText && (
-                <div className="text-[10px] text-white/20 pl-3.5">AI analysis · confidence may be lower without multi-model consensus</div>
-              )}
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* ── Cost Waterfall ──────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
-            Cost Breakdown — {platform}
-          </h4>
-          <span className="text-[10px] text-white/25">{currency}</span>
-        </div>
-
-        <div className="space-y-1.5">
-          {/* Source cost */}
-          <WaterfallBar label="India Source Cost" value={src}    total={sale} color="#6366f1" />
-          <WaterfallBar label="Int'l Shipping"     value={ship}   total={sale} color="#8b5cf6" />
-          <WaterfallBar label="Packaging + Labels" value={pkg}    total={sale} color="#a78bfa" />
-          <WaterfallBar label="Import Duties"      value={duty}   total={sale} color="#c4b5fd" />
-
-          {/* Landed cost subtotal */}
-          <div className="my-2 flex items-center gap-2 text-xs border-t border-white/10 pt-2">
-            <div className="w-40 text-white/70 font-semibold text-right shrink-0">= Landed Cost</div>
-            <div className="flex-1" />
-            <div className="w-16 font-mono font-bold text-violet-300 text-right">{usd(landed, 2)}</div>
-          </div>
-
-          {/* Deductions from sale */}
-          <div className="flex items-center gap-2 text-xs text-white/25 mt-3 mb-1">
-            <div className="w-40 text-right shrink-0">Sale Price</div>
-            <div className="flex-1" />
-            <div className="w-16 font-mono font-semibold text-white/70 text-right">{usd(sale, 2)}</div>
-          </div>
-          <WaterfallBar label={`Referral Fee (${referralPct}%)`} value={refFee}   total={sale} color="#ef4444" />
-          <WaterfallBar label="FBA / Fulfillment Fee"             value={fbaFee}   total={sale} color="#f97316" />
-          <WaterfallBar label="Est. Ad Spend (5%)"                value={adSpend}  total={sale} color="#eab308" />
-          <WaterfallBar label="Landed Cost"                       value={landed}   total={sale} color="#6366f1" />
-        </div>
-
-        {/* Net profit summary */}
-        <div className={`mt-3 rounded-lg border p-3 ${net > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/25 bg-red-500/8'}`}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white/60">Net Profit / Unit</span>
-            <span className={`text-xl font-bold ${net > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usd(net, 2)}</span>
-          </div>
-          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-white/40">
-            <span>Margin <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{pct(margin)}</strong></span>
-            <span>ROI <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{roi.toFixed(0)}%</strong></span>
-            {pm.breakevenUnits < 999 && (
-              <span>Break-even <strong className="text-white/60">{pm.breakevenUnits} units</strong></span>
-            )}
-          </div>
-          {pm.monthlyProfitMinor > 0 && (
-            <div className="mt-2 pt-2 border-t border-white/10 grid grid-cols-2 gap-2 text-[10px] text-white/40">
-              <div>Monthly (50 units) <div className="font-semibold text-white/70 text-sm">{usd(pm.monthlyProfitMinor, 0)}</div></div>
-              <div>Annual projection <div className="font-semibold text-white/70 text-sm">{usd(pm.annualProfitMinor, 0)}</div></div>
+              ))}
             </div>
           )}
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-white/25">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
+            <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
+            {(() => {
+              const m = String(opp.product?.description ?? '').match(/Consensus: ([^|]+)/);
+              return m ? <span className="text-emerald-500/60">✓ {m[1].trim().split('+').length} models agreed</span> : null;
+            })()}
+          </div>
         </div>
+      )}
 
-        <div className="mt-2 text-[10px] text-white/20 text-right">
-          Fees: {platform} standard schedule · Shipping: India air freight estimate · Duties: destination country avg
+      {/* ── Profitability tab ── */}
+      {tab === 'profit' && pm && (
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Cost Breakdown — {platform}</h4>
+            <div className="space-y-1.5">
+              <WaterfallBar label="India Source Cost"   value={src}    total={sale} color="#6366f1" />
+              <WaterfallBar label="Int'l Shipping"      value={ship}   total={sale} color="#8b5cf6" />
+              <WaterfallBar label="Packaging + Labels"  value={pkg}    total={sale} color="#a78bfa" />
+              <WaterfallBar label="Import Duties"       value={duty}   total={sale} color="#c4b5fd" />
+              <div className="my-2 flex items-center gap-2 text-xs border-t border-white/10 pt-2">
+                <div className="w-40 text-white/70 font-semibold text-right shrink-0">= Landed Cost</div>
+                <div className="flex-1" />
+                <div className="w-14 font-mono font-bold text-violet-300 text-right">{usd(landed, 2)}</div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-white/25 mt-3 mb-1">
+                <div className="w-40 text-right shrink-0">Sale Price</div>
+                <div className="flex-1" />
+                <div className="w-14 font-mono font-semibold text-white/70 text-right">{usd(sale, 2)}</div>
+              </div>
+              <WaterfallBar label={`Referral (${referralPct}%)`} value={refFee}  total={sale} color="#ef4444" />
+              <WaterfallBar label="FBA / Fulfillment"             value={fbaFee}  total={sale} color="#f97316" />
+              <WaterfallBar label="Est. Ad Spend (5%)"           value={adSpend} total={sale} color="#eab308" />
+              <WaterfallBar label="Landed Cost"                   value={landed}  total={sale} color="#6366f1" />
+            </div>
+          </div>
+          <div>
+            <div className={`rounded-lg border p-4 ${net > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/25 bg-red-500/8'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-white/60">Net Profit / Unit</span>
+                <span className={`text-2xl font-bold ${net > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usd(net, 2)}</span>
+              </div>
+              <div className="flex gap-4 text-[10px] text-white/40 mb-3">
+                <span>Margin <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{pct(margin)}</strong></span>
+                <span>ROI <strong className={net > 0 ? 'text-emerald-400' : 'text-red-400'}>{roi.toFixed(0)}%</strong></span>
+                {pm.breakevenUnits < 999 && <span>Break-even <strong className="text-white/60">{pm.breakevenUnits} units</strong></span>}
+              </div>
+              {pm.monthlyProfitMinor > 0 && (
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-white/40 pt-3 border-t border-white/10">
+                  <div>Monthly (50 units)<div className="font-semibold text-white/70 text-sm mt-0.5">{usd(pm.monthlyProfitMinor, 0)}</div></div>
+                  <div>Annual projection<div className="font-semibold text-white/70 text-sm mt-0.5">{usd(pm.annualProfitMinor, 0)}</div></div>
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-[10px] text-white/20">
+              Fees: {platform} standard · Shipping: India air freight · Duties: destination avg · {currency}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
+      {tab === 'profit' && !pm && (
+        <div className="p-6 text-center text-xs text-white/30">No profitability data for this opportunity</div>
+      )}
     </div>
   );
 }
@@ -518,7 +618,7 @@ export default function OpportunitiesPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-white">Opportunities</h1>
-          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities · Click any row for cost breakdown</p>
+          <p className="text-sm text-white/40 mt-0.5">AI-ranked cross-border eCommerce opportunities · Click any row for research, suppliers &amp; profitability</p>
         </div>
         <button onClick={() => runSearch.mutate()} disabled={searching}
           className="btn-primary text-sm disabled:opacity-60 shrink-0">
@@ -628,7 +728,7 @@ export default function OpportunitiesPage() {
                 <th className="text-center px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Score</th>
                 <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Signal</th>
                 <th className="text-right px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Net Profit</th>
-                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Details</th>
+                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Research</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -736,17 +836,18 @@ export default function OpportunitiesPage() {
                           : <span className="text-white/25">&mdash;</span>}
                       </td>
 
-                      {/* Expand + View */}
+                      {/* Research / expand button */}
                       <td className="px-3 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
-                            className="text-xs text-violet-400 font-medium hover:underline whitespace-nowrap hidden group-hover:inline">
-                            View
-                          </Link>
-                          <svg className={`w-4 h-4 text-white/30 transition-transform ${isOpen ? 'rotate-180 text-violet-400' : ''}`}
-                            viewBox="0 0 12 8" fill="none">
-                            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : opp.id); }}
+                            className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                              isOpen
+                                ? 'bg-violet-500/25 text-violet-300 border border-violet-500/30'
+                                : 'bg-white/5 text-white/45 border border-white/10 hover:bg-violet-500/15 hover:text-violet-300 hover:border-violet-500/25'
+                            }`}>
+                            {isOpen ? 'Close' : '📊 Research'}
+                          </button>
                         </div>
                       </td>
                     </tr>,

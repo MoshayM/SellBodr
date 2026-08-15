@@ -173,39 +173,44 @@ function consensusConfidence(c: MergedCandidate, validationScore: number): numbe
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
 function discoveryPrompt(mpName: string, today: string, month: string, year: number): string {
-  return `You are a cross-border eCommerce data analyst specialising in India-to-global exports. Today: ${today} (${month} ${year}).
+  return `You are a senior cross-border eCommerce analyst specialising in India-to-global exports. Today: ${today} (${month} ${year}).
 
-Find exactly 10 products with HIGH opportunity on ${mpName} RIGHT NOW.
+Find exactly 10 DISTINCT, HIGH-OPPORTUNITY products for ${mpName} RIGHT NOW.
+
+HARD RULES:
+1. SPECIFICITY — Use precise, descriptive product names. BAD: "Brass Vase", "Cotton Scarf". GOOD: "Hand-hammered Brass Flower Vase with Geometric Cutwork Pattern", "Hand-block Printed Ajrakh Cotton Stole in Indigo Blue".
+2. DIVERSITY — All 10 products MUST be from different sub-categories. No two products in the same niche.
+3. NOVELTY — Avoid generic commodity items (plain t-shirts, basic mugs, generic earphones, simple candles). Focus on products with a clear India craft/manufacturing differentiation that is hard to replicate cheaply elsewhere.
+4. CURRENT — Must have genuine buying signals on ${mpName} in ${month} ${year} (seasonal demand, trending searches, social virality, supply gaps).
 
 Criteria:
-- Strong search/purchase demand on ${mpName} in ${month} ${year}
-- India manufacturing advantage (cost, craftsmanship, raw material access)
-- Price gap: India source cost ≪ platform sale price after fees
-- Not yet oversaturated on ${mpName}
+- Strong search/purchase demand on ${mpName} right now
+- India has a clear cost or craftsmanship advantage vs China/other sources
+- Price spread: India source cost at least 45% below ${mpName} sale price after all fees
+- Not oversaturated — room for a new seller to get traction in 60–90 days
 
 For EACH product return:
 {
-  "title": "specific product name (not generic)",
-  "category": "product category",
-  "description": "2 sentences — what it is and why buyers want it now",
-  "sourcePriceUSD": <realistic India source cost USD>,
-  "salePriceUSD": <realistic ${mpName} sale price USD>,
-  "evidenceBasis": "specific signals — seasonal demand, rising social mentions, supply gap vs China, etc.",
+  "title": "specific descriptive product name with differentiating detail",
+  "category": "precise sub-category",
+  "description": "2 sentences — exactly what makes this product special and why buyers want it NOW",
+  "sourcePriceUSD": <realistic India factory/wholesale cost USD>,
+  "salePriceUSD": <realistic ${mpName} current market sale price USD>,
+  "evidenceBasis": "concrete signals: specific search trend, seasonal event, social platform buzz, supply gap vs competitors, or price arbitrage data",
   "indiaManufacturing": "easy|moderate|hard",
   "scores": {
-    "demand": <0-100 buyer demand>,
-    "competition": <0-100, 100=low competition>,
-    "margin": <0-100 profit quality>,
-    "trend": <0-100 trend strength right now>,
-    "marketplaceFit": <0-100 platform suitability>,
-    "shipping": <0-100 ease of shipping from India>,
-    "saturation": <0-100, 100=not yet saturated>
+    "demand": <0-100 current buyer demand on ${mpName}>,
+    "competition": <0-100, higher=less competition>,
+    "margin": <0-100 net profit quality after fees>,
+    "trend": <0-100 current momentum strength>,
+    "marketplaceFit": <0-100 suitability for ${mpName} platform and audience>,
+    "shipping": <0-100 ease of air/sea freight from India>,
+    "saturation": <0-100, higher=less saturated, more room to enter>
   }
 }
 
-CALIBRATION: 50-70=average. 70-85=strong. 85+=exceptional only.
-Never assign 90+ without unmistakable evidence. Source price must be ≥40% below sale price.
-Return JSON array only. No markdown.`;
+SCORE CALIBRATION: 50-69=average, 70-84=strong, 85-100=exceptional (rare, needs hard evidence).
+Return JSON array only. No markdown, no explanation.`;
 }
 
 function validationPrompt(mpName: string, month: string, year: number, candidates: MergedCandidate[]): string {
@@ -333,6 +338,14 @@ export async function POST(req: NextRequest) {
     let count = 0;
     for (const c of finalList) {
       if (!c.title) continue;
+
+      // Skip if same product title already exists for this marketplace across any prior search
+      const normTitle = c.title.toLowerCase().trim();
+      const dupCheck = await db.execute({
+        sql: `SELECT COUNT(*) as cnt FROM "Product" p JOIN "Opportunity" o ON p.id = o.productId WHERE o.marketplaceId = ? AND lower(trim(p.title)) = ?`,
+        args: [marketplaceId, normTitle],
+      });
+      if (Number((dupCheck.rows[0] as any)?.cnt ?? 0) > 0) continue;
 
       const productId     = crypto.randomUUID();
       const opportunityId = crypto.randomUUID();
