@@ -507,8 +507,8 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
       {tab === 'suppliers' && (
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Indian Suppliers</h4>
-            <span className="text-[10px] text-white/25">Via IndiaMART &amp; Alibaba</span>
+            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Global Suppliers <span className="text-emerald-400/70">· India First</span></h4>
+            <span className="text-[10px] text-white/25">IndiaMART · Alibaba · DHgate · more</span>
           </div>
           {suppliers.length === 0 ? (
             <div className="text-xs text-white/25 py-6 text-center">
@@ -523,7 +523,7 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
                       <div className="text-sm font-medium text-white truncate">{s.name}</div>
                       <div className="flex items-center gap-1.5 text-[10px] text-white/35 mt-0.5">
                         <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
-                          {s.source === 'indiamart' ? '🇮🇳 IndiaMART' : '🌐 Alibaba'}
+                          {s.country === 'India' ? '🇮🇳' : s.country === 'China' ? '🇨🇳' : s.country === 'Hong Kong' ? '🇭🇰' : '🌐'} {(s.source || '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                         </span>
                         <span className={`px-1.5 py-0.5 rounded border capitalize ${
                           s.feasibility === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
