@@ -81,11 +81,20 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
         {/* Logo */}
         <div className="px-4 h-16 border-b border-white/5 flex items-center">
-          <Link href="/opportunities" className="flex items-center gap-2.5">
-            <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 rounded-lg shadow-lg shadow-violet-500/40 shrink-0" />
+          <Link href="/opportunities" className="flex items-center gap-2.5 group">
+            <div className="relative shrink-0">
+              <img src="/icons/icon.svg" alt="SellBodr"
+                className="w-9 h-9 rounded-xl transition-transform duration-200 group-hover:scale-105"
+                style={{ boxShadow: '0 4px 18px rgba(124,58,237,0.50), 0 1px 3px rgba(0,0,0,0.5)' }} />
+            </div>
             <div>
-              <div className="text-sm font-black text-white">SellBodr</div>
-              <div className="text-[10px] text-white/30 -mt-0.5">Intelligence Platform</div>
+              <div className="text-[15px] font-black tracking-tight leading-none"
+                style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                SellBodr
+              </div>
+              <div className="text-[9px] font-semibold text-white/28 uppercase tracking-[0.18em] mt-0.5 leading-none">
+                eCommerce Intelligence
+              </div>
             </div>
           </Link>
         </div>
@@ -128,7 +137,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       {/* ── Mobile top bar ─────────────────────────────────────── */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 glass border-b border-white/5 flex items-center px-3 gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shadow shadow-violet-500/30 shrink-0" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shrink-0"
+            style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }} />
           <span className="text-sm font-bold text-white truncate">{pageName}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -159,8 +169,12 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               {/* Header */}
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shadow shadow-violet-500/30 shrink-0" />
-                  <span className="text-sm font-bold text-white">SellBodr</span>
+                  <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7 rounded-lg shrink-0"
+                    style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }} />
+                  <span className="text-sm font-black tracking-tight"
+                    style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                    SellBodr
+                  </span>
                 </div>
                 <button onClick={() => setMenuOpen(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:bg-white/5 text-xl">

@@ -1,39 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
-    <!-- Arrow gradient: orange (upper-right) → magenta → violet (lower-left) -->
-    <linearGradient id="g" x1="74" y1="18" x2="26" y2="82" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#ff6420"/>
-      <stop offset="48%"  stop-color="#d63fa8"/>
-      <stop offset="100%" stop-color="#7c3aed"/>
-    </linearGradient>
-    <!-- Background: deep dark navy with subtle purple tint -->
+    <!-- Deep navy background: dark violet-tinted top, near-black bottom -->
     <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#180840"/>
-      <stop offset="100%" stop-color="#040c20"/>
+      <stop offset="0%"   stop-color="#180a42"/>
+      <stop offset="100%" stop-color="#040c1e"/>
     </linearGradient>
-    <!-- Subtle glow behind arrows -->
-    <radialGradient id="glow" cx="50%" cy="50%" r="48%">
-      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+
+    <!-- Main mark gradient: deep violet → vivid magenta → warm amber -->
+    <linearGradient id="g" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6d28d9"/>
+      <stop offset="52%"  stop-color="#c026d3"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Soft ambient glow behind the mark -->
+    <radialGradient id="glow" cx="50%" cy="48%" r="44%">
+      <stop offset="0%"   stop-color="#a855f7" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
     </radialGradient>
+
+    <!-- Subtle highlight on upper-left edge of background square -->
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
   </defs>
 
-  <!-- Rounded square background -->
+  <!-- Background square -->
   <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-  <!-- Inner glow -->
+  <!-- Edge highlight (gives depth / glass feel) -->
+  <rect width="100" height="100" rx="22" fill="url(#edge)"/>
+  <!-- Ambient glow -->
   <rect width="100" height="100" rx="22" fill="url(#glow)"/>
 
-  <!-- Upper arc: lower-left → upper-right, tangent at end points upper-right -->
-  <path d="M 22 63 C 18 28, 58 30, 72 21"
-    stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <!-- Upper arrowhead at (72,21), pointing upper-right -->
-  <polyline points="68,32 72,21 61,20"
-    stroke="url(#g)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!--
+    Two interlocking arrows — cross-border trade cycle:
+      Arrow 1 flows lower-left → upper-right (export / global selling)
+      Arrow 2 flows upper-right → lower-left (sourcing / returning value)
+    Arrowheads are filled polygons for crisp rendering at every size.
+  -->
 
-  <!-- Lower arc: upper-right → lower-left, tangent at end points lower-left -->
-  <path d="M 78 37 C 82 72, 42 70, 28 79"
-    stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <!-- Lower arrowhead at (28,79), pointing lower-left -->
-  <polyline points="32,68 28,79 39,80"
-    stroke="url(#g)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Arrow 1 — shaft (lower-left arc → upper-right, stops before head) -->
+  <path d="M 20 65 C 15 35, 53 17, 62 19"
+        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+  <!-- Arrow 1 — filled head at (74, 22), pointing upper-right -->
+  <!-- Tangent from ctrl-pt (53,17)→(62,19): dir≈(0.976,0.217); perp≈(−0.217,0.976) -->
+  <polygon points="74,22 61,24 63,14" fill="url(#g)"/>
+
+  <!-- Arrow 2 — shaft (upper-right arc → lower-left, stops before head) -->
+  <path d="M 80 35 C 85 65, 47 83, 38 81"
+        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+  <!-- Arrow 2 — filled head at (26, 78), pointing lower-left -->
+  <!-- Tangent from ctrl-pt (47,83)→(38,81): dir≈(−0.976,−0.217); perp≈(0.217,−0.976) -->
+  <polygon points="26,78 39,76 37,86" fill="url(#g)"/>
 </svg>
