@@ -47,10 +47,17 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       recommendation: row.recommendation,
       confidence: row.confidence,
       scoreVersion: row.sVersion ?? '2.0.0',
-      product: {
-        id: row.pId, title: row.pTitle, category: row.pCategory,
-        imageUrl: row.pImageUrl, description: row.pDesc,
-      },
+      product: (() => {
+        const stored = String(row.pImageUrl || '');
+        const needsImage = !stored || stored.includes('loremflickr.com') || stored.includes('picsum.photos');
+        const imageUrl = needsImage ? (() => {
+          const subject = [String(row.pTitle || ''), String(row.pCategory || '')].filter(Boolean).join(', ').slice(0, 120);
+          const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
+          const seed = parseInt(String(row.pId).replace(/-/g, '').slice(0, 8), 16) % 999983;
+          return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
+        })() : stored;
+        return { id: row.pId, title: row.pTitle, category: row.pCategory, imageUrl, description: row.pDesc };
+      })(),
       marketplace: {
         id: row.mId, code: row.mCode, country: row.mCountry, currency: row.mCurrency,
       },

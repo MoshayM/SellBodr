@@ -25,14 +25,12 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── Image URL (keyword-based loremflickr) ────────────────────────────────────
+// ── AI image via Pollinations.ai — free, no key, deterministic seed ──────────
 function productImageUrl(productId: string, title: string, category: string): string {
-  const raw = (title || category || 'product').toLowerCase();
-  const keywords = raw.replace(/[^a-z\s]/g, '').split(/\s+/)
-    .filter(w => w.length > 2 && !['and','the','for','with','set','from'].includes(w))
-    .slice(0, 3).join(',') || 'product';
-  const lock = parseInt(productId.replace(/-/g, '').slice(0, 8), 16) % 10000;
-  return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
+  const subject = [title, category].filter(Boolean).join(', ').slice(0, 120);
+  const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
+  const seed = parseInt(productId.replace(/-/g, '').slice(0, 8), 16) % 999983;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
 }
 
 // ── Supplier name with Indian city clusters ───────────────────────────────────

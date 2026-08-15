@@ -77,12 +77,13 @@ export async function GET(req: NextRequest) {
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
       const storedUrl = (r.pImageUrl as string) || '';
-      const imageUrl = storedUrl || (() => {
-        const raw = (String(r.pTitle || r.pCategory || 'product')).toLowerCase().replace(/[^a-z\s]/g, '');
-        const keywords = raw.split(/\s+/).filter((w: string) => w.length > 2 && !['and','the','for','with','set'].includes(w)).slice(0, 3).join(',') || 'product';
-        const lock = parseInt(String(r.pId).replace(/-/g, '').slice(0, 8), 16) % 10000;
-        return `https://loremflickr.com/400/300/${encodeURIComponent(keywords)}/all?lock=${lock}`;
-      })();
+      const needsImage = !storedUrl || storedUrl.includes('loremflickr.com') || storedUrl.includes('picsum.photos');
+      const imageUrl = needsImage ? (() => {
+        const subject = [String(r.pTitle || ''), String(r.pCategory || '')].filter(Boolean).join(', ').slice(0, 120);
+        const prompt = `professional ecommerce product photo of ${subject}, isolated on white background, studio lighting, high resolution`;
+        const seed = parseInt(String(r.pId).replace(/-/g, '').slice(0, 8), 16) % 999983;
+        return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=400&height=300&nologo=true&seed=${seed}`;
+      })() : storedUrl;
 
       const currency = (r.pmCurrency ?? r.mCurrency ?? 'USD') as string;
 

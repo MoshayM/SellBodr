@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
@@ -88,11 +87,18 @@ export default function OpportunityDetailPage() {
       {/* Header card */}
       <div className="card p-4 sm:p-6 mb-5">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-          {opp.product?.imageUrl && (
-            <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-              <Image src={opp.product.imageUrl} alt={opp.product.title} width={128} height={128} className="w-full h-full object-cover" unoptimized />
-            </div>
-          )}
+          <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-gray-100 shrink-0 relative">
+            {opp.product?.imageUrl ? (
+              <img
+                src={opp.product.imageUrl}
+                alt={opp.product.title}
+                className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).src = `https://image.pollinations.ai/prompt/${encodeURIComponent('product photo ' + (opp.product?.title || 'product') + ' white background')}?width=128&height=128&nologo=true&seed=1`; }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📦</div>
+            )}
+          </div>
           <div className="shrink-0">
             <ScoreGauge score={score.opportunity || 0} size="lg" label="Opportunity Score" />
           </div>
