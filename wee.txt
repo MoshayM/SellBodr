@@ -1,0 +1,11 @@
+heigh-light the full report button for user catch easily,
+
+  inside the full report the supplier page fonts and backgroend is not best for visibilty,upadte it as best ai priciple refer Capture.PNG and inside the full report profitabilty page the profit waterfall presenation remove reference shown e1.PNG then,
+
+ ads, and growth page is not working properly so do unit playwright test for new faetures build and updated such as ads, currency converther, growth etc.,
+
+ while sign in with passkey showing that prompt was cancelled or timed out , do playwright test for this also
+
+ in login page showing install sellbodr make it as intractive clickable
+
+the number of supplies showing less,in worst case minimum 10 competitive suppliers details give, for suppliers research enable websearch also, for india apart from indiamart the just in time kind of supplier information repositories also publically available. consider as best in ai principle
