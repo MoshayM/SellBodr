@@ -118,6 +118,7 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const ship    = Number(pm.intlShippingMinor ?? 0);
   const pkg     = Number(pm.packagingCostMinor ?? 0);
   const duty    = Number(pm.dutyMinor          ?? 0);
+  const landed  = Number(pm.landedCostMinor   ?? (src + ship + pkg + duty));
   const refFee  = Number(pm.referralFeeMinor  ?? 0);
   const fbaFee  = Number(pm.fbaFeeMinor        ?? 0);
   const ads     = Number(pm.adCostMinor        ?? 0);
@@ -135,15 +136,16 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   //   negative (costs, net loss)  → grows DOWN from center
   interface Step { key: string; label: string; value: number; color: string; glow: string; up: boolean }
   const allSteps: Step[] = [
-    { key: 'sale', label: 'Sale Price',       value: sale,        color: '#8b5cf6', glow: '#8b5cf655', up: true  },
-    { key: 'src',  label: 'Source',           value: src,         color: '#f43f5e', glow: '#f43f5e55', up: false },
-    { key: 'ship', label: 'Shipping',         value: ship,        color: '#fb923c', glow: '#fb923c55', up: false },
-    { key: 'pkg',  label: 'Packaging',        value: pkg,         color: '#fbbf24', glow: '#fbbf2455', up: false },
-    { key: 'duty', label: 'Duties',           value: duty,        color: '#f59e0b', glow: '#f59e0b55', up: false },
-    { key: 'ref',  label: `Ref ${referralPct}%`, value: refFee,  color: '#f87171', glow: '#f8717155', up: false },
-    { key: 'fba',  label: 'FBA',              value: fbaFee,      color: '#ef4444', glow: '#ef444455', up: false },
-    { key: 'ads',  label: 'Ads 5%',           value: ads,         color: '#94a3b8', glow: '#94a3b855', up: false },
-    { key: 'net',  label: isLoss ? 'Net Loss' : 'Net Profit',
+    { key: 'sale',   label: 'Sale Price',          value: sale,    color: '#8b5cf6', glow: '#8b5cf655', up: true  },
+    { key: 'src',    label: 'Source',              value: src,     color: '#f43f5e', glow: '#f43f5e55', up: false },
+    { key: 'ship',   label: 'Shipping',            value: ship,    color: '#fb923c', glow: '#fb923c55', up: false },
+    { key: 'pkg',    label: 'Packaging',           value: pkg,     color: '#fbbf24', glow: '#fbbf2455', up: false },
+    { key: 'duty',   label: 'Duties',              value: duty,    color: '#f59e0b', glow: '#f59e0b55', up: false },
+    { key: 'landed', label: 'Landed Cost',         value: landed,  color: '#06b6d4', glow: '#06b6d455', up: false },
+    { key: 'ref',    label: `Ref ${referralPct}%`, value: refFee,  color: '#f87171', glow: '#f8717155', up: false },
+    { key: 'fba',    label: 'FBA',                 value: fbaFee,  color: '#ef4444', glow: '#ef444455', up: false },
+    { key: 'ads',    label: 'Ads 5%',              value: ads,     color: '#94a3b8', glow: '#94a3b855', up: false },
+    { key: 'net',    label: isLoss ? 'Net Loss' : 'Net Profit',
       value: Math.abs(net),
       color: isLoss ? '#ef4444' : '#10b981',
       glow:  isLoss ? '#ef444455' : '#10b98155',
@@ -158,7 +160,7 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
 
   // Single scale so bars are proportional to each other across both zones
   const maxUp   = Math.max(sale, net > 0 ? net : 0, 1);
-  const maxDown = Math.max(src, ship, pkg, duty, refFee, fbaFee, ads, net < 0 ? Math.abs(net) : 0, 1);
+  const maxDown = Math.max(src, ship, pkg, duty, landed, refFee, fbaFee, ads, net < 0 ? Math.abs(net) : 0, 1);
   const scale   = Math.min((CENTER_H * 0.92) / maxUp, (CENTER_H * 0.92) / maxDown);
 
   const pitchPct    = 100 / n;
@@ -237,9 +239,7 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
                     ? (isShort ? bar.top - 13 : bar.top + bar.h / 2 - 5)
                     : (isShort ? bar.top + bar.h + 3 : bar.top + bar.h / 2 - 5),
                   fontSize: 7.5, fontFamily: 'monospace', fontWeight: 700, lineHeight: 1,
-                  color: bar.key === 'net'
-                    ? bar.color
-                    : isShort ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.88)',
+                  color: 'rgba(255,255,255,0.92)',
                   textShadow: `0 0 8px ${bar.glow}`,
                   animation: `wf-fadein 0.3s ease-out ${delay + 0.45}s both`,
                 }}>
