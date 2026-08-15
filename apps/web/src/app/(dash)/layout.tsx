@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,124 +20,31 @@ const ALL_PAGES = [
   { href: '/settings',       label: 'Settings',        icon: '⚙️', desc: 'Account & preferences' },
 ];
 
-function SearchIcon() {
+function SIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
   );
 }
 
-function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function DashLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
   const path     = usePathname();
-  const [query, setQuery] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (open) { setQuery(''); setTimeout(() => inputRef.current?.focus(), 60); }
-  }, [open]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
-    if (open) window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
-  const results = query.trim()
-    ? ALL_PAGES.filter(p =>
-        p.label.toLowerCase().includes(query.toLowerCase()) ||
-        p.desc.toLowerCase().includes(query.toLowerCase()))
-    : ALL_PAGES;
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-            onClick={onClose} />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -8 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 450 }}
-            className="fixed top-[72px] left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4">
-            <div className="bg-[#0E1628] border border-white/12 rounded-2xl shadow-2xl overflow-hidden"
-              style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(124,58,237,0.14)' }}>
-
-              {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8">
-                <span className="text-white/35 shrink-0"><SearchIcon /></span>
-                <input ref={inputRef} value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="Search pages, features..."
-                  className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none" />
-                <kbd className="text-white/25 text-[10px] border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
-              </div>
-
-              {/* Results */}
-              <div className="py-1.5 max-h-[min(340px,60vh)] overflow-y-auto scrollbar-dark">
-                {results.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-sm text-white/30">No results for &ldquo;{query}&rdquo;</div>
-                ) : (
-                  <>
-                    <div className="px-4 pt-1.5 pb-1 text-[9px] font-semibold text-white/25 uppercase tracking-widest">
-                      {query ? 'Results' : 'All pages'}
-                    </div>
-                    {results.map(p => {
-                      const active = path === p.href || path.startsWith(p.href + '/');
-                      return (
-                        <button key={p.href}
-                          onClick={() => { router.push(p.href); onClose(); }}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left group ${
-                            active ? 'bg-violet-500/10' : 'hover:bg-white/5 active:bg-white/8'
-                          }`}>
-                          <span className="text-xl w-8 shrink-0 text-center">{p.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium transition-colors ${active ? 'text-violet-300' : 'text-white/75 group-hover:text-white'}`}>
-                              {p.label}
-                              {'badge' in p && p.badge && (
-                                <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md"
-                                  style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
-                                  {p.badge}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-white/28 leading-tight mt-0.5">{p.desc}</div>
-                          </div>
-                          {active
-                            ? <span className="text-violet-400/60 text-xs shrink-0">active</span>
-                            : <span className="text-white/15 text-xs shrink-0 group-hover:text-white/30 transition-colors">→</span>}
-                        </button>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-
-              <div className="px-4 py-2 border-t border-white/6 flex items-center gap-4 text-[10px] text-white/20">
-                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">↑↓</kbd> navigate</span>
-                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">↵</kbd> open</span>
-                <span><kbd className="font-mono text-white/30 border border-white/10 rounded px-1 py-0.5">⌘K</kbd> toggle</span>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-export default function DashLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const path   = usePathname();
   const [menuOpen,     setMenuOpen]     = useState(false);
-  const [searchOpen,   setSearchOpen]   = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [searchQuery,  setSearchQuery]  = useState('');
+  const [anchor,       setAnchor]       = useState<DOMRect | null>(null);
+  const [mounted,      setMounted]      = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const userMenuRef   = useRef<HTMLDivElement>(null);
+  const desktopBtnRef = useRef<HTMLButtonElement>(null);
+  const mobileBtnRef  = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -146,7 +54,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => { setMenuOpen(false); }, [path]);
 
-  /* Close user dropdown on outside click */
+  /* Close user menu on outside click */
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -157,28 +65,136 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     return () => document.removeEventListener('mousedown', onDown);
   }, [userMenuOpen]);
 
-  /* Global ⌘K shortcut */
+  /* ⌘K global shortcut — anchors to desktop bar */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSearchOpen(true); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const ref = desktopBtnRef.current ?? mobileBtnRef.current;
+        if (ref) openSearch(ref.getBoundingClientRect());
+      }
+      if (e.key === 'Escape') setSearchOpen(false);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  /* Focus input when dropdown opens */
+  useEffect(() => {
+    if (searchOpen) {
+      setSearchQuery('');
+      setTimeout(() => searchInputRef.current?.focus(), 40);
+    }
+  }, [searchOpen]);
+
+  function openSearch(rect: DOMRect) {
+    setAnchor(rect);
+    setSearchOpen(true);
+  }
+
+  function closeSearch() { setSearchOpen(false); }
+
   function logout() { clearAuth(); router.push('/login'); }
 
-  const initials  = user?.name
+  const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U';
-  const pageName  = ALL_PAGES.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
-  const isHome    = path === '/opportunities' || path.startsWith('/opportunities/');
+  const pageName = ALL_PAGES.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
+  const isHome   = path === '/opportunities' || path.startsWith('/opportunities/');
+
+  const searchResults = searchQuery.trim()
+    ? ALL_PAGES.filter(p =>
+        p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+    : ALL_PAGES;
+
+  /* ── Inline search dropdown (portal) ─────────────────── */
+  const searchDropdown = searchOpen && mounted && anchor ? createPortal(
+    <>
+      {/* Click-away backdrop — no visual overlay */}
+      <div className="fixed inset-0 z-40" onClick={closeSearch} />
+
+      {/* Dropdown panel anchored below the trigger */}
+      <div
+        className="fixed z-50 bg-[#0E1628] border border-white/12 rounded-xl overflow-hidden"
+        style={{
+          top:      anchor.bottom + 6,
+          left:     anchor.width < 80 ? Math.max(8, anchor.right - 360) : anchor.left,
+          width:    anchor.width < 80 ? Math.min(360, window.innerWidth - 16) : Math.max(anchor.width, 380),
+          maxWidth: window.innerWidth - 16,
+          boxShadow: '0 16px 48px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.12)',
+        }}>
+
+        {/* Input row */}
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-white/8">
+          <span className="text-white/35 shrink-0"><SIcon /></span>
+          <input
+            ref={searchInputRef}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search pages & features..."
+            className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none min-w-0"
+          />
+          <kbd className="text-white/20 text-[10px] border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
+        </div>
+
+        {/* Results */}
+        <div className="py-1 max-h-72 overflow-y-auto scrollbar-dark">
+          {searchResults.length === 0 ? (
+            <div className="px-4 py-5 text-center text-sm text-white/30">
+              No results for &ldquo;{searchQuery}&rdquo;
+            </div>
+          ) : (
+            <>
+              <div className="px-3.5 pt-2 pb-1 text-[9px] font-semibold text-white/22 uppercase tracking-widest">
+                {searchQuery ? 'Results' : 'All pages'}
+              </div>
+              {searchResults.map(p => {
+                const active = path === p.href || path.startsWith(p.href + '/');
+                return (
+                  <button key={p.href}
+                    onClick={() => { router.push(p.href); closeSearch(); }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2 transition-colors text-left group ${
+                      active ? 'bg-violet-500/12' : 'hover:bg-white/5 active:bg-white/8'
+                    }`}>
+                    <span className="text-lg w-7 text-center shrink-0">{p.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium leading-snug transition-colors ${active ? 'text-violet-300' : 'text-white/72 group-hover:text-white'}`}>
+                        {p.label}
+                        {'badge' in p && p.badge && (
+                          <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
+                            style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
+                            {p.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-white/27 truncate mt-0.5">{p.desc}</div>
+                    </div>
+                    <span className={`text-xs shrink-0 transition-colors ${active ? 'text-violet-400/50' : 'text-white/15 group-hover:text-white/35'}`}>
+                      {active ? '●' : '→'}
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        <div className="px-3.5 py-1.5 border-t border-white/6 flex items-center gap-3 text-[10px] text-white/18">
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">⌘K</kbd> toggle</span>
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">↵</kbd> open</span>
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">ESC</kbd> close</span>
+        </div>
+      </div>
+    </>,
+    document.body
+  ) : null;
 
   return (
     <div className="min-h-screen bg-[#020817] flex flex-col">
 
       {/* ────────────────────────────────────────────────────────────
-          Top navigation bar — always visible on all devices
+          Top navigation bar
       ──────────────────────────────────────────────────────────── */}
       <header
         className="fixed top-0 inset-x-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 glass border-b border-white/5"
@@ -200,29 +216,32 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           </div>
         </Link>
 
-        {/* Page title — mobile only, between logo and actions */}
+        {/* Page title — mobile only */}
         <span className="sm:hidden text-sm font-semibold text-white/65 truncate flex-1 min-w-0 pl-1">{pageName}</span>
 
-        {/* Search bar — desktop (md+) */}
+        {/* Desktop search bar — clicks open inline dropdown */}
         <div className="hidden md:flex flex-1 justify-center max-w-xl">
           <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.07] border border-white/8 hover:border-white/14 rounded-xl px-4 py-2 text-xs text-white/35 transition-all duration-200 w-full max-w-md group"
+            ref={desktopBtnRef}
+            onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
+            className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.07] border border-white/8 hover:border-white/16 rounded-xl px-4 py-2 text-xs text-white/35 transition-all duration-200 w-full max-w-md group"
             aria-label="Search (⌘K)">
-            <span className="text-white/30 group-hover:text-white/45 transition-colors"><SearchIcon /></span>
+            <span className="text-white/30 group-hover:text-white/50 transition-colors shrink-0"><SIcon /></span>
             <span className="flex-1 text-left">Search everything...</span>
-            <kbd className="text-[10px] glass rounded px-1.5 py-1 border border-white/8 font-mono text-white/25">⌘K</kbd>
+            <kbd className="text-[10px] glass rounded px-1.5 py-1 border border-white/8 font-mono text-white/22">⌘K</kbd>
           </button>
         </div>
 
-        {/* Right actions */}
+        {/* Right actions — always ml-auto to pin at far right */}
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
 
-          {/* Mobile search icon */}
-          <button onClick={() => setSearchOpen(true)}
+          {/* Mobile search icon — opens dropdown anchored to this button */}
+          <button
+            ref={mobileBtnRef}
+            onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-white/40 hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation"
             aria-label="Search">
-            <SearchIcon />
+            <SIcon />
           </button>
 
           {/* User avatar + dropdown */}
@@ -272,13 +291,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
 
-      {/* ────────────────────────────────────────────────────────────
-          Command palette — all devices
-      ──────────────────────────────────────────────────────────── */}
-      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {/* Inline search dropdown — portal, anchored to trigger */}
+      {searchDropdown}
 
       {/* ────────────────────────────────────────────────────────────
-          Mobile slide-in drawer — right side, md and below
+          Mobile slide-in drawer
       ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {menuOpen && (
@@ -294,7 +311,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               className="md:hidden fixed inset-y-0 right-0 z-50 w-[280px] sm:w-72 bg-[#0A0F1E] border-l border-white/5 flex flex-col shadow-2xl"
               style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
-              {/* Drawer header */}
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5 shrink-0">
                 <span className="text-sm font-bold text-white/60">All pages</span>
                 <button onClick={() => setMenuOpen(false)}
@@ -304,7 +320,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 </button>
               </div>
 
-              {/* User row */}
               <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
                   {initials}
@@ -315,7 +330,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
 
-              {/* Page list */}
               <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
                 {ALL_PAGES.map(p => {
                   const active = path === p.href || path.startsWith(p.href + '/');
@@ -341,7 +355,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 })}
               </nav>
 
-              {/* Sign out */}
               <div className="px-3 pt-3 border-t border-white/5"
                 style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                 <button onClick={logout}
@@ -355,7 +368,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       </AnimatePresence>
 
       {/* ────────────────────────────────────────────────────────────
-          Main content area
+          Main content
       ──────────────────────────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-dark">
         <div className="min-h-full"
@@ -370,7 +383,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       <CurrencyWidget />
 
       {/* ────────────────────────────────────────────────────────────
-          Mobile bottom tab bar — md and below only
+          Mobile bottom tab bar
       ──────────────────────────────────────────────────────────── */}
       <nav
         className="md:hidden fixed bottom-0 inset-x-0 z-30 glass border-t border-white/5"
@@ -378,7 +391,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         aria-label="Bottom navigation">
         <div className="flex items-stretch h-16">
 
-          {/* Home — Opportunities */}
           <Link href="/opportunities"
             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
               isHome ? 'text-violet-300' : 'text-white/30 active:text-white/60'
@@ -391,16 +403,18 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-violet-300' : ''}`}>Scout</span>
           </Link>
 
-          {/* Search */}
           <button
-            onClick={() => setSearchOpen(true)}
+            onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
             className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
             aria-label="Search">
-            <span className="text-white/35"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+            <span className="text-white/35">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </span>
             <span className="text-[10px] font-medium leading-none">Search</span>
           </button>
 
-          {/* More */}
           <button
             onClick={() => setMenuOpen(true)}
             className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
