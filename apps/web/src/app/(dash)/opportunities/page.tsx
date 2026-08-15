@@ -125,6 +125,7 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
   const net     = Number(pm.trueNetMinor ?? pm.netProfitMinor ?? 0);
   const margin  = Number(pm.netMarginPct  ?? 0);
   const roi     = Number(pm.roiPct        ?? 0);
+  const totalCost = src + ship + pkg + duty + refFee + fbaFee + ads;
   const breakeven = Number(pm.breakevenUnits ?? (net > 0 ? Math.ceil(50000 / net) : 999));
   const monthly = Number(pm.monthlyProfitMinor ?? net * 50);
   const referralPct = Number(pm.referralPct ?? 15);
@@ -315,20 +316,21 @@ function ProfitWaterfallChart({ pm, currency, platform }: { pm: any; currency: s
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-2">
         {([
-          { label: 'Net / Unit',  val: fmtN(net),                 ok: net >= 0,       big: true  },
-          { label: 'Net Margin',  val: `${margin.toFixed(1)}%`,   ok: margin >= 15,   big: false },
-          { label: 'ROI',         val: `${roi.toFixed(0)}%`,      ok: roi >= 0,       big: false },
-          { label: 'Break-even',  val: `${Math.min(breakeven, 999)} units`, ok: breakeven < 200, big: false },
-        ] as { label: string; val: string; ok: boolean; big: boolean }[]).map(({ label, val, ok, big }) => (
+          { label: 'Net / Unit',   val: fmtN(net),                           ok: net >= 0,        cost: false },
+          { label: 'Total Cost',   val: fmt(totalCost),                      ok: false,           cost: true  },
+          { label: 'Net Margin',   val: `${margin.toFixed(1)}%`,             ok: margin >= 15,    cost: false },
+          { label: 'ROI',          val: `${roi.toFixed(0)}%`,                ok: roi >= 0,        cost: false },
+          { label: 'Break-even',   val: `${Math.min(breakeven, 999)} units`, ok: breakeven < 200, cost: false },
+        ] as { label: string; val: string; ok: boolean; cost: boolean }[]).map(({ label, val, ok, cost }) => (
           <div key={label} className={`rounded-xl border p-2.5 transition-colors ${
-            big
-              ? ok ? 'border-emerald-500/35 bg-emerald-500/10' : 'border-red-500/35 bg-red-500/10'
-              : 'border-white/8 bg-white/[0.025]'
+            cost
+              ? 'border-orange-500/25 bg-orange-500/[0.06]'
+              : ok ? 'border-emerald-500/35 bg-emerald-500/10' : 'border-red-500/35 bg-red-500/10'
           }`}>
             <div className="text-[9px] text-white/30 mb-0.5">{label}</div>
-            <div className={`font-bold text-sm leading-tight ${ok ? 'text-emerald-400' : 'text-red-400'}`}>{val}</div>
+            <div className={`font-bold text-sm leading-tight ${cost ? 'text-orange-300/80' : ok ? 'text-emerald-400' : 'text-red-400'}`}>{val}</div>
           </div>
         ))}
       </div>
