@@ -1,10 +1,15 @@
 'use client';
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 import { ParticleCanvas } from '@/components/ui/ParticleCanvas';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +19,20 @@ export default function LoginPage() {
   const [loading, setLoading]       = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPw, setShowPw]         = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isIOS, setIsIOS]           = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) { setIsInstalled(true); return; }
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua) && !(window as any).MSStream) { setIsIOS(true); return; }
+    const captured = (window as any).__pwaInstallPrompt as BeforeInstallPromptEvent | null;
+    if (captured) { (window as any).__pwaInstallPrompt = null; setInstallPrompt(captured); return; }
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e as BeforeInstallPromptEvent); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   async function submitPassword(e: FormEvent) {
     e.preventDefault();
@@ -41,11 +60,22 @@ export default function LoginPage() {
       router.push('/opportunities');
     } catch (err: any) {
       if (err?.name === 'NotAllowedError') {
-        setError('Passkey prompt was cancelled or timed out. Please try again.');
+        setError('Passkey prompt was cancelled. Try again or use your password below.');
+      } else if (err?.message?.toLowerCase().includes('no passkey')) {
+        setError(err.message + ' (Sign in with password first, then add a passkey in Settings → Security.)');
       } else {
         setError(err?.message || 'Passkey login failed. Try password instead.');
       }
     } finally { setPasskeyLoading(false); }
+  }
+
+  async function handleInstall() {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') setIsInstalled(true);
+      setInstallPrompt(null);
+    }
   }
 
   return (
@@ -196,17 +226,31 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <div className="mt-5 p-3 rounded-xl bg-white/[0.03] border border-white/8 flex items-center gap-3">
-            <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
-              style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-white/60 leading-snug">Install SellBodr</div>
-              <div className="text-[10px] text-white/30 leading-snug mt-0.5">
-                Android: tap <span className="text-white/50">⋮ → Add to Home Screen</span> &nbsp;·&nbsp;
-                iOS: tap <span className="text-white/50">Share → Add to Home Screen</span>
+          {!isInstalled && (
+            installPrompt ? (
+              <button onClick={handleInstall}
+                className="mt-5 w-full p-3 rounded-xl bg-violet-500/8 border border-violet-500/20 hover:bg-violet-500/14 hover:border-violet-500/35 transition-all flex items-center gap-3 text-left touch-manipulation">
+                <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
+                  style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-white/70 leading-snug">Install SellBodr App</div>
+                  <div className="text-[10px] text-violet-400/70 leading-snug mt-0.5">Tap to install — works offline, loads instantly</div>
+                </div>
+                <span className="text-violet-400 text-xs shrink-0">↓ Install</span>
+              </button>
+            ) : isIOS ? (
+              <div className="mt-5 p-3 rounded-xl bg-white/[0.03] border border-white/8 flex items-center gap-3">
+                <img src="/icons/icon.svg" alt="" className="w-8 h-8 flex-shrink-0"
+                  style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-white/60 leading-snug">Install on iPhone / iPad</div>
+                  <div className="text-[10px] text-white/30 leading-snug mt-0.5">
+                    Tap <span className="text-white/50">Share ↑</span> then <span className="text-white/50">Add to Home Screen</span> in Safari
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            ) : null
+          )}
 
           <div className="flex items-center justify-center gap-4 mt-4">
             <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40 transition-colors">Privacy Policy</Link>

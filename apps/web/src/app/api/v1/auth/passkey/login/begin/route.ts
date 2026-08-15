@@ -26,6 +26,13 @@ export async function POST(req: NextRequest) {
       if (userRes.rows[0]) {
         userId = String(userRes.rows[0].id);
         const passkeys = await db.execute({ sql: 'SELECT credentialId FROM "Passkey" WHERE userId = ?', args: [userId] });
+        if (passkeys.rows.length === 0) {
+          // User exists but has no passkeys registered — return actionable error
+          return NextResponse.json(
+            { message: 'No passkey registered for this account. Sign in with your password, then add one in Settings → Security.' },
+            { status: 404 }
+          );
+        }
         allowCredentials = passkeys.rows.map(pk => ({
           id: Buffer.from(String(pk.credentialId), 'base64url'),
           type: 'public-key' as const,

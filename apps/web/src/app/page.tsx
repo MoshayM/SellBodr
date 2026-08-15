@@ -86,9 +86,16 @@ function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; de
   );
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
@@ -98,6 +105,23 @@ export default function LandingPage() {
     const token = localStorage.getItem('bs_access_token');
     if (token) { router.replace('/opportunities'); } else { setChecked(true); }
   }, [router]);
+
+  useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches) { setIsInstalled(true); return; }
+    const captured = (window as any).__pwaInstallPrompt as BeforeInstallPromptEvent | null;
+    if (captured) { (window as any).__pwaInstallPrompt = null; setInstallPrompt(captured); return; }
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e as BeforeInstallPromptEvent); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  async function handleInstall() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') setIsInstalled(true);
+    setInstallPrompt(null);
+  }
 
   if (!checked) {
     return (
@@ -350,28 +374,59 @@ export default function LandingPage() {
             <h2 className="text-3xl font-black mb-3">Available on every device</h2>
             <p className="text-white/40 mb-8 max-w-lg mx-auto">Install SellBodr as an app on Android, iOS, Mac, or Windows — works offline, loads instantly.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70">
-                <span className="text-2xl">🤖</span>
-                <div className="text-left">
-                  <div className="font-semibold text-white text-xs">Android</div>
-                  <div className="text-white/40 text-xs">Tap "Add to Home Screen"</div>
+              {/* Android / Chrome — clickable if prompt available */}
+              {installPrompt ? (
+                <button onClick={handleInstall}
+                  className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70 hover:bg-violet-500/10 hover:border-violet-500/30 border border-transparent transition-all touch-manipulation">
+                  <span className="text-2xl">🤖</span>
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-xs">Android / Chrome</div>
+                    <div className="text-violet-400/80 text-xs">Tap here to install now ↓</div>
+                  </div>
+                </button>
+              ) : (
+                <div className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70">
+                  <span className="text-2xl">🤖</span>
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-xs">Android</div>
+                    <div className="text-white/40 text-xs">Menu → Add to Home Screen</div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* iPhone / iPad — always instructions */}
               <div className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70">
                 <span className="text-2xl"></span>
                 <div className="text-left">
                   <div className="font-semibold text-white text-xs">iPhone / iPad</div>
-                  <div className="text-white/40 text-xs">Safari → Share → Add to Home</div>
+                  <div className="text-white/40 text-xs">Safari → Share ↑ → Add to Home</div>
                 </div>
               </div>
-              <div className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70">
-                <span className="text-2xl">💻</span>
-                <div className="text-left">
-                  <div className="font-semibold text-white text-xs">Desktop</div>
-                  <div className="text-white/40 text-xs">Chrome → Install App icon</div>
+
+              {/* Desktop — clickable if prompt available */}
+              {installPrompt ? (
+                <button onClick={handleInstall}
+                  className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70 hover:bg-violet-500/10 hover:border-violet-500/30 border border-transparent transition-all touch-manipulation">
+                  <span className="text-2xl">💻</span>
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-xs">Desktop</div>
+                    <div className="text-violet-400/80 text-xs">Tap here to install now ↓</div>
+                  </div>
+                </button>
+              ) : (
+                <div className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70">
+                  <span className="text-2xl">💻</span>
+                  <div className="text-left">
+                    <div className="font-semibold text-white text-xs">Desktop</div>
+                    <div className="text-white/40 text-xs">Chrome → Install App icon ↑</div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
+
+            {isInstalled && (
+              <p className="mt-4 text-sm text-emerald-400 font-medium">✓ SellBodr is installed on this device</p>
+            )}
           </motion.div>
         </div>
       </section>
