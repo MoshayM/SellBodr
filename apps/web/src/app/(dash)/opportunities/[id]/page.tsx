@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
 import { ProGate } from '@/components/ui/ProGate';
@@ -297,9 +297,17 @@ export default function OpportunityDetailPage() {
     return TABS.includes(t || '') ? (t as string) : 'Overview';
   });
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => {
+    setIsGuest(!localStorage.getItem('bs_access_token'));
+    setIsFree(!isPro());
+  }, []);
   const [genLoading, setGenLoading] = useState(false);
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
+  const [extraSuppliers, setExtraSuppliers] = useState<any[]>([]);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const [moreNote, setMoreNote] = useState('');
+  const [showSupplierGate, setShowSupplierGate] = useState(false);
 
   const { data: opp, isLoading } = useQuery({
     queryKey: ['opportunity', id],
@@ -647,14 +655,17 @@ export default function OpportunityDetailPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/6">
-                    {opp.sourcingCandidates?.map((sc: any, idx: number) => {
+                    {(isFree
+                      ? [...(opp.sourcingCandidates || []), ...extraSuppliers].slice(0, 10)
+                      : [...(opp.sourcingCandidates || []), ...extraSuppliers]
+                    ).map((sc: any, idx: number) => {
                       const isIndia = (sc.country || 'India') === 'India';
                       const flag = isIndia ? '🇮🇳' : sc.country === 'China' ? '🇨🇳' : sc.country === 'Hong Kong' ? '🇭🇰' : sc.country === 'United States' ? '🇺🇸' : '🌐';
                       const trustPct = Math.round((Number(sc.rating) || 4.0) / 5 * 100);
                       const costLabel = isIndia ? `₹${minor(sc.productCostMinor)}` : `$${((sc.productCostMinor || 0) / 100).toFixed(2)}`;
                       return (
                         <tr key={sc.id} className={`cursor-pointer transition-colors ${isIndia ? 'hover:bg-emerald-500/8 bg-emerald-500/5' : 'hover:bg-white/[0.06]'}`}
-                          onClick={() => setDrawerSupplier(sc.id)}>
+                          onClick={() => setDrawerSupplier(sc.supplier?.id || sc.supplierId || sc.id)}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {isIndia && idx === 0 && (
@@ -692,7 +703,7 @@ export default function OpportunityDetailPage() {
                             }`}>{sc.feasibility}</span>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <button onClick={e => { e.stopPropagation(); setDrawerSupplier(sc.id); }}
+                            <button onClick={e => { e.stopPropagation(); setDrawerSupplier(sc.supplier?.id || sc.supplierId || sc.id); }}
                               className="text-xs px-2.5 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors whitespace-nowrap">
                               View
                             </button>
@@ -733,6 +744,75 @@ export default function OpportunityDetailPage() {
                     );
                   })}
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* Search More Suppliers */}
+          {(() => {
+            const baseCandidates: any[] = opp.sourcingCandidates || [];
+            const allCandidates = [...baseCandidates, ...extraSuppliers];
+            const cappedCandidates = isFree ? allCandidates.slice(0, 10) : allCandidates;
+            const lockedCount = isFree ? Math.max(0, allCandidates.length - 10) : 0;
+
+            async function searchMoreSuppliers() {
+              setFetchingMore(true);
+              setMoreNote('');
+              try {
+                const result: any[] = await api.opportunities.getSuppliers(id);
+                const existingNames = new Set(allCandidates.map((s: any) => (s.supplier?.name || s.supplierName || '').toLowerCase()));
+                const fresh = result.filter((s: any) => !existingNames.has((s.supplier?.name || s.supplierName || '').toLowerCase()));
+                if (fresh.length > 0) {
+                  setExtraSuppliers(prev => [...prev, ...fresh]);
+                  setMoreNote(`+${fresh.length} additional supplier${fresh.length > 1 ? 's' : ''} found`);
+                } else {
+                  setMoreNote('No additional suppliers found at this time');
+                }
+              } catch {
+                setMoreNote('Could not fetch more suppliers — please try again');
+              } finally {
+                setFetchingMore(false);
+              }
+            }
+
+            return (
+              <div className="card-dark p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="text-sm text-white/55">
+                    Showing {cappedCandidates.length} supplier{cappedCandidates.length !== 1 ? 's' : ''}
+                    {lockedCount > 0 && <span className="ml-1 text-white/30">· {lockedCount} locked</span>}
+                    {moreNote && <span className="ml-2 text-green-400 text-xs">{moreNote}</span>}
+                  </div>
+                  {isFree ? (
+                    <div className="flex items-center gap-2">
+                      {!showSupplierGate ? (
+                        <button
+                          onClick={() => setShowSupplierGate(true)}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-violet-500/40 text-violet-300 hover:bg-violet-500/10 transition-colors whitespace-nowrap">
+                          🔍 Search More Suppliers
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3">
+                          <span className="text-sm">🔒</span>
+                          <span className="text-sm text-white/70">Pro unlocks unlimited supplier search</span>
+                          <a href="/upgrade" className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 transition-colors font-semibold whitespace-nowrap">
+                            Upgrade to Pro →
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={searchMoreSuppliers}
+                      disabled={fetchingMore}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap">
+                      {fetchingMore ? '⟳ Searching…' : '🔍 Search More Suppliers'}
+                    </button>
+                  )}
+                </div>
+                {isFree && allCandidates.length >= 10 && (
+                  <p className="text-xs text-white/30 mt-2">Free plan: max 10 suppliers per product. Upgrade for unlimited access.</p>
+                )}
               </div>
             );
           })()}
