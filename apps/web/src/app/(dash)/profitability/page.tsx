@@ -2,18 +2,18 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 export default function ProfitabilityPage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
   const { data: opps = [] } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => api.opportunities.list({}),
-    enabled: !isGuest,
+    enabled: !isFree,
   });
 
   const [selectedId, setSelectedId] = useState('');
@@ -23,10 +23,10 @@ export default function ProfitabilityPage() {
   const { data: oppDetail } = useQuery({
     queryKey: ['opportunity', effectiveId],
     queryFn: () => api.opportunities.get(effectiveId),
-    enabled: !!effectiveId && !isGuest,
+    enabled: !!effectiveId && !isFree,
   });
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="💰"
       feature="Full Profit Model"

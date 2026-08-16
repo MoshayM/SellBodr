@@ -30,12 +30,9 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
           <h3 className="text-lg font-black text-white mb-1.5">{feature}</h3>
           <p className="text-sm text-white/50 mb-5 max-w-sm mx-auto leading-relaxed">{tagline}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
-            <Link href="/register"
+            <Link href="/register?plan=pro"
               className="inline-flex items-center gap-1.5 text-xs font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] hover:shadow-[0_0_22px_rgba(124,58,237,0.7)] transition-all duration-200 border border-violet-400/30">
-              Start Pro Trial →
-            </Link>
-            <Link href="/login" className="text-xs text-white/35 hover:text-white/60 transition-colors">
-              Already have an account? Sign in
+              Upgrade to Pro →
             </Link>
           </div>
         </div>
@@ -79,15 +76,12 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <Link href="/register"
+            <Link href="/register?plan=pro"
               className="inline-flex items-center gap-2 text-sm font-bold px-7 py-3.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.5)] hover:shadow-[0_0_30px_rgba(124,58,237,0.75)] transition-all duration-200 border border-violet-400/30">
-              Start Pro — Free 14-day Trial
+              Upgrade to Pro
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M2 8a.75.75 0 0 1 .75-.75h8.69L8.22 4.03a.75.75 0 0 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H2.75A.75.75 0 0 1 2 8Z" clipRule="evenodd" />
               </svg>
-            </Link>
-            <Link href="/login" className="text-sm text-white/40 hover:text-white/65 transition-colors px-4 py-2">
-              Already have an account? Sign in →
             </Link>
           </div>
 

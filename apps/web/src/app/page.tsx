@@ -27,7 +27,7 @@ const STEPS = [
 ];
 
 const PLANS = [
-  { name: 'Free', price: '$0', period: '', desc: 'Browse opportunities with no account needed', features: ['Opportunity dashboard access', 'Basic profit calculator', 'Score previews', 'Wishlist (local)'], cta: 'Browse Free', ctaHref: '/opportunities', highlight: false },
+  { name: 'Free', price: '$0', period: '', desc: 'Discover opportunities with a free account', features: ['AI-scored opportunity feed', 'Basic profit indicators', 'Score previews', 'Wishlist (save up to 10)'], cta: 'Create Free Account', ctaHref: '/register', highlight: false },
   { name: 'Pro', price: '$49', period: '/mo', desc: 'Unlimited AI power for serious sellers', features: ['Unlimited AI searches', 'Full 7-dimension scoring', 'Supplier sourcing', 'AI listing generator', 'Priority support', 'Export reports'], cta: 'Start Free Trial', ctaHref: '/register', highlight: true },
   { name: 'Organisation', price: 'Custom', period: '', desc: 'For agencies and large catalogues', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated account manager', 'SLA guarantee'], cta: 'Contact Sales', ctaHref: 'mailto:sales@sellbodr.com', highlight: false },
 ];
@@ -162,7 +162,7 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2 hidden sm:block">Sign in</Link>
-          <Link href="/opportunities" className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Browse Free</Link>
+          <Link href="/register" className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Sign Up Free</Link>
           <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-lg shadow-lg shadow-violet-500/30">
             Start Pro →
           </Link>
@@ -218,11 +218,11 @@ export default function LandingPage() {
             transition={{ delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-3 justify-center mb-4"
           >
-            <Link href="/opportunities" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
-              Browse Free — No signup needed
+            <Link href="/register" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
+              Create Free Account — No card needed →
             </Link>
-            <Link href="/register" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
-              Start Pro Trial →
+            <Link href="/register?plan=pro" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
+              Start Pro Trial
             </Link>
           </motion.div>
           <motion.p

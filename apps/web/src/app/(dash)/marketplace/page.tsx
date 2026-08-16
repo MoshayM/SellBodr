@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ProGate } from '@/components/ui/ProGate';
 import Image from 'next/image';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 
 // ── Display metadata ──────────────────────────────────────────────
@@ -118,8 +118,8 @@ function minor(v: number, currency = '') {
 
 // ── Page ──────────────────────────────────────────────────────────
 export default function MarketplacePage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
   const [selected, setSelected] = useState<string | null>(null);
   const [regionFilter, setRegionFilter] = useState<string>('All');
@@ -127,16 +127,16 @@ export default function MarketplacePage() {
   const { data: marketplaces = [], isLoading: mkLoading } = useQuery({
     queryKey: ['marketplaces'],
     queryFn: () => api.marketplaces.list(),
-    enabled: !isGuest,
+    enabled: !isFree,
   });
 
   const { data: opps = [], isLoading: oppLoading } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => api.opportunities.list({}),
-    enabled: !isGuest,
+    enabled: !isFree,
   });
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="🛒"
       feature="Marketplace Intelligence"

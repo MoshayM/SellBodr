@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getMarketplaceDef, getMarketplaceSearchUrl } from '@/lib/marketplace';
@@ -165,16 +165,16 @@ const SELECT_CLS = 'bg-[#0d1225] border border-white/10 hover:border-white/20 te
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ResearchPage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
   const { data: opps = [], isLoading } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => api.opportunities.list({}),
-    enabled: !isGuest,
+    enabled: !isFree,
   });
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="🔬"
       feature="Deep Market Research"

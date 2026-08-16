@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 
 const PLANS = [
-  { id: 'pro', name: 'Pro', price: '$49/mo', desc: 'Unlimited AI power', features: ['Unlimited AI searches', 'Supplier sourcing', 'AI listing builder', 'Full 7-dimension scores', 'Priority support'], color: 'border-violet-500/60', highlight: true },
-  { id: 'enterprise', name: 'Organisation', price: 'Custom', desc: 'For agencies & teams', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated manager', 'SLA guarantee'], color: 'border-cyan-500/30' },
+  { id: 'free', name: 'Free', price: '$0', desc: 'Discover cross-border opportunities', features: ['AI-scored opportunity feed', 'Marketplace price comparisons', 'Basic profit indicators', 'Wishlist — save up to 10 products'], color: 'border-emerald-500/40', highlight: false, startLabel: 'Get Started Free' },
+  { id: 'pro', name: 'Pro', price: '$49/mo', desc: 'Unlimited AI power for serious sellers', features: ['Unlimited AI scans & sourcing', 'Supplier database + MOQ data', 'Full profit model & cost waterfall', 'AI listing generator', 'Deep research & trend data', 'Export reports'], color: 'border-violet-500/60', highlight: true, startLabel: 'Start Pro Trial' },
+  { id: 'enterprise', name: 'Organisation', price: 'Custom', desc: 'For agencies & teams', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated manager', 'SLA guarantee'], color: 'border-cyan-500/30', startLabel: 'Contact Sales' },
 ];
 
 export default function RegisterPage() {
@@ -19,7 +20,7 @@ export default function RegisterPage() {
   }, [router]);
 
   const [step, setStep]           = useState<'plan' | 'form'>('plan');
-  const [plan, setPlan]           = useState('pro'); // default to Pro since no free tier registration
+  const [plan, setPlan]           = useState('free'); // default to Free
   const [form, setForm]           = useState({ name: '', email: '', password: '', confirm: '' });
   const [showPw, setShowPw]       = useState(false);
   const [usePassword, setUsePassword] = useState(false);
@@ -119,19 +120,30 @@ export default function RegisterPage() {
         {step === 'plan' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-black text-white mb-2">Choose your plan</h2>
-              <p className="text-white/40 text-sm">Start free, upgrade anytime. No credit card for Starter.</p>
+              <h2 className="text-3xl font-black text-white mb-2">Create your account</h2>
+              <p className="text-white/40 text-sm">Free forever · Upgrade to Pro anytime · No credit card required to start</p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4 mb-6">
               {PLANS.map(p => (
                 <motion.button
                   key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   className={`relative glass-card rounded-2xl p-5 text-left transition-all duration-200 border-2 ${
-                    plan === p.id ? (p.highlight ? 'border-violet-500 shadow-lg shadow-violet-500/25' : 'border-violet-400/60') : p.color
+                    plan === p.id
+                      ? p.highlight
+                        ? 'border-violet-500 shadow-lg shadow-violet-500/25'
+                        : p.id === 'free'
+                          ? 'border-emerald-500/70 shadow-lg shadow-emerald-500/15'
+                          : 'border-violet-400/60'
+                      : p.color
                   }`}>
+                  {p.id === 'free' && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-0.5 rounded-full">
+                      START HERE
+                    </div>
+                  )}
                   {p.highlight && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-3 py-0.5 rounded-full">
-                      POPULAR
+                      MOST POPULAR
                     </div>
                   )}
                   <div className="flex items-start justify-between mb-3">
@@ -156,16 +168,11 @@ export default function RegisterPage() {
             </div>
             <motion.button onClick={() => setStep('form')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
               className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30">
-              Continue with {PLANS.find(p2 => p2.id === plan)?.name} →
+              {PLANS.find(p2 => p2.id === plan)?.startLabel ?? 'Continue'} →
             </motion.button>
-            <p className="text-center text-white/30 text-xs mt-4">Cancel Pro anytime. No credit card required to browse free.</p>
-            <div className="mt-3 text-center">
-              <Link href="/opportunities"
-                className="inline-flex items-center gap-1.5 text-sm text-white/30 hover:text-white/55 transition-colors group">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M5 12h14M5 12l6 6M5 12l6-6"/></svg>
-                Browse free without an account
-              </Link>
-            </div>
+            <p className="text-center text-white/30 text-xs mt-4">
+              {plan === 'free' ? 'Free forever — upgrade to Pro anytime.' : 'Cancel Pro anytime. No setup fee.'}
+            </p>
           </motion.div>
         )}
 

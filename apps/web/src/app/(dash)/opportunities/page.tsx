@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/wishlist';
 
@@ -664,10 +664,8 @@ export default function OpportunitiesPage() {
   const [searching,    setSearching]    = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
-  const [isGuest,      setIsGuest]      = useState(false);
-  useEffect(() => {
-    setIsGuest(!localStorage.getItem('bs_access_token'));
-  }, []);
+  const [isFree, setIsFree] = useState(false);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
     queryKey: ['marketplaces', 'active'],
@@ -813,17 +811,17 @@ export default function OpportunitiesPage() {
         </div>
       )}
 
-      {/* Guest Pro upsell strip */}
-      {isGuest && (
+      {/* Free account Pro upsell strip */}
+      {isFree && (
         <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-500/20 bg-violet-500/8">
           <span className="text-violet-400 text-base shrink-0">✦</span>
           <p className="flex-1 text-xs text-violet-200/65 leading-snug">
-            <strong className="text-violet-200/90">Free mode:</strong> browse AI-scored opportunities.{' '}
+            <strong className="text-violet-200/90">Free account:</strong> browse AI-scored opportunities.{' '}
             <strong className="text-violet-200/90">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
           </p>
-          <Link href="/register"
+          <Link href="/register?plan=pro"
             className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
-            Start Pro →
+            Upgrade to Pro →
           </Link>
         </div>
       )}

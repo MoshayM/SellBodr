@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 
 function CopyButton({ text }: { text: string }) {
@@ -30,17 +30,17 @@ function Section({ label, children, copyText }: { label: string; children: React
 }
 
 export default function ListingPage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
-  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isGuest });
+  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isFree });
   const [selected, setSelected] = useState('');
   const opp = (opps as any[]).find(o => o.id === selected) || (opps as any[])[0];
 
   const { data: listing, refetch } = useQuery({
     queryKey: ['listing', opp?.id],
     queryFn: () => api.opportunities.getListing(opp.id),
-    enabled: !!opp?.id && !isGuest,
+    enabled: !!opp?.id && !isFree,
   });
 
   const gen = useMutation({
@@ -48,7 +48,7 @@ export default function ListingPage() {
     onSuccess: () => refetch(),
   });
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="📝"
       feature="AI Listing Generator"

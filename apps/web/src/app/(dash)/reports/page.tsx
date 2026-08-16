@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 
 type Report = { id: string; product: any; marketplace: any; content: any; generatedAt: string };
@@ -45,15 +45,15 @@ function ReportView({ content }: { content: any }) {
 }
 
 export default function ReportsPage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
-  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isGuest });
+  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isFree });
   const [reports, setReports] = useState<Report[]>([]);
   const [generating, setGenerating] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="📊"
       feature="Export & Reports"

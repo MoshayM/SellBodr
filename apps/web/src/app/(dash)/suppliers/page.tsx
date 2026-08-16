@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 
 function minor(v: number) { return (v / 100).toFixed(2); }
@@ -33,16 +33,16 @@ function FeasibilityBadge({ level }: { level: string }) {
 }
 
 export default function SuppliersPage() {
-  const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  const [isFree, setIsFree] = useState(true);
+  useEffect(() => { setIsFree(!isPro()); }, []);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['suppliers'],
     queryFn: () => api.suppliers.list(),
-    enabled: !isGuest,
+    enabled: !isFree,
   });
 
-  if (isGuest) return (
+  if (isFree) return (
     <ProGate
       icon="🏭"
       feature="Supplier Sourcing"

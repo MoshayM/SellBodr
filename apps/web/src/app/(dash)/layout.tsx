@@ -43,8 +43,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [anchor,       setAnchor]       = useState<DOMRect | null>(null);
   const [mounted,      setMounted]      = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string; plan?: string } | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
-  const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
 
   const userMenuRef   = useRef<HTMLDivElement>(null);
@@ -56,7 +54,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
-    if (!token) { setIsGuest(true); return; }
+    if (!token) { router.replace('/register'); return; }
     setUser(getUser());
   }, [router]);
 
@@ -111,7 +109,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   function closeSearch() { setSearchOpen(false); }
 
-  function logout() { clearAuth(); router.push('/opportunities'); }
+  function logout() { clearAuth(); router.push('/login'); }
 
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
@@ -119,7 +117,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const pageName = ALL_PAGES.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
   const isHome   = path === '/opportunities' || path.startsWith('/opportunities/');
 
-  const navPages = ALL_PAGES.filter(p => !p.adminOnly || user?.role === 'admin');
+  const navPages = ALL_PAGES.filter(p => !p.adminOnly || isAdmin());
   const searchResults = searchQuery.trim()
     ? navPages.filter(p =>
         p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -278,14 +276,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             )}
           </Link>
 
-          {/* User avatar + dropdown (authenticated) or Sign in button (guest) */}
-          {isGuest ? (
-            <Link href="/login"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.45)] hover:shadow-[0_0_16px_rgba(124,58,237,0.7)] transition-all duration-200 border border-violet-400/30 touch-manipulation">
-              Sign in
-            </Link>
-          ) : (
-            <div className="relative" ref={userMenuRef}>
+          {/* User avatar + dropdown */}
+          <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs transition-transform duration-150 hover:scale-105 active:scale-95 touch-manipulation"
@@ -336,8 +328,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          )}
+          </div>
 
           {/* Mobile "More" button */}
           <button onClick={() => setMenuOpen(true)}
@@ -382,22 +373,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               </div>
 
               <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
-                {isGuest ? (
-                  <Link href="/login" onClick={() => setMenuOpen(false)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-500 transition-colors shadow-[0_0_12px_rgba(124,58,237,0.4)]">
-                    Sign in to SellBodr →
-                  </Link>
-                ) : (
-                  <>
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-white truncate">{user?.name ?? 'User'}</div>
-                      <div className="text-xs text-white/30 capitalize">{user?.role ?? 'member'} · Pro</div>
-                    </div>
-                  </>
-                )}
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-white truncate">{user?.name ?? 'User'}</div>
+                  <div className="text-xs text-white/30 capitalize">
+                    {user?.plan === 'pro' ? 'Pro' : user?.role === 'admin' ? 'Admin' : 'Free'} account
+                  </div>
+                </div>
               </div>
 
               <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
@@ -425,15 +409,13 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 })}
               </nav>
 
-              {!isGuest && (
-                <div className="px-3 pt-3 border-t border-white/5"
-                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-                  <button onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
-                    <span>↩</span><span>Sign out</span>
-                  </button>
-                </div>
-              )}
+              <div className="px-3 pt-3 border-t border-white/5"
+                style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                <button onClick={logout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
+                  <span>↩</span><span>Sign out</span>
+                </button>
+              </div>
             </motion.div>
           </>
         )}
@@ -445,26 +427,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-dark">
         <div className="min-h-full"
           style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
-          {/* Guest mode banner */}
-          {isGuest && !guestBannerDismissed && (
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 pt-3 sm:pt-4">
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-500/25 bg-amber-500/8 backdrop-blur-sm mb-1">
-                <span className="text-amber-400 text-base shrink-0">✦</span>
-                <p className="flex-1 text-sm text-amber-200/75 leading-snug">
-                  You&apos;re browsing as a guest — no account needed for basic features.{' '}
-                  <Link href="/login" className="text-amber-300 font-semibold hover:text-amber-200 underline underline-offset-2 transition-colors">Sign in</Link>
-                  {' '}or{' '}
-                  <Link href="/register" className="text-amber-300 font-semibold hover:text-amber-200 underline underline-offset-2 transition-colors">start a Pro trial</Link>
-                  {' '}to unlock unlimited AI features, saved opportunities and full reports.
-                </p>
-                <button onClick={() => setGuestBannerDismissed(true)}
-                  className="shrink-0 text-amber-400/50 hover:text-amber-400 transition-colors p-1 rounded-lg hover:bg-amber-500/10"
-                  aria-label="Dismiss">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                </button>
-              </div>
-            </div>
-          )}
 
           <div className="md:pb-6 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8">
             {children}
