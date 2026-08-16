@@ -71,22 +71,35 @@ export function CurrencyWidget() {
     return () => clearInterval(id);
   }, []);
 
+  // Load cached rates from localStorage on mount so the grid is never blank
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('sb_fx_rates');
+      if (cached) {
+        const { rates: r, at } = JSON.parse(cached);
+        setRates(r);
+        setUpdatedAt(new Date(at));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const fetchRates = useCallback(async () => {
     setFetching(true);
     setError(false);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8_000);
     try {
-      const targets = CODES.filter(c => c !== 'USD').join(',');
-      const res = await fetch(
-        `https://api.frankfurter.app/latest?from=USD&to=${targets}`,
-        { cache: 'no-store' },
-      );
-      if (!res.ok) throw new Error('bad response');
+      const res = await fetch('/api/v1/fx-rates', { signal: controller.signal });
+      if (!res.ok) throw new Error('upstream error');
       const data = await res.json();
-      setRates({ USD: 1, ...data.rates });
+      if (data.error) throw new Error('api error');
+      setRates(data);
       setUpdatedAt(new Date());
+      try { localStorage.setItem('sb_fx_rates', JSON.stringify({ rates: data, at: Date.now() })); } catch { /* ignore */ }
     } catch {
       setError(true);
     } finally {
+      clearTimeout(timer);
       setFetching(false);
     }
   }, []);
@@ -264,7 +277,7 @@ export function CurrencyWidget() {
                       </div>
 
                       {/* Rate label */}
-                      <div className="text-[9px] text-white/22 mt-1.5 truncate">{rateLabel(cur.code)}</div>
+                      <div className="text-[9px] text-white/20 mt-1.5 truncate">{rateLabel(cur.code)}</div>
                     </button>
                   ))}
                 </div>
