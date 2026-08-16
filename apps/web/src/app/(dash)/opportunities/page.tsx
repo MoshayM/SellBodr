@@ -1019,7 +1019,8 @@ export default function OpportunitiesPage() {
                     </div>
                   </td></tr>
                 )
-                : displayed.flatMap((opp: any) => {
+                : [
+                    ...(isFree ? displayed.slice(0, 10) : displayed).flatMap((opp: any) => {
                   const mpCode  = opp.marketplace?.code || '';
                   const cc      = countryCode(mpCode);
                   const ts      = trendSource(mpCode);
@@ -1168,12 +1169,77 @@ export default function OpportunitiesPage() {
                     );
                   }
                   return rows;
-                })
-              }
-            </tbody>
+                }),
+                ...(isFree && displayed.length > 10 ? [
+                  <tr key="free-gate">
+                    <td colSpan={7} className="p-0">
+                      <div className="py-12 text-center border-t border-white/5"
+                        style={{ background: 'linear-gradient(to top,rgba(2,8,23,0.98) 0%,rgba(2,8,23,0.55) 100%)' }}>
+                        <div className="text-4xl mb-3">🔒</div>
+                        <p className="text-sm font-semibold text-white mb-1">
+                          {displayed.length - 10} more opportunit{displayed.length - 10 === 1 ? 'y' : 'ies'} on this marketplace
+                        </p>
+                        <p className="text-xs text-white/40 mb-5 leading-snug max-w-xs mx-auto">
+                          Free account shows 10 results per marketplace · Upgrade to Pro for unlimited AI scans &amp; full results
+                        </p>
+                        <Link href="/register?plan=pro"
+                          className="inline-flex items-center gap-1.5 text-sm font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] hover:shadow-[0_0_24px_rgba(124,58,237,0.8)] transition-all">
+                          Unlock All Results — Upgrade to Pro →
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>,
+                ] : []),
+              ]
+            }
+          </tbody>
           </table>
         </div>
       </div>
+
+      {/* ── Bottom bar: result count + Scan for More ── */}
+      {!isLoading && allOpps.length > 0 && (
+        <div className="mt-5 flex flex-col sm:flex-row items-center gap-3 px-1">
+          {/* Count + mini stats */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40">
+            <span>
+              Showing{' '}
+              <span className="font-semibold text-white/70 tabular-nums">
+                {isFree ? Math.min(10, displayed.length) : displayed.length}
+              </span>
+              {isFree && allOpps.length > 10 && (
+                <span className="text-white/30"> of <span className="font-semibold text-white/50 tabular-nums">{allOpps.length}</span></span>
+              )}{' '}
+              opportunit{(isFree ? Math.min(10, displayed.length) : displayed.length) === 1 ? 'y' : 'ies'}
+              {isFree && allOpps.length > 10 && (
+                <span className="text-violet-400/70"> · {allOpps.length - 10} locked</span>
+              )}
+            </span>
+            <div className="flex items-center gap-2.5">
+              {hotCount > 0 && <span>🔥 <span className="font-semibold tabular-nums">{hotCount}</span> hot</span>}
+              {launchCount > 0 && <span>🚀 <span className="font-semibold tabular-nums">{launchCount}</span> launch-ready</span>}
+              {profitableCount > 0 && <span>💰 <span className="font-semibold tabular-nums">{profitableCount}</span> profitable</span>}
+            </div>
+          </div>
+          {/* CTA */}
+          <div className="sm:ml-auto">
+            {isFree ? (
+              <Link href="/register?plan=pro"
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:shadow-[0_0_20px_rgba(124,58,237,0.7)] transition-all">
+                🔒 Upgrade to Pro — Unlock All
+              </Link>
+            ) : (
+              <button onClick={() => runSearch.mutate()} disabled={searching}
+                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 transition-all disabled:opacity-40">
+                {searching
+                  ? <><span className="animate-spin inline-block">⟳</span> Scanning for more…</>
+                  : <>Scan for More <span className="text-base leading-none">↓</span></>}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
