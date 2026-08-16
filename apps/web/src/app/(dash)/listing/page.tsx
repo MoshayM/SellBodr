@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
+import { isPro } from '@/lib/api';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -31,7 +32,7 @@ function Section({ label, children, copyText }: { label: string; children: React
 
 export default function ListingPage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  useEffect(() => { setIsGuest(!isPro()); }, []);
   if (isGuest) return (
     <ProGate
       icon="📝"

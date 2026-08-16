@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { clearAuth, getUser } from '@/lib/api';
+import { clearAuth, getUser, isAdmin } from '@/lib/api';
 import { getWishlistCount } from '@/lib/wishlist';
 import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
@@ -39,7 +39,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [searchQuery,  setSearchQuery]  = useState('');
   const [anchor,       setAnchor]       = useState<DOMRect | null>(null);
   const [mounted,      setMounted]      = useState(false);
-  const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; role?: string; plan?: string } | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -299,8 +299,22 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.55)' }}>
                     <div className="px-3 py-2 border-b border-white/8 mb-1">
                       <div className="text-xs font-semibold text-white/80 truncate">{user?.name ?? 'User'}</div>
-                      <div className="text-[10px] text-white/30 capitalize">{user?.role ?? 'member'} · Pro</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-white/30 capitalize">{user?.role ?? 'member'}</span>
+                        {user?.role === 'admin'
+                          ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/25">Admin</span>
+                          : user?.plan === 'pro'
+                            ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/25">Pro</span>
+                            : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/8 text-white/35 border border-white/10">Free</span>
+                        }
+                      </div>
                     </div>
+                    {isAdmin() && (
+                      <Link href="/admin" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-300/70 hover:text-red-300 hover:bg-red-500/8 rounded-lg transition-colors">
+                        <span>🔐</span><span>Admin Panel</span>
+                      </Link>
+                    )}
                     <Link href="/settings" onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                       <span>⚙️</span><span>Settings</span>

@@ -130,6 +130,11 @@ export const api = {
     loginComplete: (challengeId: string, response: any) =>
       request<any>('/auth/passkey/login/complete', { method: 'POST', body: JSON.stringify({ challengeId, response }) }),
   },
+  admin: {
+    getUsers: () => request<any[]>('/admin/users'),
+    updateUser: (userId: string, changes: { plan?: string; role?: string }) =>
+      request<{ success: boolean }>('/admin/users', { method: 'PATCH', body: JSON.stringify({ userId, ...changes }) }),
+  },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
       request<{ success: boolean }>('/settings/change-password', { method: 'POST', body: JSON.stringify(data) }),
@@ -161,4 +166,17 @@ export function clearAuth() {
   localStorage.removeItem('bs_access_token');
   localStorage.removeItem('bs_refresh_token');
   localStorage.removeItem('bs_user');
+}
+
+export function isPro(): boolean {
+  if (typeof window === 'undefined') return false;
+  const token = localStorage.getItem('bs_access_token');
+  if (!token) return false;
+  const user = getUser();
+  return user?.plan === 'pro' || user?.role === 'admin';
+}
+
+export function isAdmin(): boolean {
+  if (typeof window === 'undefined') return false;
+  return getUser()?.role === 'admin';
 }

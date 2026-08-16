@@ -14,6 +14,7 @@ const TABLES = [
   `CREATE TABLE IF NOT EXISTS "User" (
     id TEXT PRIMARY KEY, organizationId TEXT, email TEXT UNIQUE NOT NULL,
     passwordHash TEXT NOT NULL, name TEXT, role TEXT DEFAULT 'member',
+    plan TEXT DEFAULT 'free',
     mfaEnabled INTEGER DEFAULT 0, lastLoginAt INTEGER, deletedAt INTEGER,
     createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
@@ -183,6 +184,7 @@ const MIGRATIONS = [
   `ALTER TABLE "SourcingCandidate" ADD COLUMN annualTurnover TEXT`,
   `ALTER TABLE "SourcingCandidate" ADD COLUMN verifiedBadge INTEGER DEFAULT 0`,
   `ALTER TABLE "SourcingCandidate" ADD COLUMN description TEXT`,
+  `ALTER TABLE "User" ADD COLUMN plan TEXT DEFAULT 'free'`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {

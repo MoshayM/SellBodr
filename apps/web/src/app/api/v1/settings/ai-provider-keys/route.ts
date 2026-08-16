@@ -65,6 +65,7 @@ async function getUserFromRequest(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const user = await getUserFromRequest(req);
   if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  if (user.role !== 'admin') return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
 
   const db = getDb();
   await ensureTable(db);
@@ -96,6 +97,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const user = await getUserFromRequest(req);
   if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  if (user.role !== 'admin') return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
 
   const db = getDb();
   await ensureTable(db);

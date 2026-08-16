@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
+import { isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getMarketplaceDef, getMarketplaceSearchUrl } from '@/lib/marketplace';
 
@@ -166,7 +167,7 @@ const SELECT_CLS = 'bg-[#0d1225] border border-white/10 hover:border-white/20 te
 
 export default function ResearchPage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  useEffect(() => { setIsGuest(!isPro()); }, []);
   if (isGuest) return (
     <ProGate
       icon="🔬"

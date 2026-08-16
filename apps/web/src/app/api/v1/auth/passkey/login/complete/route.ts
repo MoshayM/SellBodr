@@ -98,9 +98,11 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ message: 'User account not found' }, { status: 404 });
 
     // Issue tokens
+    const userPlan = String(user.plan || 'free');
     const accessToken = await new SignJWT({
       sub: userId,
       role: String(user.role),
+      plan: userPlan,
       organizationId: String(user.organizationId),
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -125,6 +127,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
+        plan: userPlan,
         organizationId: user.organizationId,
       },
     });

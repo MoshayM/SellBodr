@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     if (!valid) return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
 
     // Issue tokens
-    const accessToken = await new SignJWT({ sub: String(user.id), role: String(user.role), organizationId: String(user.organizationId) })
+    const userPlan = String(user.plan || 'free');
+    const accessToken = await new SignJWT({ sub: String(user.id), role: String(user.role), plan: userPlan, organizationId: String(user.organizationId) })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('15m')
       .sign(ACCESS_SECRET);
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       accessToken,
       refreshToken: rawRefresh,
       expiresIn: 900,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role, plan: userPlan, organizationId: user.organizationId },
     });
   } catch (err: any) {
     console.error('Login error:', err);

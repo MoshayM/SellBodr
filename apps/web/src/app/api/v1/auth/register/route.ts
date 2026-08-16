@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     await db.execute({ sql: 'INSERT INTO "User" (id, organizationId, email, passwordHash, name, role, mfaEnabled, createdAt, updatedAt) VALUES (?,?,?,?,?,?,0,?,?)', args: [userId, orgId, email, passwordHash, name, 'owner', now, now] });
     await db.execute({ sql: 'INSERT INTO "AuditLog" (id, organizationId, actorUserId, action, resourceType, resourceId, createdAt) VALUES (?,?,?,?,?,?,?)', args: [uuidv4(), orgId, userId, 'auth.register', 'user', userId, now] });
 
-    const accessToken = await new SignJWT({ sub: userId, role: 'owner', organizationId: orgId })
+    const accessToken = await new SignJWT({ sub: userId, role: 'owner', plan: 'free', organizationId: orgId })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('15m')
       .sign(ACCESS_SECRET);
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       accessToken,
       refreshToken: rawRefresh,
       expiresIn: 900,
-      user: { id: userId, email, name, role: 'owner', organizationId: orgId },
+      user: { id: userId, email, name, role: 'owner', plan: 'free', organizationId: orgId },
     }, { status: 201 });
   } catch (err: any) {
     console.error('Register error:', err);

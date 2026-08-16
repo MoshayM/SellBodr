@@ -82,13 +82,21 @@ function supplierName(title: string, category: string, idx: number): string {
   return `${city} ${keyword} ${SUFFIXES[idx % SUFFIXES.length]}`;
 }
 
-function getUserId(req: NextRequest): string {
+function getTokenPayload(req: NextRequest): { userId: string; role: string; plan: string } {
   try {
     const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-    if (!token) return '';
+    if (!token) return { userId: '', role: '', plan: '' };
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-    return String(payload.sub ?? payload.userId ?? '');
-  } catch { return ''; }
+    return {
+      userId: String(payload.sub ?? payload.userId ?? ''),
+      role:   String(payload.role ?? ''),
+      plan:   String(payload.plan ?? ''),
+    };
+  } catch { return { userId: '', role: '', plan: '' }; }
+}
+
+function getUserId(req: NextRequest): string {
+  return getTokenPayload(req).userId;
 }
 
 // ── AI types ──────────────────────────────────────────────────────────────────
@@ -272,8 +280,28 @@ export async function POST(req: NextRequest) {
     if (hGroq)    guestKeys['groq']    = hGroq;
     if (hMistral) guestKeys['mistral'] = hMistral;
 
+    const { role: userRole, plan: userPlan } = getTokenPayload(req);
+
     const db = getDb();
     await ensureSchema(db);
+
+    // Quota: free authenticated users are limited to 5 searches total
+    const FREE_LIMIT = 5;
+    if (userId && userRole !== 'admin' && userPlan !== 'pro') {
+      const countRes = await db.execute({
+        sql: 'SELECT COUNT(*) as cnt FROM "Search" WHERE userId = ?',
+        args: [userId],
+      });
+      const used = Number((countRes.rows[0] as any)?.cnt ?? 0);
+      if (used >= FREE_LIMIT) {
+        return NextResponse.json({
+          error: `Free plan limit reached (${FREE_LIMIT} searches). Upgrade to Pro for unlimited searches.`,
+          limitReached: true,
+          used,
+          limit: FREE_LIMIT,
+        }, { status: 429 });
+      }
+    }
 
     const searchId = crypto.randomUUID();
     const now      = Date.now();
