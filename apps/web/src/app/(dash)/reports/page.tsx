@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
-import { isPro } from '@/lib/api';
 
 type Report = { id: string; product: any; marketplace: any; content: any; generatedAt: string };
 
@@ -47,7 +46,7 @@ function ReportView({ content }: { content: any }) {
 
 export default function ReportsPage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!isPro()); }, []);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   if (isGuest) return (
     <ProGate
       icon="📊"

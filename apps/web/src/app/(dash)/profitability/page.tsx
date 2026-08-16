@@ -4,12 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
-import { isPro } from '@/lib/api';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 export default function ProfitabilityPage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!isPro()); }, []);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   if (isGuest) return (
     <ProGate
       icon="💰"

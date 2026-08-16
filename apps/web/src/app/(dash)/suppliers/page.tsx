@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
-import { isPro } from '@/lib/api';
 
 function minor(v: number) { return (v / 100).toFixed(2); }
 
@@ -35,7 +34,7 @@ function FeasibilityBadge({ level }: { level: string }) {
 
 export default function SuppliersPage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!isPro()); }, []);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   if (isGuest) return (
     <ProGate
       icon="🏭"

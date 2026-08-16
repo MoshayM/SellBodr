@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
-import { PROVIDERS, tryProvider } from '@/lib/ai/gateway';
+import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
@@ -82,7 +82,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const token = req.headers.get('authorization')?.split(' ')[1];
     if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    await jwtVerify(token, ACCESS_SECRET);
+    const { payload: tokenPayload } = await jwtVerify(token, ACCESS_SECRET);
+    const freeOnly = tokenPayload.role !== 'admin' && tokenPayload.plan !== 'pro';
 
     const db = getDb();
     await ensureSchema(db);
@@ -118,7 +119,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
     }
 
-    const available = PROVIDERS.filter(p => p.available());
+    const available = PROVIDERS.filter(p =>
+      p.available() && (!freeOnly || (FREE_PROVIDER_IDS as readonly string[]).includes(p.id))
+    );
     if (!available.length) {
       return NextResponse.json(staticPlaybook(title, category, mkt, rec));
     }

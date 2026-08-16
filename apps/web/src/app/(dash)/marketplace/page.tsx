@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ProGate } from '@/components/ui/ProGate';
-import { isPro } from '@/lib/api';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
@@ -120,7 +119,7 @@ function minor(v: number, currency = '') {
 // ── Page ──────────────────────────────────────────────────────────
 export default function MarketplacePage() {
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!isPro()); }, []);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   if (isGuest) return (
     <ProGate
       icon="🛒"

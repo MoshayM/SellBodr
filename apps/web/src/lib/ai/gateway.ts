@@ -102,6 +102,9 @@ const callMistral = makeOpenAICompat('https://api.mistral.ai/v1/chat/completions
 
 // ── Provider list (ordered by quality; first = preferred for validation) ──────
 
+/** IDs of providers that have a free/generous tier — safe to use for non-Pro accounts. */
+export const FREE_PROVIDER_IDS = ['groq', 'mistral'] as const;
+
 export const PROVIDERS: Provider[] = [
   {
     id: 'anthropic', name: 'Claude (Anthropic)', quality: 0.95,
@@ -163,15 +166,25 @@ export async function tryProvider<T>(
   }
 }
 
-/** Run all available providers in parallel and return every successful result. */
+/** Run all available providers in parallel and return every successful result.
+ *  Pass `freeOnly: true` to restrict to Groq + Mistral — never charge paid provider credits. */
 export async function callAllProviders<T>(
   messages: ChatMessage[],
-  opts?: CallOpts & { discoveryOnly?: boolean; guestKeys?: Record<string, string> },
+  opts?: CallOpts & { discoveryOnly?: boolean; guestKeys?: Record<string, string>; freeOnly?: boolean },
 ): Promise<Array<{ provider: Provider; result: T }>> {
   const guestKeys = opts?.guestKeys ?? {};
-  const { guestKeys: _gk, ...callOpts } = opts ?? {};
-  const available = PROVIDERS.filter(p => p.available() || !!guestKeys[p.id]);
-  if (available.length === 0) throw new Error('No AI providers configured — set at least GROQ_API_KEY or configure a free key in Settings');
+  const freeOnly  = opts?.freeOnly ?? false;
+  const { guestKeys: _gk, freeOnly: _fo, ...callOpts } = opts ?? {};
+
+  let pool = PROVIDERS;
+  if (freeOnly) pool = pool.filter(p => (FREE_PROVIDER_IDS as readonly string[]).includes(p.id));
+
+  const available = pool.filter(p => p.available() || !!guestKeys[p.id]);
+  if (available.length === 0) throw new Error(
+    freeOnly
+      ? 'No free AI providers available — set GROQ_API_KEY or MISTRAL_API_KEY, or supply a key in Settings'
+      : 'No AI providers configured — set at least GROQ_API_KEY or configure a free key in Settings'
+  );
 
   const results = await Promise.all(
     available.map(p => tryProvider<T>(p, p.discoveryModel, messages, callOpts, guestKeys[p.id]))
@@ -179,30 +192,45 @@ export async function callAllProviders<T>(
   return results.filter((r): r is { provider: Provider; result: T } => r !== null);
 }
 
-/** Call a single provider's validation model — prefers highest quality available, skips discovery providers. */
+/** Call a single provider's validation model — prefers highest quality available, skips discovery providers.
+ *  Pass `freeOnly: true` to restrict to Groq + Mistral only. */
 export async function callBestValidator<T>(
   excludeProviderIds: string[],
   messages: ChatMessage[],
-  opts?: CallOpts & { guestKeys?: Record<string, string> },
+  opts?: CallOpts & { guestKeys?: Record<string, string>; freeOnly?: boolean },
 ): Promise<{ provider: Provider; result: T } | null> {
   const guestKeys = opts?.guestKeys ?? {};
-  const { guestKeys: _gk, ...callOpts } = opts ?? {};
+  const freeOnly  = opts?.freeOnly ?? false;
+  const { guestKeys: _gk, freeOnly: _fo, ...callOpts } = opts ?? {};
+
+  let pool = PROVIDERS;
+  if (freeOnly) pool = pool.filter(p => (FREE_PROVIDER_IDS as readonly string[]).includes(p.id));
 
   const isAvail = (p: Provider) => p.available() || !!guestKeys[p.id];
 
-  const candidates = PROVIDERS
+  const candidates = pool
     .filter(p => isAvail(p) && !excludeProviderIds.includes(p.id))
     .sort((a, b) => b.quality - a.quality);
 
   const validators = candidates.length > 0
     ? candidates
-    : PROVIDERS.filter(p => isAvail(p)).sort((a, b) => b.quality - a.quality).slice(0, 1);
+    : pool.filter(p => isAvail(p)).sort((a, b) => b.quality - a.quality).slice(0, 1);
 
   for (const p of validators) {
     const res = await tryProvider<T>(p, p.validationModel, messages, callOpts, guestKeys[p.id]);
     if (res) return res;
   }
   return null;
+}
+
+/** Return a filtered provider list safe for free/guest calls (Groq + Mistral only). */
+export function getFreeProviders(): Provider[] {
+  return PROVIDERS.filter(p => (FREE_PROVIDER_IDS as readonly string[]).includes(p.id) && p.available());
+}
+
+/** Return all available providers (for Pro/Admin users). */
+export function getAllProviders(): Provider[] {
+  return PROVIDERS.filter(p => p.available());
 }
 
 /** Product title similarity using Jaccard index on word tokens. ≥ 0.4 = same product. */

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { api, isPro } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
 import { ProGate } from '@/components/ui/ProGate';
@@ -212,7 +212,7 @@ export default function OpportunityDetailPage() {
     return TABS.includes(t || '') ? (t as string) : 'Overview';
   });
   const [isGuest, setIsGuest] = useState(false);
-  useEffect(() => { setIsGuest(!isPro()); }, []);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   const [genLoading, setGenLoading] = useState(false);
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
 

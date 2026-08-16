@@ -315,6 +315,9 @@ export async function POST(req: NextRequest) {
       args: [searchId, userId, marketplace, now, now],
     });
 
+    // Pro users can use all AI providers; free/guest are restricted to Groq + Mistral only
+    const freeOnly = userRole !== 'admin' && userPlan !== 'pro';
+
     // ── Stage 1: Parallel multi-provider discovery ────────────────────────────
     const discMsgs = [
       { role: 'system' as const, content: 'Return only valid JSON arrays. No markdown, no explanation.' },
@@ -323,7 +326,7 @@ export async function POST(req: NextRequest) {
 
     let providerResults: Array<{ provider: Provider; result: AiCandidate[] }> = [];
     try {
-      providerResults = await callAllProviders<AiCandidate[]>(discMsgs, { maxTokens: 3000, guestKeys });
+      providerResults = await callAllProviders<AiCandidate[]>(discMsgs, { maxTokens: 3000, guestKeys, freeOnly });
     } catch (err) {
       await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage=?, updatedAt=? WHERE id=?`, args: [String(err).slice(0, 400), Date.now(), searchId] });
       return NextResponse.json({ error: String(err), searchId }, { status: 502 });
@@ -351,7 +354,7 @@ export async function POST(req: NextRequest) {
     const valResult = await callBestValidator<ValidationVerdict[]>(
       providerResults.map(r => r.provider.id),
       valMsgs,
-      { maxTokens: 2000, guestKeys },
+      { maxTokens: 2000, guestKeys, freeOnly },
     );
 
     if (valResult && Array.isArray(valResult.result)) {
