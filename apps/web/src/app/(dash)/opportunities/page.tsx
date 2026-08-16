@@ -198,13 +198,30 @@ function ResearchTab({ opp }: { opp: any }) {
 
 // ── Breakdown panel — tabbed: Research | Suppliers | Profitability ─────────────
 
-function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
+function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isFree: boolean }) {
   const [tab, setTab] = useState<'research' | 'suppliers' | 'profit'>('research');
+  const [extraSuppliers, setExtraSuppliers] = useState<any[]>([]);
+  const [fetchingMore,   setFetchingMore]   = useState(false);
+  const [moreError,      setMoreError]      = useState('');
+  const [showFreeGate,   setShowFreeGate]   = useState(false);
   const pm          = opp.profitModel;
   const sale        = pm?.salePriceMinor ?? 0;
   const suppliers: any[] = opp.suppliers ?? [];
   const confidence  = Math.round(opp.confidence ?? 0);
   const confColor   = confidence >= 80 ? '#10b981' : confidence >= 65 ? '#f59e0b' : '#6b7280';
+  const allSuppliers    = [...suppliers, ...extraSuppliers];
+  const cappedSuppliers = isFree ? allSuppliers.slice(0, 10) : allSuppliers;
+
+  async function searchMoreSuppliers() {
+    setFetchingMore(true); setMoreError('');
+    try {
+      const more = await api.opportunities.getSuppliers(opp.id) as any[];
+      const seen = new Set(allSuppliers.map((s: any) => s.name));
+      setExtraSuppliers(prev => [...prev, ...more.filter((s: any) => !seen.has(s.name))]);
+    } catch (e: any) {
+      setMoreError(e?.message || 'Failed to search for more suppliers');
+    } finally { setFetchingMore(false); }
+  }
 
   const PANEL_TABS = [
     { key: 'research' as const,   label: '📊 Research' },
@@ -447,13 +464,13 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
             <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Global Suppliers <span className="text-emerald-400/70">· India First</span></h4>
             <span className="text-[10px] text-white/25">IndiaMART · TradeIndia · GEM · ExportHub · Udaan · Alibaba · more</span>
           </div>
-          {suppliers.length === 0 ? (
+          {cappedSuppliers.length === 0 ? (
             <div className="text-xs text-white/25 py-6 text-center">
               No supplier data yet — run a new search to populate sourcing candidates
             </div>
           ) : (
             <div className="space-y-2">
-              {suppliers.map((s: any, i: number) => (
+              {cappedSuppliers.map((s: any, i: number) => (
                 <div key={i} className={`rounded-lg border p-3 ${i === 0 ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-white/8 bg-white/[0.02]'}`}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="min-w-0">
@@ -499,6 +516,50 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
               ))}
             </div>
           )}
+          {/* ── Search More Suppliers footer ── */}
+          <div className="mt-4 pt-3 border-t border-white/8 space-y-3">
+            {isFree && allSuppliers.length > 10 && (
+              <p className="text-[10px] text-violet-400/60 text-center">
+                Showing 10 of {allSuppliers.length} suppliers · {allSuppliers.length - 10} locked
+              </p>
+            )}
+            {isFree ? (
+              showFreeGate ? (
+                <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 text-center">
+                  <div className="text-2xl mb-2">🔒</div>
+                  <p className="text-xs font-semibold text-white mb-1">Pro unlocks full supplier search</p>
+                  <p className="text-[11px] text-white/40 mb-3 leading-snug">
+                    Free shows up to 10 suppliers · Pro searches IndiaMART, Alibaba &amp; 8 more sources in real-time
+                  </p>
+                  <Link href="/register?plan=pro" onClick={e => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.4)] transition-all">
+                    Upgrade to Pro →
+                  </Link>
+                </div>
+              ) : (
+                <button onClick={e => { e.stopPropagation(); setShowFreeGate(true); }}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 rounded-xl border border-white/10 text-white/40 hover:border-violet-500/40 hover:text-violet-300 hover:bg-violet-500/8 transition-all">
+                  🔍 Search More Suppliers
+                </button>
+              )
+            ) : (
+              <div className="space-y-2">
+                {moreError && <p className="text-[10px] text-red-400 text-center">{moreError}</p>}
+                <button onClick={e => { e.stopPropagation(); searchMoreSuppliers(); }} disabled={fetchingMore}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 rounded-xl border border-white/10 text-white/50 hover:border-violet-500/40 hover:text-violet-300 hover:bg-violet-500/8 transition-all disabled:opacity-40">
+                  {fetchingMore
+                    ? <><span className="animate-spin inline-block text-sm">⟳</span> Searching suppliers…</>
+                    : <>🔍 Search More Suppliers</>}
+                </button>
+                {extraSuppliers.length > 0 && (
+                  <p className="text-[10px] text-emerald-400/60 text-center">
+                    +{extraSuppliers.length} additional supplier{extraSuppliers.length === 1 ? '' : 's'} found
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="mt-3 flex items-center gap-2 text-[10px] text-white/25">
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
             <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
@@ -1163,7 +1224,7 @@ export default function OpportunitiesPage() {
                     rows.push(
                       <tr key={`${opp.id}-breakdown`} className="border-t-0">
                         <td colSpan={7} className="p-0">
-                          <BreakdownPanel opp={opp} mpCode={mpCode} />
+                          <BreakdownPanel opp={opp} mpCode={mpCode} isFree={isFree} />
                         </td>
                       </tr>
                     );
