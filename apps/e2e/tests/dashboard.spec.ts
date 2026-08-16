@@ -106,8 +106,8 @@ test.describe('Opportunity Dashboard', () => {
     const firstRow = page.locator('tbody tr').first();
     // Product title in first column
     await expect(firstRow.locator('td').first().locator('.font-medium')).toBeVisible();
-    // Research button is always visible
-    await expect(firstRow.locator('button').filter({ hasText: /Research/i })).toBeVisible();
+    // Research button is icon-only — match by title attribute
+    await expect(firstRow.locator('button[title*="research" i], button[title*="Quick research" i]')).toBeVisible();
     // Clicking the row expands the BreakdownPanel which contains "Full Report →" link
     await firstRow.click();
     await expect(page.locator('a').filter({ hasText: /Full Report/i }).first()).toBeVisible({ timeout: 5_000 });

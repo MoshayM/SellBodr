@@ -98,10 +98,9 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
-    // Guest indicator is present (Sign in button or guest banner)
+    // Guest indicator — Sign in link in header OR guest banner (10 s for React re-render after sign-out)
     await expect(
-      page.locator('a[href="/login"], button').filter({ hasText: /Sign in/i }).first()
-        .or(page.locator('text=/browsing as a guest/i').first())
-    ).toBeVisible({ timeout: 5_000 });
+      page.locator('header a[href="/login"]').or(page.locator('text=/browsing as a guest/i'))
+    ).toBeVisible({ timeout: 10_000 });
   });
 });

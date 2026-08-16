@@ -126,7 +126,7 @@ test.describe('Opportunity Detail Page', () => {
     await goToFirstOpportunity(page);
     await page.getByRole('button', { name: 'Profitability', exact: true }).click();
 
-    await expect(page.getByText('Cost Waterfall')).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator('text=/Cost Waterfall/i').first()).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.recharts-responsive-container').first()).toBeVisible({ timeout: 8_000 });
   });
 

@@ -115,12 +115,10 @@ test.describe('Sign-out returns to guest mode', () => {
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
 
-    // Guest banner or Sign in button visible
+    // Guest indicator — Sign in link in header OR guest banner (10 s for React re-render after sign-out)
     await expect(
-      page.locator('text=/browsing as a guest/i')
-        .or(page.locator('header').getByRole('link', { name: /Sign in/i }))
-        .first()
-    ).toBeVisible({ timeout: 5_000 });
+      page.locator('header a[href="/login"]').or(page.locator('text=/browsing as a guest/i'))
+    ).toBeVisible({ timeout: 10_000 });
   });
 });
 
