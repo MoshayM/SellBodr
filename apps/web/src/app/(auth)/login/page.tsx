@@ -220,6 +220,14 @@ export default function LoginPage() {
             </Link>
           </p>
 
+          <div className="mt-3 text-center">
+            <Link href="/opportunities"
+              className="inline-flex items-center gap-1.5 text-sm text-white/30 hover:text-white/55 transition-colors group">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M5 12h14M5 12l6 6M5 12l6-6"/></svg>
+              Continue without account
+            </Link>
+          </div>
+
           <div className="flex items-center justify-center gap-6 mt-6 flex-wrap">
             {['🔒 256-bit SSL', '🛡️ SOC2 ready', '🌍 99.9% uptime'].map(b => (
               <span key={b} className="text-white/20 text-xs">{b}</span>

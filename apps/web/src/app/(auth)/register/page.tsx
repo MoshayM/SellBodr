@@ -6,15 +6,14 @@ import { motion } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 
 const PLANS = [
-  { id: 'starter', name: 'Starter', price: 'Free', desc: '5 AI searches/month', features: ['5 opportunity scores', 'Basic profit calc', 'Email support'], color: 'border-white/10' },
-  { id: 'pro', name: 'Pro', price: '$49/mo', desc: 'Unlimited AI power', features: ['Unlimited searches', 'Supplier sourcing', 'AI listing builder', 'Priority support'], color: 'border-violet-500/60', highlight: true },
-  { id: 'enterprise', name: 'Enterprise', price: 'Custom', desc: 'For agencies', features: ['API access', 'White-label reports', 'Dedicated manager', 'SLA guarantee'], color: 'border-cyan-500/30' },
+  { id: 'pro', name: 'Pro', price: '$49/mo', desc: 'Unlimited AI power', features: ['Unlimited AI searches', 'Supplier sourcing', 'AI listing builder', 'Full 7-dimension scores', 'Priority support'], color: 'border-violet-500/60', highlight: true },
+  { id: 'enterprise', name: 'Organisation', price: 'Custom', desc: 'For agencies & teams', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated manager', 'SLA guarantee'], color: 'border-cyan-500/30' },
 ];
 
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep]           = useState<'plan' | 'form'>('plan');
-  const [plan, setPlan]           = useState('pro');
+  const [plan, setPlan]           = useState('pro'); // default to Pro since no free tier registration
   const [form, setForm]           = useState({ name: '', email: '', password: '', confirm: '' });
   const [showPw, setShowPw]       = useState(false);
   const [usePassword, setUsePassword] = useState(false);
@@ -145,7 +144,14 @@ export default function RegisterPage() {
               className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30">
               Continue with {PLANS.find(p2 => p2.id === plan)?.name} →
             </motion.button>
-            <p className="text-center text-white/30 text-xs mt-4">No credit card required for Starter. Cancel Pro anytime.</p>
+            <p className="text-center text-white/30 text-xs mt-4">Cancel Pro anytime. No credit card required to browse free.</p>
+            <div className="mt-3 text-center">
+              <Link href="/opportunities"
+                className="inline-flex items-center gap-1.5 text-sm text-white/30 hover:text-white/55 transition-colors group">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M5 12h14M5 12l6 6M5 12l6-6"/></svg>
+                Browse free without an account
+              </Link>
+            </div>
           </motion.div>
         )}
 

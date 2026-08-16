@@ -27,9 +27,9 @@ const STEPS = [
 ];
 
 const PLANS = [
-  { name: 'Starter', price: 'Free', period: '', desc: 'For individuals exploring cross-border opportunities', features: ['5 AI searches / month', '10 opportunity scores', 'Basic profit calculator', 'Email support'], cta: 'Get Started Free', highlight: false },
-  { name: 'Pro', price: '$49', period: '/mo', desc: 'For serious sellers scaling globally', features: ['Unlimited AI searches', 'Full 7-dimension scoring', 'Supplier sourcing', 'AI listing generator', 'Priority support', 'Export reports'], cta: 'Start Free Trial', highlight: true },
-  { name: 'Enterprise', price: 'Custom', period: '', desc: 'For agencies and large catalogues', features: ['Everything in Pro', 'API access', 'White-label reports', 'Dedicated account manager', 'Custom integrations', 'SLA guarantee'], cta: 'Contact Sales', highlight: false },
+  { name: 'Free', price: '$0', period: '', desc: 'Browse opportunities with no account needed', features: ['Opportunity dashboard access', 'Basic profit calculator', 'Score previews', 'Wishlist (local)'], cta: 'Browse Free', ctaHref: '/opportunities', highlight: false },
+  { name: 'Pro', price: '$49', period: '/mo', desc: 'Unlimited AI power for serious sellers', features: ['Unlimited AI searches', 'Full 7-dimension scoring', 'Supplier sourcing', 'AI listing generator', 'Priority support', 'Export reports'], cta: 'Start Free Trial', ctaHref: '/register', highlight: true },
+  { name: 'Organisation', price: 'Custom', period: '', desc: 'For agencies and large catalogues', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated account manager', 'SLA guarantee'], cta: 'Contact Sales', ctaHref: 'mailto:sales@sellbodr.com', highlight: false },
 ];
 
 const STATS = [
@@ -160,10 +160,11 @@ export default function LandingPage() {
           <a href="#how" className="hover:text-white transition-colors">How it works</a>
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/70 hover:text-white transition-colors px-4 py-2 hidden sm:block">Sign in</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2 hidden sm:block">Sign in</Link>
+          <Link href="/opportunities" className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Browse Free</Link>
           <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-lg shadow-lg shadow-violet-500/30">
-            Start Free →
+            Start Pro →
           </Link>
         </div>
       </motion.nav>
@@ -215,15 +216,24 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center mb-16"
+            className="flex flex-col sm:flex-row gap-3 justify-center mb-4"
           >
-            <Link href="/register" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
-              Start Free Trial — No card needed
+            <Link href="/opportunities" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
+              Browse Free — No signup needed
             </Link>
-            <Link href="/login" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
-              Sign In →
+            <Link href="/register" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
+              Start Pro Trial →
             </Link>
           </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.85 }}
+            className="text-xs text-white/30 mb-12"
+          >
+            Already have an account?{' '}
+            <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2">Sign in</Link>
+          </motion.p>
 
           {/* Floating opportunity cards */}
           <div className="flex items-end justify-center gap-4 sm:gap-6 flex-wrap">
@@ -356,7 +366,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register"
+                <Link href={p.ctaHref}
                   className={p.highlight ? 'btn-primary text-sm justify-center min-h-0 py-3' : 'btn-secondary text-sm justify-center min-h-0 py-3'}>
                   {p.cta}
                 </Link>
