@@ -2,7 +2,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { api, getUser, getGuestKey, setGuestKey } from '@/lib/api';
+import { api, getUser, isAdmin, getGuestKey, setGuestKey } from '@/lib/api';
 
 type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide';
 
@@ -46,17 +46,22 @@ const COUNTRIES  = [
 ];
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>('ai-keys');
+  const [tab, setTab] = useState<Tab>('marketplaces');
   const [user, setUser] = useState<any>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
-    setUser(getUser());
+    const u = getUser();
+    setUser(u);
     setIsGuest(!localStorage.getItem('bs_access_token'));
+    const admin = isAdmin();
+    setIsUserAdmin(admin);
+    if (admin) setTab('ai-keys');
   }, []);
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: 'ai-keys',      label: 'AI Keys',      icon: '🔑' },
+    ...(isUserAdmin ? [{ key: 'ai-keys' as Tab, label: 'AI Keys', icon: '🔑' }] : []),
     { key: 'marketplaces', label: 'Marketplaces', icon: '🛒' },
     { key: 'security',     label: 'Security',     icon: '🛡️' },
     { key: 'guide',        label: 'Guide',        icon: '📖' },
@@ -66,9 +71,9 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Settings</h1>
-        {isGuest
-          ? <p className="text-sm text-amber-400/70 mt-0.5">Browsing as guest — configure free LLM keys below to enable AI searches</p>
-          : user?.email && <p className="text-sm text-white/40 mt-0.5">{user.email}</p>
+        {user?.email
+          ? <p className="text-sm text-white/40 mt-0.5">{user.email}</p>
+          : isGuest && <p className="text-sm text-white/40 mt-0.5">Browsing as guest</p>
         }
       </div>
 
@@ -86,7 +91,7 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {tab === 'ai-keys'      && (isGuest ? <GuestAiKeysTab /> : <AiProviderKeysTab />)}
+      {tab === 'ai-keys'      && isUserAdmin && <AiProviderKeysTab />}
       {tab === 'marketplaces' && <MarketplacesTab />}
       {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
       {tab === 'guide'        && <UserGuideTab />}

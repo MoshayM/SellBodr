@@ -178,5 +178,6 @@ export function isPro(): boolean {
 
 export function isAdmin(): boolean {
   if (typeof window === 'undefined') return false;
-  return getUser()?.role === 'admin';
+  const user = getUser();
+  return user?.role === 'admin' || user?.email === 'sellbodr@gmail.com';
 }
