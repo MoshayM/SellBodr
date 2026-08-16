@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clearAuth, getUser } from '@/lib/api';
+import { getWishlistCount } from '@/lib/wishlist';
 import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 
@@ -39,6 +40,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [anchor,       setAnchor]       = useState<DOMRect | null>(null);
   const [mounted,      setMounted]      = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   const userMenuRef   = useRef<HTMLDivElement>(null);
   const desktopBtnRef = useRef<HTMLButtonElement>(null);
@@ -54,6 +56,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   }, [router]);
 
   useEffect(() => { setMenuOpen(false); }, [path]);
+
+  /* Sync wishlist count from localStorage + react to add/remove events */
+  useEffect(() => {
+    setWishlistCount(getWishlistCount());
+    const sync = () => setWishlistCount(getWishlistCount());
+    window.addEventListener('bs:wishlist', sync);
+    window.addEventListener('storage', sync);
+    return () => { window.removeEventListener('bs:wishlist', sync); window.removeEventListener('storage', sync); };
+  }, []);
 
   /* Close user menu on outside click */
   useEffect(() => {
@@ -244,6 +255,22 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             aria-label="Search">
             <SIcon />
           </button>
+
+          {/* Wishlist icon with count badge */}
+          <Link href="/wishlist"
+            className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors touch-manipulation ${
+              path === '/wishlist' ? 'bg-amber-500/15 text-amber-400' : 'text-white/35 hover:bg-white/5 hover:text-amber-400'
+            }`}
+            aria-label="Wishlist">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+              <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
+            </svg>
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-black bg-amber-500 text-black leading-none shadow-[0_0_6px_rgba(245,158,11,0.7)]">
+                {wishlistCount > 99 ? '99+' : wishlistCount}
+              </span>
+            )}
+          </Link>
 
           {/* User avatar + dropdown */}
           <div className="relative" ref={userMenuRef}>
