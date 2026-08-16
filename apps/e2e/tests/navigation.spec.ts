@@ -90,11 +90,18 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
-  test('sign out → redirects to /login and clears localStorage tokens', async ({ page }) => {
+  test('sign out → returns to /opportunities as guest and clears localStorage tokens', async ({ page }) => {
     await page.getByRole('button', { name: 'User menu' }).click();
     await page.getByText('Sign out').click();
-    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible({ timeout: 30_000 });
+    // Sign-out now returns to /opportunities (guest mode), not /login
+    await page.waitForURL('**/opportunities', { timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
+    // Guest indicator is present (Sign in button or guest banner)
+    await expect(
+      page.locator('a[href="/login"], button').filter({ hasText: /Sign in/i }).first()
+        .or(page.locator('text=/browsing as a guest/i').first())
+    ).toBeVisible({ timeout: 5_000 });
   });
 });

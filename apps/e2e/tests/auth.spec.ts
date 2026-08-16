@@ -113,15 +113,23 @@ test.describe('Authentication', () => {
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
   });
 
-  test('accessing /opportunities without auth → redirects to /login', async ({ page }) => {
+  test('accessing /opportunities without auth → loads as guest (no redirect)', async ({ page }) => {
     await page.goto('/opportunities');
-    await page.waitForURL('**/login', { timeout: 10_000 });
-    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    // Guests are welcome on the dashboard — no redirect to /login
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible({ timeout: 15_000 });
+    expect(page.url()).toMatch(/\/opportunities/);
+    // Guest banner or Sign in button present
+    await expect(
+      page.locator('text=/browsing as a guest/i').or(page.locator('a[href="/login"], button').filter({ hasText: /Sign in/i })).first()
+    ).toBeVisible({ timeout: 5_000 });
   });
 
-  test('accessing /research without auth → redirects to /login', async ({ page }) => {
+  test('accessing /research without auth → loads as guest with ProGate', async ({ page }) => {
     await page.goto('/research');
-    await page.waitForURL('**/login', { timeout: 10_000 });
+    // Should stay on /research — no redirect, but shows ProGate for guest
+    await page.waitForURL(/\/research/, { timeout: 10_000 });
+    // Either the page loaded with content or a ProGate is shown
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('passkey button shows loading state on click', async ({ page }) => {
@@ -201,9 +209,12 @@ test.describe('Authentication', () => {
     // Sign out — open user avatar menu then click Sign out
     await page.getByRole('button', { name: 'User menu' }).click();
     await page.getByText('Sign out').click();
-    await page.waitForURL('**/login', { timeout: 10_000 });
+    // Sign-out now returns to /opportunities as guest (not /login)
+    await page.waitForURL('**/opportunities', { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
 
-    // Login with same creds using password button specifically
+    // Navigate to login to sign back in
+    await page.goto('/login');
     await page.getByPlaceholder('you@example.com').fill(email);
     await page.getByPlaceholder('••••••••').fill(password);
     await page.getByRole('button', { name: /Sign in with Password/i }).click();
