@@ -619,6 +619,86 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
 
 const SEL = 'bg-white/5 border border-white/10 hover:border-white/20 text-xs text-white/60 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 [&>option]:bg-[#0d1225] cursor-pointer transition-colors min-h-[34px]';
 
+// ── Scan progress panel ───────────────────────────────────────────────────────
+
+const SCAN_STAGES = [
+  { icon: '🔍', label: 'Discovering products',  detail: 'Scanning marketplace listings & search trends',  ms: 2000 },
+  { icon: '📈', label: 'Demand signals',         detail: 'Processing search volume & buyer intent',        ms: 2500 },
+  { icon: '⚔️', label: 'Competition map',       detail: 'Counting sellers, reviews & market share',       ms: 2000 },
+  { icon: '🏭', label: 'India suppliers',        detail: 'IndiaMART · TradeIndia · GEM · Alibaba',         ms: 3000 },
+  { icon: '💰', label: 'Profit model',           detail: 'Landed cost + marketplace fees + ad spend',      ms: 2500 },
+  { icon: '🤖', label: 'AI scoring',             detail: 'Running 7-dimension opportunity score (0→100)',  ms: 2000 },
+  { icon: '✨', label: 'AI verdicts',            detail: 'Launch / Hold / Reject with confidence %',       ms: 2000 },
+];
+
+function ScanProgress({ searching }: { searching: boolean }) {
+  const [activeStep, setActiveStep] = useState(0);
+
+  useEffect(() => {
+    if (!searching) { setActiveStep(0); return; }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cum = 0;
+    for (let i = 1; i < SCAN_STAGES.length - 1; i++) {
+      cum += SCAN_STAGES[i - 1].ms;
+      const idx = i;
+      timers.push(setTimeout(() => setActiveStep(idx), cum));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [searching]);
+
+  if (!searching) return null;
+
+  const pct = Math.min(88, Math.round((activeStep / (SCAN_STAGES.length - 1)) * 100));
+  const stage = SCAN_STAGES[activeStep];
+
+  return (
+    <div className="mb-5 rounded-xl border border-violet-500/25 overflow-hidden"
+      style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.08) 0%,rgba(15,23,42,0.85) 100%)' }}>
+      {/* Progress bar */}
+      <div className="h-[3px] bg-white/5">
+        <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-[900ms] ease-out"
+          style={{ width: `${pct}%` }} />
+      </div>
+
+      <div className="p-4 sm:p-5">
+        {/* Current step */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center shrink-0 text-base">
+            <span className="animate-pulse">{stage?.icon}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-white leading-snug">{stage?.label}…</div>
+            <div className="text-[11px] text-white/40 mt-0.5 leading-snug">{stage?.detail}</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs text-white/30 tabular-nums">{pct}%</span>
+            <span className="text-sm text-violet-400 animate-spin inline-block">⟳</span>
+          </div>
+        </div>
+
+        {/* Step pills */}
+        <div className="flex flex-wrap gap-1.5">
+          {SCAN_STAGES.map((s, i) => {
+            const done   = i < activeStep;
+            const active = i === activeStep;
+            return (
+              <div key={i}
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium border transition-all duration-500 ${
+                  done   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400/80' :
+                  active ? 'bg-violet-500/15 border-violet-500/35 text-violet-300' :
+                           'bg-white/5 border-white/8 text-white/20'
+                }`}>
+                <span>{done ? '✓' : s.icon}</span>
+                <span className="hidden sm:inline">{s.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
@@ -725,7 +805,7 @@ export default function OpportunitiesPage() {
 
   const runSearch = useMutation({
     mutationFn: () => {
-      setSearchError(''); setSearching(true); setSearchStatus('AI analysing market…');
+      setSearchError(''); setSearching(true); setSearchStatus('');
       return api.searches.create({ marketplace: mpFilter });
     },
     onSuccess: (data: any) => {
@@ -773,9 +853,9 @@ export default function OpportunitiesPage() {
           <button onClick={() => runSearch.mutate()} disabled={searching}
             className="btn-primary text-sm disabled:opacity-60 shrink-0">
             {searching
-              ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
+              ? <><span className="animate-spin inline-block mr-1">⟳</span>Scanning…</>
               : searchStatus
-              ? <><span className="mr-1">✓</span>{searchStatus}</>
+              ? <>{searchStatus}</>
               : <><span className="text-base mr-1">＋</span>New Scan</>}
           </button>
         </div>
@@ -802,6 +882,9 @@ export default function OpportunitiesPage() {
           </div>
         )}
       </div>
+
+      {/* ── AI scan progress ─────────────────────── */}
+      <ScanProgress searching={searching} />
 
       {searchError && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
