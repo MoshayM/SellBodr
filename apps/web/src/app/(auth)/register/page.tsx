@@ -1,5 +1,5 @@
 ﻿'use client';
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -12,6 +12,12 @@ const PLANS = [
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  // Already logged in → skip register page
+  useEffect(() => {
+    if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
+  }, [router]);
+
   const [step, setStep]           = useState<'plan' | 'form'>('plan');
   const [plan, setPlan]           = useState('pro'); // default to Pro since no free tier registration
   const [form, setForm]           = useState({ name: '', email: '', password: '', confirm: '' });

@@ -46,13 +46,13 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   });
 
   if (res.status === 401) {
-    // Only hard-redirect if there WAS a token (expired session), not for deliberate guests
+    // Expired session — clear token and reload as guest (no automatic redirect to login)
+    // Login page only opens when the user explicitly clicks "Sign in"
     if (typeof window !== 'undefined' && localStorage.getItem('bs_access_token')) {
       localStorage.removeItem('bs_access_token');
-      const p = window.location.pathname;
-      if (!p.includes('/login') && !p.includes('/register')) {
-        window.location.href = '/login';
-      }
+      localStorage.removeItem('bs_refresh_token');
+      localStorage.removeItem('bs_user');
+      window.location.reload();
     }
     throw new Error('Unauthorized');
   }

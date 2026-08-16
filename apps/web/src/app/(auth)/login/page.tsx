@@ -23,6 +23,11 @@ export default function LoginPage() {
   const [isIOS, setIsIOS]           = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
+  // Already logged in → skip login page
+  useEffect(() => {
+    if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
+  }, [router]);
+
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches) { setIsInstalled(true); return; }
     const ua = navigator.userAgent;
