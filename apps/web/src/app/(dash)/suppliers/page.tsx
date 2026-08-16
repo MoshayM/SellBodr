@@ -1,7 +1,9 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 
 function minor(v: number) { return (v / 100).toFixed(2); }
 
@@ -31,6 +33,22 @@ function FeasibilityBadge({ level }: { level: string }) {
 }
 
 export default function SuppliersPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="🏭"
+      feature="Supplier Sourcing"
+      tagline="Discover 10+ vetted India-first suppliers per product — with MOQ, lead times, feasibility ratings, and cost comparisons against global alternatives. Source smarter, not harder."
+      benefits={[
+        'IndiaMART, TradeIndia, GEM Portal, ExportHub & Udaan',
+        'MOQ, lead time & feasibility rating per supplier',
+        'Gross margin room calculator per source',
+        'Global benchmarks: Alibaba, DHgate, Made-in-China',
+      ]}
+    />
+  );
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['suppliers'],
     queryFn: () => api.suppliers.list(),

@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { ProGate } from '@/components/ui/ProGate';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
@@ -117,6 +118,22 @@ function minor(v: number, currency = '') {
 
 // ── Page ──────────────────────────────────────────────────────────
 export default function MarketplacePage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="🛒"
+      feature="Marketplace Intelligence"
+      tagline="Compare 76+ global marketplaces across fees, competition, demand, and shipping costs — so you always pick the platform where your product wins."
+      benefits={[
+        'Fee structures for 76+ marketplaces',
+        'Competition density & saturation scores',
+        'Country-level demand signals & trends',
+        'Currency, shipping & duty cost estimates',
+      ]}
+    />
+  );
+
   const [selected, setSelected] = useState<string | null>(null);
   const [regionFilter, setRegionFilter] = useState<string>('All');
 

@@ -1,7 +1,8 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 
 type Report = { id: string; product: any; marketplace: any; content: any; generatedAt: string };
 
@@ -44,6 +45,22 @@ function ReportView({ content }: { content: any }) {
 }
 
 export default function ReportsPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="📊"
+      feature="Export & Reports"
+      tagline="Download full opportunity reports as PDF or JSON — complete with supplier contacts, compliance notes, profit model, and trade data. Share-ready for teams and investors."
+      benefits={[
+        'PDF & JSON export for every opportunity',
+        'Supplier contacts + compliance notes',
+        'Profit model + trade lane cost data',
+        'Share-ready format for teams & investors',
+      ]}
+    />
+  );
+
   const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
   const [reports, setReports] = useState<Report[]>([]);
   const [generating, setGenerating] = useState('');

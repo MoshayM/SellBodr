@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
+import { ProGate } from '@/components/ui/ProGate';
 
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
 
@@ -210,6 +211,8 @@ export default function OpportunityDetailPage() {
     const t = searchParams.get('tab');
     return TABS.includes(t || '') ? (t as string) : 'Overview';
   });
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
   const [genLoading, setGenLoading] = useState(false);
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
 
@@ -500,8 +503,24 @@ export default function OpportunityDetailPage() {
         );
       })()}
 
+      {/* ── Pro gate for restricted tabs ── */}
+      {isGuest && ['Suppliers','Profitability','Competition','Listing','Ads','Growth','Recommendation','Report'].includes(tab) && (() => {
+        const gates: Record<string, { icon: string; feature: string; tagline: string; benefits: string[] }> = {
+          Suppliers:      { icon: '🏭', feature: 'Supplier Sourcing',      tagline: 'View 10+ vetted India-first suppliers with MOQ, lead times, feasibility ratings, and cost vs global benchmarks.', benefits: ['IndiaMART, TradeIndia, GEM Portal, ExportHub & Udaan', 'MOQ, lead time & feasibility rating per supplier', 'Gross margin room calculator per source', 'Global benchmarks: Alibaba, DHgate, Made-in-China'] },
+          Profitability:  { icon: '💰', feature: 'Full Profit Model',      tagline: 'Complete landed-cost P&L — India factory gate to marketplace fulfilled. Know exact net profit before ordering.', benefits: ['Source cost + freight + duties + all fees', 'Net margin %, ROI %, break-even units', 'Monthly & annual projections', 'Diverging cost waterfall chart'] },
+          Competition:    { icon: '⚔️', feature: 'Competition Analysis',   tagline: 'Full competitor teardown — pricing, review velocity, BSR trends, and saturation score for this exact marketplace.', benefits: ['Top-10 competitor ASIN breakdown', 'Price gap & review velocity', 'BSR trend (90-day chart)', 'Saturation & entry difficulty score'] },
+          Listing:        { icon: '📝', feature: 'AI Listing Generator',   tagline: 'SEO-optimised title, bullets, description, and backend keywords tailored to this marketplace\'s ranking algorithm.', benefits: ['Platform-optimised product title', '5 keyword-rich bullet points', 'Long-form description with trust signals', 'Backend keyword set for search visibility'] },
+          Ads:            { icon: '📣', feature: 'Ad Campaign Generator',  tagline: 'AI-crafted ad copy for Facebook, Instagram, YouTube & Google — audience targeting and daily budget included.', benefits: ['Facebook & Instagram copy + audience', 'YouTube script hook + CTA', 'Google Shopping title & description', 'Suggested daily budget per platform'] },
+          Growth:         { icon: '📈', feature: 'Growth Playbook',        tagline: 'A 90-day launch roadmap with influencer brief, viral hook ideas, A/B test calendar, and review acceleration strategy.', benefits: ['90-day phased launch calendar', 'Influencer brief (nano/micro)', 'Viral hook ideas + UGC prompts', 'A/B test + review acceleration plan'] },
+          Recommendation: { icon: '🤖', feature: 'AI Recommendation',     tagline: 'Launch / Hold / Reject verdict with confidence score, risk rank, and full AI reasoning chain for this opportunity.', benefits: ['Launch / Hold / Reject with confidence %', 'Risk-ranked score vs your portfolio', 'Full AI reasoning chain', '7-dimension score breakdown + evidence'] },
+          Report:         { icon: '📊', feature: 'Export & Reports',       tagline: 'Download a complete opportunity report — supplier contacts, profit model, compliance notes, and trade data.', benefits: ['PDF & JSON export', 'Supplier contacts + compliance notes', 'Profit model + trade lane cost data', 'Share-ready format for teams & investors'] },
+        };
+        const g = gates[tab];
+        return <ProGate icon={g.icon} feature={g.feature} tagline={g.tagline} benefits={g.benefits} compact />;
+      })()}
+
       {/* ── Suppliers ── */}
-      {tab === 'Suppliers' && (
+      {!isGuest && tab === 'Suppliers' && (
         <div className="space-y-3">
           {/* Global supplier map */}
           {opp.sourcingCandidates?.some((sc: any) => sc.latitude && sc.longitude) && (
@@ -644,7 +663,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Profitability ── */}
-      {tab === 'Profitability' && (() => {
+      {!isGuest && tab === 'Profitability' && (() => {
         const pm = profit;
         if (!pm) return <div className="card-dark p-8 text-center text-white/35">No profitability data for this opportunity</div>;
         const mpCodeStr = opp.marketplace?.code || '';
@@ -815,7 +834,7 @@ export default function OpportunityDetailPage() {
       })()}
 
       {/* ── Competition ── */}
-      {tab === 'Competition' && (
+      {!isGuest && tab === 'Competition' && (
         <div className="card-dark p-4 sm:p-6 space-y-4">
           <h2 className="font-semibold text-white">Competition Analysis</h2>
           <div className="grid grid-cols-2 gap-3">
@@ -837,7 +856,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Listing ── */}
-      {tab === 'Listing' && (
+      {!isGuest && tab === 'Listing' && (
         <div className="space-y-4">
           {listing ? (
             <>
@@ -896,7 +915,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Ads ── */}
-      {tab === 'Ads' && (
+      {!isGuest && tab === 'Ads' && (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1083,7 +1102,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Growth ── */}
-      {tab === 'Growth' && (
+      {!isGuest && tab === 'Growth' && (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1273,7 +1292,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Recommendation ── */}
-      {tab === 'Recommendation' && (
+      {!isGuest && tab === 'Recommendation' && (
         <div className="card-dark p-4 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6">
             <ScoreGauge score={score.opportunity || 0} size="lg" label="Opportunity Score" />
@@ -1309,7 +1328,7 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Report ── */}
-      {tab === 'Report' && (
+      {!isGuest && tab === 'Report' && (
         <div className="card-dark p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-white">Opportunity Report</h2>

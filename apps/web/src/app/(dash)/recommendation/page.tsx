@@ -1,7 +1,9 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 
 function ScoreBar({ label, value }: { label: string; value: number }) {
@@ -65,6 +67,22 @@ const SECTIONS = [
 ];
 
 export default function RecommendationPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="🤖"
+      feature="AI Recommendations"
+      tagline="Get personalised Launch / Hold / Reject verdicts for every opportunity — ranked by risk-adjusted profit potential with full AI reasoning and confidence scores."
+      benefits={[
+        'Launch / Hold / Reject with confidence %',
+        'Risk-ranked shortlist sorted by net margin',
+        'Full AI reasoning chain per verdict',
+        '7-dimension score breakdown + evidence',
+      ]}
+    />
+  );
+
   const { data: opps = [], isLoading } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
   const grouped = SECTIONS.map(s => ({ ...s, opps: (opps as any[]).filter(o => o.recommendation === s.key) }));
   const total = (opps as any[]).length;

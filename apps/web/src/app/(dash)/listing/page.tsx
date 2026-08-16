@@ -1,7 +1,8 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -29,6 +30,22 @@ function Section({ label, children, copyText }: { label: string; children: React
 }
 
 export default function ListingPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="📝"
+      feature="AI Listing Generator"
+      tagline="Generate SEO-optimised marketplace listings in seconds — title, bullets, long-form description, and backend keywords tailored to each platform's ranking algorithm."
+      benefits={[
+        'Platform-optimised product title (80 chars)',
+        '5 keyword-rich bullet points per product',
+        'Long-form description with trust signals',
+        'Backend keyword set for search visibility',
+      ]}
+    />
+  );
+
   const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
   const [selected, setSelected] = useState('');
   const opp = (opps as any[]).find(o => o.id === selected) || (opps as any[])[0];

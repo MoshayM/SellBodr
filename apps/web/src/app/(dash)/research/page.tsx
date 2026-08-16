@@ -1,8 +1,9 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getMarketplaceDef, getMarketplaceSearchUrl } from '@/lib/marketplace';
 
@@ -164,6 +165,22 @@ const SELECT_CLS = 'bg-[#0d1225] border border-white/10 hover:border-white/20 te
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ResearchPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="🔬"
+      feature="Deep Market Research"
+      tagline="Full 7-dimension AI analysis per opportunity — demand signals, competition mapping, saturation heatmaps, trend breakdowns, and AI evidence with source citations."
+      benefits={[
+        'Full 7-dimension score breakdown with evidence',
+        'Competition density & saturation heatmap',
+        'Trend source: search, social, curated signals',
+        'Multi-model AI consensus confidence scores',
+      ]}
+    />
+  );
+
   const { data: opps = [], isLoading } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => api.opportunities.list({}),

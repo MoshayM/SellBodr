@@ -1,11 +1,28 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { ProGate } from '@/components/ui/ProGate';
 import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 export default function ProfitabilityPage() {
+  const [isGuest, setIsGuest] = useState(false);
+  useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+  if (isGuest) return (
+    <ProGate
+      icon="💰"
+      feature="Full Profit Model"
+      tagline="Complete landed-cost P&L for every opportunity — India factory gate to marketplace fulfilled. Know your exact net profit, break-even units, and monthly projections before ordering."
+      benefits={[
+        'Source cost + freight + duties + all fees',
+        'Net margin %, ROI %, break-even units',
+        'Monthly & annual projections (50 units)',
+        'Diverging cost waterfall chart per product',
+      ]}
+    />
+  );
+
   const { data: opps = [] } = useQuery({
     queryKey: ['opportunities'],
     queryFn: () => api.opportunities.list({}),
