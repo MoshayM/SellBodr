@@ -883,8 +883,8 @@ export default function OpportunitiesPage() {
         )}
       </div>
 
-      {/* ── AI scan progress ─────────────────────── */}
-      <ScanProgress searching={searching} />
+      {/* ── AI scan progress (first scan only — no results yet) ── */}
+      {allOpps.length === 0 && <ScanProgress searching={searching} />}
 
       {searchError && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
@@ -1199,7 +1199,8 @@ export default function OpportunitiesPage() {
 
       {/* ── Bottom bar: result count + Scan for More ── */}
       {!isLoading && allOpps.length > 0 && (
-        <div className="mt-5 flex flex-col sm:flex-row items-center gap-3 px-1">
+        <div className="mt-5 px-1 space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Count + mini stats */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40">
             <span>
@@ -1237,6 +1238,9 @@ export default function OpportunitiesPage() {
               </button>
             )}
           </div>
+        </div>
+        {/* Inline scan progress — appears right below the Scan for More button */}
+        <ScanProgress searching={searching} />
         </div>
       )}
 
