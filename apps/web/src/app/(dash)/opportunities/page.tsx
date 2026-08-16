@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
+import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/wishlist';
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -651,6 +652,15 @@ export default function OpportunitiesPage() {
   // Expand state
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Wishlist state (localStorage-backed)
+  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  useEffect(() => { setWishlist(new Set(getWishlist())); }, []);
+  function toggleWishlist(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    if (wishlist.has(id)) { removeFromWishlist(id); setWishlist(prev => { const s = new Set(prev); s.delete(id); return s; }); }
+    else { addToWishlist(id); setWishlist(prev => new Set([...prev, id])); }
+  }
+
   const [searching,    setSearching]    = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
@@ -1000,7 +1010,7 @@ export default function OpportunitiesPage() {
                           : <span className="text-white/25">&mdash;</span>}
                       </td>
 
-                      {/* Research / expand button */}
+                      {/* Research / expand button + wishlist bookmark */}
                       <td className="px-3 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
@@ -1017,6 +1027,19 @@ export default function OpportunitiesPage() {
                                 : 'bg-white/5 text-white/50 border-white/10 hover:bg-violet-500/12 hover:text-violet-300 hover:border-violet-500/25 hover:shadow-[0_2px_8px_rgba(124,58,237,0.18)]'
                             }`}>
                             {isOpen ? '✕ Close' : '📊 Research'}
+                          </button>
+                          {/* Bookmark / save to wishlist */}
+                          <button
+                            onClick={e => toggleWishlist(e, opp.id)}
+                            title={wishlist.has(opp.id) ? 'Remove from wishlist' : 'Save to wishlist'}
+                            className={`p-1.5 rounded-lg border transition-all duration-200 ${
+                              wishlist.has(opp.id)
+                                ? 'bg-amber-500/15 border-amber-500/35 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
+                                : 'bg-white/5 border-white/10 text-white/25 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/25'
+                            }`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                              <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
+                            </svg>
                           </button>
                         </div>
                       </td>

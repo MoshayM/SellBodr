@@ -17,7 +17,8 @@ const ALL_PAGES = [
   { href: '/listing',        label: 'AI Listing',      icon: '📝', desc: 'Generate SEO-optimised listings', badge: 'NEW' },
   { href: '/recommendation', label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
   { href: '/reports',        label: 'Reports',         icon: '📊', desc: 'Export and analyse your data' },
-  { href: '/settings',       label: 'Settings',        icon: '⚙️', desc: 'Account & preferences' },
+  { href: '/wishlist',        label: 'Wishlist',         icon: '🌟', desc: 'Saved & bookmarked opportunities' },
+  { href: '/settings',       label: 'Settings',         icon: '⚙️', desc: 'Account & preferences' },
 ];
 
 function SIcon() {
@@ -414,6 +415,18 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             </span>
             <span className="text-[10px] font-medium leading-none">Search</span>
           </button>
+
+          <Link href="/wishlist"
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
+              path === '/wishlist' ? 'text-amber-300' : 'text-white/30 active:text-white/60'
+            }`}>
+            {path === '/wishlist' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
+                style={{ boxShadow: '0 0 8px rgba(245,158,11,0.6)' }} />
+            )}
+            <span className={`text-[22px] leading-none transition-transform duration-200 ${path === '/wishlist' ? 'scale-110' : ''}`}>🌟</span>
+            <span className={`text-[10px] font-semibold leading-none ${path === '/wishlist' ? 'text-amber-300' : ''}`}>Wishlist</span>
+          </Link>
 
           <button
             onClick={() => setMenuOpen(true)}
