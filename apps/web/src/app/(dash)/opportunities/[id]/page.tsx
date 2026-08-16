@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -141,8 +141,11 @@ function getExtraDocs(category: string): string[] {
 }
 
 
-// Leaflet map rendered inside an iframe srcDoc — no package install needed, no SSR issues
+// Leaflet map — maximize/minimize, satellite/street toggle, precise popups
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   const pins = candidates
     .filter((sc: any) => sc.latitude && sc.longitude)
     .map((sc: any) => ({
@@ -152,43 +155,125 @@ function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
       country: sc.country || 'India',
       source: (sc.supplier?.source || sc.source || '').replace(/-/g, ' '),
       isIndia: (sc.country || 'India') === 'India',
-      costRaw: sc.productCostMinor || 0,
     }));
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      iframeRef.current?.contentWindow?.postMessage({ type: 'resize' }, '*');
+    }, 80);
+    return () => clearTimeout(t);
+  }, [expanded]);
 
   if (pins.length === 0) return null;
 
+  const initCenter = pins.length === 1 ? [pins[0].lat, pins[0].lon] : [22, 82];
+  const initZoom   = pins.length === 1 ? 12 : 2;
+
   const html = `<!DOCTYPE html><html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-<style>body{margin:0;padding:0;font-family:sans-serif}#map{height:100vh;width:100%}</style>
-</head><body><div id="map"></div><script>
-const map=L.map('map',{zoomControl:true,attributionControl:false}).setView([25,95],2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-const pins=${JSON.stringify(pins)};
+<style>
+*{box-sizing:border-box}body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+#map{height:100vh;width:100vw}
+.ctrl{position:absolute;top:10px;left:50px;z-index:1000}
+.cbtn{background:rgba(8,12,32,0.9);color:#e2e8f0;border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:5px;letter-spacing:.3px;transition:all .15s}
+.cbtn:hover{background:rgba(124,58,237,0.45);border-color:rgba(124,58,237,0.7);color:#ddd6fe}
+.cbtn.sat{background:rgba(14,165,233,0.25);border-color:rgba(14,165,233,0.6);color:#7dd3fc}
+.leaflet-popup-content-wrapper{background:#0d1526!important;border:1px solid rgba(255,255,255,0.13)!important;border-radius:12px!important;box-shadow:0 12px 40px rgba(0,0,0,.65)!important;color:#e2e8f0!important;padding:0!important}
+.leaflet-popup-tip-container{display:none}
+.leaflet-popup-content{margin:0!important;padding:0!important}
+.pop{padding:12px 14px;min-width:195px}
+.pop-title{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:5px}
+.pop-label{font-size:10px;font-weight:700;letter-spacing:.4px}
+.pop-loc{color:#94a3b8;font-size:11px;margin-top:3px}
+.pop-src{color:#64748b;font-size:10px;margin-top:1px}
+.pop-coords{color:#475569;font-size:9.5px;margin-top:3px;font-family:monospace;letter-spacing:.2px}
+.pop-links{display:flex;gap:5px;margin-top:8px}
+.pop-link{font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:opacity .15s;white-space:nowrap}
+.pop-link:hover{opacity:.8}
+<\/style>
+</head><body>
+<div class="ctrl">
+  <button class="cbtn" id="lb" onclick="tl()">🛰 Satellite</button>
+</div>
+<div id="map"></div>
+<script>
+var st=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19});
+var sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+var lb=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19});
+var cur='street';
+var map=L.map('map',{zoomControl:true,attributionControl:false}).setView(${JSON.stringify(initCenter)},${initZoom});
+st.addTo(map);
+function tl(){
+  if(cur==='street'){
+    map.removeLayer(st);sa.addTo(map);lb.addTo(map);
+    cur='sat';document.getElementById('lb').textContent='🗺 Street';document.getElementById('lb').classList.add('sat');
+  }else{
+    map.removeLayer(sa);map.removeLayer(lb);st.addTo(map);
+    cur='street';document.getElementById('lb').textContent='🛰 Satellite';document.getElementById('lb').classList.remove('sat');
+  }
+}
+window.addEventListener('message',function(e){
+  if(e.data&&e.data.type==='resize'){setTimeout(function(){map.invalidateSize();},100);}
+});
+var pins=${JSON.stringify(pins)};
 pins.forEach(function(p,i){
-  const color=p.isIndia?'#10b981':'#6366f1';
-  const icon=L.divIcon({
-    html:'<div style="background:'+color+';color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)">'+(i+1)+'<\/div>',
-    iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-15],className:''
+  var c=p.isIndia?'#10b981':'#6366f1';
+  var ic=L.divIcon({
+    html:'<div style="background:'+c+';color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2.5px solid rgba(255,255,255,0.9);box-shadow:0 3px 14px rgba(0,0,0,.4),0 0 0 5px '+c+'28">'+(i+1)+'<\/div>',
+    iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19],className:''
   });
-  const label=p.isIndia?'<span style="color:#10b981;font-weight:700">India Priority<\/span>':'<span style="color:#6366f1">Global Alternative<\/span>';
-  L.marker([p.lat,p.lon],{icon}).addTo(map).bindPopup(
-    '<b>'+p.name+'<\/b><br>'+label+'<br>'+p.city+(p.city?', ':'')+p.country+'<br><small>via '+p.source+'<\/small>'
-  );
+  var lbl=p.isIndia
+    ?'<span class="pop-label" style="color:#10b981">● INDIA PRIORITY<\/span>'
+    :'<span class="pop-label" style="color:#6366f1">● GLOBAL SUPPLIER<\/span>';
+  var gm='https://maps.google.com/?q='+p.lat+','+p.lon;
+  var gs='https://maps.google.com/?q='+p.lat+','+p.lon+'&layer=c';
+  var popup='<div class="pop">'+
+    '<div class="pop-title">'+p.name+'<\/div>'+
+    lbl+
+    '<div class="pop-loc">'+(p.city?p.city+', ':'')+p.country+'<\/div>'+
+    '<div class="pop-src">via '+p.source+'<\/div>'+
+    '<div class="pop-coords">'+p.lat.toFixed(5)+'°&nbsp;'+p.lon.toFixed(5)+'°<\/div>'+
+    '<div class="pop-links">'+
+      '<a href="'+gm+'" target="_blank" class="pop-link" style="background:#4f46e5;color:#fff">📍 Street<\/a>'+
+      '<a href="'+gs+'" target="_blank" class="pop-link" style="background:#0284c7;color:#fff">🛰 Satellite<\/a>'+
+    '<\/div>'+
+  '<\/div>';
+  L.marker([p.lat,p.lon],{icon:ic}).addTo(map).bindPopup(popup,{minWidth:210,closeButton:true});
 });
 if(pins.length>1){
-  try{map.fitBounds(L.latLngBounds(pins.map(function(p){return[p.lat,p.lon]})),{padding:[30,30],maxZoom:7});}catch(e){}
+  try{map.fitBounds(L.latLngBounds(pins.map(function(p){return[p.lat,p.lon]})),{padding:[45,45],maxZoom:8});}catch(e){}
 }
 <\/script></body></html>`;
 
   return (
-    <iframe
-      srcDoc={html}
-      className="w-full border-0"
-      style={{ height: 260 }}
-      title="Supplier Locations"
-      sandbox="allow-scripts"
-    />
+    <>
+      {expanded && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+          onClick={() => setExpanded(false)} />
+      )}
+      <div className={`relative rounded-xl overflow-hidden border border-white/10 ${
+        expanded ? 'fixed inset-3 sm:inset-5 z-50 shadow-[0_0_80px_rgba(0,0,0,0.85)]' : ''
+      }`}>
+        {/* Maximize / Minimize button */}
+        <button
+          onClick={() => setExpanded(e => !e)}
+          title={expanded ? 'Minimise map' : 'Maximise map'}
+          className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white border border-white/20 hover:border-violet-400/60 transition-all"
+          style={{ background: 'rgba(8,12,32,0.88)', backdropFilter: 'blur(10px)' }}>
+          {expanded ? '⊡ Minimise' : '⊞ Maximise'}
+        </button>
+        <iframe
+          ref={iframeRef}
+          srcDoc={html}
+          className="w-full border-0 block"
+          style={{ height: expanded ? '100%' : 280 }}
+          title="Global Supplier Map"
+          sandbox="allow-scripts allow-popups"
+        />
+      </div>
+    </>
   );
 }
 
