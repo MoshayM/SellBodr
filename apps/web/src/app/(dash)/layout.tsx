@@ -108,7 +108,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   function closeSearch() { setSearchOpen(false); }
 
-  function logout() { clearAuth(); router.push('/login'); }
+  function logout() { clearAuth(); router.push('/opportunities'); }
 
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
