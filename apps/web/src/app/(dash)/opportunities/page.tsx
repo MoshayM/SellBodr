@@ -1260,7 +1260,8 @@ export default function OpportunitiesPage() {
 
       {/* ── Bottom bar: result count + Scan for More ── */}
       {!isLoading && allOpps.length > 0 && (
-        <div className="mt-5 px-1 space-y-3">
+        <div className="mt-4 rounded-xl border border-white/8 px-4 py-3 space-y-3"
+          style={{ background: 'rgba(255,255,255,0.02)' }}>
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Count + mini stats */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40">
