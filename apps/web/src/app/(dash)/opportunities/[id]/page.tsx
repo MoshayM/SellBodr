@@ -141,9 +141,10 @@ function getExtraDocs(category: string): string[] {
 }
 
 
-// Leaflet map — maximize/minimize, satellite/street toggle, precise popups
+// Leaflet map — full-screen modal overlay, satellite/street toggle, precise popups
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   const [expanded, setExpanded] = useState(false);
+  const [animating, setAnimating] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const pins = candidates
@@ -157,17 +158,28 @@ function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
       isIndia: (sc.country || 'India') === 'India',
     }));
 
+  function open() {
+    setExpanded(true);
+    setTimeout(() => setAnimating(true), 10);
+    setTimeout(() => iframeRef.current?.contentWindow?.postMessage({ type: 'resize' }, '*'), 120);
+  }
+  function close() {
+    setAnimating(false);
+    setTimeout(() => setExpanded(false), 260);
+  }
+
   useEffect(() => {
-    const t = setTimeout(() => {
-      iframeRef.current?.contentWindow?.postMessage({ type: 'resize' }, '*');
-    }, 80);
-    return () => clearTimeout(t);
+    if (!expanded) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [expanded]);
 
   if (pins.length === 0) return null;
 
   const initCenter = pins.length === 1 ? [pins[0].lat, pins[0].lon] : [22, 82];
   const initZoom   = pins.length === 1 ? 12 : 2;
+  const indiaCount = pins.filter(p => p.isIndia).length;
 
   const html = `<!DOCTYPE html><html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -215,7 +227,7 @@ function tl(){
   }
 }
 window.addEventListener('message',function(e){
-  if(e.data&&e.data.type==='resize'){setTimeout(function(){map.invalidateSize();},100);}
+  if(e.data&&e.data.type==='resize'){setTimeout(function(){map.invalidateSize();},60);}
 });
 var pins=${JSON.stringify(pins)};
 pins.forEach(function(p,i){
@@ -249,30 +261,91 @@ if(pins.length>1){
 
   return (
     <>
-      {expanded && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
-          onClick={() => setExpanded(false)} />
-      )}
-      <div className={`relative rounded-xl overflow-hidden border border-white/10 ${
-        expanded ? 'fixed inset-3 sm:inset-5 z-50 shadow-[0_0_80px_rgba(0,0,0,0.85)]' : ''
-      }`}>
-        {/* Maximize / Minimize button */}
+      {/* Collapsed card */}
+      <div className="relative rounded-xl overflow-hidden border border-white/10">
         <button
-          onClick={() => setExpanded(e => !e)}
-          title={expanded ? 'Minimise map' : 'Maximise map'}
-          className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white border border-white/20 hover:border-violet-400/60 transition-all"
+          onClick={open}
+          title="Expand map"
+          className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white border border-white/20 hover:border-violet-400/60 hover:bg-violet-500/10 transition-all"
           style={{ background: 'rgba(8,12,32,0.88)', backdropFilter: 'blur(10px)' }}>
-          {expanded ? '⊡ Minimise' : '⊞ Maximise'}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 opacity-70">
+            <path d="M1.75 1h4.5a.75.75 0 0 1 0 1.5H2.56l3.97 3.97a.75.75 0 0 1-1.06 1.06L1.5 3.56v3.69a.75.75 0 0 1-1.5 0v-4.5C0 2.075.674 1 1.75 1ZM13.44 14.5h-3.69a.75.75 0 0 1 0-1.5h3.69l-3.97-3.97a.75.75 0 1 1 1.06-1.06l3.97 3.97V8.25a.75.75 0 0 1 1.5 0v4.5c0 .966-.784 1.75-1.75 1.75Z"/>
+          </svg>
+          Expand Map
         </button>
         <iframe
-          ref={iframeRef}
           srcDoc={html}
           className="w-full border-0 block"
-          style={{ height: expanded ? '100%' : 280 }}
+          style={{ height: 280 }}
           title="Global Supplier Map"
           sandbox="allow-scripts allow-popups"
         />
       </div>
+
+      {/* Full-screen modal overlay */}
+      {expanded && (
+        <div
+          className="fixed inset-0 z-[200] flex flex-col"
+          style={{
+            background: 'rgba(2,8,23,0.92)',
+            backdropFilter: 'blur(16px)',
+            opacity: animating ? 1 : 0,
+            transform: animating ? 'scale(1)' : 'scale(0.97)',
+            transition: 'opacity 0.25s ease, transform 0.25s ease',
+          }}>
+
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-5 py-3 border-b shrink-0"
+            style={{ background: 'rgba(8,12,32,0.95)', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🗺</span>
+              <div>
+                <div className="text-sm font-bold text-white leading-none">Global Supplier Map</div>
+                <div className="text-xs text-white/40 mt-0.5 leading-none">
+                  {pins.length} supplier{pins.length !== 1 ? 's' : ''} plotted
+                  {indiaCount > 0 && <span className="ml-2 text-emerald-400">· {indiaCount} India 🇮🇳</span>}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/30 hidden sm:block">Press ESC to close</span>
+              <button
+                onClick={close}
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg text-white/70 hover:text-white border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z"/>
+                </svg>
+                Close
+              </button>
+            </div>
+          </div>
+
+          {/* Map fills remaining height */}
+          <div className="flex-1 relative overflow-hidden">
+            <iframe
+              ref={iframeRef}
+              srcDoc={html}
+              className="w-full h-full border-0 block"
+              title="Global Supplier Map (expanded)"
+              sandbox="allow-scripts allow-popups"
+            />
+          </div>
+
+          {/* Legend bar */}
+          <div className="flex items-center gap-5 px-5 py-2.5 border-t shrink-0"
+            style={{ background: 'rgba(8,12,32,0.95)', borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="flex items-center gap-2 text-xs text-white/50">
+              <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/30" />
+              India priority supplier
+            </div>
+            <div className="flex items-center gap-2 text-xs text-white/50">
+              <div className="w-3 h-3 rounded-full bg-indigo-500 ring-2 ring-indigo-500/30" />
+              Global supplier
+            </div>
+            <div className="ml-auto text-[10px] text-white/20">Click a pin for precise location + Google Maps links</div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
