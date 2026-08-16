@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api, getGuestKey } from '@/lib/api';
+import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/wishlist';
 
@@ -665,11 +665,8 @@ export default function OpportunitiesPage() {
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
   const [isGuest,      setIsGuest]      = useState(false);
-  const [hasGuestKeys, setHasGuestKeys] = useState(false);
   useEffect(() => {
-    const guest = !localStorage.getItem('bs_access_token');
-    setIsGuest(guest);
-    if (guest) setHasGuestKeys(!!(getGuestKey('groq') || getGuestKey('mistral')));
+    setIsGuest(!localStorage.getItem('bs_access_token'));
   }, []);
 
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
@@ -775,22 +772,14 @@ export default function OpportunitiesPage() {
           </div>
 
           {/* Action */}
-          {isGuest && !hasGuestKeys ? (
-            <Link href="/settings"
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl text-amber-300 border border-amber-500/35 bg-amber-500/10 hover:bg-amber-500/18 transition-all shrink-0 whitespace-nowrap">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-              Add free key to scan
-            </Link>
-          ) : (
-            <button onClick={() => runSearch.mutate()} disabled={searching}
-              className="btn-primary text-sm disabled:opacity-60 shrink-0">
-              {searching
-                ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
-                : searchStatus
-                ? <><span className="mr-1">✓</span>{searchStatus}</>
-                : <><span className="text-base mr-1">＋</span>New Scan</>}
-            </button>
-          )}
+          <button onClick={() => runSearch.mutate()} disabled={searching}
+            className="btn-primary text-sm disabled:opacity-60 shrink-0">
+            {searching
+              ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
+              : searchStatus
+              ? <><span className="mr-1">✓</span>{searchStatus}</>
+              : <><span className="text-base mr-1">＋</span>New Scan</>}
+          </button>
         </div>
 
         {/* Quick-stat chips — clickable filters */}
