@@ -1,11 +1,19 @@
 'use client';
 import { useState, useEffect, FormEvent } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { api, getUser } from '@/lib/api';
+import { api, getUser, getGuestKey, setGuestKey } from '@/lib/api';
 
 type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide';
 
-const PROVIDERS = [
+// Free-tier providers — available to guest users (stored in localStorage)
+const FREE_PROVIDERS = [
+  { id: 'groq',    label: 'Groq',    hint: 'Llama 3, Mixtral — free tier available', docsUrl: 'https://console.groq.com/keys',        placeholder: 'gsk_...' },
+  { id: 'mistral', label: 'Mistral', hint: 'Mistral models — free tier available',    docsUrl: 'https://console.mistral.ai/api-keys/', placeholder: 'sk-...'  },
+];
+
+// All providers — Pro accounts only (stored in DB)
+const ALL_PROVIDERS = [
   { id: 'groq',      label: 'Groq',        hint: 'Llama 3, Mixtral (fast inference)', docsUrl: 'https://console.groq.com/keys',                placeholder: 'gsk_...'          },
   { id: 'anthropic', label: 'Anthropic',   hint: 'Claude models',                     docsUrl: 'https://console.anthropic.com/keys',           placeholder: 'sk-ant-api03-...' },
   { id: 'openai',    label: 'OpenAI',      hint: 'GPT-4o, o1 & more',                 docsUrl: 'https://platform.openai.com/api-keys',          placeholder: 'sk-proj-...'      },
@@ -40,20 +48,28 @@ const COUNTRIES  = [
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('ai-keys');
   const [user, setUser] = useState<any>(null);
-  useEffect(() => { setUser(getUser()); }, []);
+  const [isGuest, setIsGuest] = useState(false);
+
+  useEffect(() => {
+    setUser(getUser());
+    setIsGuest(!localStorage.getItem('bs_access_token'));
+  }, []);
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: 'ai-keys',      label: 'AI Provider Keys', icon: '🔑' },
-    { key: 'marketplaces', label: 'Marketplaces',      icon: '🛒' },
-    { key: 'security',     label: 'Security',          icon: '🛡️' },
-    { key: 'guide',        label: 'User Guide',        icon: '📖' },
+    { key: 'ai-keys',      label: 'AI Keys',      icon: '🔑' },
+    { key: 'marketplaces', label: 'Marketplaces', icon: '🛒' },
+    { key: 'security',     label: 'Security',     icon: '🛡️' },
+    { key: 'guide',        label: 'Guide',        icon: '📖' },
   ];
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Settings</h1>
-        {user?.email && <p className="text-sm text-white/40 mt-0.5">{user.email}</p>}
+        {isGuest
+          ? <p className="text-sm text-amber-400/70 mt-0.5">Browsing as guest — configure free LLM keys below to enable AI searches</p>
+          : user?.email && <p className="text-sm text-white/40 mt-0.5">{user.email}</p>
+        }
       </div>
 
       {/* Tab bar */}
@@ -70,15 +86,157 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {tab === 'ai-keys'      && <AiProviderKeysTab />}
+      {tab === 'ai-keys'      && (isGuest ? <GuestAiKeysTab /> : <AiProviderKeysTab />)}
       {tab === 'marketplaces' && <MarketplacesTab />}
-      {tab === 'security'     && <SecurityTab />}
+      {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
       {tab === 'guide'        && <UserGuideTab />}
     </div>
   );
 }
 
-// ── AI Provider Keys ─────────────────────────────────────────────────────────
+// ── Guest AI Keys (localStorage, Groq + Mistral only) ────────────────────────
+
+function GuestAiKeysTab() {
+  const [drafts,   setDrafts]   = useState<Record<string, string>>({});
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [saved,    setSaved]    = useState(false);
+  const [mounted,  setMounted]  = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  function save() {
+    for (const p of FREE_PROVIDERS) {
+      if (drafts[p.id] !== undefined) setGuestKey(p.id, drafts[p.id]);
+    }
+    setDrafts({}); setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  }
+
+  if (!mounted) return null;
+
+  return (
+    <div className="space-y-4">
+      {/* Free tier notice */}
+      <div className="flex gap-3 p-4 rounded-xl border border-amber-500/25 bg-amber-500/8">
+        <span className="text-amber-400 text-lg shrink-0">✦</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-amber-200/90 mb-1">Free-tier providers only</p>
+          <p className="text-xs text-amber-200/60 leading-relaxed mb-3">
+            As a guest you can configure Groq and Mistral — both offer generous free tiers.
+            Your keys are stored only in your browser (never sent to our servers permanently).
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/register"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all">
+              Upgrade to Pro — unlock Anthropic, OpenAI, xAI &amp; more →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {FREE_PROVIDERS.map(p => {
+        const current = getGuestKey(p.id);
+        const draft   = drafts[p.id] ?? '';
+        const show    = revealed[p.id] ?? false;
+        const isSet   = !!current && !draft;
+        return (
+          <div key={p.id} className="card-dark rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${current ? 'bg-green-400' : 'bg-white/20'}`} />
+                <span className="text-sm font-semibold text-white">{p.label}</span>
+                <span className="text-xs text-white/40">{p.hint}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">FREE</span>
+              </div>
+              <a href={p.docsUrl} target="_blank" rel="noreferrer"
+                className="text-xs text-white/30 hover:text-white/60 underline">
+                Get key ↗
+              </a>
+            </div>
+            {isSet && (
+              <div className="text-xs font-mono text-white/40 bg-white/5 rounded px-3 py-1.5 mb-2">
+                {current!.slice(0, 6)}...{current!.slice(-4)} <span className="text-green-400 ml-1">✓ saved locally</span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type={show ? 'text' : 'password'}
+                value={draft}
+                onChange={e => { setDrafts(d => ({ ...d, [p.id]: e.target.value })); setSaved(false); }}
+                placeholder={current ? 'Enter new key to replace…' : p.placeholder}
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500 rounded-lg text-sm font-mono text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/20 min-h-[40px] transition-colors"
+              />
+              <button type="button"
+                onClick={() => setRevealed(r => ({ ...r, [p.id]: !r[p.id] }))}
+                className="px-3 py-2 text-xs text-white/50 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 min-h-[40px] transition-colors">
+                {show ? 'Hide' : 'Show'}
+              </button>
+              {current && (
+                <button type="button"
+                  onClick={() => { setGuestKey(p.id, ''); setDrafts(d => ({ ...d, [p.id]: '' })); }}
+                  className="px-3 py-2 text-xs text-red-400 border border-red-500/30 bg-red-500/10 rounded-lg hover:bg-red-500/20 min-h-[40px] transition-colors">
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="flex items-center gap-3 pt-1">
+        <button
+          onClick={save}
+          disabled={Object.keys(drafts).length === 0}
+          className="btn-primary text-sm disabled:opacity-50">
+          Save Keys Locally
+        </button>
+        {saved && <span className="text-sm text-green-400">✓ Saved to browser</span>}
+      </div>
+
+      {/* Pro upsell card */}
+      <div className="mt-2 p-5 rounded-2xl border border-violet-500/25 bg-violet-500/8">
+        <div className="flex items-start gap-4">
+          <div className="text-3xl shrink-0">🚀</div>
+          <div>
+            <p className="text-sm font-bold text-white mb-1">Unlock all AI providers with Pro</p>
+            <p className="text-xs text-white/55 leading-relaxed mb-3">
+              Pro accounts get Anthropic Claude (highest quality), OpenAI GPT-4o, xAI Grok, Gemini, and Cohere — all stored securely in our servers, not your browser. Plus unlimited AI searches, supplier sourcing, and AI listing generation.
+            </p>
+            <Link href="/register"
+              className="inline-flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:shadow-[0_0_18px_rgba(124,58,237,0.65)] transition-all border border-violet-400/30">
+              Start Pro Trial — $49/mo →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Guest security placeholder ────────────────────────────────────────────────
+
+function GuestSecurityTab() {
+  return (
+    <div className="p-8 rounded-2xl border border-white/8 bg-white/[0.02] text-center">
+      <div className="text-4xl mb-4">🛡️</div>
+      <p className="text-sm font-semibold text-white mb-2">Sign in to manage security settings</p>
+      <p className="text-xs text-white/45 mb-5 max-w-xs mx-auto">
+        Passkeys, password management, and account security are only available for registered Pro and Organisation accounts.
+      </p>
+      <Link href="/register"
+        className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.4)] transition-all border border-violet-400/30">
+        Create a Pro Account →
+      </Link>
+      <div className="mt-3">
+        <Link href="/login" className="text-sm text-white/35 hover:text-white/60 transition-colors">
+          Already have an account? Sign in
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ── AI Provider Keys (Pro — DB backed) ───────────────────────────────────────
 
 function AiProviderKeysTab() {
   const [statuses, setStatuses] = useState<ProviderStatus[]>([]);
@@ -114,10 +272,10 @@ function AiProviderKeysTab() {
   return (
     <form onSubmit={handleSave} className="space-y-3">
       <p className="text-sm text-white/50 mb-4">
-        Keys are stored securely and override the server environment variables.
+        Keys are stored securely in our database and override server environment variables.
         Leave blank to keep the current value; clear and save to remove a key.
       </p>
-      {PROVIDERS.map(p => {
+      {ALL_PROVIDERS.map(p => {
         const status = statuses.find(s => s.id === p.id);
         const isSet  = status?.isSet ?? false;
         const draft  = drafts[p.id] ?? '';
@@ -538,7 +696,10 @@ function PasskeysSection() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-white">Passkeys</h3>
-          <p className="text-xs text-white/40 mt-0.5">Sign in with fingerprint, Face ID, PIN, or a hardware security key.</p>
+          <p className="text-xs text-white/40 mt-0.5">
+            Laptop: Windows Hello PIN or fingerprint · Mac: Touch ID · Mobile: Face ID or fingerprint.
+            No USB security key required.
+          </p>
         </div>
         <button onClick={handleAdd} disabled={adding}
           className="btn-primary text-sm py-2 min-h-0 disabled:opacity-60 flex items-center gap-2">

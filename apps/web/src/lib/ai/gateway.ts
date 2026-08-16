@@ -24,7 +24,7 @@ export interface Provider {
   discoveryModel:  string;
   validationModel: string;
   available: () => boolean;
-  callJSON: <T>(model: string, messages: ChatMessage[], opts?: CallOpts) => Promise<T>;
+  callJSON: <T>(model: string, messages: ChatMessage[], opts?: CallOpts, keyOverride?: string) => Promise<T>;
 }
 
 type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -32,7 +32,7 @@ type CallOpts    = { temperature?: number; maxTokens?: number };
 
 // ── Anthropic (Claude) ────────────────────────────────────────────────────────
 
-async function callAnthropic<T>(model: string, messages: ChatMessage[], opts: CallOpts = {}): Promise<T> {
+async function callAnthropic<T>(model: string, messages: ChatMessage[], opts: CallOpts = {}, _keyOverride?: string): Promise<T> {
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) throw new Error('ANTHROPIC_API_KEY not set');
 
@@ -67,8 +67,8 @@ async function callAnthropic<T>(model: string, messages: ChatMessage[], opts: Ca
 // ── OpenAI-compatible (OpenAI, Groq, Mistral, Together) ──────────────────────
 
 function makeOpenAICompat(baseUrl: string, envKey: string) {
-  return async function<T>(model: string, messages: ChatMessage[], opts: CallOpts = {}): Promise<T> {
-    const key = process.env[envKey]?.trim();
+  return async function<T>(model: string, messages: ChatMessage[], opts: CallOpts = {}, keyOverride?: string): Promise<T> {
+    const key = keyOverride?.trim() || process.env[envKey]?.trim();
     if (!key) throw new Error(`${envKey} not set`);
 
     const res = await fetch(baseUrl, {
@@ -152,9 +152,10 @@ export async function tryProvider<T>(
   model: string,
   messages: ChatMessage[],
   opts?: CallOpts,
+  keyOverride?: string,
 ): Promise<{ provider: Provider; result: T } | null> {
   try {
-    const result = await provider.callJSON<T>(model, messages, opts);
+    const result = await provider.callJSON<T>(model, messages, opts, keyOverride);
     return { provider, result };
   } catch (err) {
     console.warn(`[gateway] ${provider.name} failed:`, String(err).slice(0, 120));
@@ -165,13 +166,15 @@ export async function tryProvider<T>(
 /** Run all available providers in parallel and return every successful result. */
 export async function callAllProviders<T>(
   messages: ChatMessage[],
-  opts?: CallOpts & { discoveryOnly?: boolean },
+  opts?: CallOpts & { discoveryOnly?: boolean; guestKeys?: Record<string, string> },
 ): Promise<Array<{ provider: Provider; result: T }>> {
-  const available = PROVIDERS.filter(p => p.available());
-  if (available.length === 0) throw new Error('No AI providers configured — set at least GROQ_API_KEY');
+  const guestKeys = opts?.guestKeys ?? {};
+  const { guestKeys: _gk, ...callOpts } = opts ?? {};
+  const available = PROVIDERS.filter(p => p.available() || !!guestKeys[p.id]);
+  if (available.length === 0) throw new Error('No AI providers configured — set at least GROQ_API_KEY or configure a free key in Settings');
 
   const results = await Promise.all(
-    available.map(p => tryProvider<T>(p, p.discoveryModel, messages, opts))
+    available.map(p => tryProvider<T>(p, p.discoveryModel, messages, callOpts, guestKeys[p.id]))
   );
   return results.filter((r): r is { provider: Provider; result: T } => r !== null);
 }
@@ -180,20 +183,23 @@ export async function callAllProviders<T>(
 export async function callBestValidator<T>(
   excludeProviderIds: string[],
   messages: ChatMessage[],
-  opts?: CallOpts,
+  opts?: CallOpts & { guestKeys?: Record<string, string> },
 ): Promise<{ provider: Provider; result: T } | null> {
-  // Try validators in quality order, skipping those used for discovery
+  const guestKeys = opts?.guestKeys ?? {};
+  const { guestKeys: _gk, ...callOpts } = opts ?? {};
+
+  const isAvail = (p: Provider) => p.available() || !!guestKeys[p.id];
+
   const candidates = PROVIDERS
-    .filter(p => p.available() && !excludeProviderIds.includes(p.id))
+    .filter(p => isAvail(p) && !excludeProviderIds.includes(p.id))
     .sort((a, b) => b.quality - a.quality);
 
-  // If all discovery providers were used, still allow them for validation (use better model)
   const validators = candidates.length > 0
     ? candidates
-    : PROVIDERS.filter(p => p.available()).sort((a, b) => b.quality - a.quality).slice(0, 1);
+    : PROVIDERS.filter(p => isAvail(p)).sort((a, b) => b.quality - a.quality).slice(0, 1);
 
   for (const p of validators) {
-    const res = await tryProvider<T>(p, p.validationModel, messages, opts);
+    const res = await tryProvider<T>(p, p.validationModel, messages, callOpts, guestKeys[p.id]);
     if (res) return res;
   }
   return null;

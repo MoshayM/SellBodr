@@ -25,7 +25,7 @@ export default function RegisterPage() {
     return (e: React.ChangeEvent<HTMLInputElement>) => { setForm(f => ({ ...f, [field]: e.target.value })); setError(''); };
   }
 
-  async function registerWithPasskey() {
+  async function registerWithPasskey(platformOnly = true) {
     if (!form.name.trim()) { setError('Please enter your name'); return; }
     if (!form.email.trim()) { setError('Please enter your email'); return; }
     setError(''); setPasskeyLoading(true);
@@ -34,7 +34,15 @@ export default function RegisterPage() {
       const { challengeId, ...options } = beginData;
 
       const { startRegistration } = await import('@simplewebauthn/browser');
-      const attResp = await startRegistration(options);
+      // Platform-only: forces Windows Hello PIN/fingerprint or Touch ID — no USB prompt
+      const finalOptions = platformOnly ? {
+        ...options,
+        authenticatorSelection: {
+          ...(options.authenticatorSelection ?? {}),
+          authenticatorAttachment: 'platform' as const,
+        },
+      } : options;
+      const attResp = await startRegistration(finalOptions);
 
       const auth = await api.passkeys.registerComplete(
         challengeId,
@@ -185,10 +193,10 @@ export default function RegisterPage() {
 
               {!usePassword ? (
                 <>
-                  {/* Primary: Passkey */}
+                  {/* Primary: platform passkey (Windows Hello / Touch ID / PIN) */}
                   <motion.button
                     type="button"
-                    onClick={registerWithPasskey}
+                    onClick={() => registerWithPasskey(true)}
                     disabled={passkeyLoading || loading}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
@@ -201,15 +209,27 @@ export default function RegisterPage() {
                     ) : (
                       <>
                         <FingerprintIcon className="w-5 h-5 shrink-0" />
-                        Create account with Passkey
+                        Set up with Windows Hello / Touch ID / PIN
                       </>
                     )}
                   </motion.button>
                   <p className="text-center text-white/25 text-xs -mt-1">
-                    Uses your device fingerprint, Face ID or PIN — no password needed
+                    Uses your device PIN, fingerprint or face — works on any laptop or phone
                   </p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-white/8" />
+                    <span className="text-[10px] text-white/20 uppercase tracking-wider">or</span>
+                    <div className="flex-1 h-px bg-white/8" />
+                  </div>
+                  <button type="button"
+                    onClick={() => registerWithPasskey(false)}
+                    disabled={passkeyLoading || loading}
+                    className="w-full text-center text-sm text-white/40 hover:text-white/70 transition-colors py-1.5 border border-white/10 rounded-xl hover:bg-white/5 flex items-center justify-center gap-2 disabled:opacity-40">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="11" width="13" height="11" rx="2"/><path d="M15 11V7a6 6 0 0 0-6-6v0a6 6 0 0 0-6 6v4"/></svg>
+                    Use a USB security key instead
+                  </button>
                   <button type="button" onClick={() => { setUsePassword(true); setError(''); }}
-                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors">
+                    className="w-full text-center text-sm text-white/30 hover:text-white/55 transition-colors">
                     Use a password instead →
                   </button>
                 </>

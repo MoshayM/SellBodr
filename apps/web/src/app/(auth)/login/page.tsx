@@ -158,7 +158,7 @@ export default function LoginPage() {
             )}
           </motion.button>
           <p className="text-center text-white/25 text-xs mb-6">
-            Fingerprint, Face ID, PIN or security key
+            Windows Hello PIN / fingerprint · Mac Touch ID · Face ID · USB key
           </p>
 
           <div className="flex items-center gap-4 mb-6">

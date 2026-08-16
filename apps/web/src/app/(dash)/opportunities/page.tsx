@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, getGuestKey } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/wishlist';
 
@@ -664,6 +664,13 @@ export default function OpportunitiesPage() {
   const [searching,    setSearching]    = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
+  const [isGuest,      setIsGuest]      = useState(false);
+  const [hasGuestKeys, setHasGuestKeys] = useState(false);
+  useEffect(() => {
+    const guest = !localStorage.getItem('bs_access_token');
+    setIsGuest(guest);
+    if (guest) setHasGuestKeys(!!(getGuestKey('groq') || getGuestKey('mistral')));
+  }, []);
 
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
     queryKey: ['marketplaces', 'active'],
@@ -768,14 +775,22 @@ export default function OpportunitiesPage() {
           </div>
 
           {/* Action */}
-          <button onClick={() => runSearch.mutate()} disabled={searching}
-            className="btn-primary text-sm disabled:opacity-60 shrink-0">
-            {searching
-              ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
-              : searchStatus
-              ? <><span className="mr-1">✓</span>{searchStatus}</>
-              : <><span className="text-base mr-1">＋</span>New Scan</>}
-          </button>
+          {isGuest && !hasGuestKeys ? (
+            <Link href="/settings"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl text-amber-300 border border-amber-500/35 bg-amber-500/10 hover:bg-amber-500/18 transition-all shrink-0 whitespace-nowrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Add free key to scan
+            </Link>
+          ) : (
+            <button onClick={() => runSearch.mutate()} disabled={searching}
+              className="btn-primary text-sm disabled:opacity-60 shrink-0">
+              {searching
+                ? <><span className="animate-spin inline-block mr-1">⟳</span>{searchStatus || 'Scanning…'}</>
+                : searchStatus
+                ? <><span className="mr-1">✓</span>{searchStatus}</>
+                : <><span className="text-base mr-1">＋</span>New Scan</>}
+            </button>
+          )}
         </div>
 
         {/* Quick-stat chips — clickable filters */}
@@ -806,6 +821,21 @@ export default function OpportunitiesPage() {
           <span className="shrink-0 mt-0.5">✕</span>
           <span>{searchError}</span>
           <button onClick={() => setSearchError('')} className="ml-auto shrink-0 opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
+
+      {/* Guest Pro upsell strip */}
+      {isGuest && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-500/20 bg-violet-500/8">
+          <span className="text-violet-400 text-base shrink-0">✦</span>
+          <p className="flex-1 text-xs text-violet-200/65 leading-snug">
+            <strong className="text-violet-200/90">Free mode:</strong> browse AI-scored opportunities.{' '}
+            <strong className="text-violet-200/90">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
+          </p>
+          <Link href="/register"
+            className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
+            Start Pro →
+          </Link>
         </div>
       )}
 

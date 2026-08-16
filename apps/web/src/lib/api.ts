@@ -1,5 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
+// ── Guest free-key helpers (localStorage, no account needed) ─────────────────
+const GUEST_KEY_STORAGE: Record<string, string> = {
+  groq:    'bs_guest_groq_key',
+  mistral: 'bs_guest_mistral_key',
+};
+
+export function getGuestKey(provider: string): string | null {
+  if (typeof window === 'undefined') return null;
+  const k = GUEST_KEY_STORAGE[provider];
+  return k ? (localStorage.getItem(k) || null) : null;
+}
+
+export function setGuestKey(provider: string, value: string) {
+  if (typeof window === 'undefined') return;
+  const k = GUEST_KEY_STORAGE[provider];
+  if (!k) return;
+  if (value.trim()) localStorage.setItem(k, value.trim());
+  else localStorage.removeItem(k);
+}
+
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('bs_access_token');
@@ -7,19 +27,28 @@ function getToken(): string | null {
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
+  // Attach guest LLM keys as headers so server-side gateway can use them
+  const guestHeaders: Record<string, string> = {};
+  if (!token) {
+    const gk = getGuestKey('groq');
+    const mk = getGuestKey('mistral');
+    if (gk) guestHeaders['X-Guest-Groq-Key']    = gk;
+    if (mk) guestHeaders['X-Guest-Mistral-Key']  = mk;
+  }
   const res = await fetch(`${API_URL}${path}`, {
     ...opts,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...guestHeaders,
       ...opts.headers,
     },
   });
 
   if (res.status === 401) {
-    localStorage.removeItem('bs_access_token');
-    // Only redirect to /login when on a protected page, not on auth pages themselves
-    if (typeof window !== 'undefined') {
+    // Only hard-redirect if there WAS a token (expired session), not for deliberate guests
+    if (typeof window !== 'undefined' && localStorage.getItem('bs_access_token')) {
+      localStorage.removeItem('bs_access_token');
       const p = window.location.pathname;
       if (!p.includes('/login') && !p.includes('/register')) {
         window.location.href = '/login';

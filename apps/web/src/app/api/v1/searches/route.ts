@@ -265,6 +265,13 @@ export async function POST(req: NextRequest) {
     const marketplace = (body.marketplace || 'amazon_us') as string;
     const userId      = getUserId(req);
 
+    // Guest-supplied free LLM keys (Groq / Mistral only) — sent as headers by the browser
+    const guestKeys: Record<string, string> = {};
+    const hGroq    = req.headers.get('x-guest-groq-key')?.trim();
+    const hMistral = req.headers.get('x-guest-mistral-key')?.trim();
+    if (hGroq)    guestKeys['groq']    = hGroq;
+    if (hMistral) guestKeys['mistral'] = hMistral;
+
     const db = getDb();
     await ensureSchema(db);
 
@@ -288,7 +295,7 @@ export async function POST(req: NextRequest) {
 
     let providerResults: Array<{ provider: Provider; result: AiCandidate[] }> = [];
     try {
-      providerResults = await callAllProviders<AiCandidate[]>(discMsgs, { maxTokens: 3000 });
+      providerResults = await callAllProviders<AiCandidate[]>(discMsgs, { maxTokens: 3000, guestKeys });
     } catch (err) {
       await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage=?, updatedAt=? WHERE id=?`, args: [String(err).slice(0, 400), Date.now(), searchId] });
       return NextResponse.json({ error: String(err), searchId }, { status: 502 });
@@ -316,7 +323,7 @@ export async function POST(req: NextRequest) {
     const valResult = await callBestValidator<ValidationVerdict[]>(
       providerResults.map(r => r.provider.id),
       valMsgs,
-      { maxTokens: 2000 },
+      { maxTokens: 2000, guestKeys },
     );
 
     if (valResult && Array.isArray(valResult.result)) {
