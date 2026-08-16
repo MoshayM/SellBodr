@@ -9,7 +9,9 @@ import { getWishlistCount } from '@/lib/wishlist';
 import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 
-const ALL_PAGES = [
+type NavPage = { href: string; label: string; icon: string; desc: string; badge?: string; adminOnly?: boolean };
+
+const ALL_PAGES: NavPage[] = [
   { href: '/opportunities',  label: 'Opportunities',  icon: '🎯', desc: 'AI-scored cross-border products' },
   { href: '/research',       label: 'Research',        icon: '🔬', desc: 'Deep market intelligence & trends' },
   { href: '/suppliers',      label: 'Suppliers',       icon: '🏭', desc: 'India supplier sourcing database' },
@@ -18,8 +20,9 @@ const ALL_PAGES = [
   { href: '/listing',        label: 'AI Listing',      icon: '📝', desc: 'Generate SEO-optimised listings', badge: 'NEW' },
   { href: '/recommendation', label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
   { href: '/reports',        label: 'Reports',         icon: '📊', desc: 'Export and analyse your data' },
-  { href: '/wishlist',        label: 'Wishlist',         icon: '🌟', desc: 'Saved & bookmarked opportunities' },
-  { href: '/settings',       label: 'Settings',         icon: '⚙️', desc: 'Account & preferences' },
+  { href: '/wishlist',       label: 'Wishlist',        icon: '🌟', desc: 'Saved & bookmarked opportunities' },
+  { href: '/settings',       label: 'Settings',        icon: '⚙️', desc: 'Account & preferences' },
+  { href: '/ai-keys',        label: 'AI Provider Keys', icon: '🔑', desc: 'Manage AI model API keys', adminOnly: true },
 ];
 
 function SIcon() {
@@ -116,11 +119,12 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const pageName = ALL_PAGES.find(n => path === n.href || path.startsWith(n.href + '/'))?.label ?? 'SellBodr';
   const isHome   = path === '/opportunities' || path.startsWith('/opportunities/');
 
+  const navPages = ALL_PAGES.filter(p => !p.adminOnly || user?.role === 'admin');
   const searchResults = searchQuery.trim()
-    ? ALL_PAGES.filter(p =>
+    ? navPages.filter(p =>
         p.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.desc.toLowerCase().includes(searchQuery.toLowerCase()))
-    : ALL_PAGES;
+    : navPages;
 
   /* ── Inline search dropdown (portal) ─────────────────── */
   const searchDropdown = searchOpen && mounted && anchor ? createPortal(
@@ -160,7 +164,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             </div>
           ) : (
             <>
-              <div className="px-3.5 pt-2 pb-1 text-[9px] font-semibold text-white/22 uppercase tracking-widest">
+              <div className="px-3.5 pt-2 pb-1 text-[9px] font-semibold text-white/20 uppercase tracking-widest">
                 {searchQuery ? 'Results' : 'All pages'}
               </div>
               {searchResults.map(p => {
@@ -169,22 +173,22 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   <button key={p.href}
                     onClick={() => { router.push(p.href); closeSearch(); }}
                     className={`w-full flex items-center gap-3 px-3.5 py-2 transition-colors text-left group ${
-                      active ? 'bg-violet-500/12' : 'hover:bg-white/5 active:bg-white/8'
+                      active ? 'bg-violet-500/10' : 'hover:bg-white/5'
                     }`}>
                     <span className="text-lg w-7 text-center shrink-0">{p.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-medium leading-snug transition-colors ${active ? 'text-violet-300' : 'text-white/72 group-hover:text-white'}`}>
+                      <div className={`text-sm font-medium leading-snug transition-colors ${active ? 'text-violet-300' : 'text-white/70 group-hover:text-white'}`}>
                         {p.label}
-                        {'badge' in p && p.badge && (
+                        {p.badge && (
                           <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
                             style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
                             {p.badge}
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-white/27 truncate mt-0.5">{p.desc}</div>
+                      <div className="text-[11px] text-white/40 truncate mt-0.5">{p.desc}</div>
                     </div>
-                    <span className={`text-xs shrink-0 transition-colors ${active ? 'text-violet-400/50' : 'text-white/15 group-hover:text-white/35'}`}>
+                    <span className={`text-xs shrink-0 transition-colors ${active ? 'text-violet-400/50' : 'text-white/20 group-hover:text-white/40'}`}>
                       {active ? '●' : '→'}
                     </span>
                   </button>
@@ -194,7 +198,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           )}
         </div>
 
-        <div className="px-3.5 py-1.5 border-t border-white/6 flex items-center gap-3 text-[10px] text-white/18">
+        <div className="px-3.5 py-1.5 border-t border-white/10 flex items-center gap-3 text-[10px] text-white/30">
           <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">⌘K</kbd> toggle</span>
           <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">↵</kbd> open</span>
           <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">ESC</kbd> close</span>
@@ -310,10 +314,16 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                       </div>
                     </div>
                     {isAdmin() && (
-                      <Link href="/admin" onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-300/70 hover:text-red-300 hover:bg-red-500/8 rounded-lg transition-colors">
-                        <span>🔐</span><span>Admin Panel</span>
-                      </Link>
+                      <>
+                        <Link href="/admin" onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-300/70 hover:text-red-300 hover:bg-red-500/8 rounded-lg transition-colors">
+                          <span>🔐</span><span>Admin Panel</span>
+                        </Link>
+                        <Link href="/ai-keys" onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-amber-300/70 hover:text-amber-300 hover:bg-amber-500/8 rounded-lg transition-colors">
+                          <span>🔑</span><span>AI Provider Keys</span>
+                        </Link>
+                      </>
                     )}
                     <Link href="/settings" onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-sm text-white/55 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
@@ -391,7 +401,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               </div>
 
               <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
-                {ALL_PAGES.map(p => {
+                {navPages.map(p => {
                   const active = path === p.href || path.startsWith(p.href + '/');
                   return (
                     <Link key={p.href} href={p.href} onClick={() => setMenuOpen(false)}
