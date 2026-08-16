@@ -69,6 +69,9 @@ const SECTIONS = [
 export default function RecommendationPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: opps = [], isLoading } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isGuest });
+
   if (isGuest) return (
     <ProGate
       icon="🤖"
@@ -82,8 +85,6 @@ export default function RecommendationPage() {
       ]}
     />
   );
-
-  const { data: opps = [], isLoading } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
   const grouped = SECTIONS.map(s => ({ ...s, opps: (opps as any[]).filter(o => o.recommendation === s.key) }));
   const total = (opps as any[]).length;
 

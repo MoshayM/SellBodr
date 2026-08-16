@@ -167,6 +167,13 @@ const SELECT_CLS = 'bg-[#0d1225] border border-white/10 hover:border-white/20 te
 export default function ResearchPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: opps = [], isLoading } = useQuery({
+    queryKey: ['opportunities'],
+    queryFn: () => api.opportunities.list({}),
+    enabled: !isGuest,
+  });
+
   if (isGuest) return (
     <ProGate
       icon="🔬"
@@ -180,11 +187,6 @@ export default function ResearchPage() {
       ]}
     />
   );
-
-  const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => api.opportunities.list({}),
-  });
 
   const [catFilter,    setCatFilter]    = useState('');
   const [mpFilter,     setMpFilter]     = useState('');

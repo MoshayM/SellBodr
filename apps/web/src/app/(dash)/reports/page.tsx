@@ -47,6 +47,12 @@ function ReportView({ content }: { content: any }) {
 export default function ReportsPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isGuest });
+  const [reports, setReports] = useState<Report[]>([]);
+  const [generating, setGenerating] = useState('');
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   if (isGuest) return (
     <ProGate
       icon="📊"
@@ -60,11 +66,6 @@ export default function ReportsPage() {
       ]}
     />
   );
-
-  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
-  const [reports, setReports] = useState<Report[]>([]);
-  const [generating, setGenerating] = useState('');
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   async function generate(opp: any) {
     setGenerating(opp.id);

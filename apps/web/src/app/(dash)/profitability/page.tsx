@@ -9,6 +9,23 @@ import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 export default function ProfitabilityPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: opps = [] } = useQuery({
+    queryKey: ['opportunities'],
+    queryFn: () => api.opportunities.list({}),
+    enabled: !isGuest,
+  });
+
+  const [selectedId, setSelectedId] = useState('');
+  const allOpps = opps as any[];
+  const effectiveId = selectedId || allOpps[0]?.id || '';
+
+  const { data: oppDetail } = useQuery({
+    queryKey: ['opportunity', effectiveId],
+    queryFn: () => api.opportunities.get(effectiveId),
+    enabled: !!effectiveId && !isGuest,
+  });
+
   if (isGuest) return (
     <ProGate
       icon="💰"
@@ -22,22 +39,6 @@ export default function ProfitabilityPage() {
       ]}
     />
   );
-
-  const { data: opps = [] } = useQuery({
-    queryKey: ['opportunities'],
-    queryFn: () => api.opportunities.list({}),
-  });
-
-  const [selectedId, setSelectedId] = useState('');
-  const allOpps = opps as any[];
-  const effectiveId = selectedId || allOpps[0]?.id || '';
-
-  // Fetch full detail for the selected opportunity (includes complete profitModel)
-  const { data: oppDetail } = useQuery({
-    queryKey: ['opportunity', effectiveId],
-    queryFn: () => api.opportunities.get(effectiveId),
-    enabled: !!effectiveId,
-  });
 
   // Use list row for display meta, detail for profit model
   const listRow = allOpps.find(o => o.id === effectiveId) || allOpps[0];

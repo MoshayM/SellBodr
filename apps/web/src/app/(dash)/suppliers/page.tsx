@@ -35,6 +35,13 @@ function FeasibilityBadge({ level }: { level: string }) {
 export default function SuppliersPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: () => api.suppliers.list(),
+    enabled: !isGuest,
+  });
+
   if (isGuest) return (
     <ProGate
       icon="🏭"
@@ -48,11 +55,6 @@ export default function SuppliersPage() {
       ]}
     />
   );
-
-  const { data: rows = [], isLoading } = useQuery({
-    queryKey: ['suppliers'],
-    queryFn: () => api.suppliers.list(),
-  });
 
   if (isLoading) return (
     <div>

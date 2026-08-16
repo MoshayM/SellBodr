@@ -32,6 +32,22 @@ function Section({ label, children, copyText }: { label: string; children: React
 export default function ListingPage() {
   const [isGuest, setIsGuest] = useState(false);
   useEffect(() => { setIsGuest(!localStorage.getItem('bs_access_token')); }, []);
+
+  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}), enabled: !isGuest });
+  const [selected, setSelected] = useState('');
+  const opp = (opps as any[]).find(o => o.id === selected) || (opps as any[])[0];
+
+  const { data: listing, refetch } = useQuery({
+    queryKey: ['listing', opp?.id],
+    queryFn: () => api.opportunities.getListing(opp.id),
+    enabled: !!opp?.id && !isGuest,
+  });
+
+  const gen = useMutation({
+    mutationFn: () => api.opportunities.generateAssets(opp.id),
+    onSuccess: () => refetch(),
+  });
+
   if (isGuest) return (
     <ProGate
       icon="📝"
@@ -45,21 +61,6 @@ export default function ListingPage() {
       ]}
     />
   );
-
-  const { data: opps = [] } = useQuery({ queryKey: ['opportunities'], queryFn: () => api.opportunities.list({}) });
-  const [selected, setSelected] = useState('');
-  const opp = (opps as any[]).find(o => o.id === selected) || (opps as any[])[0];
-
-  const { data: listing, refetch } = useQuery({
-    queryKey: ['listing', opp?.id],
-    queryFn: () => api.opportunities.getListing(opp.id),
-    enabled: !!opp?.id,
-  });
-
-  const gen = useMutation({
-    mutationFn: () => api.opportunities.generateAssets(opp.id),
-    onSuccess: () => refetch(),
-  });
 
   const bullets: string[] = listing?.bullets ? (() => { try { return JSON.parse(listing.bullets); } catch { return []; } })() : [];
   const kwMap: Record<string, string[]> = listing?.keywords ? (() => { try { return JSON.parse(listing.keywords); } catch { return {}; } })() : {};
