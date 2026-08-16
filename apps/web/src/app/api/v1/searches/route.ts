@@ -394,21 +394,64 @@ export async function POST(req: NextRequest) {
       await db.execute({ sql: `INSERT INTO "Score" (id, opportunityId, opportunity, demand, competition, margin, trend, shipping, marketplaceFit, saturation, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: [crypto.randomUUID(), opportunityId, oScore, c.scores.demand, c.scores.competition, c.scores.margin, c.scores.trend, c.scores.shipping, c.scores.marketplaceFit, c.scores.saturation, ts, ts] });
       await db.execute({ sql: `INSERT INTO "ProfitModel" (id, opportunityId, productCostMinor, salePriceMinor, landedCostMinor, marketplaceFeesMinor, grossProfitMinor, netProfitMinor, netMarginPct, roiPct, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?)`, args: [crypto.randomUUID(), opportunityId, srcMinor, saleMinor, landed, feeMinor, saleMinor - landed, net, Math.round(margin * 10) / 10, Math.round(roi * 10) / 10, ts, ts] });
 
-      // Global sourcing candidates — India first (priority), then cheapest global alternatives
+      // 10 competitive sourcing candidates — India first (5), then global alternatives (5)
       const city1 = supplierCity(c.category);
       const altCities = Object.values(CITY_MAP).flat().filter(ci => ci !== city1);
-      const city2 = altCities[(c.title.length + 7) % altCities.length] || 'Mumbai';
+      const city2 = altCities[(c.title.length + 7)  % altCities.length] || 'Mumbai';
+      const city3 = altCities[(c.title.length + 13) % altCities.length] || 'Chennai';
+      const city4 = altCities[(c.title.length + 19) % altCities.length] || 'Kolkata';
       const coords1 = INDIAN_CITY_COORDS[city1] ?? [28.6139, 77.2090];
       const coords2 = INDIAN_CITY_COORDS[city2] ?? [19.0760, 72.8777];
-      const kw = c.title.split(' ').slice(0, 2).join(' ');
+      const coords3 = INDIAN_CITY_COORDS[city3] ?? [13.0827, 80.2707];
+      const coords4 = INDIAN_CITY_COORDS[city4] ?? [22.5726, 88.3639];
+      const kw  = c.title.split(' ').slice(0, 2).join(' ');
+      const kw3 = c.title.split(' ').slice(0, 3).join(' ');
+      const enc50 = encodeURIComponent(c.title.slice(0, 50));
+      const enc40 = encodeURIComponent(c.title.slice(0, 40));
+      const easeFeas = (c.indiaManufacturing === 'easy' ? 'easy' : 'moderate') as 'easy' | 'moderate';
       const cands = [
-        // ─ India (sorted first — same cost basis, craftsmanship advantage) ─
-        { name: supplierName(c.title, c.category, 0), source: 'indiamart',     url: `https://www.indiamart.com/search.mp?ss=${encodeURIComponent(c.title.slice(0, 60))}`,                                                            pct: 1.00, moq: 50,  lead: 21, feas: c.indiaManufacturing === 'easy' ? 'easy' : 'moderate', city: city1, country: 'India',     lat: coords1[0], lon: coords1[1], rating: 4.4, verified: 1 },
-        { name: supplierName(c.title, c.category, 3), source: 'tradeindia',    url: `https://www.tradeindia.com/search/${encodeURIComponent(c.title.slice(0, 50))}/`,                                                                 pct: 1.06, moq: 100, lead: 26, feas: 'moderate',                                                   city: city2, country: 'India',     lat: coords2[0], lon: coords2[1], rating: 4.0, verified: 0 },
-        // ─ Global alternatives (sorted by cost after India) ─────────────────
-        { name: `${kw} Global Manufacturing Co., Ltd`,                          source: 'alibaba',       url: `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(c.title.slice(0, 40))}`,                           pct: 0.80, moq: 100, lead: 35, feas: 'easy',                                                       city: 'Guangzhou', country: 'China',     lat: 23.13, lon: 113.26, rating: 4.6, verified: 1 },
-        { name: `${kw} Direct Wholesale`,                                        source: 'dhgate',        url: `https://www.dhgate.com/wholesale/search.do?act=search&searchkey=${encodeURIComponent(c.title.slice(0, 40))}`,           pct: 0.72, moq: 20,  lead: 28, feas: 'easy',                                                       city: 'Yiwu',      country: 'China',     lat: 29.31, lon: 120.06, rating: 3.9, verified: 0 },
-        { name: `Global ${kw} Exports Ltd`,                                      source: 'globalsources', url: `https://www.globalsources.com/gsol/I/Search?keyword=${encodeURIComponent(c.title.slice(0, 40))}`,                      pct: 0.85, moq: 200, lead: 38, feas: 'moderate',                                                   city: 'Hong Kong', country: 'Hong Kong', lat: 22.32, lon: 114.17, rating: 4.3, verified: 1 },
+        // ─ India (5 platforms — India-first sourcing advantage) ──────────────
+        { name: supplierName(c.title, c.category, 0), source: 'indiamart',
+          url: `https://www.indiamart.com/search.mp?ss=${enc50}`,
+          pct: 1.00, moq: 50,  lead: 21, feas: easeFeas,
+          city: city1, country: 'India', lat: coords1[0], lon: coords1[1], rating: 4.4, verified: 1 },
+        { name: supplierName(c.title, c.category, 3), source: 'tradeindia',
+          url: `https://www.tradeindia.com/search/${enc50}/`,
+          pct: 1.06, moq: 100, lead: 26, feas: 'moderate' as const,
+          city: city2, country: 'India', lat: coords2[0], lon: coords2[1], rating: 4.0, verified: 0 },
+        { name: supplierName(c.title, c.category, 4), source: 'gem',
+          url: `https://mkp.gem.gov.in/search?search=${enc50}`,
+          pct: 0.96, moq: 30,  lead: 18, feas: (c.indiaManufacturing === 'hard' ? 'moderate' : 'easy') as 'easy' | 'moderate',
+          city: city3, country: 'India', lat: coords3[0], lon: coords3[1], rating: 4.5, verified: 1 },
+        { name: supplierName(c.title, c.category, 2), source: 'exporthub',
+          url: `https://www.exporthub.com/india-suppliers/?product=${enc50}`,
+          pct: 1.04, moq: 75,  lead: 24, feas: 'moderate' as const,
+          city: city4, country: 'India', lat: coords4[0], lon: coords4[1], rating: 3.9, verified: 0 },
+        { name: supplierName(c.title, c.category, 1), source: 'udaan',
+          url: `https://udaan.com/search/results?q=${enc50}`,
+          pct: 1.02, moq: 25,  lead: 16, feas: 'easy' as const,
+          city: city1, country: 'India', lat: coords1[0], lon: coords1[1], rating: 4.1, verified: 0 },
+        // ─ Global alternatives (5 platforms — competitive benchmarks) ────────
+        { name: `${kw3} Global Manufacturing Co., Ltd`, source: 'alibaba',
+          url: `https://www.alibaba.com/trade/search?SearchText=${enc40}`,
+          pct: 0.80, moq: 100, lead: 35, feas: 'easy' as const,
+          city: 'Guangzhou', country: 'China', lat: 23.13, lon: 113.26, rating: 4.6, verified: 1 },
+        { name: `${kw} Direct Wholesale`, source: 'dhgate',
+          url: `https://www.dhgate.com/wholesale/search.do?act=search&searchkey=${enc40}`,
+          pct: 0.72, moq: 20,  lead: 28, feas: 'easy' as const,
+          city: 'Yiwu', country: 'China', lat: 29.31, lon: 120.06, rating: 3.9, verified: 0 },
+        { name: `Global ${kw} Exports Ltd`, source: 'globalsources',
+          url: `https://www.globalsources.com/gsol/I/Search?keyword=${enc40}`,
+          pct: 0.85, moq: 200, lead: 38, feas: 'moderate' as const,
+          city: 'Hong Kong', country: 'Hong Kong', lat: 22.32, lon: 114.17, rating: 4.3, verified: 1 },
+        { name: `${kw3} Industrial Co., Ltd`, source: 'made-in-china',
+          url: `https://www.made-in-china.com/multi-search/${enc40}/F0/`,
+          pct: 0.76, moq: 50,  lead: 32, feas: 'easy' as const,
+          city: 'Shenzhen', country: 'China', lat: 22.54, lon: 114.06, rating: 4.1, verified: 0 },
+        { name: `${kw} EC21 Verified Supplier`, source: 'ec21',
+          url: `https://www.ec21.com/search/?q=${enc40}`,
+          pct: 0.83, moq: 150, lead: 40, feas: 'moderate' as const,
+          city: 'Ningbo', country: 'China', lat: 29.86, lon: 121.55, rating: 4.0, verified: 1 },
       ];
       for (const s of cands) {
         const scId = crypto.randomUUID();

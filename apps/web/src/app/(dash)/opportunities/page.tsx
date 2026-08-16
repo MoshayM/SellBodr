@@ -445,7 +445,7 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Global Suppliers <span className="text-emerald-400/70">· India First</span></h4>
-            <span className="text-[10px] text-white/25">IndiaMART · Alibaba · DHgate · more</span>
+            <span className="text-[10px] text-white/25">IndiaMART · TradeIndia · GEM · ExportHub · Udaan · Alibaba · more</span>
           </div>
           {suppliers.length === 0 ? (
             <div className="text-xs text-white/25 py-6 text-center">
@@ -460,7 +460,7 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
                       <div className="text-sm font-medium text-white truncate">{s.name}</div>
                       <div className="flex items-center gap-1.5 text-[10px] text-white/35 mt-0.5">
                         <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
-                          {s.country === 'India' ? '🇮🇳' : s.country === 'China' ? '🇨🇳' : s.country === 'Hong Kong' ? '🇭🇰' : '🌐'} {(s.source || '').replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          {s.country === 'India' ? '🇮🇳' : s.country === 'China' ? '🇨🇳' : s.country === 'Hong Kong' ? '🇭🇰' : '🌐'} {({'indiamart':'IndiaMART','tradeindia':'TradeIndia','gem':'GEM Portal','exporthub':'ExportHub','udaan':'Udaan','alibaba':'Alibaba','dhgate':'DHgate','globalsources':'GlobalSources','made-in-china':'Made-in-China','ec21':'EC21'} as Record<string,string>)[s.source] || (s.source||'').replace(/-/g,' ').replace(/\b\w/g,(ch:string)=>ch.toUpperCase())}
                         </span>
                         <span className={`px-1.5 py-0.5 rounded border capitalize ${
                           s.feasibility === 'easy' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
@@ -927,7 +927,7 @@ export default function OpportunitiesPage() {
                 <th className="text-center px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Score</th>
                 <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Signal</th>
                 <th className="text-right px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Net Profit</th>
-                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Research</th>
+                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -1040,23 +1040,35 @@ export default function OpportunitiesPage() {
                           : <span className="text-white/25">&mdash;</span>}
                       </td>
 
-                      {/* Research / expand button + wishlist bookmark */}
+                      {/* Actions: Full Report (primary) + Research inline + wishlist */}
                       <td className="px-3 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* PRIMARY: Full Report — always visible, glowing violet */}
+                          <Link href={`/opportunities/${opp.id}`}
+                            onClick={e => e.stopPropagation()}
+                            title="Open full analysis report"
+                            className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 border border-violet-400/25 shadow-[0_0_10px_rgba(124,58,237,0.45)] hover:shadow-[0_0_18px_rgba(124,58,237,0.75)] transition-all duration-200 whitespace-nowrap select-none">
+                            Full Report
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 opacity-80">
+                              <path fillRule="evenodd" d="M2 8a.75.75 0 0 1 .75-.75h8.69L8.22 4.03a.75.75 0 0 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H2.75A.75.75 0 0 1 2 8Z" clipRule="evenodd" />
+                            </svg>
+                          </Link>
+                          {/* SECONDARY: Research inline expand */}
                           <button
                             onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : opp.id); }}
+                            title={isOpen ? 'Close inline panel' : 'Quick research preview'}
                             style={isOpen ? {
                               background: 'linear-gradient(135deg,rgba(124,58,237,0.3) 0%,rgba(99,102,241,0.2) 100%)',
                               borderColor: 'rgba(124,58,237,0.45)',
                               color: '#c4b5fd',
                               boxShadow: '0 2px 10px rgba(124,58,237,0.22)',
                             } : undefined}
-                            className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap border select-none transition-all duration-200 ${
+                            className={`text-xs px-2 py-1.5 rounded-lg font-semibold whitespace-nowrap border select-none transition-all duration-200 ${
                               isOpen
                                 ? 'border-violet-500/45'
-                                : 'bg-white/5 text-white/50 border-white/10 hover:bg-violet-500/12 hover:text-violet-300 hover:border-violet-500/25 hover:shadow-[0_2px_8px_rgba(124,58,237,0.18)]'
+                                : 'bg-white/5 text-white/40 border-white/10 hover:bg-violet-500/12 hover:text-violet-300 hover:border-violet-500/25 hover:shadow-[0_2px_8px_rgba(124,58,237,0.18)]'
                             }`}>
-                            {isOpen ? '✕ Close' : '📊 Research'}
+                            {isOpen ? '✕' : '📊'}
                           </button>
                           {/* Bookmark / save to wishlist */}
                           <button
