@@ -150,13 +150,8 @@ export function CurrencyWidget() {
       {open && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-end sm:justify-end">
 
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
+          {/* Backdrop — invisible, click-to-close only */}
+          <div className="absolute inset-0" onClick={() => setOpen(false)} />
 
           {/* Panel */}
           <motion.div
