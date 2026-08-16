@@ -225,8 +225,11 @@ function BreakdownPanel({ opp, mpCode }: { opp: any; mpCode: string }) {
           ))}
         </div>
         <Link href={`/opportunities/${opp.id}`} onClick={e => e.stopPropagation()}
-          className="shrink-0 text-[10px] text-violet-400/50 hover:text-violet-300 font-semibold px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/20">
-          Full Report →
+          className="shrink-0 relative inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.5)] hover:shadow-[0_0_18px_rgba(124,58,237,0.8)] transition-all duration-200 border border-violet-400/30">
+          Full Report
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+            <path fillRule="evenodd" d="M2 8a.75.75 0 0 1 .75-.75h8.69L8.22 4.03a.75.75 0 0 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H2.75A.75.75 0 0 1 2 8Z" clipRule="evenodd" />
+          </svg>
         </Link>
       </div>
 

@@ -6,9 +6,9 @@ function usd(val: number, currency = 'USD') {
   return `${sym}${(Math.abs(val) / 100).toFixed(2)}`;
 }
 
-interface Props { profit: any; currency?: string; }
+interface Props { profit: any; currency?: string; showStats?: boolean; }
 
-export function ProfitWaterfall({ profit, currency = 'USD' }: Props) {
+export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: Props) {
   if (!profit) return <div className="text-white/40 text-sm">No profit data available</div>;
 
   const p = profit;
@@ -92,22 +92,26 @@ export function ProfitWaterfall({ profit, currency = 'USD' }: Props) {
         </ResponsiveContainer>
       </div>
 
-      {/* Stats grid */}
-      <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Key Metrics</div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {stats.map(({ label, value, positive, highlight }) => (
-          <div key={label} className={`rounded-xl p-3 border ${
-            highlight
-              ? 'bg-violet-500/10 border-violet-500/20'
-              : 'bg-white/5 border-white/8'
-          }`}>
-            <div className="text-[10px] text-white/40 mb-1 leading-snug">{label}</div>
-            <div className={`font-bold text-sm leading-snug ${positive ? 'text-green-400' : 'text-red-400'}`}>
-              {value}
-            </div>
+      {/* Stats grid — hidden when parent already renders a summary card */}
+      {showStats && (
+        <>
+          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Key Metrics</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {stats.map(({ label, value, positive, highlight }) => (
+              <div key={label} className={`rounded-xl p-3 border ${
+                highlight
+                  ? 'bg-violet-500/10 border-violet-500/20'
+                  : 'bg-white/5 border-white/8'
+              }`}>
+                <div className="text-[10px] text-white/40 mb-1 leading-snug">{label}</div>
+                <div className={`font-bold text-sm leading-snug ${positive ? 'text-green-400' : 'text-red-400'}`}>
+                  {value}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {/* Legend */}
       <div className="flex gap-4 mt-4 flex-wrap">

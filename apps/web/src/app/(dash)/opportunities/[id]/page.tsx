@@ -1,17 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
-import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
 
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Recommendation', 'Report'];
 
 function minor(v: number) { return (v / 100).toFixed(2); }
-function usdD(v: number, d = 2) { return '$' + (v / 100).toFixed(d); }
-function pctD(n: number) { return n.toFixed(1) + '%'; }
 
 // ── Trade Intelligence Data ────────────────────────────────────────────────────
 type TradeRow = { hsn: string; hs6: string; chapter: string; gst: number; dgft: string; rodtep: boolean };
@@ -142,19 +139,6 @@ function getExtraDocs(category: string): string[] {
   return [];
 }
 
-// ── Profit bar for detail page ─────────────────────────────────────────────────
-function ProfitBar({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
-  const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
-  return (
-    <div className="flex items-center gap-3 text-sm">
-      <div className="w-36 text-white/40 text-right shrink-0 text-xs">{label}</div>
-      <div className="flex-1 h-4 bg-white/8 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
-      </div>
-      <div className="w-16 font-mono font-semibold text-white/80 text-right text-xs">{usdD(value)}</div>
-    </div>
-  );
-}
 
 // Leaflet map rendered inside an iframe srcDoc — no package install needed, no SSR issues
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
@@ -220,6 +204,7 @@ function CopyButton({ text }: { text: string }) {
 export default function OpportunityDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const id = Array.isArray(params.id) ? params.id[0] : (params.id as string);
   const [tab, setTab] = useState(() => {
     const t = searchParams.get('tab');
@@ -284,6 +269,15 @@ export default function OpportunityDetailPage() {
 
   return (
     <div>
+      {/* Back navigation */}
+      <button onClick={() => router.back()}
+        className="flex items-center gap-1.5 text-sm text-white/45 hover:text-white/80 mb-4 transition-colors group">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform">
+          <path fillRule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clipRule="evenodd" />
+        </svg>
+        Back to Scout
+      </button>
+
       {/* Header card */}
       <div className="card-dark p-4 sm:p-6 mb-5">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
@@ -656,6 +650,7 @@ export default function OpportunityDetailPage() {
         const mpCodeStr = opp.marketplace?.code || '';
         const platform  = mpCodeStr.split('_')[0].charAt(0).toUpperCase() + mpCodeStr.split('_')[0].slice(1) || 'Marketplace';
         const currency  = pm.currency || 'USD';
+        const sym       = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
         const src     = Number(pm.sourcePriceMinor   ?? 0);
         const sale    = Number(pm.salePriceMinor      ?? 0);
         const landed  = Number(pm.landedCostMinor     ?? 0);
@@ -674,80 +669,147 @@ export default function OpportunityDetailPage() {
         const breakeven = trueNet > 0 ? Math.ceil(5000 / trueNet) : 999;
         const monthly50 = trueNet * 50;
         const annual50  = monthly50 * 12;
-        const profitForChart = {
-          salePriceMinor: sale, productCostMinor: src, packagingCostMinor: pkg,
-          intlShippingMinor: ship, dutyMinor: dutyAmt, fbaFeeMinor: fbaFee,
-          referralFeeMinor: refFee, adCostMinor: adSpend, netProfitMinor: trueNet,
-          roiPct: roi, netMarginPct: netMargin, breakevenUnits: breakeven,
-          monthlyProfitMinor: monthly50, annualProfitMinor: annual50,
-        };
+        const f = (v: number, d = 2) => `${sym}${(Math.abs(v) / 100).toFixed(d)}`;
+        const allRows = [
+          { label: 'Sale Price',         value: sale,              positive: true,  grad: 'linear-gradient(90deg,#10b981,#34d399)',  glow: 'rgba(16,185,129,0.5)',  isSubtotal: false, isNet: false },
+          { label: 'Source Cost',        value: src,               positive: false, grad: 'linear-gradient(270deg,#818cf8,#6366f1)', glow: 'rgba(99,102,241,0.5)',  isSubtotal: false, isNet: false },
+          { label: "Int'l Ship.",        value: ship,              positive: false, grad: 'linear-gradient(270deg,#a78bfa,#7c3aed)', glow: 'rgba(124,58,237,0.45)', isSubtotal: false, isNet: false },
+          { label: 'Packaging',          value: pkg,               positive: false, grad: 'linear-gradient(270deg,#c4b5fd,#8b5cf6)', glow: 'rgba(139,92,246,0.4)',  isSubtotal: false, isNet: false },
+          { label: 'Import Duty',        value: dutyAmt,           positive: false, grad: 'linear-gradient(270deg,#ddd6fe,#a78bfa)', glow: 'rgba(167,139,250,0.35)',isSubtotal: false, isNet: false },
+          { label: '= Landed',           value: landed,            positive: false, grad: 'linear-gradient(270deg,#818cf8,#4f46e5)', glow: 'rgba(79,70,229,0.5)',   isSubtotal: true,  isNet: false },
+          { label: `Ref. ${refPct}%`,    value: refFee,            positive: false, grad: 'linear-gradient(270deg,#f87171,#ef4444)', glow: 'rgba(239,68,68,0.5)',   isSubtotal: false, isNet: false },
+          { label: 'FBA / Fulfil.',      value: fbaFee,            positive: false, grad: 'linear-gradient(270deg,#fb923c,#f97316)', glow: 'rgba(249,115,22,0.45)', isSubtotal: false, isNet: false },
+          { label: 'Ad Spend 5%',        value: adSpend,           positive: false, grad: 'linear-gradient(270deg,#fbbf24,#eab308)', glow: 'rgba(234,179,8,0.45)',  isSubtotal: false, isNet: false },
+          { label: 'Net Profit',         value: Math.abs(trueNet), positive: trueNet >= 0,
+            grad: trueNet >= 0 ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(270deg,#f87171,#ef4444)',
+            glow: trueNet >= 0 ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)',
+            isSubtotal: false, isNet: true },
+        ].filter(r => r.value > 0);
+        const maxDivRef = Math.max(sale, landed, Math.abs(trueNet), 1);
+
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Cost breakdown */}
-              <div className="card-dark p-5">
-                <h3 className="font-semibold text-white mb-4">Cost Breakdown — {platform}</h3>
-                <div className="space-y-2.5">
-                  <ProfitBar label="India Source Cost"  value={src}    total={sale} color="#6366f1" />
-                  <ProfitBar label="Int'l Shipping"     value={ship}   total={sale} color="#8b5cf6" />
-                  <ProfitBar label="Packaging + Labels" value={pkg}    total={sale} color="#a78bfa" />
-                  <ProfitBar label="Import Duties"      value={dutyAmt} total={sale} color="#c4b5fd" />
-                  <div className="flex items-center gap-3 text-xs border-t border-white/8 pt-2 mt-1">
-                    <div className="w-36 text-white/55 font-semibold text-right shrink-0">= Landed Cost</div>
-                    <div className="flex-1" />
-                    <div className="w-16 font-mono font-bold text-indigo-600 text-right">{usdD(landed)}</div>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-white/35 mt-3 mb-1">
-                    <div className="w-36 text-right shrink-0">Sale Price</div>
-                    <div className="flex-1" />
-                    <div className="w-16 font-mono font-semibold text-white/55 text-right">{usdD(sale)}</div>
-                  </div>
-                  <ProfitBar label={`Referral (${refPct}%)`} value={refFee}  total={sale} color="#ef4444" />
-                  <ProfitBar label="FBA / Fulfillment"        value={fbaFee}  total={sale} color="#f97316" />
-                  <ProfitBar label="Est. Ad Spend (5%)"       value={adSpend} total={sale} color="#eab308" />
-                  <ProfitBar label="Landed Cost"              value={landed}  total={sale} color="#6366f1" />
+            {/* Diverging butterfly chart */}
+            <div className="card-dark p-5">
+              <div className="flex items-center mb-2">
+                <div className="flex-1 text-right pr-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-red-400/60">← Costs</span>
+                </div>
+                <div className="w-[90px] shrink-0 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-white/40">{platform}</div>
+                  <div className="text-[8px] text-white/20 mt-px">Cost Breakdown</div>
+                </div>
+                <div className="flex-1 pl-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400/60">Revenue →</span>
                 </div>
               </div>
-              {/* Net profit summary */}
-              <div className="space-y-3">
-                <div className={`card-dark p-5 ${trueNet > 0 ? 'border-emerald-500/25 bg-emerald-500/8' : 'border-red-500/20 bg-red-500/10'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-white/55">Net Profit / Unit</span>
-                    <span className={`text-3xl font-bold ${trueNet > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {trueNet < 0 ? '-' : ''}{usdD(Math.abs(trueNet))}
-                    </span>
+              <div className="flex items-center justify-center gap-5 mb-4">
+                {([
+                  { c: 'rgba(99,102,241,0.75)',  label: 'Sourcing' },
+                  { c: 'rgba(239,68,68,0.75)',   label: 'Fees' },
+                  { c: 'rgba(16,185,129,0.75)',  label: 'Revenue / Profit' },
+                ] as { c: string; label: string }[]).map(({ c, label }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: c }} />
+                    <span className="text-[10px] text-white/35">{label}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 text-xs text-center py-3 border-t border-b border-white/8 mb-3">
-                    <div>
-                      <div className="text-white/35 mb-0.5">Net Margin</div>
-                      <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{pctD(netMargin)}</div>
+                ))}
+              </div>
+              <div className="space-y-[4px]">
+                {allRows.map((r) => {
+                  const barPct = Math.min(92, (r.value / maxDivRef) * 100);
+                  const rowH = r.isNet ? 30 : r.isSubtotal ? 24 : 20;
+                  const barH = r.isNet ? 'h-3.5' : r.isSubtotal ? 'h-3' : 'h-2';
+                  return (
+                    <div key={r.label}>
+                      {r.isSubtotal && <div className="h-px my-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)' }} />}
+                      {r.isNet && <div className="h-px my-1.5" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)' }} />}
+                      <div className="flex items-center" style={{ height: rowH }}>
+                        {/* Left — costs */}
+                        <div className="flex-1 flex items-center justify-end gap-2 min-w-0" style={{ borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                          {!r.positive && (
+                            <>
+                              <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                                -{f(r.value)}
+                              </span>
+                              <div className={`${barH} rounded-l-full flex-shrink-0`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
+                            </>
+                          )}
+                        </div>
+                        {/* Center label */}
+                        <div className="w-[90px] shrink-0 flex items-center justify-center px-1">
+                          <span className={`text-center leading-tight ${r.isNet ? 'text-[11px] font-bold text-white/90' : r.isSubtotal ? 'text-[10px] font-semibold text-indigo-400' : 'text-[10px] text-white/45'}`}>
+                            {r.label}
+                          </span>
+                        </div>
+                        {/* Right — revenue */}
+                        <div className="flex-1 flex items-center justify-start gap-2 min-w-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                          {r.positive && (
+                            <>
+                              <div className={`${barH} rounded-r-full flex-shrink-0`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
+                              <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                                +{f(r.value)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-white/35 mb-0.5">ROI</div>
-                      <div className={`font-bold text-sm ${trueNet > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{roi.toFixed(0)}%</div>
-                    </div>
-                    <div>
-                      <div className="text-white/35 mb-0.5">Break-even</div>
-                      <div className="font-bold text-sm text-white/80">{Math.min(breakeven, 999)} units</div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="rounded-lg bg-white/8 border border-white/10 p-3 text-center">
-                      <div className="text-white/45 mb-1">Monthly (50 units)</div>
-                      <div className={`font-bold text-base ${monthly50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usdD(Math.abs(monthly50), 0)}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/8 border border-white/10 p-3 text-center">
-                      <div className="text-white/45 mb-1">Annual projection</div>
-                      <div className={`font-bold text-base ${annual50 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{usdD(Math.abs(annual50), 0)}</div>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-white/35 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination avg · {currency}</p>
+                  );
+                })}
               </div>
             </div>
-            <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0a0e1e 0%, #0f172a 100%)' }}>
-              <ProfitWaterfall profit={profitForChart} currency={currency} />
+
+            {/* Metrics grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="col-span-2 rounded-xl p-4 flex flex-col justify-between"
+                style={{
+                  background: trueNet >= 0 ? 'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.03))' : 'linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03))',
+                  border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
+                }}>
+                <div className="text-[10px] font-semibold text-white/35 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className={`text-4xl font-black tabular-nums leading-none my-2 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
+                  style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
+                  {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold ${trueNet >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                    Margin {netMargin.toFixed(1)}%
+                  </span>
+                  <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold ${roi >= 20 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                    ROI {roi.toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Total Cost / Unit</div>
+                <div className="text-2xl font-bold text-red-400 tabular-nums my-1">{f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}</div>
+                <div className="text-[10px] text-white/20">all-in landed</div>
+              </div>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Break-even</div>
+                <div className={`text-2xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>{Math.min(breakeven, 999)}</div>
+                <div className="text-[10px] text-white/20">units to profit</div>
+              </div>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Monthly</div>
+                <div className={`text-2xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
+                  {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
+                </div>
+                <div className="text-[10px] text-white/20">est. · 50 units</div>
+              </div>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Annual</div>
+                <div className={`text-2xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
+                  style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>
+                  {annual50 < 0 ? '-' : ''}{sym}{(Math.abs(annual50) / 100).toFixed(0)}
+                </div>
+                <div className="text-[10px] text-white/20">est. · 50 units</div>
+              </div>
             </div>
+            <p className="text-xs text-white/25 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination country avg · {currency}</p>
           </div>
         );
       })()}
