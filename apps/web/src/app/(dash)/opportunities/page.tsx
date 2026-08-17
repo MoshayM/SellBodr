@@ -839,11 +839,11 @@ export default function OpportunitiesPage() {
     const q = nameFilter.trim().toLowerCase();
     let rows = allOpps.filter(opp => {
       if (q) {
-        const name  = (opp.product?.name        ?? '').toLowerCase();
+        const title = (opp.product?.title       ?? '').toLowerCase();
         const desc  = (opp.product?.description ?? '').toLowerCase();
         const cat   = (opp.product?.category    ?? '').toLowerCase();
         const keys  = (opp.product?.keywords    ?? []).join(' ').toLowerCase();
-        if (!name.includes(q) && !desc.includes(q) && !cat.includes(q) && !keys.includes(q)) return false;
+        if (!title.includes(q) && !desc.includes(q) && !cat.includes(q) && !keys.includes(q)) return false;
       }
       if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
       if (srcFilter)      { if (trendSource(opp.marketplace?.code).key !== srcFilter) return false; }
