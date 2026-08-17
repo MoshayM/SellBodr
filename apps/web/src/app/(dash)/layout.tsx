@@ -197,7 +197,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           border: '1px solid var(--dropdown-border)',
           boxShadow: isDark
             ? '0 16px 48px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.12)'
-            : '0 16px 48px rgba(15,23,42,0.12), 0 4px 16px rgba(15,23,42,0.06)',
+            : '8px 16px 32px #b8c1d4, -8px 8px 24px #b8c1d4, 0 2px 0 rgba(255,255,255,0.9)',
         }}>
 
         {/* Input row */}

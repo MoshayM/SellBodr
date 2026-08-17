@@ -2,13 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Global defaults (dark — as originally designed) ─────── */
+/* ── Global defaults ──────────────────────────────────────── */
 :root {
   --accent: #7C3AED;
   --accent2: #06B6D4;
   --green: #10B981;
   --foreground-rgb: 15, 23, 42;
   --background-start-rgb: 248, 250, 252;
+  /* Dropdown vars on :root so portal elements (outside .dash-area) can access them */
+  --dropdown-bg: #0E1628;
+  --dropdown-border: rgba(255,255,255,0.1);
+}
+
+/* Light mode dropdown overrides on html element — inherited by portals in document.body */
+html:not(.dark) {
+  --dropdown-bg: #E8ECF4;
+  --dropdown-border: rgba(184,193,212,0.4);
 }
 
 /* ── Dash app theme variables — dark (default) ────────────── */
