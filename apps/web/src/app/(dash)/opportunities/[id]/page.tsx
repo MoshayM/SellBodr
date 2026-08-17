@@ -6,6 +6,7 @@ import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
 import { SupplierProfileDrawer } from '@/components/supplier/SupplierProfileDrawer';
 import { ProGate } from '@/components/ui/ProGate';
+import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Brand Builder', 'Bundle', 'Recommendation', 'Report'];
 
@@ -979,6 +980,10 @@ export default function OpportunityDetailPage() {
 
         return (
           <div className="space-y-4">
+            {/* Waterfall chart (Recharts) */}
+            <div className="card-dark p-5">
+              <ProfitWaterfall profit={pm} currency={currency} showStats={false} />
+            </div>
             {/* Diverging butterfly chart */}
             <div className="card-dark p-5">
               <div className="flex items-center mb-2">
@@ -1155,6 +1160,8 @@ export default function OpportunityDetailPage() {
 
         return (
           <div className="space-y-4">
+
+            <h2 className="text-lg font-bold text-white">Competition Analysis</h2>
 
             {/* Score summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

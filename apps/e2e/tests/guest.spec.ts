@@ -117,7 +117,7 @@ test.describe('Sign-out returns to guest mode', () => {
 
     // Guest indicator — Sign in link in header OR guest banner (10 s for React re-render after sign-out)
     await expect(
-      page.locator('header a[href="/login"]').or(page.locator('text=/browsing as a guest/i'))
+      page.locator('header a[href="/login"]').or(page.locator('text=/browsing as a guest/i')).first()
     ).toBeVisible({ timeout: 10_000 });
   });
 });
