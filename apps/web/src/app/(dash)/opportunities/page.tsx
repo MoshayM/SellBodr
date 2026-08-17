@@ -819,6 +819,7 @@ export default function OpportunitiesPage() {
     }
     return () => timers.forEach(clearTimeout);
   }, [searching]);
+  const scanPct = Math.min(88, Math.round((scanStep / (SCAN_STAGES.length - 1)) * 100));
   const [isFree, setIsFree] = useState(false);
   const [dismissedOnboarding, setDismissedOnboarding] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -937,13 +938,54 @@ export default function OpportunitiesPage() {
           </div>
 
           {/* Action */}
-          <button onClick={() => runSearch.mutate()} disabled={searching}
-            className="btn-primary text-sm disabled:opacity-60 shrink-0 min-w-[160px] justify-center">
-            {searching
-              ? <><span className="mr-1.5">{SCAN_STAGES[scanStep]?.icon}</span>{SCAN_STAGES[scanStep]?.label}…</>
-              : searchStatus
-              ? <>{searchStatus}</>
-              : <><span className="text-base mr-1">＋</span>New Scan</>}
+          <button
+            onClick={() => runSearch.mutate()}
+            disabled={searching}
+            className={`relative overflow-hidden text-sm font-semibold shrink-0
+              inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
+              min-w-[200px] min-h-[44px] select-none transition-all duration-300
+              ${searching
+                ? 'cursor-not-allowed animate-pulse-glow'
+                : 'btn-primary'}`}
+            style={searching ? {
+              background: 'linear-gradient(135deg, rgba(109,40,217,0.95) 0%, rgba(79,70,229,0.95) 100%)',
+              boxShadow: '0 0 24px rgba(124,58,237,0.6), 0 4px 16px rgba(124,58,237,0.3)',
+            } : {}}
+          >
+            {searching && (
+              <>
+                <span
+                  className="absolute inset-0 bg-white/10 transition-all duration-[900ms] ease-out pointer-events-none"
+                  style={{ clipPath: `inset(0 ${100 - scanPct}% 0 0)` }}
+                />
+                <span
+                  className="absolute inset-0 pointer-events-none animate-shimmer"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
+                    backgroundSize: '200% 100%',
+                  }}
+                />
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 pointer-events-none overflow-hidden">
+                  <span
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-[900ms] ease-out"
+                    style={{ width: `${scanPct}%` }}
+                  />
+                </span>
+              </>
+            )}
+            <span className="relative z-10 flex items-center gap-2">
+              {searching ? (
+                <>
+                  <span className="text-lg animate-pulse leading-none">{SCAN_STAGES[scanStep]?.icon}</span>
+                  <span className="truncate">{SCAN_STAGES[scanStep]?.label}…</span>
+                  <span className="text-[11px] text-violet-200/70 font-mono tabular-nums ml-1">{scanPct}%</span>
+                </>
+              ) : searchStatus ? (
+                <>{searchStatus}</>
+              ) : (
+                <><span className="text-base">＋</span> New Scan</>
+              )}
+            </span>
           </button>
         </div>
 
@@ -1388,11 +1430,52 @@ export default function OpportunitiesPage() {
                 🔒 Upgrade to Pro — Unlock All
               </Link>
             ) : (
-              <button onClick={() => runSearch.mutate()} disabled={searching}
-                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 transition-all disabled:opacity-40 min-w-[200px] justify-center">
-                {searching
-                  ? <><span>{SCAN_STAGES[scanStep]?.icon}</span>{SCAN_STAGES[scanStep]?.label}…</>
-                  : <>Scan for More <span className="text-base leading-none">↓</span></>}
+              <button
+                onClick={() => runSearch.mutate()}
+                disabled={searching}
+                className={`relative overflow-hidden text-sm font-semibold
+                  inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                  min-w-[200px] min-h-[44px] select-none transition-all duration-300
+                  ${searching
+                    ? 'cursor-not-allowed animate-pulse-glow border border-violet-500/50'
+                    : 'border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 disabled:opacity-40'}`}
+                style={searching ? {
+                  background: 'linear-gradient(135deg, rgba(109,40,217,0.85) 0%, rgba(79,70,229,0.85) 100%)',
+                  boxShadow: '0 0 20px rgba(124,58,237,0.5), 0 4px 12px rgba(124,58,237,0.25)',
+                } : {}}
+              >
+                {searching && (
+                  <>
+                    <span
+                      className="absolute inset-0 bg-white/10 transition-all duration-[900ms] ease-out pointer-events-none"
+                      style={{ clipPath: `inset(0 ${100 - scanPct}% 0 0)` }}
+                    />
+                    <span
+                      className="absolute inset-0 pointer-events-none animate-shimmer"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)',
+                        backgroundSize: '200% 100%',
+                      }}
+                    />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 pointer-events-none overflow-hidden">
+                      <span
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-[900ms] ease-out"
+                        style={{ width: `${scanPct}%` }}
+                      />
+                    </span>
+                  </>
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {searching ? (
+                    <>
+                      <span className="text-lg animate-pulse leading-none">{SCAN_STAGES[scanStep]?.icon}</span>
+                      <span className="truncate">{SCAN_STAGES[scanStep]?.label}…</span>
+                      <span className="text-[11px] text-violet-200/70 font-mono tabular-nums ml-1">{scanPct}%</span>
+                    </>
+                  ) : (
+                    <>Scan for More <span className="text-base leading-none">↓</span></>
+                  )}
+                </span>
               </button>
             )}
           </div>
