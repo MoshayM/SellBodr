@@ -1,5 +1,6 @@
 'use client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useTheme } from '@/components/ui/ThemeProvider';
 
 function usd(val: number, currency = 'USD') {
   const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
@@ -9,6 +10,15 @@ function usd(val: number, currency = 'USD') {
 interface Props { profit: any; currency?: string; showStats?: boolean; }
 
 export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const tickColor   = isDark ? 'rgba(255,255,255,0.45)' : '#374151';
+  const labelColor  = isDark ? 'rgba(255,255,255,0.55)' : '#1F2937';
+  const cursorFill  = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(124,58,237,0.05)';
+  const ttBg        = isDark ? '#0d1225'                 : '#ffffff';
+  const ttBorder    = isDark ? 'rgba(255,255,255,0.15)'  : 'rgba(184,193,212,0.7)';
+  const ttLabel     = isDark ? 'rgba(255,255,255,0.55)'  : '#6B7280';
+
   if (!profit) return <div className="text-white/40 text-sm">No profit data available</div>;
 
   const p = profit;
@@ -52,9 +62,10 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
     if (!active || !payload?.length) return null;
     const v = payload[0]?.value ?? 0;
     return (
-      <div className="bg-[#0d1225] border border-white/15 rounded-xl px-3 py-2 text-xs shadow-xl">
-        <div className="text-white/60 mb-0.5">{label}</div>
-        <div className={`font-bold text-sm ${v >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+      <div style={{ background: ttBg, border: `1px solid ${ttBorder}` }}
+        className="rounded-xl px-3 py-2 text-xs shadow-xl">
+        <div style={{ color: ttLabel }} className="mb-0.5">{label}</div>
+        <div className={`font-bold text-sm ${v >= 0 ? 'text-green-500' : 'text-red-500'}`}>
           {sym}{Math.abs(v).toFixed(2)}
         </div>
       </div>
@@ -78,13 +89,13 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={items} margin={{ top: 4, right: 4, bottom: 36, left: 24 }}>
             <XAxis
-              dataKey="name" tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.35)' }}
+              dataKey="name" tick={{ fontSize: 9, fill: tickColor, fontWeight: 500 }}
               angle={-35} textAnchor="end" axisLine={false} tickLine={false} />
             <YAxis
-              tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }}
+              tick={{ fontSize: 10, fill: tickColor, fontWeight: 500 }}
               tickFormatter={v => `${sym}${Math.abs(v)}`}
               axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: cursorFill }} />
             <Bar dataKey="value" radius={[3, 3, 0, 0]}>
               {items.map((item, i) => <Cell key={i} fill={colors[item.type]} />)}
             </Bar>
@@ -98,13 +109,13 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
           <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-3">Key Metrics</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {stats.map(({ label, value, positive, highlight }) => (
-              <div key={label} className={`rounded-xl p-3 border ${
+              <div key={label} className={`rounded-xl p-3 border metric-stat ${
                 highlight
                   ? 'bg-violet-500/10 border-violet-500/20'
                   : 'bg-white/5 border-white/8'
               }`}>
-                <div className="text-[10px] text-white/40 mb-1 leading-snug">{label}</div>
-                <div className={`font-bold text-sm leading-snug ${positive ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="text-[10px] text-white/50 mb-1 leading-snug">{label}</div>
+                <div className={`font-bold text-sm leading-snug ${positive ? 'text-green-500' : 'text-red-500'}`}>
                   {value}
                 </div>
               </div>
@@ -122,7 +133,7 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-white/40">{label}</span>
+            <span className="text-[10px] text-white/55">{label}</span>
           </div>
         ))}
       </div>
