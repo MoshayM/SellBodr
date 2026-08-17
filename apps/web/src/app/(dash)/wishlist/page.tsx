@@ -205,7 +205,7 @@ export default function WishlistPage() {
         <div className="card-dark rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/8 text-[11px] text-white/35 uppercase tracking-widest">
+              <tr className="border-b border-white/8 text-[11px] text-white/55 uppercase tracking-widest">
                 <th className="text-left px-5 py-3 font-semibold">Product</th>
                 <th className="text-left px-4 py-3 font-semibold hidden sm:table-cell">Marketplace</th>
                 <th className="text-center px-4 py-3 font-semibold">Score</th>
@@ -226,7 +226,7 @@ export default function WishlistPage() {
                       <div className="font-medium text-white text-sm leading-snug line-clamp-2 max-w-xs">
                         {opp.product?.title || 'Unnamed product'}
                       </div>
-                      <div className="text-[11px] text-white/35 mt-0.5 sm:hidden">
+                      <div className="text-[11px] text-white/55 mt-0.5 sm:hidden">
                         {cc ? flag(cc) : '🛒'} {platformOf(code)}
                       </div>
                     </td>
@@ -234,7 +234,7 @@ export default function WishlistPage() {
                       <div className="flex items-center gap-1.5 text-sm text-white/55">
                         <span>{cc ? flag(cc) : '🛒'}</span>
                         <span>{platformOf(code)}</span>
-                        {cc && <span className="text-[10px] text-white/30">{cc}</span>}
+                        {cc && <span className="text-[10px] text-white/50">{cc}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center">
@@ -256,7 +256,7 @@ export default function WishlistPage() {
                         </Link>
                         <button onClick={() => handleRemove(opp.id)}
                           title="Remove from wishlist"
-                          className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/35 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/8 transition-colors">
+                          className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/8 transition-colors">
                           ✕
                         </button>
                       </div>

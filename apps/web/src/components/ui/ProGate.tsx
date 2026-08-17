@@ -87,7 +87,7 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
           </div>
 
           {/* Trust signals */}
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 mt-8 text-xs text-white/25">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 mt-8 text-xs text-white/50">
             <span>✓ From <strong className="text-white/40">$49/mo</strong></span>
             <span>✓ No setup fee</span>
             <span>✓ Cancel anytime</span>

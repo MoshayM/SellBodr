@@ -154,7 +154,7 @@ export default function TeamPage() {
         </div>
         <div className="text-right shrink-0">
           <div className="text-sm font-bold text-white">{usedSeats} / {totalSeats}</div>
-          <div className="text-xs text-white/35">seats used</div>
+          <div className="text-xs text-white/55">seats used</div>
           {/* Seat bar */}
           <div className="w-24 h-1.5 bg-white/10 rounded-full mt-1.5 overflow-hidden">
             <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
@@ -184,7 +184,7 @@ export default function TeamPage() {
         {inviteError   && <p className="text-xs text-rose-400 mt-2">{inviteError}</p>}
         {inviteSuccess && <p className="text-xs text-emerald-400 mt-2">✓ {inviteSuccess}</p>}
         {inviteRole && (
-          <p className="text-xs text-white/30 mt-2">{ROLE_DESC[inviteRole]}</p>
+          <p className="text-xs text-white/50 mt-2">{ROLE_DESC[inviteRole]}</p>
         )}
       </div>
 
@@ -197,19 +197,19 @@ export default function TeamPage() {
           <div className="divide-y divide-white/4">
             {(invites as any[]).map((inv: any) => (
               <div key={inv.id} className="px-4 py-3 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/15 flex items-center justify-center text-white/30 text-sm shrink-0">
+                <div className="w-9 h-9 rounded-full border-2 border-dashed border-white/15 flex items-center justify-center text-white/50 text-sm shrink-0">
                   ✉
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white/70">{inv.email}</div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <RoleBadge role={inv.role} />
-                    <span className="text-[10px] text-white/25">Invite sent {inv.sentAt ? new Date(inv.sentAt).toLocaleDateString() : ''}</span>
+                    <span className="text-[10px] text-white/50">Invite sent {inv.sentAt ? new Date(inv.sentAt).toLocaleDateString() : ''}</span>
                   </div>
                 </div>
                 <span className="text-[10px] text-amber-400 border border-amber-500/25 bg-amber-500/8 px-2 py-0.5 rounded-full shrink-0">Pending</span>
                 <button onClick={() => cancelInvite.mutate(inv.id)}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/30 hover:text-rose-400 hover:border-rose-500/30 transition-all">
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-rose-400 hover:border-rose-500/30 transition-all">
                   Cancel
                 </button>
               </div>
@@ -229,7 +229,7 @@ export default function TeamPage() {
         ) : (members as any[]).length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-3xl mb-2">👥</div>
-            <p className="text-sm text-white/35">No team members yet. Invite your first colleague above.</p>
+            <p className="text-sm text-white/55">No team members yet. Invite your first colleague above.</p>
           </div>
         ) : (
           <div className="divide-y divide-white/4">
@@ -238,7 +238,7 @@ export default function TeamPage() {
               <div className="px-4 py-3 flex items-center gap-3 bg-white/2">
                 <Avatar name={user.name} email={user.email} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-white">{user.name || 'You'} <span className="text-[10px] text-white/30 ml-1">(you)</span></div>
+                  <div className="text-sm font-medium text-white">{user.name || 'You'} <span className="text-[10px] text-white/50 ml-1">(you)</span></div>
                   <div className="text-xs text-white/40 truncate">{user.email}</div>
                 </div>
                 <RoleBadge role={user.role || 'admin'} />
@@ -274,7 +274,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <RoleBadge role={m.role || 'viewer'} />
                       <button onClick={() => { setEditingId(m.id); setEditRole(m.role || 'viewer'); }}
-                        className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/30 hover:text-white hover:border-white/25 transition-all">
+                        className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
                         Edit
                       </button>
                       <button onClick={() => { if (confirm(`Remove ${m.name || m.email} from the team?`)) remove.mutate(m.id); }}
@@ -291,7 +291,7 @@ export default function TeamPage() {
 
       {/* Role reference */}
       <div className="card-dark p-4 mt-4">
-        <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Role Reference</div>
+        <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-3">Role Reference</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ROLES.map(r => (
             <div key={r} className="flex items-start gap-2">

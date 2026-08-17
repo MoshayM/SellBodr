@@ -138,7 +138,7 @@ export default function GuidePage() {
 
         {/* Sidebar TOC */}
         <aside className="hidden lg:flex flex-col gap-1 w-56 shrink-0 sticky top-28 self-start">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 mb-3 px-3">Contents</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-3 px-3">Contents</p>
           {SECTIONS.map(s => (
             <button key={s.id} onClick={() => {
               setActive(s.id);
@@ -257,7 +257,7 @@ export default function GuidePage() {
 
       {/* Footer */}
       <footer className="border-t border-white/5 py-8 px-6 text-center">
-        <p className="text-white/25 text-sm">
+        <p className="text-white/45 text-sm">
           <Link href="/" className="hover:text-white/50 transition-colors">SellBodr</Link>
           {' · '}
           <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>

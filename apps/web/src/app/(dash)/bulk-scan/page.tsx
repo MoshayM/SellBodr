@@ -65,7 +65,7 @@ export default function BulkScanPage() {
         <div className="md:col-span-2 card-dark p-4 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs text-white/50 font-semibold uppercase tracking-widest">Keywords (one per line)</label>
-            <span className={`text-xs ${tooMany ? 'text-rose-400' : keywords.length > 15 ? 'text-amber-400' : 'text-white/30'}`}>
+            <span className={`text-xs ${tooMany ? 'text-rose-400' : keywords.length > 15 ? 'text-amber-400' : 'text-white/50'}`}>
               {keywords.length} / 20
             </span>
           </div>
@@ -95,7 +95,7 @@ export default function BulkScanPage() {
             {scan.isPending ? '&#x27F3; Scanning…' : `⚡ Scan ${keywords.length || ''} Product${keywords.length !== 1 ? 's' : ''}`}
           </button>
 
-          <div className="card-dark p-4 text-xs text-white/35 space-y-1.5">
+          <div className="card-dark p-4 text-xs text-white/55 space-y-1.5">
             <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> AI scores all products in parallel</div>
             <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> Results ranked by Opportunity Score</div>
             <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> Click any result to open full analysis</div>
@@ -108,7 +108,7 @@ export default function BulkScanPage() {
         <div className="card-dark p-12 text-center">
           <div className="animate-spin text-4xl text-violet-400 mb-4">&#x27F3;</div>
           <p className="text-white/50 text-sm">Running AI scan on {keywords.length} product{keywords.length !== 1 ? 's' : ''}&hellip;</p>
-          <p className="text-white/25 text-xs mt-1">This may take up to 30 seconds</p>
+          <p className="text-white/50 text-xs mt-1">This may take up to 30 seconds</p>
         </div>
       )}
 
@@ -123,7 +123,7 @@ export default function BulkScanPage() {
               <div key={opp.id || i}
                 onClick={() => opp.id && router.push(`/opportunities/${opp.id}`)}
                 className={`card-dark p-4 flex items-center gap-4 ${opp.id ? 'cursor-pointer hover:bg-white/3 transition-colors' : ''}`}>
-                <div className="text-xl font-black text-white/20 w-6 shrink-0">{i + 1}</div>
+                <div className="text-xl font-black text-white/50 w-6 shrink-0">{i + 1}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-white mb-1 line-clamp-1">{opp.product?.title || opp.keyword}</div>
                   <div className="flex flex-wrap gap-3 text-xs text-white/40">
@@ -138,7 +138,7 @@ export default function BulkScanPage() {
                     <div className="text-lg font-black" style={{
                       color: (opp.score?.opportunity || 0) >= 70 ? '#10b981' : (opp.score?.opportunity || 0) >= 50 ? '#f59e0b' : '#ef4444'
                     }}>{Math.round(opp.score?.opportunity || 0)}</div>
-                    <div className="text-[10px] text-white/25">score</div>
+                    <div className="text-[10px] text-white/50">score</div>
                   </div>
                   <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence || 0)} />
                 </div>

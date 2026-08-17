@@ -184,7 +184,7 @@ function ResearchTab({ opp }: { opp: any }) {
             <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">AI Evidence</p>
             {body && <p className="text-[11px] text-white/55 leading-relaxed">{body}</p>}
             {evidence && (
-              <div className="text-[10px] text-white/35 bg-white/3 rounded-lg p-2.5 leading-relaxed border border-white/8">
+              <div className="text-[10px] text-white/55 bg-white/3 rounded-lg p-2.5 leading-relaxed border border-white/8">
                 📌 {evidence}
               </div>
             )}
@@ -256,7 +256,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
 
       {/* ── Profitability tab ── */}
       {tab === 'profit' && (() => {
-        if (!pm) return <div className="p-6 text-center text-white/30 text-xs">No profitability data</div>;
+        if (!pm) return <div className="p-6 text-center text-white/50 text-xs">No profitability data</div>;
         const src       = Number(pm.productCostMinor   ?? 0);
         const saleP     = Number(pm.salePriceMinor     ?? 0);
         const landed    = Number(pm.landedCostMinor    ?? 0);
@@ -307,7 +307,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                 </div>
                 <div className="w-[76px] shrink-0 text-center">
                   <div className="text-[9px] font-bold uppercase tracking-wide text-white/40">{platform}</div>
-                  <div className="text-[7px] text-white/20 mt-px">Cost Breakdown</div>
+                  <div className="text-[7px] text-white/50 mt-px">Cost Breakdown</div>
                 </div>
                 <div className="flex-1 pl-2">
                   <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400/60">Revenue →</span>
@@ -323,7 +323,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                 ] as {c:string;label:string}[]).map(({ c, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-sm" style={{ background: c }} />
-                    <span className="text-[8px] text-white/35">{label}</span>
+                    <span className="text-[8px] text-white/55">{label}</span>
                   </div>
                 ))}
               </div>
@@ -395,7 +395,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                     : 'linear-gradient(135deg,rgba(239,68,68,0.1) 0%,rgba(239,68,68,0.03) 100%)',
                   border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
                 }}>
-                <div className="text-[9px] font-semibold text-white/35 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className="text-[9px] font-semibold text-white/55 uppercase tracking-widest">Net Profit / Unit</div>
                 <div className={`text-3xl font-black tabular-nums leading-none my-1.5 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
                   style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
                   {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
@@ -413,42 +413,42 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
               {/* Total Cost / Unit */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Total Cost / Unit</div>
+                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Total Cost / Unit</div>
                 <div className="text-xl font-bold text-red-400 tabular-nums my-1">
                   {f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}
                 </div>
-                <div className="text-[9px] text-white/20">all-in landed</div>
+                <div className="text-[9px] text-white/50">all-in landed</div>
               </div>
 
               {/* Break-even */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Break-even</div>
+                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Break-even</div>
                 <div className={`text-xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>
                   {Math.min(breakeven, 999)}
                 </div>
-                <div className="text-[9px] text-white/20">units to profit</div>
+                <div className="text-[9px] text-white/50">units to profit</div>
               </div>
 
               {/* Monthly · 50u */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Monthly</div>
+                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Monthly</div>
                 <div className={`text-xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
                   {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[9px] text-white/20">est. · 50 units</div>
+                <div className="text-[9px] text-white/50">est. · 50 units</div>
               </div>
 
               {/* Annual · 50u */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/30 uppercase tracking-widest font-medium">Annual</div>
+                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Annual</div>
                 <div className={`text-xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
                   style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>
                   {annual50 < 0 ? '-' : ''}{sym}{(Math.abs(annual50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[9px] text-white/20">est. · 50 units</div>
+                <div className="text-[9px] text-white/50">est. · 50 units</div>
               </div>
 
             </div>
@@ -462,10 +462,10 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest">Global Suppliers <span className="text-emerald-400/70">· India First</span></h4>
-            <span className="text-[10px] text-white/25">IndiaMART · TradeIndia · GEM · ExportHub · Udaan · Alibaba · more</span>
+            <span className="text-[10px] text-white/50">IndiaMART · TradeIndia · GEM · ExportHub · Udaan · Alibaba · more</span>
           </div>
           {cappedSuppliers.length === 0 ? (
-            <div className="text-xs text-white/25 py-6 text-center">
+            <div className="text-xs text-white/50 py-6 text-center">
               No supplier data yet — run a new search to populate sourcing candidates
             </div>
           ) : (
@@ -475,7 +475,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-white truncate">{s.name}</div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-white/35 mt-0.5">
+                      <div className="flex items-center gap-1.5 text-[10px] text-white/55 mt-0.5">
                         <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
                           {s.country === 'India' ? '🇮🇳' : s.country === 'China' ? '🇨🇳' : s.country === 'Hong Kong' ? '🇭🇰' : '🌐'} {({'indiamart':'IndiaMART','tradeindia':'TradeIndia','gem':'GEM Portal','exporthub':'ExportHub','udaan':'Udaan','alibaba':'Alibaba','dhgate':'DHgate','globalsources':'GlobalSources','made-in-china':'Made-in-China','ec21':'EC21'} as Record<string,string>)[s.source] || (s.source||'').replace(/-/g,' ').replace(/\b\w/g,(ch:string)=>ch.toUpperCase())}
                         </span>
@@ -490,7 +490,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-lg font-bold text-white">{usd(s.costMinor, 2)}</div>
-                      <div className="text-[10px] text-white/35">per unit</div>
+                      <div className="text-[10px] text-white/55">per unit</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-[10px] text-white/40">
@@ -507,7 +507,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                         <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                           style={{ width: `${Math.min(100, (1 - s.costMinor / sale) * 100)}%` }} />
                       </div>
-                      <div className="text-[10px] text-white/25 mt-0.5">
+                      <div className="text-[10px] text-white/50 mt-0.5">
                         {pct((1 - s.costMinor / sale) * 100)} gross margin room
                       </div>
                     </>
@@ -560,7 +560,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
             )}
           </div>
 
-          <div className="mt-3 flex items-center gap-2 text-[10px] text-white/25">
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-white/50">
             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: confColor }} />
             <span>AI Confidence: <span className="font-semibold" style={{ color: confColor }}>{confidence}%</span></span>
             {(() => {
@@ -638,15 +638,15 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
           <input autoFocus type="text" placeholder={`Search ${marketplaces.length} marketplaces…`}
             value={search} onChange={e => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-xs text-white placeholder-white/30 focus:outline-none" />
-          {search && <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60 text-xs">✕</button>}
+          {search && <button onClick={() => setSearch('')} className="text-white/50 hover:text-white/70 text-xs">✕</button>}
         </div>
       </div>
       <div className="max-h-60 overflow-y-auto scrollbar-dark py-1">
         {Object.keys(filtered).length === 0 ? (
-          <div className="px-4 py-8 text-center text-xs text-white/30">No marketplaces match &ldquo;{search}&rdquo;</div>
+          <div className="px-4 py-8 text-center text-xs text-white/50">No marketplaces match &ldquo;{search}&rdquo;</div>
         ) : Object.entries(filtered).map(([platform, mps]) => (
           <div key={platform}>
-            <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-white/25 uppercase tracking-widest sticky top-0 bg-[#0d1526]">{platform}</div>
+            <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-white/50 uppercase tracking-widest sticky top-0 bg-[#0d1526]">{platform}</div>
             {mps.map((mp: any) => (
               <button key={mp.code} type="button" onClick={() => { onChange(mp.code); setOpen(false); setSearch(''); }}
                 className={`w-full text-left px-3 py-2 text-sm leading-snug transition-colors flex items-center gap-2.5 ${
@@ -732,7 +732,7 @@ function ScanProgress({ searching }: { searching: boolean }) {
             <div className="text-[11px] text-white/40 mt-0.5 leading-snug">{stage?.detail}</div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-white/30 tabular-nums">{pct}%</span>
+            <span className="text-xs text-white/50 tabular-nums">{pct}%</span>
             <span className="text-sm text-violet-400 animate-spin inline-block">⟳</span>
           </div>
         </div>
@@ -918,7 +918,7 @@ export default function OpportunitiesPage() {
             <h1 className="text-[28px] sm:text-[36px] font-black text-white tracking-tight leading-none mb-2">
               Scout
             </h1>
-            <p className="text-sm text-white/40 leading-snug max-w-lg">
+            <p className="text-sm text-white/65 leading-snug max-w-lg">
               AI-ranked products sourced from India — ready to sell on Amazon, Etsy &amp; 70+ global marketplaces
             </p>
           </div>
@@ -965,7 +965,7 @@ export default function OpportunitiesPage() {
         <div className="card-dark p-5 sm:p-6 border border-violet-500/15 mb-4 relative">
           <button
             onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
-            className="absolute top-3 right-3 text-white/20 hover:text-white/50 transition-colors text-sm">
+            className="absolute top-3 right-3 text-white/50 hover:text-white/70 transition-colors text-sm">
             ✕
           </button>
           <div className="flex items-center gap-2 mb-4">
@@ -1003,7 +1003,7 @@ export default function OpportunitiesPage() {
             <a href="/guide" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Read the full User Guide →</a>
             <span className="text-white/15 text-xs">·</span>
             <button onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
-              className="text-xs text-white/25 hover:text-white/45 transition-colors">
+              className="text-xs text-white/50 hover:text-white/65 transition-colors">
               Dismiss
             </button>
           </div>
@@ -1054,7 +1054,7 @@ export default function OpportunitiesPage() {
                 className="pl-7 pr-2.5 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-white/80 placeholder-white/25 focus:outline-none focus:border-violet-500/50 focus:bg-white/8 w-40 transition-colors"
               />
               {nameFilter && (
-                <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">✕</button>
+                <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 text-xs">✕</button>
               )}
             </div>
 
@@ -1111,12 +1111,12 @@ export default function OpportunitiesPage() {
             <div className="ml-auto flex items-center gap-2.5 pl-2">
               {hasClientFilters && (
                 <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
-                  className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 whitespace-nowrap">
+                  className="text-xs text-white/55 hover:text-white/80 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 whitespace-nowrap">
                   Clear ✕
                 </button>
               )}
-              <span className="text-xs text-white/30 whitespace-nowrap tabular-nums">
-                {displayed.length}<span className="text-white/20"> / {allOpps.length}</span>
+              <span className="text-xs text-white/50 whitespace-nowrap tabular-nums">
+                {displayed.length}<span className="text-white/40"> / {allOpps.length}</span>
               </span>
             </div>
 
@@ -1194,7 +1194,7 @@ export default function OpportunitiesPage() {
                             <div className="font-medium text-white line-clamp-1 text-sm">{opp.product?.title}</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {opp.product?.category && (
-                                <span className="text-[10px] text-white/35 capitalize leading-snug truncate max-w-[120px]">
+                                <span className="text-[10px] text-white/55 capitalize leading-snug truncate max-w-[120px]">
                                   {opp.product.category.replace(/_/g, ' ')}
                                 </span>
                               )}
@@ -1228,7 +1228,7 @@ export default function OpportunitiesPage() {
                         <div className="text-sm font-medium text-white/80 leading-snug">
                           {cc ? flag(cc) : '🛒'} {platformOf(mpCode)}
                         </div>
-                        <div className="text-[10px] text-white/35 leading-snug mt-0.5">{region}</div>
+                        <div className="text-[10px] text-white/55 leading-snug mt-0.5">{region}</div>
                       </td>
 
                       {/* Score */}
@@ -1247,7 +1247,7 @@ export default function OpportunitiesPage() {
                           ? <span className={netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}>
                               {netMinor > 0 ? '+' : ''}{currency} {(netMinor / 100).toFixed(0)}
                             </span>
-                          : <span className="text-white/25">&mdash;</span>}
+                          : <span className="text-white/50">&mdash;</span>}
                       </td>
 
                       {/* Actions: Full Report (primary) + Research inline + wishlist */}
@@ -1287,7 +1287,7 @@ export default function OpportunitiesPage() {
                             className={`p-1.5 rounded-lg border transition-all duration-200 ${
                               wishlist.has(opp.id)
                                 ? 'bg-amber-500/15 border-amber-500/35 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
-                                : 'bg-white/5 border-white/10 text-white/25 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/25'
+                                : 'bg-white/5 border-white/10 text-white/50 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/25'
                             }`}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
                               <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
@@ -1349,7 +1349,7 @@ export default function OpportunitiesPage() {
                 {isFree ? Math.min(10, displayed.length) : displayed.length}
               </span>
               {isFree && allOpps.length > 10 && (
-                <span className="text-white/30"> of <span className="font-semibold text-white/50 tabular-nums">{allOpps.length}</span></span>
+                <span className="text-white/50"> of <span className="font-semibold text-white/70 tabular-nums">{allOpps.length}</span></span>
               )}{' '}
               opportunit{(isFree ? Math.min(10, displayed.length) : displayed.length) === 1 ? 'y' : 'ies'}
               {isFree && allOpps.length > 10 && (

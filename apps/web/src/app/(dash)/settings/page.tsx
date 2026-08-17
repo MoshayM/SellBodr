@@ -63,26 +63,26 @@ function ApiKeyRow({ apiKey: k, onDelete }: { apiKey: any; onDelete: (id: string
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-white/80">{k.name}</div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <code className="text-xs text-white/30 font-mono">{k.prefix || k.keyPreview || 'sk-...'}</code>
+            <code className="text-xs text-white/50 font-mono">{k.prefix || k.keyPreview || 'sk-...'}</code>
             {k.createdAt && (
-              <span className="text-[10px] text-white/20">Created {new Date(k.createdAt).toLocaleDateString()}</span>
+              <span className="text-[10px] text-white/50">Created {new Date(k.createdAt).toLocaleDateString()}</span>
             )}
             {k.lastUsed && (
-              <span className="text-[10px] text-white/20">Last used {new Date(k.lastUsed).toLocaleDateString()}</span>
+              <span className="text-[10px] text-white/50">Last used {new Date(k.lastUsed).toLocaleDateString()}</span>
             )}
           </div>
           {/* Usage meter */}
           {usage && (
             <div className="mt-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-white/30">API Usage</span>
+                <span className="text-[10px] text-white/50">API Usage</span>
                 <span className="text-[10px] text-white/40 font-mono">{usage.calls.toLocaleString()} / {usage.quota.toLocaleString()} calls</span>
               </div>
               <div className="h-1 bg-white/8 rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
               </div>
               {usage.resetAt && (
-                <div className="text-[10px] text-white/20 mt-0.5">Resets {new Date(usage.resetAt).toLocaleDateString()}</div>
+                <div className="text-[10px] text-white/50 mt-0.5">Resets {new Date(usage.resetAt).toLocaleDateString()}</div>
               )}
             </div>
           )}
@@ -167,7 +167,7 @@ function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
               {copied ? '✓' : 'Copy'}
             </button>
           </div>
-          <button onClick={() => setNewKey(null)} className="text-xs text-white/25 mt-2 hover:text-white/50">Dismiss</button>
+          <button onClick={() => setNewKey(null)} className="text-xs text-white/50 mt-2 hover:text-white/70">Dismiss</button>
         </div>
       )}
 
@@ -201,7 +201,7 @@ function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
             <div className="animate-spin text-2xl text-violet-400">⟳</div>
           </div>
         ) : keys.length === 0 ? (
-          <div className="p-8 text-center text-white/30 text-sm">No API keys yet. Create one above.</div>
+          <div className="p-8 text-center text-white/50 text-sm">No API keys yet. Create one above.</div>
         ) : (
           <div className="divide-y divide-white/4">
             {keys.map((k: any) => (
@@ -213,10 +213,10 @@ function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
 
       {/* Usage note */}
       <div className="card-dark p-4 border border-white/5">
-        <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Usage</div>
+        <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">Usage</div>
         <pre className="text-xs text-white/50 font-mono bg-black/20 p-3 rounded-lg overflow-x-auto">{`curl https://sellbodr.com/api/v1/opportunities \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
-        <p className="text-xs text-white/30 mt-2">API access is available on Organisation plan. Free and Pro keys are rate-limited to 100 requests/day.</p>
+        <p className="text-xs text-white/50 mt-2">API access is available on Organisation plan. Free and Pro keys are rate-limited to 100 requests/day.</p>
       </div>
     </div>
   );
@@ -291,7 +291,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
           <p className="text-xs text-white/40">Customise branding across your organisation's workspace. Changes apply to all team members.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={reset} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/35 hover:text-white/70 transition-colors">Reset</button>
+          <button onClick={reset} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/55 hover:text-white/70 transition-colors">Reset</button>
           <button onClick={save} className="text-xs px-4 py-1.5 rounded-lg font-semibold text-white transition-all"
             style={{ background: saved ? '#10b981' : 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
             {saved ? '✓ Saved' : 'Save changes'}
@@ -321,7 +321,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
 
           {/* Logo URL */}
           <div>
-            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Logo URL <span className="text-white/20 normal-case font-normal">(PNG / SVG)</span></label>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Logo URL <span className="text-white/50 normal-case font-normal">(PNG / SVG)</span></label>
             <input type="url" value={settings.logoUrl || ''} onChange={e => update('logoUrl', e.target.value)}
               placeholder="https://example.com/logo.svg"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
@@ -359,7 +359,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
 
           {/* Custom domain */}
           <div>
-            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Custom Domain <span className="text-white/20 normal-case font-normal">(contact support to activate)</span></label>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Custom Domain <span className="text-white/50 normal-case font-normal">(contact support to activate)</span></label>
             <input type="text" value={settings.customDomain || ''} onChange={e => update('customDomain', e.target.value)}
               placeholder="app.yourcompany.com"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
@@ -367,7 +367,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
 
           {/* Support email */}
           <div>
-            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Support Email <span className="text-white/20 normal-case font-normal">(shown to your team)</span></label>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Support Email <span className="text-white/50 normal-case font-normal">(shown to your team)</span></label>
             <input type="email" value={settings.supportEmail || ''} onChange={e => update('supportEmail', e.target.value)}
               placeholder="support@yourcompany.com"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
@@ -390,7 +390,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
               }
               <div>
                 <div className="text-xs font-black text-white leading-none">{previewName}</div>
-                <div className="text-[8px] text-white/30 leading-none mt-0.5">eCommerce Intelligence</div>
+                <div className="text-[8px] text-white/60 leading-none mt-0.5">eCommerce Intelligence</div>
               </div>
             </div>
             {/* Hero preview */}
@@ -410,12 +410,12 @@ function WhiteLabelPanel({ user }: { user: any }) {
                 <div className="flex items-center gap-1.5">
                   <div className="text-[10px] px-2 py-0.5 rounded-full text-white font-bold"
                     style={{ background: `linear-gradient(135deg, ${previewColor}, ${previewAccent})` }}>LAUNCH</div>
-                  <div className="text-[10px] text-white/35">+$14.20/unit</div>
+                  <div className="text-[10px] text-white/55">+$14.20/unit</div>
                 </div>
               </div>
             </div>
           </div>
-          <p className="text-[10px] text-white/25 mt-2 text-center">Preview updates live as you type</p>
+          <p className="text-[10px] text-white/50 mt-2 text-center">Preview updates live as you type</p>
         </div>
       </div>
     </div>
@@ -489,7 +489,7 @@ function DataExportPanel({ user, isGuest }: { user: any; isGuest: boolean }) {
             {exporting ? '⟳ Preparing…' : exported ? '✓ Downloaded' : '📦 Export JSON'}
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-white/35">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-white/55">
           {[
             { icon: '🎯', text: 'All scanned opportunities + scores' },
             { icon: '🏭', text: 'Supplier sourcing records' },
@@ -516,9 +516,9 @@ function DataExportPanel({ user, isGuest }: { user: any; isGuest: boolean }) {
             <div key={row.label} className="flex items-start gap-3">
               <div className="flex-1">
                 <div className="text-xs font-medium text-white/70">{row.label}</div>
-                <div className="text-[11px] text-white/35 mt-0.5">{row.detail}</div>
+                <div className="text-[11px] text-white/55 mt-0.5">{row.detail}</div>
               </div>
-              <div className="text-[10px] text-white/25 shrink-0 text-right pt-0.5">{row.retention}</div>
+              <div className="text-[10px] text-white/50 shrink-0 text-right pt-0.5">{row.retention}</div>
             </div>
           ))}
         </div>
@@ -677,7 +677,7 @@ function GuestAiKeysTab() {
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">FREE</span>
               </div>
               <a href={p.docsUrl} target="_blank" rel="noreferrer"
-                className="text-xs text-white/30 hover:text-white/60 underline">
+                className="text-xs text-white/50 hover:text-white/70 underline">
                 Get key ↗
               </a>
             </div>
@@ -756,7 +756,7 @@ function GuestSecurityTab() {
         Create a Pro Account →
       </Link>
       <div className="mt-3">
-        <Link href="/login" className="text-sm text-white/35 hover:text-white/60 transition-colors">
+        <Link href="/login" className="text-sm text-white/55 hover:text-white/70 transition-colors">
           Already have an account? Sign in
         </Link>
       </div>
@@ -824,7 +824,7 @@ function AiProviderKeysTab() {
                   <span className="text-xs bg-green-500/20 text-green-400 border border-green-500/30 rounded px-1.5 py-0.5">saved</span>
                 )}
                 <a href={p.docsUrl} target="_blank" rel="noreferrer"
-                  className="text-xs text-white/30 hover:text-white/60 underline">
+                  className="text-xs text-white/50 hover:text-white/70 underline">
                   Get key ↗
                 </a>
               </div>
@@ -947,7 +947,7 @@ function MarketplacesTab() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-white/60 mb-1">
-                Marketplace Code <span className="text-white/30">(e.g. amazon_us)</span>
+                Marketplace Code <span className="text-white/50">(e.g. amazon_us)</span>
               </label>
               <input required value={form.code} onChange={set('code')} placeholder="e.g. temu_us"
                 pattern="[a-z0-9_]+" title="Lowercase letters, numbers and underscores only"
@@ -973,7 +973,7 @@ function MarketplacesTab() {
             <div>
               <label className="block text-xs font-medium text-white/60 mb-1">FBA / Fulfilment Fee (minor units)</label>
               <input type="number" required min={0} value={form.fbaFeeMinor} onChange={set('fbaFeeMinor')} className={inputCls} />
-              <p className="text-xs text-white/30 mt-0.5">In paise/cents (e.g. 350 = ₹3.50 / $3.50)</p>
+              <p className="text-xs text-white/50 mt-0.5">In paise/cents (e.g. 350 = ₹3.50 / $3.50)</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-white/60 mb-1">Storage Fee (minor units / month)</label>
@@ -1000,7 +1000,7 @@ function MarketplacesTab() {
 
       <div className="space-y-2">
         {markets.length === 0 && (
-          <div className="text-center py-10 text-white/30">
+          <div className="text-center py-10 text-white/50">
             <div className="text-3xl mb-2">🛒</div>
             <p className="text-sm">No marketplaces yet — loading…</p>
           </div>
@@ -1024,9 +1024,9 @@ function MarketplacesTab() {
                   <span className="font-mono text-sm font-semibold text-white">{mp.code}</span>
                   <span className="text-xs bg-white/10 text-white/60 px-1.5 py-0.5 rounded">{mp.country}</span>
                   <span className="text-xs bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded">{mp.currency}</span>
-                  {!mp.active && <span className="text-xs bg-white/10 text-white/30 px-1.5 py-0.5 rounded">inactive</span>}
+                  {!mp.active && <span className="text-xs bg-white/10 text-white/50 px-1.5 py-0.5 rounded">inactive</span>}
                 </div>
-                <div className="flex gap-3 mt-0.5 text-xs text-white/30">
+                <div className="flex gap-3 mt-0.5 text-xs text-white/50">
                   <span>Referral: {f.referralPct ?? '—'}%</span>
                   <span>FBA: {f.fbaFeeMinor ?? '—'}</span>
                   <span>Storage: {f.storageFee ?? '—'}</span>
@@ -1133,11 +1133,11 @@ function UserGuideTab() {
             Email support
           </a>
           <a href="/privacy"
-            className="text-xs text-white/30 hover:text-white/50 transition-colors self-center">
+            className="text-xs text-white/50 hover:text-white/70 transition-colors self-center">
             Privacy Policy
           </a>
           <a href="/terms"
-            className="text-xs text-white/30 hover:text-white/50 transition-colors self-center">
+            className="text-xs text-white/50 hover:text-white/70 transition-colors self-center">
             Terms of Service
           </a>
         </div>
@@ -1246,12 +1246,12 @@ function PasskeysSection() {
       )}
 
       {loading ? (
-        <div className="text-center py-8 text-white/30 text-sm">Loading passkeys…</div>
+        <div className="text-center py-8 text-white/50 text-sm">Loading passkeys…</div>
       ) : passkeys.length === 0 ? (
         <div className="card-dark rounded-xl p-6 text-center">
           <div className="text-3xl mb-2">🔑</div>
           <p className="text-sm text-white/50 mb-1">No passkeys registered</p>
-          <p className="text-xs text-white/30">Add a passkey to sign in with your fingerprint, Face ID, or device PIN.</p>
+          <p className="text-xs text-white/50">Add a passkey to sign in with your fingerprint, Face ID, or device PIN.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -1278,7 +1278,7 @@ function PasskeysSection() {
                     {pk.backedUp && <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded">synced</span>}
                   </div>
                 )}
-                <div className="text-xs text-white/30 mt-0.5">
+                <div className="text-xs text-white/50 mt-0.5">
                   Added {pk.createdAt ? new Date(Number(pk.createdAt)).toLocaleDateString() : '—'}
                   {pk.lastUsedAt ? ` · Last used ${new Date(Number(pk.lastUsedAt)).toLocaleDateString()}` : ''}
                 </div>
@@ -1286,7 +1286,7 @@ function PasskeysSection() {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => { setRenameId(pk.id); setRenameName(String(pk.name)); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors text-sm"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors text-sm"
                   title="Rename">✏️</button>
                 <button
                   onClick={() => handleDelete(pk.id)}
@@ -1331,7 +1331,7 @@ function PasswordForm() {
           <input type="password" required autoComplete={i === 0 ? 'current-password' : 'new-password'}
             value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
             className="w-full px-3 py-2.5 bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/20 min-h-[44px] transition-colors" />
-          {field === 'newPassword' && <p className="text-xs text-white/30 mt-1">Minimum 8 characters</p>}
+          {field === 'newPassword' && <p className="text-xs text-white/50 mt-1">Minimum 8 characters</p>}
         </div>
       ))}
       {error && (

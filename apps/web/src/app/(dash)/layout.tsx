@@ -160,18 +160,18 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             placeholder="Search pages & features..."
             className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none min-w-0"
           />
-          <kbd className="text-white/20 text-[10px] border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
+          <kbd className="text-white/50 text-[10px] border border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
         </div>
 
         {/* Results */}
         <div className="py-1 max-h-72 overflow-y-auto scrollbar-dark">
           {searchResults.length === 0 ? (
-            <div className="px-4 py-5 text-center text-sm text-white/30">
+            <div className="px-4 py-5 text-center text-sm text-white/50">
               No results for &ldquo;{searchQuery}&rdquo;
             </div>
           ) : (
             <>
-              <div className="px-3.5 pt-2 pb-1 text-[9px] font-semibold text-white/20 uppercase tracking-widest">
+              <div className="px-3.5 pt-2 pb-1 text-[9px] font-semibold text-white/50 uppercase tracking-widest">
                 {searchQuery ? 'Results' : 'All pages'}
               </div>
               {searchResults.map(p => {
@@ -205,10 +205,10 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           )}
         </div>
 
-        <div className="px-3.5 py-1.5 border-t border-white/10 flex items-center gap-3 text-[10px] text-white/30">
-          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">⌘K</kbd> toggle</span>
-          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">↵</kbd> open</span>
-          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/25">ESC</kbd> close</span>
+        <div className="px-3.5 py-1.5 border-t border-white/10 flex items-center gap-3 text-[10px] text-white/50">
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/50">⌘K</kbd> toggle</span>
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/50">↵</kbd> open</span>
+          <span><kbd className="font-mono border border-white/10 rounded px-1 py-0.5 text-white/50">ESC</kbd> close</span>
         </div>
       </div>
     </>,
@@ -235,7 +235,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               SellBodr
             </div>
-            <div className="text-[8px] font-semibold text-white/28 uppercase tracking-[0.18em] leading-none mt-0.5">
+            <div className="text-[8px] font-semibold text-white/60 uppercase tracking-[0.18em] leading-none mt-0.5">
               eCommerce Intelligence
             </div>
           </div>
@@ -249,11 +249,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           <button
             ref={desktopBtnRef}
             onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.07] border border-white/8 hover:border-white/16 rounded-xl px-4 py-2 text-xs text-white/35 transition-all duration-200 w-full max-w-md group"
+            className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.07] border border-white/8 hover:border-white/16 rounded-xl px-4 py-2 text-xs text-white/55 transition-all duration-200 w-full max-w-md group"
             aria-label="Search (⌘K)">
             <span className="text-white/30 group-hover:text-white/50 transition-colors shrink-0"><SIcon /></span>
             <span className="flex-1 text-left">Search everything...</span>
-            <kbd className="text-[10px] glass rounded px-1.5 py-1 border border-white/8 font-mono text-white/22">⌘K</kbd>
+            <kbd className="text-[10px] glass rounded px-1.5 py-1 border border-white/8 font-mono text-white/50">⌘K</kbd>
           </button>
         </div>
 
@@ -272,7 +272,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           {/* Wishlist icon with count badge */}
           <Link href="/wishlist"
             className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors touch-manipulation ${
-              path === '/wishlist' ? 'bg-amber-500/15 text-amber-400' : 'text-white/35 hover:bg-white/5 hover:text-amber-400'
+              path === '/wishlist' ? 'bg-amber-500/15 text-amber-400' : 'text-white/50 hover:bg-white/5 hover:text-amber-400'
             }`}
             aria-label="Wishlist">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -306,12 +306,12 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     <div className="px-3 py-2 border-b border-white/8 mb-1">
                       <div className="text-xs font-semibold text-white/80 truncate">{user?.name ?? 'User'}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-white/30 capitalize">{user?.role ?? 'member'}</span>
+                        <span className="text-[10px] text-white/50 capitalize">{user?.role ?? 'member'}</span>
                         {user?.role === 'admin'
                           ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/25">Admin</span>
                           : user?.plan === 'pro'
                             ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/25">Pro</span>
-                            : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/8 text-white/35 border border-white/10">Free</span>
+                            : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/8 text-white/55 border border-white/10">Free</span>
                         }
                       </div>
                     </div>
@@ -395,7 +395,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-white truncate">{user.name ?? 'User'}</div>
-                    <div className="text-xs text-white/30 capitalize">
+                    <div className="text-xs text-white/50 capitalize">
                       {user.plan === 'pro' ? 'Pro' : user.role === 'admin' ? 'Admin' : 'Free'} account
                     </div>
                   </div>
@@ -438,7 +438,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                 {user ? (
                   <button onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/50 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
                     <span>↩</span><span>Sign out</span>
                   </button>
                 ) : (
@@ -501,7 +501,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <Link href="/opportunities"
             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
-              isHome ? 'text-violet-300' : 'text-white/30 active:text-white/60'
+              isHome ? 'text-violet-300' : 'text-white/50 active:text-white/70'
             }`}>
             {isHome && (
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
@@ -513,9 +513,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <button
             onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/50 active:text-white/70 transition-colors touch-manipulation"
             aria-label="Search">
-            <span className="text-white/35">
+            <span className="text-white/50">
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
@@ -525,7 +525,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <Link href="/wishlist"
             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
-              path === '/wishlist' ? 'text-amber-300' : 'text-white/30 active:text-white/60'
+              path === '/wishlist' ? 'text-amber-300' : 'text-white/50 active:text-white/70'
             }`}>
             {path === '/wishlist' && (
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
@@ -537,7 +537,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/30 active:text-white/60 transition-colors touch-manipulation"
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-white/50 active:text-white/70 transition-colors touch-manipulation"
             aria-label="More pages">
             <svg width="20" height="16" viewBox="0 0 20 16" fill="none" aria-hidden="true">
               <rect width="20" height="2" rx="1" fill="currentColor"/>

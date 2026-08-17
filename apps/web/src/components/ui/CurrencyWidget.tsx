@@ -174,21 +174,21 @@ export function CurrencyWidget() {
                   <div className="text-sm font-bold text-white leading-none">Live Currency Rates</div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'bg-amber-400 animate-pulse' : error ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className="text-[10px] text-white/30">
+                    <span className="text-[10px] text-white/55">
                       {fetching ? 'Fetching ECB rates…' : error ? 'Could not fetch — showing cached' : updatedAt ? `Updated ${timeAgo(updatedAt)}` : 'Loading…'}
                     </span>
                   </div>
                 </div>
               </div>
               <button onClick={() => setOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-white/35 hover:bg-white/8 hover:text-white transition-colors text-lg shrink-0">
+                className="w-8 h-8 flex items-center justify-center rounded-full text-white/55 hover:bg-white/8 hover:text-white transition-colors text-lg shrink-0">
                 ✕
               </button>
             </div>
 
             {/* Amount + base currency input */}
             <div className="px-4 pt-4 pb-3 border-b border-white/8 shrink-0">
-              <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2">Convert from</div>
+              <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-2">Convert from</div>
               <div className="flex items-center gap-2">
 
                 {/* Base currency pill */}
@@ -231,7 +231,7 @@ export function CurrencyWidget() {
                 </button>
               </div>
 
-              <div className="mt-2 text-[10px] text-white/25 pl-0.5">
+              <div className="mt-2 text-[10px] text-white/50 pl-0.5">
                 {baseInfo.name} · Tap any result card to set it as the base
               </div>
             </div>
@@ -243,7 +243,7 @@ export function CurrencyWidget() {
                   <svg className="w-6 h-6 text-violet-500/50 animate-spin" viewBox="0 0 16 16" fill="none">
                     <path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  <span className="text-xs text-white/30">Fetching live rates…</span>
+                  <span className="text-xs text-white/50">Fetching live rates…</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">

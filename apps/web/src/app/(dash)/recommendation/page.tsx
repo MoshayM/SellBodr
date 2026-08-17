@@ -117,7 +117,7 @@ export default function RecommendationPage() {
               <div className={`text-xs sm:text-sm font-semibold leading-snug mt-1 ${color}`}>
                 {emoji} {label}
               </div>
-              <div className="text-xs text-white/30 mt-0.5 leading-snug hidden sm:block">
+              <div className="text-xs text-white/50 mt-0.5 leading-snug hidden sm:block">
                 {total > 0 ? Math.round(list.length / total * 100) : 0}% of {total}
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function RecommendationPage() {
         <div key={key} className="mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <h2 className={`text-sm font-bold leading-none ${color}`}>{emoji} {label}</h2>
-            <span className="text-xs text-white/30 leading-snug">{desc}</span>
+            <span className="text-xs text-white/50 leading-snug">{desc}</span>
           </div>
           <div className="space-y-3">{list.map(o => <OppCard key={o.id} opp={o} />)}</div>
         </div>

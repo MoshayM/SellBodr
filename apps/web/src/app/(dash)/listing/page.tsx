@@ -21,7 +21,7 @@ function Section({ label, children, copyText }: { label: string; children: React
   return (
     <div className="card-dark rounded-xl p-4 sm:p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] leading-none font-semibold text-white/30 uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] leading-none font-semibold text-white/55 uppercase tracking-widest">{label}</span>
         {copyText && <CopyButton text={copyText} />}
       </div>
       {children}
@@ -95,7 +95,7 @@ export default function ListingPage() {
         {/* Desktop sidebar */}
         <div className="hidden lg:block w-56 shrink-0">
           <div className="card-dark rounded-xl p-3 sticky top-4">
-            <div className="text-[10px] leading-none font-semibold text-white/30 uppercase tracking-widest mb-3 px-2 mt-1">
+            <div className="text-[10px] leading-none font-semibold text-white/55 uppercase tracking-widest mb-3 px-2 mt-1">
               Opportunity
             </div>
             <div className="space-y-0.5">
@@ -107,11 +107,11 @@ export default function ListingPage() {
                       : 'text-white/50 hover:bg-white/5 hover:text-white'
                   }`}>
                   <div className="truncate">{o.product?.title}</div>
-                  <div className="text-white/30 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
+                  <div className="text-white/50 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
                 </button>
               ))}
               {(opps as any[]).length === 0 && (
-                <div className="text-xs text-white/30 px-3 py-2">Run a search first</div>
+                <div className="text-xs text-white/50 px-3 py-2">Run a search first</div>
               )}
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function ListingPage() {
 
               <div className="pt-2">
                 <button onClick={() => gen.mutate()} disabled={gen.isPending}
-                  className="text-xs text-white/30 hover:text-white/60 underline disabled:opacity-40 transition-colors">
+                  className="text-xs text-white/50 hover:text-white/70 underline disabled:opacity-40 transition-colors">
                   {gen.isPending ? 'Regenerating…' : '↺ Regenerate assets'}
                 </button>
               </div>

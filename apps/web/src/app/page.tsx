@@ -150,7 +150,7 @@ export default function LandingPage() {
               style={{ background: 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               SellBodr
             </div>
-            <div className="hidden sm:block text-[8px] font-semibold text-white/28 uppercase tracking-[0.18em] leading-none mt-0.5">
+            <div className="hidden sm:block text-[8px] font-semibold text-white/60 uppercase tracking-[0.18em] leading-none mt-0.5">
               eCommerce Intelligence
             </div>
           </div>

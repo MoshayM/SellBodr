@@ -74,7 +74,7 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
     <div>
       {/* Waterfall chart */}
       <div className="mb-5">
-        <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Cost Waterfall</div>
+        <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-3">Cost Waterfall</div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={items} margin={{ top: 4, right: 4, bottom: 36, left: 24 }}>
             <XAxis
@@ -95,7 +95,7 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
       {/* Stats grid — hidden when parent already renders a summary card */}
       {showStats && (
         <>
-          <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Key Metrics</div>
+          <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-3">Key Metrics</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {stats.map(({ label, value, positive, highlight }) => (
               <div key={label} className={`rounded-xl p-3 border ${

@@ -51,7 +51,7 @@ function ImagePlaceholder({ title, category }: { title?: string; category?: stri
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-4 bg-gradient-to-br from-white/5 to-white/[0.02]">
       <span className="text-4xl opacity-40">{icon}</span>
-      {title && <span className="text-[9px] text-white/25 text-center line-clamp-2 leading-snug">{title}</span>}
+      {title && <span className="text-[9px] text-white/50 text-center line-clamp-2 leading-snug">{title}</span>}
     </div>
   );
 }
@@ -110,7 +110,7 @@ function ProductCard({ opp }: { opp: any }) {
               { label: 'Comp.', value: s.competition },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white/5 rounded px-1.5 py-1.5">
-                <div className="text-[9px] leading-none text-white/30 mb-0.5">{label}</div>
+                <div className="text-[9px] leading-none text-white/50 mb-0.5">{label}</div>
                 <div className={`text-xs font-bold leading-snug ${
                   (value ?? 0) >= 70 ? 'text-green-400' :
                   (value ?? 0) >= 40 ? 'text-amber-400' : 'text-red-400'

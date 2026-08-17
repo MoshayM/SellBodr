@@ -309,7 +309,7 @@ if(pins.length>1){
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/30 hidden sm:block">Press ESC to close</span>
+              <span className="text-[10px] text-white/50 hidden sm:block">Press ESC to close</span>
               <button
                 onClick={close}
                 className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg text-white/70 hover:text-white border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all">
@@ -343,7 +343,7 @@ if(pins.length>1){
               <div className="w-3 h-3 rounded-full bg-indigo-500 ring-2 ring-indigo-500/30" />
               Global supplier
             </div>
-            <div className="ml-auto text-[10px] text-white/20">Click a pin for precise location + Google Maps links</div>
+            <div className="ml-auto text-[10px] text-white/50">Click a pin for precise location + Google Maps links</div>
           </div>
         </div>
       )}
@@ -355,7 +355,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="text-xs px-2.5 py-1 rounded-lg border border-white/10 text-white/35 hover:text-white/80 hover:bg-white/5 transition-all">
+      className="text-xs px-2.5 py-1 rounded-lg border border-white/10 text-white/55 hover:text-white/80 hover:bg-white/5 transition-all">
       {copied ? '✓ Copied' : 'Copy'}
     </button>
   );
@@ -496,9 +496,9 @@ export default function OpportunityDetailPage() {
                 {opp.marketplace?.code?.toUpperCase()}
               </span>
               <span className="text-xs text-white/40 capitalize">{opp.product?.category?.replace(/_/g, ' ')}</span>
-              <span className="text-[10px] text-white/25 font-mono">v{opp.scoreVersion}</span>
+              <span className="text-[10px] text-white/50 font-mono">v{opp.scoreVersion}</span>
               {opp.scoredAt && (
-                <span className="text-[10px] text-white/25">
+                <span className="text-[10px] text-white/50">
                   Scored {Math.round((Date.now() - new Date(opp.scoredAt).getTime()) / 3600000)}h ago
                 </span>
               )}
@@ -533,7 +533,7 @@ export default function OpportunityDetailPage() {
         <div className="flex gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/5 flex-wrap">
           {sub.map(({ label, value }) => (
             <div key={label} className="text-center">
-              <div className="text-[10px] text-white/35 mb-1">{label}</div>
+              <div className="text-[10px] text-white/55 mb-1">{label}</div>
               <ScoreBadge score={value || 0} />
             </div>
           ))}
@@ -568,7 +568,7 @@ export default function OpportunityDetailPage() {
               <ScoreGauge score={value || 0} size="sm" />
               <div>
                 <div className="text-sm font-medium text-white/80">{label}</div>
-                <div className="text-xs text-white/35">{(value || 0) >= 70 ? 'Strong' : (value || 0) >= 40 ? 'Moderate' : 'Weak'}</div>
+                <div className="text-xs text-white/55">{(value || 0) >= 70 ? 'Strong' : (value || 0) >= 40 ? 'Moderate' : 'Weak'}</div>
               </div>
             </div>
           ))}
@@ -594,8 +594,8 @@ export default function OpportunityDetailPage() {
                   { label: 'Saturation', val: Math.round(score.saturation || 0), unit: '/100' },
                 ].map(s => (
                   <div key={s.label} className="rounded-xl bg-white/5 p-3 text-center">
-                    <div className="text-[11px] text-white/35 mb-1">{s.label}</div>
-                    <div className={`font-bold text-xl ${s.val >= 70 ? 'text-emerald-400' : s.val >= 45 ? 'text-amber-400' : 'text-red-600'}`}>{s.val}<span className="text-xs font-normal text-white/35">{s.unit}</span></div>
+                    <div className="text-[11px] text-white/55 mb-1">{s.label}</div>
+                    <div className={`font-bold text-xl ${s.val >= 70 ? 'text-emerald-400' : s.val >= 45 ? 'text-amber-400' : 'text-red-600'}`}>{s.val}<span className="text-xs font-normal text-white/55">{s.unit}</span></div>
                   </div>
                 ))}
               </div>
@@ -625,7 +625,7 @@ export default function OpportunityDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl bg-white/5 px-4 py-3 mb-3">
-                <span className="text-[10px] text-white/35">Customs Chapter · </span>
+                <span className="text-[10px] text-white/55">Customs Chapter · </span>
                 <span className="text-sm font-medium text-white/80">{trade.chapter}</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -727,7 +727,7 @@ export default function OpportunityDetailPage() {
             <div className="card-dark overflow-hidden">
               <div className="p-3 border-b border-white/8 flex items-center gap-2">
                 <span className="text-sm font-semibold text-white/80">🌍 Global Supplier Map</span>
-                <span className="text-xs text-white/35">India suppliers prioritised</span>
+                <span className="text-xs text-white/55">India suppliers prioritised</span>
               </div>
               <GlobalSupplierMap candidates={opp.sourcingCandidates} />
             </div>
@@ -739,12 +739,12 @@ export default function OpportunityDetailPage() {
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-white">Sourcing Candidates</span>
                 <span className="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded-full font-medium">India First</span>
-                <span className="text-xs text-white/30">({opp.sourcingCandidates?.length ?? 0} suppliers)</span>
+                <span className="text-xs text-white/50">({opp.sourcingCandidates?.length ?? 0} suppliers)</span>
               </div>
-              <span className="text-xs text-white/35">Click a row to view profile &amp; contact</span>
+              <span className="text-xs text-white/55">Click a row to view profile &amp; contact</span>
             </div>
             {(opp.sourcingCandidates?.length === 0 || !opp.sourcingCandidates) ? (
-              <div className="p-8 text-center text-white/35">No suppliers found</div>
+              <div className="p-8 text-center text-white/55">No suppliers found</div>
             ) : (
               <div className="table-scroll">
                 <table className="w-full text-sm min-w-[700px]">
@@ -780,7 +780,7 @@ export default function OpportunityDetailPage() {
                               )}
                               <span className="font-medium text-white leading-tight">{sc.supplier?.name || sc.supplierName}</span>
                             </div>
-                            {sc.city && <div className="text-xs text-white/35 mt-0.5">📍 {sc.city}</div>}
+                            {sc.city && <div className="text-xs text-white/55 mt-0.5">📍 {sc.city}</div>}
                           </td>
                           <td className="px-4 py-3">
                             <span className="flex items-center gap-1.5 text-sm">
@@ -887,7 +887,7 @@ export default function OpportunityDetailPage() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="text-sm text-white/55">
                     Showing {cappedCandidates.length} supplier{cappedCandidates.length !== 1 ? 's' : ''}
-                    {lockedCount > 0 && <span className="ml-1 text-white/30">· {lockedCount} locked</span>}
+                    {lockedCount > 0 && <span className="ml-1 text-white/50">· {lockedCount} locked</span>}
                     {moreNote && <span className="ml-2 text-green-400 text-xs">{moreNote}</span>}
                   </div>
                   {isFree ? (
@@ -918,7 +918,7 @@ export default function OpportunityDetailPage() {
                   )}
                 </div>
                 {isFree && allCandidates.length >= 10 && (
-                  <p className="text-xs text-white/30 mt-2">Free plan: max 10 suppliers per product. Upgrade for unlimited access.</p>
+                  <p className="text-xs text-white/50 mt-2">Free plan: max 10 suppliers per product. Upgrade for unlimited access.</p>
                 )}
               </div>
             );
@@ -937,7 +937,7 @@ export default function OpportunityDetailPage() {
       {/* ── Profitability ── */}
       {!isGuest && tab === 'Profitability' && (() => {
         const pm = profit;
-        if (!pm) return <div className="card-dark p-8 text-center text-white/35">No profitability data for this opportunity</div>;
+        if (!pm) return <div className="card-dark p-8 text-center text-white/55">No profitability data for this opportunity</div>;
         const mpCodeStr = opp.marketplace?.code || '';
         const platform  = mpCodeStr.split('_')[0].charAt(0).toUpperCase() + mpCodeStr.split('_')[0].slice(1) || 'Marketplace';
         const currency  = pm.currency || 'USD';
@@ -992,7 +992,7 @@ export default function OpportunityDetailPage() {
                 </div>
                 <div className="w-[90px] shrink-0 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-wide text-white/40">{platform}</div>
-                  <div className="text-[8px] text-white/20 mt-px">Cost Breakdown</div>
+                  <div className="text-[8px] text-white/50 mt-px">Cost Breakdown</div>
                 </div>
                 <div className="flex-1 pl-2">
                   <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400/60">Revenue →</span>
@@ -1006,7 +1006,7 @@ export default function OpportunityDetailPage() {
                 ] as { c: string; label: string }[]).map(({ c, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-sm" style={{ background: c }} />
-                    <span className="text-[10px] text-white/35">{label}</span>
+                    <span className="text-[10px] text-white/55">{label}</span>
                   </div>
                 ))}
               </div>
@@ -1064,7 +1064,7 @@ export default function OpportunityDetailPage() {
                   background: trueNet >= 0 ? 'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.03))' : 'linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03))',
                   border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
                 }}>
-                <div className="text-[10px] font-semibold text-white/35 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest">Net Profit / Unit</div>
                 <div className={`text-4xl font-black tabular-nums leading-none my-2 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
                   style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
                   {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
@@ -1079,32 +1079,32 @@ export default function OpportunityDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Total Cost / Unit</div>
+                <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Total Cost / Unit</div>
                 <div className="text-2xl font-bold text-red-400 tabular-nums my-1">{f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}</div>
-                <div className="text-[10px] text-white/20">all-in landed</div>
+                <div className="text-[10px] text-white/50">all-in landed</div>
               </div>
               <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Break-even</div>
+                <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Break-even</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>{Math.min(breakeven, 999)}</div>
-                <div className="text-[10px] text-white/20">units to profit</div>
+                <div className="text-[10px] text-white/50">units to profit</div>
               </div>
               <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Monthly</div>
+                <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Monthly</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
                   {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[10px] text-white/20">est. · 50 units</div>
+                <div className="text-[10px] text-white/50">est. · 50 units</div>
               </div>
               <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Annual</div>
+                <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Annual</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
                   style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>
                   {annual50 < 0 ? '-' : ''}{sym}{(Math.abs(annual50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[10px] text-white/20">est. · 50 units</div>
+                <div className="text-[10px] text-white/50">est. · 50 units</div>
               </div>
             </div>
-            <p className="text-xs text-white/25 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination country avg · {currency}</p>
+            <p className="text-xs text-white/50 px-1">Fees: {platform} standard · Shipping: India air freight estimate · Duties: destination country avg · {currency}</p>
           </div>
         );
       })()}
@@ -1174,7 +1174,7 @@ export default function OpportunityDetailPage() {
                 <div key={card.label} className="card-dark p-4">
                   <div className="text-xs text-white/40 mb-1.5">{card.label}</div>
                   <div className="text-2xl font-bold mb-0.5" style={{ color: card.color }}>{card.value}</div>
-                  <div className="text-[11px] text-white/30">{card.sub}</div>
+                  <div className="text-[11px] text-white/50">{card.sub}</div>
                 </div>
               ))}
             </div>
@@ -1194,18 +1194,18 @@ export default function OpportunityDetailPage() {
             <div className="card-dark overflow-hidden">
               <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
                 <div className="text-xs font-semibold text-white/60 uppercase tracking-widest">Top Competitors on {mkt}</div>
-                <span className="text-[10px] text-white/25">AI-modelled · representative data</span>
+                <span className="text-[10px] text-white/50">AI-modelled · representative data</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-white/6">
-                      <th className="px-4 py-2.5 text-left text-white/35 font-semibold">Brand</th>
-                      <th className="px-4 py-2.5 text-right text-white/35 font-semibold">Price</th>
-                      <th className="px-4 py-2.5 text-right text-white/35 font-semibold">Reviews</th>
-                      <th className="px-4 py-2.5 text-right text-white/35 font-semibold">Rating</th>
-                      <th className="px-4 py-2.5 text-right text-white/35 font-semibold">BSR</th>
-                      <th className="px-4 py-2.5 text-center text-white/35 font-semibold">Weakness</th>
+                      <th className="px-4 py-2.5 text-left text-white/55 font-semibold">Brand</th>
+                      <th className="px-4 py-2.5 text-right text-white/55 font-semibold">Price</th>
+                      <th className="px-4 py-2.5 text-right text-white/55 font-semibold">Reviews</th>
+                      <th className="px-4 py-2.5 text-right text-white/55 font-semibold">Rating</th>
+                      <th className="px-4 py-2.5 text-right text-white/55 font-semibold">BSR</th>
+                      <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Weakness</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1254,7 +1254,7 @@ export default function OpportunityDetailPage() {
                 </div>
                 <span className="text-sm text-white/40 w-12 shrink-0">${priceMax.toFixed(0)}</span>
               </div>
-              <div className="flex justify-between text-[10px] text-white/30 mt-1">
+              <div className="flex justify-between text-[10px] text-white/50 mt-1">
                 <span>Budget zone</span><span>Mid-market</span><span>Premium zone</span>
               </div>
             </div>
@@ -1264,7 +1264,7 @@ export default function OpportunityDetailPage() {
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">🔬</span>
                 <div className="text-sm font-semibold text-white/80">Review Intelligence</div>
-                <span className="text-[10px] text-white/25 ml-auto">Derived from competitor review patterns</span>
+                <span className="text-[10px] text-white/50 ml-auto">Derived from competitor review patterns</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -1330,14 +1330,14 @@ export default function OpportunityDetailPage() {
             <>
               <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">SEO Title</div>
+                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest">SEO Title</div>
                   <CopyButton text={listing.seoTitle || ''} />
                 </div>
                 <div className="font-semibold text-white">{listing.seoTitle}</div>
               </div>
               <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">Bullets</div>
+                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest">Bullets</div>
                   <CopyButton text={(JSON.parse(listing.bullets || '[]') as string[]).join('\n')} />
                 </div>
                 <ul className="space-y-2">
@@ -1350,14 +1350,14 @@ export default function OpportunityDetailPage() {
               </div>
               <div className="card-dark p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">Description</div>
+                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest">Description</div>
                   <CopyButton text={listing.description || ''} />
                 </div>
                 <div className="text-sm text-white/80 leading-relaxed">{listing.description}</div>
               </div>
               {keywords && (
                 <div className="card-dark p-4 sm:p-5">
-                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Keywords</div>
+                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-3">Keywords</div>
                   <div className="space-y-3">
                     {Object.entries(keywords as Record<string, any>).map(([k, vals]) => (
                       <div key={k}>
@@ -1433,14 +1433,14 @@ export default function OpportunityDetailPage() {
                       <div className="p-4 space-y-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-white/35 uppercase">Headline</span>
+                            <span className="text-xs font-semibold text-white/55 uppercase">Headline</span>
                             <CopyButton text={ads.facebook.headline} />
                           </div>
                           <p className="text-sm font-semibold text-white">{ads.facebook.headline}</p>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-white/35 uppercase">Primary Text</span>
+                            <span className="text-xs font-semibold text-white/55 uppercase">Primary Text</span>
                             <CopyButton text={ads.facebook.primaryText} />
                           </div>
                           <p className="text-sm text-white/80 whitespace-pre-line">{ads.facebook.primaryText}</p>
@@ -1468,14 +1468,14 @@ export default function OpportunityDetailPage() {
                       <div className="p-4 space-y-3">
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-white/35 uppercase">Caption</span>
+                            <span className="text-xs font-semibold text-white/55 uppercase">Caption</span>
                             <CopyButton text={ads.instagram.caption} />
                           </div>
                           <p className="text-sm text-white/80">{ads.instagram.caption}</p>
                         </div>
                         {ads.instagram.reelHook && (
                           <div>
-                            <div className="text-xs font-semibold text-white/35 uppercase mb-1">Reel Hook</div>
+                            <div className="text-xs font-semibold text-white/55 uppercase mb-1">Reel Hook</div>
                             <p className="text-sm text-white/80 italic">{ads.instagram.reelHook}</p>
                           </div>
                         )}
@@ -1501,7 +1501,7 @@ export default function OpportunityDetailPage() {
                         {ads.youtube.title && (
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs font-semibold text-white/35 uppercase">Video Title</span>
+                              <span className="text-xs font-semibold text-white/55 uppercase">Video Title</span>
                               <CopyButton text={ads.youtube.title} />
                             </div>
                             <p className="text-sm font-semibold text-white">{ads.youtube.title}</p>
@@ -1510,7 +1510,7 @@ export default function OpportunityDetailPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {[['Hook (0–5s)', ads.youtube.hook], ['Body', ads.youtube.body], ['CTA', ads.youtube.cta]].map(([label, text]) => text && (
                             <div key={label as string} className="bg-white/5 rounded-lg p-2.5">
-                              <div className="text-xs font-semibold text-white/35 uppercase mb-1">{label as string}</div>
+                              <div className="text-xs font-semibold text-white/55 uppercase mb-1">{label as string}</div>
                               <p className="text-xs text-white/80">{text as string}</p>
                             </div>
                           ))}
@@ -1530,14 +1530,14 @@ export default function OpportunityDetailPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[ads.google.headline1, ads.google.headline2, ads.google.headline3].filter(Boolean).map((h: string, i) => (
                             <div key={i} className="bg-white/5 rounded p-2">
-                              <div className="text-xs text-white/35 mb-0.5">H{i + 1}</div>
+                              <div className="text-xs text-white/55 mb-0.5">H{i + 1}</div>
                               <p className="text-sm font-semibold text-white">{h}</p>
                             </div>
                           ))}
                         </div>
                         {ads.google.keywords?.length > 0 && (
                           <div>
-                            <div className="text-xs font-semibold text-white/35 uppercase mb-1.5">Target Keywords</div>
+                            <div className="text-xs font-semibold text-white/55 uppercase mb-1.5">Target Keywords</div>
                             <div className="flex flex-wrap gap-1.5">
                               {ads.google.keywords.map((kw: string, i: number) => (
                                 <span key={i} className="text-xs bg-green-500/8 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">{kw}</span>
@@ -1608,7 +1608,7 @@ export default function OpportunityDetailPage() {
                   {/* Quick Wins */}
                   {g.quickWins?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">⚡ Quick Wins</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">⚡ Quick Wins</div>
                       <ul className="space-y-2">
                         {g.quickWins.map((w: string, i: number) => (
                           <li key={i} className="text-sm text-white/80 flex gap-2 p-2.5 rounded-lg bg-green-500/8">
@@ -1622,7 +1622,7 @@ export default function OpportunityDetailPage() {
                   {/* Listing Optimization */}
                   {g.listingOptimization && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">📝 Listing Optimization</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">📝 Listing Optimization</div>
                       <div className="space-y-3">
                         {g.listingOptimization.title && (
                           <div className="card-dark p-3">
@@ -1666,11 +1666,11 @@ export default function OpportunityDetailPage() {
                   {/* Pricing */}
                   {g.pricingStrategy && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">💰 Pricing Strategy</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">💰 Pricing Strategy</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {Object.entries(g.pricingStrategy as Record<string, string>).map(([key, val]) => (
                           <div key={key} className="card-dark p-3">
-                            <div className="text-xs text-white/35 capitalize mb-1">{key}</div>
+                            <div className="text-xs text-white/55 capitalize mb-1">{key}</div>
                             <p className="text-sm text-white/80">{val}</p>
                           </div>
                         ))}
@@ -1681,7 +1681,7 @@ export default function OpportunityDetailPage() {
                   {/* Launch Sequence */}
                   {g.launchSequence?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">🗓 Launch Sequence</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">🗓 Launch Sequence</div>
                       <div className="relative">
                         <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
                         <div className="space-y-3">
@@ -1702,7 +1702,7 @@ export default function OpportunityDetailPage() {
                   {/* PPC */}
                   {g.ppcStrategy && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">📢 PPC Strategy</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">📢 PPC Strategy</div>
                       <div className="card-dark p-4 space-y-3">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-semibold text-white/80">Budget:</span>
@@ -1727,7 +1727,7 @@ export default function OpportunityDetailPage() {
                   {/* Monthly Milestones */}
                   {g.monthlyMilestones?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">🎯 Monthly Milestones</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">🎯 Monthly Milestones</div>
                       <div className="grid grid-cols-2 gap-2">
                         {g.monthlyMilestones.map((m: any) => (
                           <div key={m.month} className="card-dark p-3">
@@ -1742,7 +1742,7 @@ export default function OpportunityDetailPage() {
                   {/* Review Strategy */}
                   {g.reviewStrategy?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-2">⭐ Review Strategy</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-wider mb-2">⭐ Review Strategy</div>
                       <ul className="space-y-2">
                         {g.reviewStrategy.map((tip: string, i: number) => (
                           <li key={i} className="text-sm text-white/80 flex gap-2">
@@ -1799,7 +1799,7 @@ export default function OpportunityDetailPage() {
                   {/* Brand names */}
                   {b.names?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">🏷️ Brand Name Options</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">🏷️ Brand Name Options</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {b.names.map((n: any, i: number) => (
                           <div key={i} className={`card-dark p-3 border ${i === 0 ? 'border-violet-500/30 bg-violet-500/5' : 'border-white/5'}`}>
@@ -1817,7 +1817,7 @@ export default function OpportunityDetailPage() {
                   {/* Positioning */}
                   {b.positioning && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">🎯 Brand Positioning</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">🎯 Brand Positioning</div>
                       <div className="card-dark p-4">
                         <p className="text-sm text-white/80 leading-relaxed">{b.positioning}</p>
                       </div>
@@ -1828,7 +1828,7 @@ export default function OpportunityDetailPage() {
                   {b.taglines?.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="text-xs font-semibold text-white/35 uppercase tracking-widest">💬 Tagline Options</div>
+                        <div className="text-xs font-semibold text-white/55 uppercase tracking-widest">💬 Tagline Options</div>
                         <CopyButton text={b.taglines.join('\n')} />
                       </div>
                       <div className="space-y-2">
@@ -1845,7 +1845,7 @@ export default function OpportunityDetailPage() {
                   {/* Colour palette */}
                   {b.colourPalette && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">🎨 Colour Palette</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">🎨 Colour Palette</div>
                       <div className="card-dark p-4">
                         <div className="flex gap-3 flex-wrap mb-3">
                           {(b.colourPalette.colours || b.colourPalette).map?.((c: any, i: number) => {
@@ -1855,7 +1855,7 @@ export default function OpportunityDetailPage() {
                               <div key={i} className="flex flex-col items-center gap-1">
                                 <div className="w-10 h-10 rounded-lg border border-white/10" style={{ background: hex }} />
                                 <span className="text-[10px] text-white/40">{name}</span>
-                                <span className="text-[10px] text-white/25 font-mono">{hex}</span>
+                                <span className="text-[10px] text-white/50 font-mono">{hex}</span>
                               </div>
                             );
                           })}
@@ -1868,7 +1868,7 @@ export default function OpportunityDetailPage() {
                   {/* Brand voice */}
                   {b.brandVoice && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">🗣️ Brand Voice</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">🗣️ Brand Voice</div>
                       <div className="card-dark p-4">
                         {typeof b.brandVoice === 'string'
                           ? <p className="text-sm text-white/80">{b.brandVoice}</p>
@@ -1889,7 +1889,7 @@ export default function OpportunityDetailPage() {
                   {/* Domain ideas */}
                   {b.domainIdeas?.length > 0 && (
                     <div>
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">🌐 Domain Ideas</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">🌐 Domain Ideas</div>
                       <div className="flex flex-wrap gap-2">
                         {b.domainIdeas.map((d: string, i: number) => (
                           <span key={i} className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-white/60 font-mono">{d}</span>
@@ -1953,7 +1953,7 @@ export default function OpportunityDetailPage() {
                         {/* Products in bundle */}
                         {bundle.products?.length > 0 && (
                           <div>
-                            <div className="text-[10px] font-semibold text-white/35 uppercase mb-1.5">Includes</div>
+                            <div className="text-[10px] font-semibold text-white/55 uppercase mb-1.5">Includes</div>
                             <div className="flex flex-wrap gap-1.5">
                               {bundle.products.map((p: string, j: number) => (
                                 <span key={j} className="text-xs px-2 py-1 rounded-lg bg-white/5 border border-white/8 text-white/65">{p}</span>
@@ -1964,15 +1964,15 @@ export default function OpportunityDetailPage() {
 
                         {/* Pricing */}
                         <div className="flex flex-wrap gap-4 text-xs">
-                          {bundle.bundlePrice && <div><span className="text-white/35">Bundle price: </span><span className="text-white font-semibold">{bundle.bundlePrice}</span></div>}
-                          {bundle.sourceTotal && <div><span className="text-white/35">Source total: </span><span className="text-amber-400">{bundle.sourceTotal}</span></div>}
-                          {bundle.aov && <div><span className="text-white/35">AOV lift: </span><span className="text-emerald-400 font-semibold">{bundle.aov}</span></div>}
+                          {bundle.bundlePrice && <div><span className="text-white/55">Bundle price: </span><span className="text-white font-semibold">{bundle.bundlePrice}</span></div>}
+                          {bundle.sourceTotal && <div><span className="text-white/55">Source total: </span><span className="text-amber-400">{bundle.sourceTotal}</span></div>}
+                          {bundle.aov && <div><span className="text-white/55">AOV lift: </span><span className="text-emerald-400 font-semibold">{bundle.aov}</span></div>}
                         </div>
 
                         {/* Listing title */}
                         {bundle.listingTitle && (
                           <div>
-                            <div className="text-[10px] font-semibold text-white/35 uppercase mb-1">Bundle Listing Title</div>
+                            <div className="text-[10px] font-semibold text-white/55 uppercase mb-1">Bundle Listing Title</div>
                             <div className="flex items-start justify-between gap-3">
                               <p className="text-xs text-white/70 leading-relaxed flex-1">{bundle.listingTitle}</p>
                               <CopyButton text={bundle.listingTitle} />
@@ -1991,7 +1991,7 @@ export default function OpportunityDetailPage() {
                   {/* Inventory ratio */}
                   {data.inventoryRatio && (
                     <div className="card-dark p-4">
-                      <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">📦 Inventory Ratio Recommendation</div>
+                      <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">📦 Inventory Ratio Recommendation</div>
                       <p className="text-sm text-white/65">{data.inventoryRatio}</p>
                     </div>
                   )}
@@ -2038,7 +2038,7 @@ export default function OpportunityDetailPage() {
 
           {/* Seller feedback */}
           <div className="border-t border-white/8 pt-4 mt-4">
-            <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Was this recommendation accurate?</div>
+            <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-3">Was this recommendation accurate?</div>
             {submitFeedback.isSuccess ? (
               <div className="flex items-center gap-2 text-sm text-emerald-400">
                 <span>✓</span>
@@ -2058,7 +2058,7 @@ export default function OpportunityDetailPage() {
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-rose-500/20 text-rose-400/60 hover:bg-rose-500/8 hover:text-rose-400 hover:border-rose-500/35 transition-all text-sm disabled:opacity-40">
                   👎 Not accurate
                 </button>
-                <span className="text-[10px] text-white/20">Feedback trains the AI scoring model</span>
+                <span className="text-[10px] text-white/50">Feedback trains the AI scoring model</span>
               </div>
             )}
           </div>
@@ -2080,7 +2080,7 @@ export default function OpportunityDetailPage() {
             <div className="space-y-3">
               {Object.entries(((genReport.data as any).content || {}) as Record<string, any>).map(([key, val]) => (
                 <div key={key}>
-                  <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-1.5">{key.replace(/_/g, ' ')}</div>
+                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-1.5">{key.replace(/_/g, ' ')}</div>
                   {typeof val === 'string' ? (
                     <p className="text-sm text-white/80 leading-relaxed">{val}</p>
                   ) : Array.isArray(val) ? (
@@ -2094,7 +2094,7 @@ export default function OpportunityDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center text-white/35">
+            <div className="p-8 text-center text-white/55">
               <div className="text-3xl mb-2">📊</div>
               <p className="text-sm">Generate a full opportunity report with all data</p>
             </div>

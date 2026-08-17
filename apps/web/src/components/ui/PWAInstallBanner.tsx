@@ -91,7 +91,7 @@ export function PWAInstallBanner() {
             )}
           </div>
           <button onClick={dismiss}
-            className="text-white/25 hover:text-white/60 transition-colors text-lg leading-none shrink-0 -mt-0.5">
+            className="text-white/50 hover:text-white/70 transition-colors text-lg leading-none shrink-0 -mt-0.5">
             &times;
           </button>
         </div>

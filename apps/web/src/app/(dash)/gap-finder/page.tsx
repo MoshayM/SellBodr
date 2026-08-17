@@ -26,7 +26,7 @@ function GapScore({ opp }: { opp: any }) {
     <div className="flex items-center gap-1.5">
       <div className="w-2 h-2 rounded-full" style={{ background: color }} />
       <span className="text-sm font-bold" style={{ color }}>{gap}</span>
-      <span className="text-xs text-white/30">gap</span>
+      <span className="text-xs text-white/50">gap</span>
     </div>
   );
 }
@@ -158,7 +158,7 @@ export default function GapFinderPage() {
         <div className="card-dark p-12 text-center">
           <div className="text-4xl mb-3">🔍</div>
           <p className="text-white/40 text-sm">No gaps match your criteria. Try lowering the minimum score or adjusting filters.</p>
-          <p className="text-white/25 text-xs mt-2">Run more scans on Scout to populate the gap finder.</p>
+          <p className="text-white/50 text-xs mt-2">Run more scans on Scout to populate the gap finder.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -207,7 +207,7 @@ export default function GapFinderPage() {
                         { l: 'Margin',      v: s.margin,      color: '#fbbf24' },
                       ].map(({ l, v, color }) => (
                         <div key={l} className="flex items-center gap-1">
-                          <span className="text-white/35">{l}:</span>
+                          <span className="text-white/55">{l}:</span>
                           <span className="font-semibold" style={{ color }}>{Math.round(v || 0)}</span>
                         </div>
                       ))}
@@ -223,7 +223,7 @@ export default function GapFinderPage() {
                           </span>
                         ) : null;
                       })}
-                      <span className="text-[10px] text-white/25 ml-auto">{opp.marketplace?.code?.toUpperCase()}</span>
+                      <span className="text-[10px] text-white/50 ml-auto">{opp.marketplace?.code?.toUpperCase()}</span>
                     </div>
                   </div>
                 </div>

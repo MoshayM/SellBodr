@@ -167,7 +167,7 @@ export default function AdminPage() {
         <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-lg">🔐</div>
         <div>
           <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-xs text-white/35 mt-0.5">User management · Provider keys · System access</p>
+          <p className="text-xs text-white/55 mt-0.5">User management · Provider keys · System access</p>
         </div>
         <div className="ml-auto">
           <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/25 uppercase tracking-wider">
@@ -186,7 +186,7 @@ export default function AdminPage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="card-dark rounded-xl p-4">
             <div className={`text-2xl font-black ${color}`}>{value}</div>
-            <div className="text-xs text-white/35 mt-0.5">{label}</div>
+            <div className="text-xs text-white/55 mt-0.5">{label}</div>
           </div>
         ))}
       </div>
@@ -232,12 +232,12 @@ export default function AdminPage() {
                   <tr key={u.id} className="hover:bg-white/[0.03] transition-colors">
                     <td className="px-4 py-3.5">
                       <div className="font-medium text-white leading-snug">{u.name || '—'}</div>
-                      <div className="text-xs text-white/35 mt-0.5">{u.email}</div>
+                      <div className="text-xs text-white/55 mt-0.5">{u.email}</div>
                     </td>
                     <td className="px-4 py-3.5 text-center"><RoleBadge role={u.role} /></td>
                     <td className="px-4 py-3.5 text-center"><PlanBadge plan={u.plan} /></td>
                     <td className="px-4 py-3.5 text-center text-white/60 text-xs font-mono">{u.searchCount}</td>
-                    <td className="px-4 py-3.5 text-center text-xs text-white/35">
+                    <td className="px-4 py-3.5 text-center text-xs text-white/55">
                       {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-4 py-3.5">
@@ -261,13 +261,13 @@ export default function AdminPage() {
                           <option value="owner">Owner</option>
                           <option value="admin">Admin</option>
                         </select>
-                        {updating === u.id && <span className="text-xs text-white/35 animate-pulse">saving…</span>}
+                        {updating === u.id && <span className="text-xs text-white/55 animate-pulse">saving…</span>}
                       </div>
                     </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-12 text-center text-white/30 text-sm">No users found</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-12 text-center text-white/50 text-sm">No users found</td></tr>
                 )}
               </tbody>
             </table>
@@ -289,14 +289,14 @@ export default function AdminPage() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="font-semibold text-white text-sm">{p.label}</div>
-                  <div className="text-xs text-white/35 mt-0.5">{p.hint}</div>
+                  <div className="text-xs text-white/55 mt-0.5">{p.hint}</div>
                 </div>
                 {p.isSet ? (
                   <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/25">
                     ✓ Set {p.source === 'env' ? '(env)' : '(db)'}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/5 text-white/30 border border-white/10">
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/5 text-white/50 border border-white/10">
                     Not set
                   </span>
                 )}
@@ -337,7 +337,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-1">
             <div>
               <h2 className="font-semibold text-white">Audit Log</h2>
-              <p className="text-xs text-white/35 mt-0.5">Security events, access changes, and system mutations</p>
+              <p className="text-xs text-white/55 mt-0.5">Security events, access changes, and system mutations</p>
             </div>
             <button onClick={loadAuditLog} disabled={auditLoading}
               className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-colors disabled:opacity-40">
@@ -350,7 +350,7 @@ export default function AdminPage() {
             ) : auditLog.length === 0 ? (
               <div className="p-10 text-center">
                 <div className="text-3xl mb-3">📋</div>
-                <p className="text-sm text-white/35">No audit events yet — actions will appear here as users interact with the platform.</p>
+                <p className="text-sm text-white/55">No audit events yet — actions will appear here as users interact with the platform.</p>
               </div>
             ) : (
               <div className="divide-y divide-white/5">
@@ -370,17 +370,17 @@ export default function AdminPage() {
                           <span className={`text-xs font-bold font-mono uppercase ${color}`}>{entry.action || 'unknown'}</span>
                           {entry.userEmail && <span className="text-xs text-white/50">{entry.userEmail}</span>}
                           {entry.targetEmail && entry.targetEmail !== entry.userEmail && (
-                            <span className="text-xs text-white/30">→ {entry.targetEmail}</span>
+                            <span className="text-xs text-white/50">→ {entry.targetEmail}</span>
                           )}
                         </div>
                         {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-                          <p className="text-[11px] text-white/30 mt-0.5 font-mono">{JSON.stringify(entry.metadata)}</p>
+                          <p className="text-[11px] text-white/50 mt-0.5 font-mono">{JSON.stringify(entry.metadata)}</p>
                         )}
                         {entry.description && (
                           <p className="text-xs text-white/40 mt-0.5">{entry.description}</p>
                         )}
                       </div>
-                      <div className="text-[10px] text-white/20 shrink-0 text-right">
+                      <div className="text-[10px] text-white/50 shrink-0 text-right">
                         {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '—'}
                       </div>
                     </div>
@@ -398,7 +398,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-1">
             <div>
               <h2 className="font-semibold text-white">System Health</h2>
-              <p className="text-xs text-white/35 mt-0.5">Pipeline metrics, agent status, and model availability</p>
+              <p className="text-xs text-white/55 mt-0.5">Pipeline metrics, agent status, and model availability</p>
             </div>
             <button onClick={loadHealth} disabled={healthLoading}
               className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-colors disabled:opacity-40">
@@ -417,7 +417,7 @@ export default function AdminPage() {
                   <div className={`font-semibold capitalize ${health.status === 'healthy' ? 'text-emerald-300' : health.status === 'degraded' ? 'text-amber-300' : 'text-rose-300'}`}>{health.status || 'unknown'}</div>
                   <div className="text-xs text-white/40">{health.message || 'All systems operational'}</div>
                 </div>
-                {health.uptime && <div className="ml-auto text-right"><div className="text-xs font-mono text-white/50">{health.uptime}</div><div className="text-[10px] text-white/25">uptime</div></div>}
+                {health.uptime && <div className="ml-auto text-right"><div className="text-xs font-mono text-white/50">{health.uptime}</div><div className="text-[10px] text-white/50">uptime</div></div>}
               </div>
 
               {/* Metric grid */}
@@ -431,7 +431,7 @@ export default function AdminPage() {
                   <div key={m.label} className="card-dark p-4">
                     <div className="text-xl mb-1">{m.icon}</div>
                     <div className={`text-2xl font-black ${m.color}`}>{m.value}</div>
-                    <div className="text-[10px] text-white/35 mt-0.5">{m.label}</div>
+                    <div className="text-[10px] text-white/55 mt-0.5">{m.label}</div>
                   </div>
                 ))}
               </div>
@@ -445,7 +445,7 @@ export default function AdminPage() {
                       <div key={name} className="px-4 py-3 flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${status?.healthy !== false ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                         <div className="flex-1 text-sm text-white/70 capitalize">{name.replace(/_/g, ' ')}</div>
-                        {status?.latencyMs && <span className="text-xs text-white/30 font-mono">{status.latencyMs}ms</span>}
+                        {status?.latencyMs && <span className="text-xs text-white/50 font-mono">{status.latencyMs}ms</span>}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status?.healthy !== false ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
                           {status?.healthy !== false ? 'healthy' : 'down'}
                         </span>
@@ -464,7 +464,7 @@ export default function AdminPage() {
                       <div key={model} className="px-4 py-3 flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${info?.available !== false ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                         <div className="flex-1 text-sm text-white/70 font-mono text-xs">{model}</div>
-                        {info?.costPer1k && <span className="text-[10px] text-white/30">${info.costPer1k}/1k tok</span>}
+                        {info?.costPer1k && <span className="text-[10px] text-white/50">${info.costPer1k}/1k tok</span>}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${info?.available !== false ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
                           {info?.available !== false ? 'available' : 'unavailable'}
                         </span>
@@ -477,8 +477,8 @@ export default function AdminPage() {
           ) : (
             <div className="card-dark p-10 text-center">
               <div className="text-3xl mb-3">🩺</div>
-              <p className="text-sm text-white/35 mb-3">Health data not available — the API endpoint may not be implemented yet.</p>
-              <p className="text-xs text-white/20 font-mono">GET /admin/health</p>
+              <p className="text-sm text-white/55 mb-3">Health data not available — the API endpoint may not be implemented yet.</p>
+              <p className="text-xs text-white/50 font-mono">GET /admin/health</p>
             </div>
           )}
         </div>
@@ -490,7 +490,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-white">Marketplace Configuration</h2>
-              <p className="text-xs text-white/35 mt-0.5">Add or disable marketplaces in the Scout dropdown. Changes apply to all users immediately.</p>
+              <p className="text-xs text-white/55 mt-0.5">Add or disable marketplaces in the Scout dropdown. Changes apply to all users immediately.</p>
             </div>
             <button onClick={loadMarketplaces} disabled={mktLoading} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white transition-colors disabled:opacity-40">
               {mktLoading ? '⟳' : '↻ Refresh'}
@@ -528,7 +528,7 @@ export default function AdminPage() {
             {mktLoading ? (
               <div className="p-8 text-center"><div className="animate-spin text-2xl text-violet-400">⟳</div></div>
             ) : marketplaces.length === 0 ? (
-              <div className="p-8 text-center text-white/30 text-sm">No marketplaces configured. Add one above.</div>
+              <div className="p-8 text-center text-white/50 text-sm">No marketplaces configured. Add one above.</div>
             ) : (
               <div className="divide-y divide-white/4">
                 {marketplaces.map((m: any) => (
@@ -536,14 +536,14 @@ export default function AdminPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-white/80">{m.name}</span>
-                        <code className="text-[10px] text-white/30 font-mono bg-white/5 px-1.5 py-0.5 rounded">{m.code}</code>
-                        <span className="text-[10px] text-white/25">{m.currency}</span>
-                        {m.feePercent != null && <span className="text-[10px] text-white/25">{m.feePercent}% fee</span>}
+                        <code className="text-[10px] text-white/50 font-mono bg-white/5 px-1.5 py-0.5 rounded">{m.code}</code>
+                        <span className="text-[10px] text-white/50">{m.currency}</span>
+                        {m.feePercent != null && <span className="text-[10px] text-white/50">{m.feePercent}% fee</span>}
                       </div>
                     </div>
                     {/* Active toggle */}
                     <button onClick={() => toggleMarketplace(m.id, !m.active)}
-                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all ${m.active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/25' : 'bg-white/5 text-white/30 border-white/10 hover:bg-white/10'}`}>
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all ${m.active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/25' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10'}`}>
                       {m.active ? 'Active' : 'Inactive'}
                     </button>
                     <button onClick={() => removeMarketplace(m.id)}
@@ -555,7 +555,7 @@ export default function AdminPage() {
               </div>
             )}
           </div>
-          <p className="text-xs text-white/20">Marketplace changes propagate to the Scout page dropdown within 60 seconds via cache invalidation.</p>
+          <p className="text-xs text-white/50">Marketplace changes propagate to the Scout page dropdown within 60 seconds via cache invalidation.</p>
         </div>
       )}
 
@@ -564,7 +564,7 @@ export default function AdminPage() {
         <div className="space-y-5">
           <div>
             <h2 className="font-semibold text-white">Model Routing Configuration</h2>
-            <p className="text-xs text-white/35 mt-0.5">Assign AI models to each agent step. Changes take effect on the next scan. Free users are always routed to Groq/Mistral.</p>
+            <p className="text-xs text-white/55 mt-0.5">Assign AI models to each agent step. Changes take effect on the next scan. Free users are always routed to Groq/Mistral.</p>
           </div>
 
           {/* Routing table */}
@@ -589,7 +589,7 @@ export default function AdminPage() {
                     <div key={agent} className="px-4 py-3 flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-white/80">{label}</div>
-                        <div className="text-[11px] text-white/35 mt-0.5">{hint}</div>
+                        <div className="text-[11px] text-white/55 mt-0.5">{hint}</div>
                       </div>
                       <select
                         value={modelDraft[agent] || current}

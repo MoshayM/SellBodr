@@ -168,16 +168,16 @@ export default function KeywordIntelligencePage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/8">
-                  <th className="px-4 py-2.5 text-left text-white/35 font-semibold">Keyword</th>
-                  <th className="px-4 py-2.5 text-center text-white/35 font-semibold">Type</th>
-                  <th className="px-4 py-2.5 text-center text-white/35 font-semibold">Volume</th>
-                  <th className="px-4 py-2.5 text-center text-white/35 font-semibold">Competition</th>
-                  <th className="px-4 py-2.5 text-right text-white/35 font-semibold">Est. CPC</th>
+                  <th className="px-4 py-2.5 text-left text-white/55 font-semibold">Keyword</th>
+                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Type</th>
+                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Volume</th>
+                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Competition</th>
+                  <th className="px-4 py-2.5 text-right text-white/55 font-semibold">Est. CPC</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-white/30">No keywords match filters</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-white/50">No keywords match filters</td></tr>
                 ) : filtered.map((kw, i) => (
                   <tr key={i} className="border-b border-white/4 hover:bg-white/2 transition-colors">
                     <td className="px-4 py-2.5 text-white/75 font-medium">{kw.keyword}</td>

@@ -71,7 +71,7 @@ export default function ProfitabilityPage() {
         {/* Desktop sidebar */}
         <div className="hidden md:block w-64 shrink-0">
           <div className="card-dark rounded-xl p-3 sticky top-4">
-            <div className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3 px-2 mt-1">
+            <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-3 px-2 mt-1">
               Select Opportunity
             </div>
             <div className="space-y-0.5 max-h-[60vh] overflow-y-auto scrollbar-dark">
@@ -83,11 +83,11 @@ export default function ProfitabilityPage() {
                       : 'text-white/50 hover:bg-white/5 hover:text-white'
                   }`}>
                   <div className="truncate text-inherit">{o.product?.title}</div>
-                  <div className="text-white/30 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
+                  <div className="text-white/50 font-normal mt-0.5">{o.marketplace?.code?.toUpperCase()}</div>
                 </button>
               ))}
               {allOpps.length === 0 && (
-                <div className="text-xs text-white/30 px-3 py-2">No data — run a search</div>
+                <div className="text-xs text-white/50 px-3 py-2">No data — run a search</div>
               )}
             </div>
           </div>

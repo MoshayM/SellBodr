@@ -116,10 +116,10 @@ export default function AiKeysPage() {
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">DB KEY</span>
                     )}
                     {status.source === 'none' && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/10">NOT SET</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/10">NOT SET</span>
                     )}
                   </div>
-                  <p className="text-xs text-white/35 mt-0.5">{prov.hint}</p>
+                  <p className="text-xs text-white/55 mt-0.5">{prov.hint}</p>
                 </div>
                 <a href={prov.docsUrl} target="_blank" rel="noopener noreferrer"
                   className="shrink-0 text-[10px] text-violet-400/60 hover:text-violet-300 transition-colors whitespace-nowrap">
@@ -172,7 +172,7 @@ export default function AiKeysPage() {
         })}
       </div>
 
-      <p className="mt-6 text-xs text-white/20 leading-relaxed">
+      <p className="mt-6 text-xs text-white/50 leading-relaxed">
         Changes apply immediately to new AI pipeline runs. Existing queued jobs use the keys that were active at queue time.
         ENV VAR keys (set in Vercel / server environment) cannot be updated here.
       </p>

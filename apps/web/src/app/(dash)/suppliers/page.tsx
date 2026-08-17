@@ -120,7 +120,7 @@ export default function SuppliersPage() {
                     { label: 'Lead',     value: `${sc.leadTimeDays}d` },
                   ].map(({ label, value }) => (
                     <div key={label} className="bg-white/5 rounded-lg px-2 py-2 text-center">
-                      <div className="text-[10px] leading-none text-white/30 mb-1">{label}</div>
+                      <div className="text-[10px] leading-none text-white/50 mb-1">{label}</div>
                       <div className="text-sm font-bold text-white leading-snug">{value}</div>
                     </div>
                   ))}
