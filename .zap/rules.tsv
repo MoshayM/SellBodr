@@ -1,30 +1,7 @@
-# ZAP rule overrides for SellBodr (Next.js / Vercel)
-# Format: rule-id	IGNORE|WARN|FAIL	optional-description
-#
-# 10016 – Web Browser XSS Protection Not Enabled
-#   Vercel sets X-XSS-Protection: 0 intentionally (modern browsers ignore it; CSP is used instead)
-10016	IGNORE	Vercel intentionally omits X-XSS-Protection header
-#
-# 10017 – Cross-Domain JavaScript Source File Inclusion
-#   Next.js loads scripts from vercel CDN edge nodes and trusted third parties
-10017	IGNORE	Next.js and Vercel CDN assets are trusted
-#
-# 10020 – X-Frame-Options Header Not Set
-#   Vercel sets Content-Security-Policy frame-ancestors instead
-10020	IGNORE	CSP frame-ancestors replaces X-Frame-Options on Vercel
-#
-# 10021 – X-Content-Type-Options Header Missing
-#   Vercel sets this; ZAP may miss it on edge-cached responses
-10021	WARN	Verify X-Content-Type-Options is set on all routes
-#
-# 10027 – Information Disclosure – Suspicious Comments
-#   Next.js build output includes React source-map comments in dev; not prod
-10027	IGNORE	Next.js build comments are not sensitive
-#
-# 10096 – Timestamp Disclosure
-#   Build timestamps in Next.js __NEXT_DATA__ are not sensitive
-10096	IGNORE	Next.js build timestamps are not sensitive
-#
-# 90022 – Application Error Disclosure
-#   Next.js 404/500 pages include generic error messages, not stack traces
-90022	WARN	Review error pages for stack trace leakage
+10016	IGNORE
+10017	IGNORE
+10020	IGNORE
+10021	WARN
+10027	IGNORE
+10096	IGNORE
+90022	WARN
