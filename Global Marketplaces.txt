@@ -276,4 +276,189 @@ UX features:
 
 
 
+Here's a breakdown of everything in wed.txt:
 
+---
+1. Wishlist icon in top-right + notification badge
+Show the wishlist (🌟) icon near the account avatar in the top header, with a count bubble when items are saved.
+
+2. AI cold-mailing to multiple suppliers
+Bulk outreach tool — AI generates personalised emails per supplier (adapting to product, requirement, supplier profile). User can set/edit the email format/template, then send to a bundle of suppliers at once.
+
+3. AI auto-reply & supplier email communication
+If user connects their email account, the AI reads supplier replies and auto-drafts responses — matching the supplier's tone, focusing on SRM (supplier relationship management) and negotiation toward best-cost pricing. User can review/edit before sending, or fully automate. Must follow privacy/ethics.
+
+4. Free account — no login required
+Free-tier users shouldn't need to register or sign in. Only Pro and Organisation accounts require login + passkey. Redesign login/cover/other pages accordingly.
+
+5. Redefine free vs. Pro account access + competitive pricing
+Clearly define what free vs. Pro users can access (AI principle — generous free tier, meaningful Pro). Price Pro competitively so it's accessible.
+
+6. Overall quality mandate
+Every feature should be built to best-by-AI-principles standard — smooth UX, attractive, behaviour-aware, high output quality.
+
+7. Refresh cover page, login, Terms & Privacy
+Redesign with focus on customer retention, UX, compliance with international/country laws and ethics.
+
+---
+Priority order I'd suggest:
+1. Wishlist icon + badge in header — small, quick win, builds on what we just shipped
+2. Free account no-login — this changes auth flow significantly; needs careful redesign of login/landing
+3. Cover/login/T&C/Privacy refresh — can be done alongside #2
+4. AI bulk cold-mailing — significant feature, needs supplier outreach UI
+5. AI email auto-reply — requires OAuth email integration (Gmail/Outlook), most complex
+
+Want me to start with the wishlist badge in the header (item 1), then move to the free-account / login redesign?
+   
+
+
+
+
+
+
+
+
+
+
+
+Commit 1 — Wishlist + Full Report (already done, now on master):
+- Bookmark icon + amber badge in header (before avatar)
+- New /wishlist page with full filter bar
+- Full Report's Profitability tab replaced with diverging butterfly chart matching the Scout inline view
+- Back button on Full Report page
+
+Commit 2 — Guest mode + Page redesigns (just pushed):
+- Free browsing with no account — the auth guard no longer hard-redirects. Guests get a dismissible amber banner ("You're browsing as a guest") with Sign in / Start Pro Trial CTAs. The header shows a "Sign in" button instead of the avatar for guests.
+- Landing page — primary CTA is now "Browse Free — No signup needed" linking directly to /opportunities. Pricing updated to Free / Pro / Organisation with correct CTA links.
+- Login page — "Continue without account" escape link below the form.
+- Register page — plan step shows Pro + Organisation (no Starter registration required). "Browse free without an account" escape link added.
+- Terms of Service — full rewrite: guest/Pro/Org tiers defined, GDPR lawful basis, EU Consumer Rights Directive, UK CRA 2015, India DPDPA 2023, CCPA, export controls & sanctions clause, AI disclaimer strengthened.
+- Privacy Policy — full rewrite: guest vs registered data separated, minimal cookie footprint documented, lawful basis table, GDPR/UK GDPR/CCPA/India DPDPA rights, international transfer safeguards, DPO contact.
+
+
+
+
+
+The root cause — when a session token expired, api.ts was auto-redirecting to /login. Now instead it clears the stale token and reloads the page, so the user continues browsing as a guest with the amber "Sign in" banner. The login page never opens without an explicit click.
+
+What changed:
+
+1. api.ts 401 handler — expired session now silently transitions to guest mode (token cleared, page reloads). No more window.location.href = '/login'.
+2. /login page — if you already have a valid token and somehow land on /login, you're immediately sent to /opportunities instead of seeing the login form again.
+3. /register page — same guard: authenticated users are skipped to /opportunities.
+
+The full rule now:
+- Guest browsing freely → login page never appears
+- Token expires mid-session → guest mode silently, amber banner shows "Sign in"
+- User explicitly clicks "Sign in" → /login opens
+- User explicitly clicks "Start Pro / Register" → /register opens
+
+
+
+
+
+
+
+
+
+Phase 3 — Advanced Intelligence 🔄 IN PROGRESS
+
+┌────────────────┬─────────────────────────────────────────────────────────────────────────────────────┐
+│     Status     │                                        Item                                         │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ 🔄 Partial     │ Competition Analysis tab — core agent exists, full teardown UI incomplete           │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ Product Gap Finder — high demand + weak existing listings detector                  │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ Review Intelligence — mine competitor reviews → surface pain points                 │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ Keyword Intelligence — marketplace-specific deep-dive (beyond what Listing tab has) │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ Product Bundle Generator                                                            │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ AI Brand Builder — names, logo concepts, packaging, positioning                     │
+├────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ⬜ Not started │ Agency tier — multi-user workspaces, portfolio management                           │
+└────────────────┴─────────────────────────────────────────────────────────────────────────────────────┘
+
+---
+Phase 4 — Enterprise & Scale ⬜ NOT STARTED
+
+┌─────────────────────────────────────────────────────────────────┐
+│                              Item                               │
+├─────────────────────────────────────────────────────────────────┤
+│ Public REST API + API keys + usage metering                     │
+├─────────────────────────────────────────────────────────────────┤
+│ White-label theming                                             │
+├─────────────────────────────────────────────────────────────────┤
+│ Bulk scoring + batch jobs                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ Future marketplaces: Temu, Noon, Lazada, Shopee                 │
+├─────────────────────────────────────────────────────────────────┤
+│ Advanced observability (Grafana/Prometheus, SLOs)               │
+├─────────────────────────────────────────────────────────────────┤
+│ Model routing + eval harness hardening                          │
+├─────────────────────────────────────────────────────────────────┤
+│ SOC2-readiness (audit logs, access reviews, encryption posture) │
+└─────────────────────────────────────────────────────────────────┘
+
+---
+Phase 5 — Continuous Discovery ⬜ NOT STARTED
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│                                   Item
+├───────────────────────────────────────────────────────────────────────────┤
+│ Always-on crawl + re-score pipeline (opportunities refresh automat
+├───────────────────────────────────────────────────────────────────────────┤
+│ Feedback loop — realized seller outcomes retrain scoring weights
+├───────────────────────────────────────────────────────────────────────────┤
+│ Marketplace expansion playbook (add new marketplace in < 2 weeks)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What's still pending
+
+Frontend-buildable (can do now):
+
+┌───────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────┐
+│                         Item                          │                                     Status                                      │
+├───────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Agency tier — team/invite UI                          │ Not started                                                                     │
+├───────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ Add Temu, Noon, Lazada, Shopee to Scout scan dropdown │ Not started (they exist in Marketplace page filter but not in the Scout search) │
+├───────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────┤
+│ White-label theme settings UI                         │ Not started                                                                     │
+└───────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────┘
+
+Backend/infrastructure (can't build in frontend yet):
+
+┌─────────────────────────────────────────────┬─────────────────────────────┐
+│                    Item                     │         Why blocked         │
+├─────────────────────────────────────────────┼─────────────────────────────┤
+│ Always-on crawl + auto re-score pipeline    │ Needs backend job scheduler │
+├─────────────────────────────────────────────┼─────────────────────────────┤
+│ Feedback loop (retrain scoring weights)     │ Needs ML pipeline           │
+├─────────────────────────────────────────────┼─────────────────────────────┤
+│ Advanced observability (Grafana/Prometheus) │ Needs infra setup           │
+├─────────────────────────────────────────────┼─────────────────────────────┤
+│ Model routing eval harness hardening        │ Backend AI gateway work     │
+├─────────────────────────────────────────────┼─────────────────────────────┤
+│ SOC2-readiness (audit, access reviews)      │ Backend + compliance work   │
+└─────────────────────────────────────────────┴─────────────────────────────┘
+
+---
+Short answer: All Phase 3 and the frontend-visible Phase 4 features are done. The remaining unbuilt items are either backend infrastructure (can't touch from the Next.js app) or 3 small frontend items (agency UI, scout marketplace expansion, white-label settings).
+
+Want me to knock out those 3 remaining frontend items?
