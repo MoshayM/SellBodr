@@ -1017,11 +1017,11 @@ export default function OpportunityDetailPage() {
                   const barH = r.isNet ? 'h-3.5' : r.isSubtotal ? 'h-3' : 'h-2';
                   return (
                     <div key={r.label}>
-                      {r.isSubtotal && <div className="h-px my-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)' }} />}
-                      {r.isNet && <div className="h-px my-1.5" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)' }} />}
+                      {r.isSubtotal && <div className="profit-sep h-px my-1" />}
+                      {r.isNet && <div className="profit-sep-lg h-px my-1.5" />}
                       <div className="flex items-center" style={{ height: rowH }}>
                         {/* Left — costs */}
-                        <div className="flex-1 flex items-center justify-end gap-2 min-w-0" style={{ borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div className="flex-1 flex items-center justify-end gap-2 min-w-0 split-divider-l">
                           {!r.positive && (
                             <>
                               <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
@@ -1039,7 +1039,7 @@ export default function OpportunityDetailPage() {
                           </span>
                         </div>
                         {/* Right — revenue */}
-                        <div className="flex-1 flex items-center justify-start gap-2 min-w-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div className="flex-1 flex items-center justify-start gap-2 min-w-0 split-divider-r">
                           {r.positive && (
                             <>
                               <div className={`${barH} rounded-r-full flex-shrink-0`}
@@ -1078,24 +1078,24 @@ export default function OpportunityDetailPage() {
                   </span>
                 </div>
               </div>
-              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between metric-stat">
                 <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Total Cost / Unit</div>
                 <div className="text-2xl font-bold text-red-400 tabular-nums my-1">{f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}</div>
                 <div className="text-[10px] text-white/50">all-in landed</div>
               </div>
-              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between metric-stat">
                 <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Break-even</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>{Math.min(breakeven, 999)}</div>
                 <div className="text-[10px] text-white/50">units to profit</div>
               </div>
-              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between metric-stat">
                 <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Monthly</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
                   {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
                 </div>
                 <div className="text-[10px] text-white/50">est. · 50 units</div>
               </div>
-              <div className="rounded-xl p-4 text-center flex flex-col justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="rounded-xl p-4 text-center flex flex-col justify-between metric-stat">
                 <div className="text-[10px] text-white/50 uppercase tracking-widest font-medium">Annual</div>
                 <div className={`text-2xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
                   style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>

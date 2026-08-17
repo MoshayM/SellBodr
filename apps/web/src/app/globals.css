@@ -446,6 +446,10 @@ html:not(.dark) .dash-area .text-white\/35 { color: #9DAEBB; }
 html:not(.dark) .dash-area .text-white\/30 { color: #A0AEC0; }
 html:not(.dark) .dash-area .text-white\/25 { color: #AEBCC8; }
 html:not(.dark) .dash-area .text-white\/20 { color: #B8C4D0; }
+html:not(.dark) .dash-area .text-white\/45 { color: #7A8FA6; }
+html:not(.dark) .dash-area .text-white\/65 { color: #5A6B7A; }
+html:not(.dark) .dash-area .text-white\/75 { color: #455668; }
+html:not(.dark) .dash-area .text-white\/90 { color: #2D3748; }
 html:not(.dark) .dash-area .hover\:text-white:hover     { color: #1E293B !important; }
 html:not(.dark) .dash-area .hover\:text-white\/70:hover { color: #4A5568 !important; }
 html:not(.dark) .dash-area .hover\:text-white\/80:hover { color: #374151 !important; }
@@ -455,6 +459,8 @@ html:not(.dark) .dash-area .btn-primary * { color: #ffffff; }
 /* ── bg-white/X → neumorphic base tints ─────────────────────── */
 html:not(.dark) .dash-area .bg-white\/5  { background-color: #E8ECF4 !important; }
 html:not(.dark) .dash-area .bg-white\/10 { background-color: rgba(184,193,212,0.25) !important; }
+html:not(.dark) .dash-area .bg-white\/8  { background-color: rgba(184,193,212,0.18) !important; }
+html:not(.dark) .dash-area .bg-white\/3  { background-color: #E8ECF4 !important; }
 html:not(.dark) .dash-area .hover\:bg-white\/5:hover  { background-color: rgba(124,58,237,0.06) !important; }
 html:not(.dark) .dash-area .hover\:bg-white\/10:hover { background-color: rgba(124,58,237,0.08) !important; }
 html:not(.dark) .dash-area .focus\:bg-white\/8:focus  { background-color: rgba(124,58,237,0.05) !important; }
@@ -480,6 +486,35 @@ html:not(.dark) .dash-area .bg-slate-200 {
 html:not(.dark) .dash-area .hover\:bg-violet-500\/\[0\.06\]:hover {
   background-color: rgba(124,58,237,0.05) !important;
 }
+
+/* ── Placeholder card opacity — prevent invisible empty-states in light mode ── */
+html:not(.dark) .dash-area .opacity-40 { opacity: 0.75; }
+html:not(.dark) .dash-area .opacity-50 { opacity: 0.85; }
+
+/* ── Butterfly chart split dividers (replaces inline rgba border styles) ───── */
+.split-divider-l { border-right: 1px solid rgba(255,255,255,0.1); }
+.split-divider-r { border-left:  1px solid rgba(255,255,255,0.1); }
+.profit-sep      { background: linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent); }
+.profit-sep-lg   { background: linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent); }
+html:not(.dark) .dash-area .split-divider-l { border-right-color: rgba(184,193,212,0.55); }
+html:not(.dark) .dash-area .split-divider-r { border-left-color:  rgba(184,193,212,0.55); }
+html:not(.dark) .dash-area .profit-sep      { background: linear-gradient(90deg,transparent,rgba(184,193,212,0.55),transparent); }
+html:not(.dark) .dash-area .profit-sep-lg   { background: linear-gradient(90deg,transparent,rgba(184,193,212,0.65),transparent); }
+
+/* ── Metric stat cells (replaces inline rgba(255,255,255,0.03) bg + border) ── */
+.metric-stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+html:not(.dark) .dash-area .metric-stat {
+  background: #E8ECF4 !important;
+  border-color: rgba(184,193,212,0.45) !important;
+  box-shadow: 5px 5px 12px #b8c1d4, -5px -5px 12px #ffffff;
+}
+
+/* ── Colored opacity text — improve contrast on #E8ECF4 ─────────────────── */
+html:not(.dark) .dash-area .text-red-400\/60     { color: rgba(185,28,28,0.9)  !important; }
+html:not(.dark) .dash-area .text-emerald-400\/60 { color: rgba(4,120,87,0.9)   !important; }
+html:not(.dark) .dash-area .text-indigo-300      { color: #3730A3 !important; }
+html:not(.dark) .dash-area .text-indigo-400      { color: #4338CA !important; }
+html:not(.dark) .dash-area .text-violet-300      { color: #6D28D9 !important; }
 
 /* ── Marketplace dropdown portal ─────────────────────────────── */
 html:not(.dark) .bg-\[\#0d1526\] {
