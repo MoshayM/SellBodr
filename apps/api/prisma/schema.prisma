@@ -14,6 +14,7 @@ model Organization {
   plan              String    @default("starter")
   whiteLabelConfig  String?
   aiProviderKeys    String?
+  modelRoutes       String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -21,6 +22,7 @@ model Organization {
   workspaces        Workspace[]
   subscription      Subscription?
   auditLogs         AuditLog[]
+  teamInvites       TeamInvite[]
 }
 
 model User {
@@ -43,6 +45,7 @@ model User {
   reports          Report[]
   auditLogs        AuditLog[]
   apiKeys          ApiKey[]
+  sentInvites      TeamInvite[] @relation("InviteSender")
 }
 
 model Workspace {
@@ -353,8 +356,25 @@ model ApiKey {
   name       String
   keyHash    String    @unique
   keyPrefix  String
+  callCount  Int       @default(0)
+  quota      Int       @default(1000)
+  resetAt    DateTime?
   lastUsedAt DateTime?
   createdAt  DateTime  @default(now())
 
   user       User      @relation(fields: [userId], references: [id])
+}
+
+model TeamInvite {
+  id             String       @id @default(uuid())
+  organizationId String
+  invitedEmail   String
+  role           String       @default("member")
+  invitedById    String
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  invitedBy      User         @relation("InviteSender", fields: [invitedById], references: [id])
 }

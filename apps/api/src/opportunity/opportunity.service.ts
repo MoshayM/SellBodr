@@ -315,6 +315,212 @@ export class OpportunityService {
     });
   }
 
+  async rescoreOpportunity(id: string, userId: string) {
+    const opp = await this.prisma.opportunity.findFirst({
+      where: { id, search: { userId } },
+      include: { product: true, marketplace: true },
+    });
+    if (!opp) throw new NotFoundException('Opportunity not found');
+
+    const { score, recommendation, confidence: conf, scoreVersion } =
+      this.scoring.scoreMockOpportunity(opp.product, opp.marketplace);
+
+    await this.prisma.score.upsert({
+      where: { opportunityId: id },
+      update: {
+        demand: score.demand, competition: score.competition, margin: score.margin,
+        saturation: score.saturation, trend: score.trend, shipping: score.shipping,
+        marketplaceFit: score.marketplaceFit, opportunity: score.opportunity,
+        breakdown: JSON.stringify(score.breakdown),
+      },
+      create: {
+        opportunityId: id,
+        demand: score.demand, competition: score.competition, margin: score.margin,
+        saturation: score.saturation, trend: score.trend, shipping: score.shipping,
+        marketplaceFit: score.marketplaceFit, opportunity: score.opportunity,
+        breakdown: JSON.stringify(score.breakdown),
+      },
+    });
+
+    await this.prisma.opportunity.update({
+      where: { id },
+      data: { recommendation, confidence: conf, scoreVersion },
+    });
+
+    return this.getOpportunity(id, userId);
+  }
+
+  async submitFeedback(id: string, userId: string, organizationId: string, data: { rating: 'up' | 'down'; note?: string }) {
+    await this.prisma.auditLog.create({
+      data: {
+        organizationId,
+        actorUserId: userId,
+        action: 'opportunity.feedback',
+        resourceType: 'opportunity',
+        resourceId: id,
+        metadata: JSON.stringify(data),
+      },
+    });
+    return { success: true };
+  }
+
+  async getCompetition(id: string, userId: string) {
+    const opp = await this.prisma.opportunity.findFirst({
+      where: { id, search: { userId } },
+      include: {
+        competitors: { include: { reviewInsights: true } },
+        score: true,
+        product: true,
+        marketplace: true,
+      },
+    });
+    if (!opp) throw new NotFoundException('Opportunity not found');
+
+    const competitors = opp.competitors.length > 0
+      ? opp.competitors
+      : this.mockCompetitors(opp.product?.title ?? '');
+
+    return {
+      competitorCount: competitors.length,
+      avgPrice: competitors.reduce((s: number, c: any) => s + (c.priceMinor ?? 0), 0) / (competitors.length || 1),
+      avgRating: competitors.reduce((s: number, c: any) => s + (c.rating ?? 0), 0) / (competitors.length || 1),
+      avgReviews: competitors.reduce((s: number, c: any) => s + (c.reviewCount ?? 0), 0) / (competitors.length || 1),
+      competitors,
+      scoreBreakdown: opp.score,
+    };
+  }
+
+  private mockCompetitors(productTitle: string) {
+    const names = ['BrandX', 'IndiaArtisan', 'CraftsHub', 'EthnicStore', 'HandmadeWorld'];
+    return names.map((n, i) => ({
+      id: `mock-${i}`,
+      title: `${n} — ${productTitle}`,
+      priceMinor: (1500 + i * 250) * 100,
+      rating: parseFloat((3.8 + i * 0.15).toFixed(1)),
+      reviewCount: 50 + i * 120,
+      listingQuality: parseFloat((60 + i * 7).toFixed(1)),
+      reviewInsights: [],
+    }));
+  }
+
+  async generateBrand(id: string, userId: string) {
+    const opp = await this.prisma.opportunity.findFirst({
+      where: { id, search: { userId } },
+      include: { product: true, launchAsset: true },
+    });
+    if (!opp) throw new NotFoundException('Opportunity not found');
+
+    if (opp.launchAsset?.brandConcepts) {
+      return JSON.parse(opp.launchAsset.brandConcepts);
+    }
+
+    const product = opp.product;
+    const brandData = this.buildBrandConcepts(product?.title ?? 'Product', product?.category ?? 'general');
+
+    await this.prisma.launchAsset.upsert({
+      where: { opportunityId: id },
+      update: { brandConcepts: JSON.stringify(brandData) },
+      create: { opportunityId: id, brandConcepts: JSON.stringify(brandData) },
+    });
+
+    return brandData;
+  }
+
+  private buildBrandConcepts(title: string, category: string) {
+    const kw = title.split(' ').slice(0, 2).join('');
+    return {
+      names: [
+        { name: `${kw}Craft`, tagline: 'Artisan-grade quality, globally delivered', score: 88 },
+        { name: 'AuraIndia', tagline: 'The essence of Indian craftsmanship', score: 84 },
+        { name: `Vrinda ${kw}`, tagline: 'Heritage. Reimagined.', score: 79 },
+      ],
+      colorPalette: ['#B5451B', '#F2C078', '#2E4A35', '#F5F0E8'],
+      brandVoice: 'Warm, culturally rooted, aspirational. Speak to global buyers who value authenticity.',
+      domainIdeas: [`${kw.toLowerCase()}craft.com`, 'auraindia.store', `vrinda${kw.toLowerCase()}.com`],
+      targetPersona: `Global marketplace shopper, 28-45, values sustainability and cultural authenticity in ${category.replace(/_/g, ' ')} products`,
+    };
+  }
+
+  async generateBundle(id: string, userId: string) {
+    const opp = await this.prisma.opportunity.findFirst({
+      where: { id, search: { userId } },
+      include: { product: true, profitModel: true, launchAsset: true },
+    });
+    if (!opp) throw new NotFoundException('Opportunity not found');
+
+    if (opp.launchAsset?.bundleSuggestions) {
+      return JSON.parse(opp.launchAsset.bundleSuggestions);
+    }
+
+    const bundleData = this.buildBundleSuggestions(opp.product?.title ?? 'Product', opp.profitModel);
+
+    await this.prisma.launchAsset.upsert({
+      where: { opportunityId: id },
+      update: { bundleSuggestions: JSON.stringify(bundleData) },
+      create: { opportunityId: id, bundleSuggestions: JSON.stringify(bundleData) },
+    });
+
+    return bundleData;
+  }
+
+  private buildBundleSuggestions(title: string, profitModel: any) {
+    const base = profitModel?.salePriceMinor ?? 2500_00;
+    return {
+      bundles: [
+        {
+          name: `${title} — Starter Set`,
+          items: [title, 'Premium Gift Box', 'Care Instructions Card'],
+          aovLiftPct: 35,
+          suggestedPriceMinor: Math.round(base * 1.35),
+          listingStrategy: 'Position as the perfect gift set with "ready to ship" messaging',
+        },
+        {
+          name: `${title} — Family Pack`,
+          items: [title, title, title, 'Bulk Discount Label'],
+          aovLiftPct: 68,
+          suggestedPriceMinor: Math.round(base * 2.5),
+          listingStrategy: 'Target resellers and bulk buyers with "buy 3, save 25%" framing',
+        },
+        {
+          name: `${title} — Artisan Experience Kit`,
+          items: [title, 'Origin Story Card', 'Artisan Signature', 'Regional Certification'],
+          aovLiftPct: 52,
+          suggestedPriceMinor: Math.round(base * 1.52),
+          listingStrategy: 'Premium positioning with storytelling — "Meet the artisan who made this"',
+        },
+      ],
+    };
+  }
+
+  async bulkScan(userId: string, orgId: string, keywords: string[], marketplace: string) {
+    const searches = await Promise.all(
+      keywords.slice(0, 20).map(keyword =>
+        this.createSearch(userId, orgId, { keyword, marketplace }),
+      ),
+    );
+    return { searches, count: searches.length };
+  }
+
+  async createReport(id: string, userId: string, format: string) {
+    const opp = await this.getOpportunity(id, userId);
+
+    const report = await this.prisma.report.create({
+      data: {
+        opportunityId: id,
+        generatedById: userId,
+        format,
+        content: JSON.stringify(opp),
+      },
+    });
+
+    return {
+      id: report.id,
+      format: report.format,
+      createdAt: report.createdAt,
+      content: opp,
+    };
+  }
+
   private async runPipeline(searchId: string, userId: string, orgId: string, filters: any) {
     try {
       const marketplaceCode = filters.marketplace || 'amazon_us';

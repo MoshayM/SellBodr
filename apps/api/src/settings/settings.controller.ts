@@ -41,4 +41,15 @@ export class SettingsController {
   deleteApiKey(@Request() req: any, @Param('id') id: string) {
     return this.settings.deleteApiKey(req.user.sub, id);
   }
+
+  @Get('api-keys/:id/usage')
+  getApiKeyUsage(@Request() req: any, @Param('id') id: string) {
+    return this.settings.getApiKeyUsage(req.user.sub, id);
+  }
+
+  @Post('change-password')
+  @HttpCode(200)
+  changePassword(@Request() req: any, @Body() body: { currentPassword: string; newPassword: string }) {
+    return this.settings.changePassword(req.user.sub, body.currentPassword, body.newPassword);
+  }
 }

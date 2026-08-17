@@ -11,6 +11,9 @@ import { ReportModule } from './report/report.module';
 import { SettingsModule } from './settings/settings.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { AiSystemModule } from './ai-system/ai-system.module';
+import { AdminModule } from './admin/admin.module';
+import { TeamModule } from './team/team.module';
+import { CrawlModule } from './crawl/crawl.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { AiSystemModule } from './ai-system/ai-system.module';
     ReportModule,
     SettingsModule,
     MarketplaceModule,
+    AdminModule,
+    TeamModule,
+    CrawlModule,
   ],
 })
 export class AppModule {}

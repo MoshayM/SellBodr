@@ -1,4 +1,5 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -140,6 +141,29 @@ export class SettingsService {
     const key = await this.prisma.apiKey.findFirst({ where: { id: keyId, userId } });
     if (!key) throw new NotFoundException('API key not found');
     await this.prisma.apiKey.delete({ where: { id: keyId } });
+    return { success: true };
+  }
+
+  async getApiKeyUsage(userId: string, keyId: string) {
+    const key = await this.prisma.apiKey.findFirst({
+      where: { id: keyId, userId },
+      select: { callCount: true, quota: true, resetAt: true },
+    });
+    if (!key) throw new NotFoundException('API key not found');
+    return {
+      calls: key.callCount,
+      quota: key.quota,
+      resetAt: key.resetAt,
+    };
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (!user.passwordHash) throw new BadRequestException('No password set on this account');
+    const valid = await argon2.verify(user.passwordHash, currentPassword);
+    if (!valid) throw new BadRequestException('Current password is incorrect');
+    const newHash = await argon2.hash(newPassword);
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } });
     return { success: true };
   }
 }
