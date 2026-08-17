@@ -806,6 +806,19 @@ export default function OpportunitiesPage() {
   const [searching,    setSearching]    = useState(false);
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
+  const [scanStep,     setScanStep]     = useState(0);
+
+  useEffect(() => {
+    if (!searching) { setScanStep(0); return; }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cum = 0;
+    for (let i = 1; i < SCAN_STAGES.length - 1; i++) {
+      cum += SCAN_STAGES[i - 1].ms;
+      const idx = i;
+      timers.push(setTimeout(() => setScanStep(idx), cum));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [searching]);
   const [isFree, setIsFree] = useState(false);
   const [dismissedOnboarding, setDismissedOnboarding] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -925,9 +938,9 @@ export default function OpportunitiesPage() {
 
           {/* Action */}
           <button onClick={() => runSearch.mutate()} disabled={searching}
-            className="btn-primary text-sm disabled:opacity-60 shrink-0">
+            className="btn-primary text-sm disabled:opacity-60 shrink-0 min-w-[160px] justify-center">
             {searching
-              ? <><span className="animate-spin inline-block mr-1">⟳</span>Scanning…</>
+              ? <><span className="mr-1.5">{SCAN_STAGES[scanStep]?.icon}</span>{SCAN_STAGES[scanStep]?.label}…</>
               : searchStatus
               ? <>{searchStatus}</>
               : <><span className="text-base mr-1">＋</span>New Scan</>}
@@ -957,8 +970,13 @@ export default function OpportunitiesPage() {
         )}
       </div>
 
-      {/* ── AI scan progress (first scan only — no results yet) ── */}
-      {allOpps.length === 0 && <ScanProgress searching={searching} />}
+      {/* ── Thin scan progress bar (first scan only) ── */}
+      {allOpps.length === 0 && searching && (
+        <div className="h-[3px] rounded-full bg-white/5 mb-5 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-[900ms] ease-out"
+            style={{ width: `${Math.min(88, Math.round((scanStep / (SCAN_STAGES.length - 1)) * 100))}%` }} />
+        </div>
+      )}
 
       {/* Onboarding checklist — shown only on first use */}
       {allOpps.length === 0 && !searching && !dismissedOnboarding && (
@@ -1371,16 +1389,14 @@ export default function OpportunitiesPage() {
               </Link>
             ) : (
               <button onClick={() => runSearch.mutate()} disabled={searching}
-                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 transition-all disabled:opacity-40">
+                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 transition-all disabled:opacity-40 min-w-[200px] justify-center">
                 {searching
-                  ? <><span className="animate-spin inline-block">⟳</span> Scanning for more…</>
+                  ? <><span>{SCAN_STAGES[scanStep]?.icon}</span>{SCAN_STAGES[scanStep]?.label}…</>
                   : <>Scan for More <span className="text-base leading-none">↓</span></>}
               </button>
             )}
           </div>
         </div>
-        {/* Inline scan progress — appears right below the Scan for More button */}
-        <ScanProgress searching={searching} />
         </div>
       )}
 
