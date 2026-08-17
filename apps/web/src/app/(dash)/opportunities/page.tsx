@@ -1095,8 +1095,7 @@ export default function OpportunitiesPage() {
 
       {/* ── Filter bar — sticky, visually attached to top nav ── */}
       <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 md:-mx-5 lg:-mx-6 xl:-mx-8 mb-4">
-        <div className="px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 py-2.5 border-b border-white/8 overflow-x-auto scroll-tabs"
-          style={{ background: 'rgba(2,8,23,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+        <div className="filter-bar-inner px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 py-2.5 overflow-x-auto scroll-tabs">
           <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
 
             {/* Marketplace */}
@@ -1188,18 +1187,18 @@ export default function OpportunitiesPage() {
       <div className="card-dark rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[800px]">
-            <thead className="bg-white/5 border-b border-white/10">
+            <thead className="dark:bg-white/5 bg-slate-50/80 border-b dark:border-white/10 border-slate-200">
               <tr>
-                <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Product</th>
-                <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Trend</th>
-                <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Region</th>
-                <th className="text-center px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Score</th>
-                <th className="text-left px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Signal</th>
-                <th className="text-right px-3 py-3 font-semibold text-white/40 text-xs uppercase tracking-wide">Net Profit</th>
-                <th className="px-3 py-3 text-center font-semibold text-white/40 text-xs uppercase tracking-wide">Actions</th>
+                <th className="text-left px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Product</th>
+                <th className="text-left px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Trend</th>
+                <th className="text-left px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Region</th>
+                <th className="text-center px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Score</th>
+                <th className="text-left px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Signal</th>
+                <th className="text-right px-3 py-3 font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Net Profit</th>
+                <th className="px-3 py-3 text-center font-semibold dark:text-white/40 text-slate-400 text-xs uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y dark:divide-white/5 divide-slate-100">
               {isLoading
                 ? [1, 2, 3].map(i => <SkeletonRow key={i} />)
                 : displayed.length === 0
@@ -1240,7 +1239,7 @@ export default function OpportunitiesPage() {
                       {/* Product */}
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0 relative">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden dark:bg-white/10 bg-slate-200 shrink-0 relative">
                             {opp.product?.imageUrl
                               ? <img src={opp.product.imageUrl} alt={opp.product.title}
                                   loading="lazy" decoding="async" width="40" height="40"
@@ -1251,7 +1250,7 @@ export default function OpportunitiesPage() {
                               : <div className="w-full h-full flex items-center justify-center text-base">🎯</div>}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-medium text-white line-clamp-1 text-sm">{opp.product?.title}</div>
+                            <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {opp.product?.category && (
                                 <span className="text-[10px] text-white/55 capitalize leading-snug truncate max-w-[120px]">
@@ -1276,7 +1275,7 @@ export default function OpportunitiesPage() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] text-white/40">{tStr.label}</span>
-                          <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden min-w-[40px] max-w-[60px]">
+                          <div className="flex-1 h-1 dark:bg-white/10 bg-slate-200 rounded-full overflow-hidden min-w-[40px] max-w-[60px]">
                             <div className="h-full rounded-full" style={{ width: `${opp.score?.trend ?? 0}%`, backgroundColor: tStr.color }} />
                           </div>
                           <span className="text-[10px] font-bold" style={{ color: tStr.color }}>{Math.round(opp.score?.trend ?? 0)}</span>
