@@ -784,6 +784,7 @@ export default function OpportunitiesPage() {
   const [recFilter, setRecFilter] = useState('');
 
   // Client-side filters
+  const [nameFilter,     setNameFilter]     = useState('');
   const [catFilter,      setCatFilter]      = useState('');
   const [srcFilter,      setSrcFilter]      = useState('');
   const [strengthFilter, setStrengthFilter] = useState('');
@@ -835,7 +836,15 @@ export default function OpportunitiesPage() {
 
   const displayed = useMemo(() => {
     const now = Date.now();
+    const q = nameFilter.trim().toLowerCase();
     let rows = allOpps.filter(opp => {
+      if (q) {
+        const name  = (opp.product?.name        ?? '').toLowerCase();
+        const desc  = (opp.product?.description ?? '').toLowerCase();
+        const cat   = (opp.product?.category    ?? '').toLowerCase();
+        const keys  = (opp.product?.keywords    ?? []).join(' ').toLowerCase();
+        if (!name.includes(q) && !desc.includes(q) && !cat.includes(q) && !keys.includes(q)) return false;
+      }
       if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
       if (srcFilter)      { if (trendSource(opp.marketplace?.code).key !== srcFilter) return false; }
       if (strengthFilter) { if (trendStrengthLabel(opp.score?.trend ?? 0).key !== strengthFilter) return false; }
@@ -857,9 +866,9 @@ export default function OpportunitiesPage() {
       return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
-  }, [allOpps, catFilter, srcFilter, strengthFilter, periodFilter, sortBy]);
+  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, periodFilter, sortBy]);
 
-  const hasClientFilters = !!(catFilter || srcFilter || strengthFilter || periodFilter);
+  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || periodFilter);
 
   // Quick stats for hero
   const hotCount        = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'hot').length;
@@ -1034,6 +1043,21 @@ export default function OpportunitiesPage() {
             <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
               onChange={v => setMpFilter(v)} loading={mktLoading} />
 
+            {/* Product name / keyword search */}
+            <div className="relative">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 text-xs pointer-events-none">🔍</span>
+              <input
+                type="text"
+                value={nameFilter}
+                onChange={e => setNameFilter(e.target.value)}
+                placeholder="Search products…"
+                className="pl-7 pr-2.5 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-white/80 placeholder-white/25 focus:outline-none focus:border-violet-500/50 focus:bg-white/8 w-40 transition-colors"
+              />
+              {nameFilter && (
+                <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">✕</button>
+              )}
+            </div>
+
             {/* Category */}
             <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SEL}>
               <option value="">All Categories</option>
@@ -1086,7 +1110,7 @@ export default function OpportunitiesPage() {
             {/* Clear + count */}
             <div className="ml-auto flex items-center gap-2.5 pl-2">
               {hasClientFilters && (
-                <button onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
+                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
                   className="text-xs text-white/35 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 whitespace-nowrap">
                   Clear ✕
                 </button>
