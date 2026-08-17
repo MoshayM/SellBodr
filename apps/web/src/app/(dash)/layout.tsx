@@ -173,7 +173,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   /* Loading / auth-redirect state */
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#020817] flex items-center justify-center">
+      <div className="dash-area min-h-screen bg-gray-50 dark:bg-[#020817] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-9 h-9 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
           <span className="text-sm text-gray-400 dark:text-white/35">Loading…</span>
@@ -272,7 +272,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   ) : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#020817] flex flex-col">
+    <div className="dash-area min-h-screen bg-gray-50 dark:bg-[#020817] flex flex-col">
 
       {/* ── Top navigation bar ── */}
       <header
@@ -328,12 +328,21 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             <SearchIcon />
           </button>
 
-          {/* Theme toggle */}
+          {/* Theme toggle — pill switch */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-violet-600 dark:hover:text-violet-300 transition-colors touch-manipulation"
+            className="relative flex items-center gap-1 h-8 px-2 rounded-full border transition-all duration-200 touch-manipulation shrink-0"
+            style={{
+              background: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(15,23,42,0.06)',
+              borderColor: isDark ? 'rgba(124,58,237,0.3)' : 'rgba(15,23,42,0.12)',
+            }}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
-            {isDark ? <SunIcon /> : <MoonIcon />}
+            <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${isDark ? 'text-white/40 hover:text-white/70' : 'bg-white shadow-sm text-amber-500'}`}>
+              <SunIcon />
+            </span>
+            <span className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${isDark ? 'bg-violet-600 shadow-sm text-white' : 'text-gray-400 hover:text-gray-600'}`}>
+              <MoonIcon />
+            </span>
           </button>
 
           {/* Wishlist */}
