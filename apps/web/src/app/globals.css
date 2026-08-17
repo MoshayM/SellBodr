@@ -2,16 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Light theme (default :root) ─────────────────────────── */
 :root {
-  --bg: #020817;
-  --card: #0F1629;
-  --border: rgba(255,255,255,0.08);
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --card2: #F1F5F9;
+  --border: rgba(15,23,42,0.08);
   --accent: #7C3AED;
   --accent2: #06B6D4;
   --green: #10B981;
   --foreground-rgb: 15, 23, 42;
   --background-start-rgb: 248, 250, 252;
+  --nav-bg: rgba(255,255,255,0.92);
+  --nav-border: rgba(15,23,42,0.08);
+  --glass-bg: rgba(255,255,255,0.85);
+  --glass-border: rgba(15,23,42,0.08);
+  --text: #0F172A;
+  --text-muted: rgba(15,23,42,0.5);
+  --scrollbar: rgba(15,23,42,0.15);
+  --dropdown-bg: #FFFFFF;
+  --dropdown-border: rgba(15,23,42,0.1);
 }
+
+/* ── Dark theme ──────────────────────────────────────────── */
+html.dark {
+  --bg: #020817;
+  --card: #0F1629;
+  --card2: #0E1628;
+  --border: rgba(255,255,255,0.08);
+  --nav-bg: rgba(2,8,23,0.85);
+  --nav-border: rgba(255,255,255,0.05);
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --text: #FFFFFF;
+  --text-muted: rgba(255,255,255,0.5);
+  --scrollbar: rgba(255,255,255,0.15);
+  --dropdown-bg: #0E1628;
+  --dropdown-border: rgba(255,255,255,0.1);
+}
+
+/* Smooth theme transition */
+html { transition: background-color 0.25s ease; }
+body { transition: background-color 0.25s ease, color 0.25s ease; }
 
 *, *::before, *::after {
   -webkit-tap-highlight-color: transparent;
@@ -224,10 +256,10 @@ img {
 /* ── Glass morphism ───────────────────────────────────── */
 
 .glass {
-  background: rgba(255,255,255,0.04);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--glass-border);
 }
 
 .glass-card {
@@ -237,6 +269,11 @@ img {
   border: 1px solid rgba(255,255,255,0.07);
 }
 
+html:not(.dark) .glass-card {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(15,23,42,0.08);
+}
+
 /* ── Glow effects ─────────────────────────────────────── */
 
 .glow-purple { box-shadow: 0 0 30px rgba(124,58,237,0.3), 0 0 60px rgba(124,58,237,0.1); }
@@ -244,10 +281,10 @@ img {
 
 /* ── Scrollbar dark ───────────────────────────────────── */
 
-.scrollbar-dark { scrollbar-color: rgba(255,255,255,0.15) transparent; scrollbar-width: thin; }
+.scrollbar-dark { scrollbar-color: var(--scrollbar) transparent; scrollbar-width: thin; }
 .scrollbar-dark::-webkit-scrollbar { width: 4px; }
 .scrollbar-dark::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+.scrollbar-dark::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
 
 /* ── Delay utilities ──────────────────────────────────── */
 

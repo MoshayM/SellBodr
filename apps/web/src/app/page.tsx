@@ -219,8 +219,8 @@ export default function LandingPage() {
             transition={{ delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-3 justify-center mb-4"
           >
-            <Link href="/opportunities" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
-              Browse Free →
+            <Link href="/register" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
+              Get Started Free →
             </Link>
             <Link href="/register?plan=pro" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
               Start Pro →

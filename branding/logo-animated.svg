@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <!-- Main vivid gradient: deep violet → hot pink → amber -->
+    <linearGradient id="g" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#7c3aed"/>
+      <stop offset="48%"  stop-color="#db2777"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <!-- 3D depth shadow gradient (dark extrusion layer) -->
+    <linearGradient id="gd" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#1e0a3c"/>
+      <stop offset="100%" stop-color="#431407"/>
+    </linearGradient>
+    <!-- Soft glow filter -->
+    <filter id="gf" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5.5"/>
+    </filter>
+    <!-- Sharper close glow -->
+    <filter id="gf2" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <!-- ─── Outer float animation wraps everything ─────────── -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 0,-3.5; 0,0"
+      dur="3s" repeatCount="indefinite"
+      calcMode="spline"
+      keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/>
+
+    <!-- Wide ambient glow bloom (pulsing opacity) -->
+    <g filter="url(#gf)">
+      <animate attributeName="opacity"
+        values="0.4;0.88;0.4" dur="2.6s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"/>
+      <path d="M 20 65 C 15 35,53 17,62 19"
+            stroke="url(#g)" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <polygon points="74,22 61,24 63,14" fill="#db2777"/>
+      <path d="M 80 35 C 85 65,47 83,38 81"
+            stroke="url(#g)" stroke-width="12" stroke-linecap="round" fill="none"/>
+      <polygon points="26,78 39,76 37,86" fill="#7c3aed"/>
+    </g>
+
+    <!-- 3D extrusion depth layer (+3 x, +4 y, dark) -->
+    <g opacity="0.65">
+      <path d="M 23 69 C 18 39,56 21,65 23"
+            stroke="url(#gd)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <polygon points="77,26 64,28 66,17" fill="url(#gd)"/>
+      <path d="M 83 39 C 88 69,50 87,41 85"
+            stroke="url(#gd)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <polygon points="29,82 42,80 40,90" fill="url(#gd)"/>
+    </g>
+
+    <!-- Tight inner glow (makes edges pop) -->
+    <g filter="url(#gf2)" opacity="0.55">
+      <path d="M 20 65 C 15 35,53 17,62 19"
+            stroke="url(#g)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <polygon points="74,22 61,24 63,14" fill="url(#g)"/>
+      <path d="M 80 35 C 85 65,47 83,38 81"
+            stroke="url(#g)" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <polygon points="26,78 39,76 37,86" fill="url(#g)"/>
+    </g>
+
+    <!-- ── Main vivid arrows ── -->
+    <path d="M 20 65 C 15 35,53 17,62 19"
+          stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+    <polygon points="74,22 61,24 63,14" fill="url(#g)"/>
+    <path d="M 80 35 C 85 65,47 83,38 81"
+          stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
+    <polygon points="26,78 39,76 37,86" fill="url(#g)"/>
+
+    <!-- Top-face rim highlight (white, gives 3D top-plane illusion) -->
+    <path d="M 20 65 C 15 35,53 17,62 19"
+          stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.28"/>
+    <path d="M 80 35 C 85 65,47 83,38 81"
+          stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.28"/>
+
+    <!-- Shimmer highlight that travels along arrow 1 -->
+    <path d="M 20 65 C 15 35,53 17,62 19"
+          stroke="white" stroke-width="4" stroke-linecap="round"
+          fill="none" opacity="0" pathLength="1"
+          stroke-dasharray="0.18 0.82" stroke-dashoffset="0">
+      <animate attributeName="opacity"
+        values="0;0.55;0;0;0" dur="4s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+      <animate attributeName="stroke-dashoffset"
+        values="1;-0.1" dur="4s" repeatCount="indefinite" calcMode="spline"
+        keySplines="0.4 0 0.6 1"/>
+    </path>
+    <!-- Shimmer along arrow 2 (offset by half cycle) -->
+    <path d="M 80 35 C 85 65,47 83,38 81"
+          stroke="white" stroke-width="4" stroke-linecap="round"
+          fill="none" opacity="0" pathLength="1"
+          stroke-dasharray="0.18 0.82" stroke-dashoffset="0">
+      <animate attributeName="opacity"
+        values="0;0;0.55;0;0" dur="4s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
+      <animate attributeName="stroke-dashoffset"
+        values="1;-0.1" dur="4s" begin="2s" repeatCount="indefinite" calcMode="spline"
+        keySplines="0.4 0 0.6 1"/>
+    </path>
+  </g>
+</svg>
