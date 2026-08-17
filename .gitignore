@@ -11,21 +11,9 @@ dist/
 coverage/
 .pnpm-store/
 
-# Sensitive credential files
-Antropic API Key.txt
-Open AI API Key.txt
-Login Credentials.txt
-Token.txt
-Turso.txt
-Turso url.txt
-Turso db url.txt
-vercel.txt
-git.txt
-groq api.txt
-Antropic API Key.txt
-Open AI API Key.txt
-Login Credentials.txt
-Token.txt
+# Sensitive credential files — catch all token/key txt files
+*.txt
+!.env.example
 
 # Reserved Windows device name — cannot be indexed on Windows
 apps/api/nul
