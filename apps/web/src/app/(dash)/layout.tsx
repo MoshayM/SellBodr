@@ -48,6 +48,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [mounted,      setMounted]      = useState(false);
   const [user, setUser] = useState<{ name?: string; role?: string; plan?: string } | null>(null);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [guestBannerDismissed, setGuestBannerDismissed] = useState(false);
 
   const userMenuRef   = useRef<HTMLDivElement>(null);
   const desktopBtnRef = useRef<HTMLButtonElement>(null);
@@ -58,9 +60,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
-    if (!token) { router.replace('/register'); return; }
-    setUser(getUser());
-  }, [router]);
+    if (token) {
+      setUser(getUser());
+    }
+    setAuthChecked(true);
+  }, []);
 
   useEffect(() => { setMenuOpen(false); }, [path]);
 
@@ -113,8 +117,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   function closeSearch() { setSearchOpen(false); }
 
-  function logout() { clearAuth(); router.push('/login'); }
+  function logout() { clearAuth(); setUser(null); router.push('/opportunities'); }
 
+  const isGuest = authChecked && !user;
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U';
@@ -280,8 +285,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             )}
           </Link>
 
-          {/* User avatar + dropdown */}
-          <div className="relative" ref={userMenuRef}>
+          {/* User avatar (auth) OR Sign in link (guest) */}
+          {user ? (
+            <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs transition-transform duration-150 hover:scale-105 active:scale-95 touch-manipulation"
@@ -332,7 +338,13 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   </motion.div>
                 )}
               </AnimatePresence>
-          </div>
+            </div>
+          ) : authChecked ? (
+            <Link href="/login"
+              className="text-sm font-medium text-white/60 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/5">
+              Sign in
+            </Link>
+          ) : null}
 
           {/* Mobile "More" button */}
           <button onClick={() => setMenuOpen(true)}
@@ -376,17 +388,26 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
-                  {initials}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">{user?.name ?? 'User'}</div>
-                  <div className="text-xs text-white/30 capitalize">
-                    {user?.plan === 'pro' ? 'Pro' : user?.role === 'admin' ? 'Admin' : 'Free'} account
+              {user ? (
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white truncate">{user.name ?? 'User'}</div>
+                    <div className="text-xs text-white/30 capitalize">
+                      {user.plan === 'pro' ? 'Pro' : user.role === 'admin' ? 'Admin' : 'Free'} account
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="px-5 py-4 border-b border-white/5">
+                  <Link href="/login" onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm font-medium text-violet-300 hover:text-violet-200 transition-colors">
+                    Sign in to your account →
+                  </Link>
+                </div>
+              )}
 
               <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
                 {navPages.map(p => {
@@ -415,15 +436,43 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
               <div className="px-3 pt-3 border-t border-white/5"
                 style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-                <button onClick={logout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
-                  <span>↩</span><span>Sign out</span>
-                </button>
+                {user ? (
+                  <button onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all min-h-[44px] touch-manipulation">
+                    <span>↩</span><span>Sign out</span>
+                  </button>
+                ) : (
+                  <Link href="/register" onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-violet-300 hover:text-violet-200 hover:bg-violet-500/8 transition-all min-h-[44px] touch-manipulation">
+                    Create Free Account →
+                  </Link>
+                )}
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      {/* ── Guest banner (only on /opportunities for unauthenticated visitors) ── */}
+      {isGuest && path === '/opportunities' && !guestBannerDismissed && (
+        <div
+          className="fixed inset-x-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 bg-violet-950/90 backdrop-blur-sm border-b border-violet-500/25 text-sm"
+          style={{ top: 'calc(56px + env(safe-area-inset-top, 0px))' }}>
+          <span className="text-white/70">
+            You&apos;re browsing as a guest.{' '}
+            <Link href="/register" className="text-violet-300 hover:text-violet-200 underline underline-offset-2">
+              Create free account
+            </Link>{' '}
+            to run AI scans.
+          </span>
+          <button
+            onClick={() => setGuestBannerDismissed(true)}
+            aria-label="Dismiss"
+            className="shrink-0 text-white/40 hover:text-white transition-colors text-lg leading-none w-6 h-6 flex items-center justify-center">
+            ×
+          </button>
+        </div>
+      )}
 
       {/* ────────────────────────────────────────────────────────────
           Main content

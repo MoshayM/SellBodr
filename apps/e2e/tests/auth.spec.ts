@@ -16,14 +16,15 @@ test.describe('Authentication', () => {
 
   test('register page step 1 renders plan selection', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.getByRole('heading', { name: 'Choose your plan' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Continue with/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
+    // Step 1 shows plan cards with a "Get Started" / "Start Pro" CTA button
+    await expect(page.getByRole('button', { name: /Get Started|Start Pro/i }).first()).toBeVisible();
     await expect(page.getByText('SellBodr', { exact: true }).first()).toBeVisible();
   });
 
   test('register page step 2 renders account form', async ({ page }) => {
     await page.goto('/register');
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
     await expect(page.getByPlaceholder('Jane Smith')).toBeVisible();
     await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
@@ -37,7 +38,7 @@ test.describe('Authentication', () => {
   test('register → links to login page', async ({ page }) => {
     await page.goto('/register');
     // Sign in link only appears on the form step (step 2)
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
     await page.getByRole('link', { name: /Sign in/ }).click();
     await page.waitForURL('**/login');
@@ -48,7 +49,7 @@ test.describe('Authentication', () => {
     await page.goto('/login');
     await page.getByRole('link', { name: /Start free/ }).click();
     await page.waitForURL('**/register');
-    await expect(page.getByRole('heading', { name: 'Choose your plan' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
   });
 
   test('register new user → redirects to /opportunities', async ({ page }) => {
@@ -57,7 +58,7 @@ test.describe('Authentication', () => {
     const email = `reg-${ts}@e2e.test`;
 
     await page.goto('/register');
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await page.getByPlaceholder('Jane Smith').fill('New User');
     await page.getByPlaceholder('you@example.com').fill(email);
     // Expand password form (passkey-first design hides password fields by default)
@@ -197,7 +198,7 @@ test.describe('Authentication', () => {
 
     // Register: step 1 → step 2 → expand password form → submit
     await page.goto('/register');
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await page.getByPlaceholder('Jane Smith').fill('Roundtrip User');
     await page.getByPlaceholder('you@example.com').fill(email);
     await page.getByText('Use a password instead').click();

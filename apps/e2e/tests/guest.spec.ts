@@ -125,7 +125,7 @@ test.describe('Sign-out returns to guest mode', () => {
 test.describe('Register passkey UX', () => {
   test('register step 2 shows platform passkey button (no USB option)', async ({ page }) => {
     await page.goto('/register');
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
 
     // Platform passkey button is the primary CTA
@@ -142,7 +142,7 @@ test.describe('Register passkey UX', () => {
 
   test('register passkey button hint mentions "No USB key needed"', async ({ page }) => {
     await page.goto('/register');
-    await page.getByRole('button', { name: /Continue with/ }).first().click();
+    await page.getByRole('button', { name: /Get Started|Start Pro/i }).first().click();
     await expect(page.getByRole('heading', { name: 'Create your account' })).toBeVisible();
     await expect(page.locator('text=/No USB key needed/i')).toBeVisible({ timeout: 5_000 });
   });

@@ -219,13 +219,25 @@ export default function LandingPage() {
             transition={{ delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-3 justify-center mb-4"
           >
-            <Link href="/register" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
-              Create Free Account — No card needed →
+            <Link href="/opportunities" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
+              Browse Free →
             </Link>
             <Link href="/register?plan=pro" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
-              Start Pro Trial
+              Start Pro →
             </Link>
           </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-sm text-white/35 mb-2"
+          >
+            No account needed to browse.{' '}
+            <Link href="/register" className="text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2">
+              Create Free Account
+            </Link>
+            {' '}to run AI scans.
+          </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
