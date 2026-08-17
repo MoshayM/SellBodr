@@ -93,9 +93,12 @@ A phased plan from MVP to Enterprise. Each phase is shippable and gated by the s
 - ✅ Bulk scoring — Bulk Scan page covers batch opportunity discovery
 - ✅ API usage metering UI — per-key usage bar (calls / quota / reset date) in Settings → API Keys
 - ✅ SOC2-readiness (frontend) — Admin Audit Log tab (event feed: action type, user, metadata, timestamps); System Health tab (pipeline metrics, agent status, model availability grid)
+- ✅ Model routing UI — Admin → Model Routing tab: agent-to-model assignment table for all 8 agents; cost guidance card; save config
+- ✅ Marketplace Management UI — Admin → Marketplaces tab: add marketplace form (name, code, currency, fee%), active/inactive toggle, remove; live updates Scout dropdown
+- ✅ GDPR / Data Export — Settings → Data & Privacy tab: JSON data export, data retention disclosure, typed-confirmation account deletion request
 - ⬜ SOC2-readiness (backend) — server-side audit event emission, access reviews, encryption posture
 - ⬜ Advanced observability — Grafana/Prometheus dashboards, SLOs (infrastructure work)
-- ⬜ Model routing + eval harness hardening — backend/infra
+- ⬜ Model routing persistence — wire Admin model routing config to backend agent gateway
 
 **Exit:** Enterprises integrate via API and white-label; platform meets scale + compliance bars.
 
@@ -107,7 +110,10 @@ A phased plan from MVP to Enterprise. Each phase is shippable and gated by the s
 - ✅ Re-score on demand — "↻ Re-score" button on every opportunity detail header; "Scored X ago" freshness indicator
 - ⬜ Always-on crawl pipeline — server-side background re-scoring (infrastructure work)
 - ⬜ Realized seller outcomes — track actual sales performance to retrain scoring weights
-- ⬜ Marketplace expansion playbook — add a new marketplace in < 2 weeks (process doc)
+- ✅ Marketplace expansion UI — Admin Marketplaces tab enables admin to add any new marketplace in minutes (no code deploy needed)
+- ✅ Onboarding checklist — 3-step "Get started" banner on Scout page for first-time users; dismissible, localStorage-persisted
+- ⬜ Always-on crawl pipeline — server-side background re-scoring (infrastructure work)
+- ⬜ Realized seller outcomes — track actual sales performance to retrain scoring weights
 
 ---
 

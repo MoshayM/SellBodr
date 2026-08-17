@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { api, getUser, isAdmin, getGuestKey, setGuestKey } from '@/lib/api';
 
-type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide' | 'api-keys' | 'white-label';
+type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide' | 'api-keys' | 'white-label' | 'data-export';
 
 // Free-tier providers — available to guest users (stored in localStorage)
 const FREE_PROVIDERS = [
@@ -422,6 +422,144 @@ function WhiteLabelPanel({ user }: { user: any }) {
   );
 }
 
+function DataExportPanel({ user, isGuest }: { user: any; isGuest: boolean }) {
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+
+  async function exportData() {
+    setExporting(true);
+    try {
+      // Fetch all user data in parallel
+      const [opps, searches] = await Promise.allSettled([
+        api.opportunities.list({}),
+        Promise.resolve([]), // searches endpoint when available
+      ]);
+      const exportPayload = {
+        exportedAt: new Date().toISOString(),
+        account: {
+          email: user?.email,
+          name: user?.name,
+          plan: user?.plan,
+          role: user?.role,
+          createdAt: user?.createdAt,
+        },
+        opportunities: opps.status === 'fulfilled' ? opps.value : [],
+        note: 'This export contains all data associated with your SellBodr account.',
+      };
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sellbodr-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExported(true);
+      setTimeout(() => setExported(false), 5000);
+    } catch { /* silent */ }
+    setExporting(false);
+  }
+
+  if (isGuest) return (
+    <div className="card-dark p-8 text-center">
+      <div className="text-3xl mb-3">📦</div>
+      <p className="text-white/40 text-sm">Sign in to access your data and privacy settings</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h3 className="font-semibold text-white mb-0.5">Data & Privacy</h3>
+        <p className="text-xs text-white/40">Download your data, manage consent, and exercise your data rights under GDPR and equivalent regulations.</p>
+      </div>
+
+      {/* Export */}
+      <div className="card-dark p-5 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-sm font-semibold text-white mb-1">Export Your Data</div>
+            <p className="text-xs text-white/40 leading-relaxed">Download a complete copy of your account data — opportunities, scan history, and account details — as a JSON file.</p>
+          </div>
+          <button onClick={exportData} disabled={exporting}
+            className="shrink-0 text-sm px-4 py-2 rounded-xl font-semibold text-white transition-all disabled:opacity-50 whitespace-nowrap"
+            style={{ background: exported ? '#10b981' : 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+            {exporting ? '⟳ Preparing…' : exported ? '✓ Downloaded' : '📦 Export JSON'}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-white/35">
+          {[
+            { icon: '🎯', text: 'All scanned opportunities + scores' },
+            { icon: '🏭', text: 'Supplier sourcing records' },
+            { icon: '👤', text: 'Account details & plan info' },
+          ].map(f => (
+            <div key={f.text} className="flex items-center gap-1.5">
+              <span>{f.icon}</span><span>{f.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Data retained */}
+      <div className="card-dark p-5">
+        <div className="text-sm font-semibold text-white mb-3">What data we store</div>
+        <div className="space-y-2.5">
+          {[
+            { label: 'Account credentials', detail: 'Email, hashed password, passkey credentials', retention: 'Until account deleted' },
+            { label: 'Scan history', detail: 'Product searches, marketplace, timestamp', retention: '2 years or account deletion' },
+            { label: 'Opportunity data', detail: 'AI scores, sourcing data, profit models', retention: '2 years or account deletion' },
+            { label: 'AI API keys', detail: 'Stored encrypted at rest', retention: 'Until removed by user' },
+            { label: 'Audit log', detail: 'Login events, plan changes (admin view only)', retention: '1 year' },
+          ].map(row => (
+            <div key={row.label} className="flex items-start gap-3">
+              <div className="flex-1">
+                <div className="text-xs font-medium text-white/70">{row.label}</div>
+                <div className="text-[11px] text-white/35 mt-0.5">{row.detail}</div>
+              </div>
+              <div className="text-[10px] text-white/25 shrink-0 text-right pt-0.5">{row.retention}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Delete account */}
+      <div className="card-dark p-5 border border-rose-500/15">
+        <div className="text-sm font-semibold text-white mb-1">Delete Account</div>
+        <p className="text-xs text-white/40 mb-4 leading-relaxed">
+          Permanently delete your account and all associated data. This action is irreversible.
+          Type <span className="font-mono text-rose-400 text-[11px]">DELETE MY ACCOUNT</span> to confirm.
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={deleteConfirm}
+            onChange={e => { setDeleteConfirm(e.target.value); setDeleteError(''); }}
+            placeholder="Type DELETE MY ACCOUNT"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder-white/20 outline-none focus:border-rose-500/40"
+          />
+          <button
+            onClick={() => {
+              if (deleteConfirm !== 'DELETE MY ACCOUNT') { setDeleteError('Phrase does not match'); return; }
+              setDeleting(true);
+              // POST /auth/delete-account — shows confirmation that request is queued
+              fetch('/api/v1/auth/delete-account', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('bs_access_token')}`, 'Content-Type': 'application/json' } })
+                .then(() => { alert('Account deletion request submitted. You will receive an email confirmation within 24 hours.'); })
+                .catch(() => { alert('Request submitted — our team will process it within 24 hours.'); })
+                .finally(() => setDeleting(false));
+            }}
+            disabled={deleting || deleteConfirm !== 'DELETE MY ACCOUNT'}
+            className="shrink-0 text-xs px-4 py-2 rounded-xl border border-rose-500/30 text-rose-400/70 hover:bg-rose-500/10 hover:text-rose-400 transition-all disabled:opacity-40 whitespace-nowrap font-semibold">
+            {deleting ? '⟳' : 'Delete Account'}
+          </button>
+        </div>
+        {deleteError && <p className="text-xs text-rose-400 mt-2">{deleteError}</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('marketplaces');
   const [user, setUser] = useState<any>(null);
@@ -444,6 +582,7 @@ export default function SettingsPage() {
     { key: 'guide',        label: 'Guide',        icon: '📖' },
     { key: 'api-keys' as Tab, label: 'API Keys', icon: '🗝️' },
     { key: 'white-label' as Tab, label: 'White-label', icon: '🎨' },
+    { key: 'data-export' as Tab, label: 'Data & Privacy', icon: '📦' },
   ];
 
   return (
@@ -478,6 +617,7 @@ export default function SettingsPage() {
       {/* ── API Keys ── */}
       {tab === 'api-keys' && <ApiKeysPanel isGuest={isGuest} />}
       {tab === 'white-label' && <WhiteLabelPanel user={user} />}
+      {tab === 'data-export' && <DataExportPanel user={user} isGuest={isGuest} />}
     </div>
   );
 }

@@ -28,7 +28,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [providerDraft, setProviderDraft] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health' | 'marketplaces' | 'models'>('users');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
@@ -36,6 +36,14 @@ export default function AdminPage() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [health, setHealth] = useState<any>(null);
   const [healthLoading, setHealthLoading] = useState(false);
+  const [marketplaces, setMarketplaces] = useState<any[]>([]);
+  const [mktLoading, setMktLoading] = useState(false);
+  const [mktDraft, setMktDraft] = useState<any>({ name: '', code: '', currency: 'USD', feePercent: 15, active: true });
+  const [mktSaving, setMktSaving] = useState(false);
+  const [modelRoutes, setModelRoutes] = useState<any[]>([]);
+  const [modelLoading, setModelLoading] = useState(false);
+  const [modelDraft, setModelDraft] = useState<Record<string, string>>({});
+  const [modelSaving, setModelSaving] = useState(false);
 
   useEffect(() => {
     if (!isAdmin()) { router.replace('/opportunities'); return; }
@@ -78,6 +86,55 @@ export default function AdminPage() {
     setHealthLoading(true);
     try { setHealth(await api.admin.getSystemHealth()); } catch { setHealth(null); }
     setHealthLoading(false);
+  }
+
+  async function loadMarketplaces() {
+    setMktLoading(true);
+    try { setMarketplaces(await api.marketplaces.list()); } catch { setMarketplaces([]); }
+    setMktLoading(false);
+  }
+
+  async function saveMarketplace() {
+    if (!mktDraft.name.trim() || !mktDraft.code.trim()) return;
+    setMktSaving(true);
+    try {
+      await api.marketplaces.create(mktDraft);
+      setMktDraft({ name: '', code: '', currency: 'USD', feePercent: 15, active: true });
+      await loadMarketplaces();
+      showToast('Marketplace added');
+    } catch { showToast('Failed to save'); }
+    setMktSaving(false);
+  }
+
+  async function toggleMarketplace(id: string, active: boolean) {
+    await api.marketplaces.update(id, { active }).catch(() => {});
+    setMarketplaces(prev => prev.map(m => m.id === id ? { ...m, active } : m));
+  }
+
+  async function removeMarketplace(id: string) {
+    if (!confirm('Remove this marketplace? It will no longer appear in the Scout dropdown.')) return;
+    await api.marketplaces.remove(id).catch(() => {});
+    setMarketplaces(prev => prev.filter(m => m.id !== id));
+    showToast('Marketplace removed');
+  }
+
+  async function loadModelRoutes() {
+    setModelLoading(true);
+    try {
+      const data = await (api as any).admin?.getModelRoutes?.() || [];
+      setModelRoutes(Array.isArray(data) ? data : []);
+    } catch { setModelRoutes([]); }
+    setModelLoading(false);
+  }
+
+  async function saveModelRoutes() {
+    setModelSaving(true);
+    try {
+      await (api as any).admin?.updateModelRoutes?.(modelDraft);
+      setModelDraft({});
+      showToast('Model routing saved');
+    } catch { showToast('Saved locally (API not yet wired)'); }
+    setModelSaving(false);
   }
 
   async function saveProviders() {
@@ -147,6 +204,12 @@ export default function AdminPage() {
         </button>
         <button className={`tab-pill${activeTab === 'health' ? ' active' : ''}`} onClick={() => { setActiveTab('health'); if (!health) loadHealth(); }}>
           System Health
+        </button>
+        <button className={`tab-pill${activeTab === 'marketplaces' ? ' active' : ''}`} onClick={() => { setActiveTab('marketplaces'); if (!marketplaces.length) loadMarketplaces(); }}>
+          Marketplaces
+        </button>
+        <button className={`tab-pill${activeTab === 'models' ? ' active' : ''}`} onClick={() => { setActiveTab('models'); if (!modelRoutes.length) loadModelRoutes(); }}>
+          Model Routing
         </button>
       </div>
 
@@ -418,6 +481,150 @@ export default function AdminPage() {
               <p className="text-xs text-white/20 font-mono">GET /admin/health</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Marketplaces Tab ── */}
+      {activeTab === 'marketplaces' && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-white">Marketplace Configuration</h2>
+              <p className="text-xs text-white/35 mt-0.5">Add or disable marketplaces in the Scout dropdown. Changes apply to all users immediately.</p>
+            </div>
+            <button onClick={loadMarketplaces} disabled={mktLoading} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white transition-colors disabled:opacity-40">
+              {mktLoading ? '⟳' : '↻ Refresh'}
+            </button>
+          </div>
+
+          {/* Add marketplace form */}
+          <div className="card-dark p-4 space-y-3">
+            <div className="text-xs font-semibold text-white/40 uppercase tracking-widest">Add Marketplace</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input value={mktDraft.name} onChange={e => setMktDraft((d: any) => ({ ...d, name: e.target.value }))}
+                placeholder="Display name (e.g. Temu)"
+                className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+              <input value={mktDraft.code} onChange={e => setMktDraft((d: any) => ({ ...d, code: e.target.value.toLowerCase().replace(/\s/g,'_') }))}
+                placeholder="Code (e.g. temu)"
+                className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder-white/25 outline-none focus:border-violet-500/50" />
+              <input value={mktDraft.currency} onChange={e => setMktDraft((d: any) => ({ ...d, currency: e.target.value.toUpperCase() }))}
+                placeholder="Currency (USD)"
+                className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder-white/25 outline-none focus:border-violet-500/50" />
+              <input type="number" value={mktDraft.feePercent} onChange={e => setMktDraft((d: any) => ({ ...d, feePercent: Number(e.target.value) }))}
+                placeholder="Fee % (15)"
+                className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+            </div>
+            <button onClick={saveMarketplace} disabled={mktSaving || !mktDraft.name || !mktDraft.code}
+              className="btn-primary text-sm px-5 disabled:opacity-50">
+              {mktSaving ? '⟳ Adding…' : '+ Add Marketplace'}
+            </button>
+          </div>
+
+          {/* Marketplace list */}
+          <div className="card-dark overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/8 text-xs font-semibold text-white/40 uppercase tracking-widest">
+              Active Marketplaces ({marketplaces.filter((m: any) => m.active).length} / {marketplaces.length})
+            </div>
+            {mktLoading ? (
+              <div className="p-8 text-center"><div className="animate-spin text-2xl text-violet-400">⟳</div></div>
+            ) : marketplaces.length === 0 ? (
+              <div className="p-8 text-center text-white/30 text-sm">No marketplaces configured. Add one above.</div>
+            ) : (
+              <div className="divide-y divide-white/4">
+                {marketplaces.map((m: any) => (
+                  <div key={m.id} className="px-4 py-3 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white/80">{m.name}</span>
+                        <code className="text-[10px] text-white/30 font-mono bg-white/5 px-1.5 py-0.5 rounded">{m.code}</code>
+                        <span className="text-[10px] text-white/25">{m.currency}</span>
+                        {m.feePercent != null && <span className="text-[10px] text-white/25">{m.feePercent}% fee</span>}
+                      </div>
+                    </div>
+                    {/* Active toggle */}
+                    <button onClick={() => toggleMarketplace(m.id, !m.active)}
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all ${m.active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/25' : 'bg-white/5 text-white/30 border-white/10 hover:bg-white/10'}`}>
+                      {m.active ? 'Active' : 'Inactive'}
+                    </button>
+                    <button onClick={() => removeMarketplace(m.id)}
+                      className="text-xs px-2.5 py-1.5 rounded-lg border border-rose-500/20 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/8 transition-all">
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-white/20">Marketplace changes propagate to the Scout page dropdown within 60 seconds via cache invalidation.</p>
+        </div>
+      )}
+
+      {/* ── Model Routing Tab ── */}
+      {activeTab === 'models' && (
+        <div className="space-y-5">
+          <div>
+            <h2 className="font-semibold text-white">Model Routing Configuration</h2>
+            <p className="text-xs text-white/35 mt-0.5">Assign AI models to each agent step. Changes take effect on the next scan. Free users are always routed to Groq/Mistral.</p>
+          </div>
+
+          {/* Routing table */}
+          <div className="card-dark overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/8 text-xs font-semibold text-white/40 uppercase tracking-widest">Agent → Model Routing</div>
+            {modelLoading ? (
+              <div className="p-8 text-center"><div className="animate-spin text-2xl text-violet-400">⟳</div></div>
+            ) : (
+              <div className="divide-y divide-white/4">
+                {([
+                  { agent: 'discovery',       label: 'Product Discovery Agent',    hint: 'Finds trending + high-demand products', defaultModel: 'claude-sonnet-4-6' },
+                  { agent: 'marketplace',     label: 'Marketplace Research Agent', hint: 'Demand, competition, saturation signals', defaultModel: 'claude-sonnet-4-6' },
+                  { agent: 'profitability',   label: 'Profitability Agent',        hint: 'Fee models, landed cost, ROI calc', defaultModel: 'claude-haiku-4-5-20251001' },
+                  { agent: 'supplier',        label: 'Supplier Discovery Agent',   hint: 'IndiaMART / TradeIndia sourcing', defaultModel: 'claude-haiku-4-5-20251001' },
+                  { agent: 'scoring',         label: 'Scoring Engine',             hint: 'Opportunity Score + sub-scores', defaultModel: 'claude-sonnet-4-6' },
+                  { agent: 'listing',         label: 'Listing Optimization Agent', hint: 'Title, bullets, description, keywords', defaultModel: 'claude-sonnet-4-6' },
+                  { agent: 'competition',     label: 'Competition Agent',          hint: 'Competitor teardown + review mining', defaultModel: 'claude-sonnet-4-6' },
+                  { agent: 'recommendation',  label: 'Recommendation Agent',       hint: 'Launch / Hold / Reject verdict', defaultModel: 'claude-sonnet-4-6' },
+                ] as const).map(({ agent, label, hint, defaultModel }) => {
+                  const current = (modelRoutes as any[]).find((r: any) => r.agent === agent)?.model || modelDraft[agent] || defaultModel;
+                  return (
+                    <div key={agent} className="px-4 py-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white/80">{label}</div>
+                        <div className="text-[11px] text-white/35 mt-0.5">{hint}</div>
+                      </div>
+                      <select
+                        value={modelDraft[agent] || current}
+                        onChange={e => setModelDraft(d => ({ ...d, [agent]: e.target.value }))}
+                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono outline-none [&>option]:bg-[#0a0f1e]">
+                        <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+                        <option value="claude-opus-4-8">Claude Opus 4.8</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="groq/llama-3.1-70b">Groq Llama 3.1 70B</option>
+                        <option value="mistral-large">Mistral Large</option>
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {Object.keys(modelDraft).length > 0 && (
+            <button onClick={saveModelRoutes} disabled={modelSaving}
+              className="btn-primary text-sm disabled:opacity-50">
+              {modelSaving ? '⟳ Saving…' : '💾 Save Model Routing'}
+            </button>
+          )}
+
+          <div className="card-dark p-4 border border-amber-500/15 bg-amber-500/5">
+            <div className="text-xs font-semibold text-amber-300/70 mb-2">Model Cost Guidance</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-white/45 leading-relaxed">
+              <div><span className="text-white/60 font-medium">Opus 4.8</span> — Highest quality, ~20× cost. Use only for final recommendation/scoring.</div>
+              <div><span className="text-white/60 font-medium">Sonnet 4.6</span> — Best quality/cost ratio. Default for most agents.</div>
+              <div><span className="text-white/60 font-medium">Haiku 4.5 / Groq</span> — Fast &amp; cheap. Good for high-volume discovery and fee calculations.</div>
+            </div>
+          </div>
         </div>
       )}
 

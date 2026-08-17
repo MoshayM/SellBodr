@@ -806,6 +806,10 @@ export default function OpportunitiesPage() {
   const [searchStatus, setSearchStatus] = useState('');
   const [searchError,  setSearchError]  = useState('');
   const [isFree, setIsFree] = useState(false);
+  const [dismissedOnboarding, setDismissedOnboarding] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('bs_onboarding_dismissed') === '1';
+  });
   useEffect(() => { setIsFree(!isPro()); }, []);
 
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
@@ -946,6 +950,56 @@ export default function OpportunitiesPage() {
 
       {/* ── AI scan progress (first scan only — no results yet) ── */}
       {allOpps.length === 0 && <ScanProgress searching={searching} />}
+
+      {/* Onboarding checklist — shown only on first use */}
+      {allOpps.length === 0 && !searching && !dismissedOnboarding && (
+        <div className="card-dark p-5 sm:p-6 border border-violet-500/15 mb-4 relative">
+          <button
+            onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
+            className="absolute top-3 right-3 text-white/20 hover:text-white/50 transition-colors text-sm">
+            ✕
+          </button>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">🚀</span>
+            <h2 className="font-bold text-white text-sm">Get started — 3 steps to your first opportunity</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                step: '1', done: false, icon: '🛒',
+                title: 'Pick a marketplace',
+                body: 'Select Amazon US (best for beginners) or any of the 13 supported marketplaces from the dropdown above.',
+              },
+              {
+                step: '2', done: false, icon: '🔭',
+                title: 'Run your first scan',
+                body: 'Click "＋ New Scan". The AI runs a 7-stage pipeline: Discover → Demand → Competition → Suppliers → Profit → Score → Verdict.',
+              },
+              {
+                step: '3', done: false, icon: '🎯',
+                title: 'Open an opportunity',
+                body: 'Click any result to see the full 12-tab breakdown: scores, suppliers, profit model, listing, ads, and your Launch / Hold / Reject recommendation.',
+              },
+            ].map(s => (
+              <div key={s.step} className="flex items-start gap-3 p-3 rounded-xl bg-white/3 border border-white/5">
+                <div className="w-7 h-7 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-300 text-xs font-bold shrink-0">{s.step}</div>
+                <div>
+                  <div className="text-xs font-semibold text-white mb-1">{s.icon} {s.title}</div>
+                  <p className="text-[11px] text-white/40 leading-relaxed">{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-3 flex-wrap">
+            <a href="/guide" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Read the full User Guide →</a>
+            <span className="text-white/15 text-xs">·</span>
+            <button onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
+              className="text-xs text-white/25 hover:text-white/45 transition-colors">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {searchError && (
         <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
