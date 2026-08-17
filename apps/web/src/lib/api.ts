@@ -94,6 +94,10 @@ export const api = {
     refresh: (id: string) => request<any>(`/opportunities/${id}/refresh`, { method: 'POST', body: '{}' }),
     generateAds: (id: string) => request<any>(`/opportunities/${id}/ads`, { method: 'POST', body: '{}' }),
     generateGrowth: (id: string) => request<any>(`/opportunities/${id}/growth`, { method: 'POST', body: '{}' }),
+    generateBrand:  (id: string) => request<any>(`/opportunities/${id}/brand`,  { method: 'POST', body: '{}' }),
+    generateBundle: (id: string) => request<any>(`/opportunities/${id}/bundle`, { method: 'POST', body: '{}' }),
+    getCompetition: (id: string) => request<any>(`/opportunities/${id}/competition`),
+    bulkScan:       (keywords: string[], marketplace: string) => request<any>('/opportunities/bulk-scan', { method: 'POST', body: JSON.stringify({ keywords, marketplace }) }),
   },
   billing: {
     getSubscription: () => request<any>('/billing/subscription'),

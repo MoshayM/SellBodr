@@ -1,95 +1,180 @@
-﻿# features.md — SellBodr
+# features.md — SellBodr
 
-Functional specification for every feature. Each feature lists its purpose, inputs, behaviour, outputs, and owning agent/module.
+Functional specification for shipped features only. Each entry documents what is live in the app as of August 2026.
 
 ---
 
 ## A. Core Engines
 
 ### A1. Product Opportunity Engine
-- **Purpose:** Continuously discover products satisfying high demand, low competition, good margin, easy India sourcing, lightweight shipping, strong review potential, and cross-border compliance suitability.
-- **Analyzes:** Best sellers, trending, rising, seasonal, evergreen products, review growth, category growth, search demand.
-- **Produces:** Candidate products + **Opportunity Score (0–100)**.
-- **Owner:** Product Discovery + Trend + Scoring Engine.
+
+- **Purpose:** Discover products satisfying high demand, low competition, good margin, easy India sourcing, and cross-border suitability.
+- **Trigger:** User enters a product keyword + selects a marketplace from the Scout page dropdown (Amazon US / UK / DE / CA / AU, Etsy, eBay, Walmart, TikTok Shop).
+- **Produces:** Ranked results table showing Opportunity Score (0–100), recommendation badge (Launch / Hold / Reject + confidence %), and net profit estimate per result.
+- **Owner:** Product Discovery + Trend + Scoring Engine (AI agent pipeline).
 
 ### A2. Product Sourcing Engine
-- **Purpose:** Find Indian suppliers and capture sourcing economics.
-- **Sources:** IndiaMART, TradeIndia, verified manufacturers, factory suppliers, artisan suppliers.
-- **Collects:** Product cost, MOQ, lead time, production capacity, export experience, supplier quality indicators.
+
+- **Purpose:** Find Indian suppliers and capture sourcing economics per opportunity.
+- **Platforms:** IndiaMART, TradeIndia, Alibaba, Made-in-China, DHgate, Global Sources, Etsy, eBay, Amazon, TradeKey (per-platform quality profiles stored as `qualityIndicators` JSON).
+- **Collects:** Unit cost, MOQ, lead time, trust score (%), feasibility, supplier country, platform.
 - **Owner:** Supplier Discovery Agent.
 
 ### A3. Marketplace Analysis
+
 - **Purpose:** Score each opportunity's marketplace conditions.
-- **Computes:** Demand, Competition, Margin, Market Saturation, Trend, Shipping, Marketplace Fit, and composite Opportunity Score.
+- **Sub-scores computed:** Demand, Competition, Margin, Market Saturation, Trend, Shipping Feasibility, Marketplace Fit.
+- **Composite:** These feed the Opportunity Score (0–100) produced by the Scoring Engine.
 - **Owner:** Marketplace Research + Competition Agents → Scoring Engine.
 
 ### A4. Profitability Engine
-- **Purpose:** Full cost-to-profit model.
-- **Calculates:** Product cost, packaging, international shipping, Amazon FBA fees, referral fees, storage fees, advertising cost, taxes → gross profit, net profit, ROI, break-even units, monthly + annual profit projections.
+
+- **Purpose:** Full cost-to-profit model shown in the Profitability tab.
+- **Calculates:** Sale price, source cost, international shipping, packaging, import duty, landed cost, marketplace fees, ad spend → net profit, ROI, breakeven units, monthly and annual projections.
+- **UI:** Butterfly waterfall chart visualising each cost/revenue component.
 - **Owner:** Profitability Agent + `packages/core/profit`.
 
-### A5. Marketplace Launch Advisor
-- **Purpose:** Make a recommendation actionable.
-- **Generates:** Recommended selling price, product positioning, unique selling points, listing strategy, keyword strategy, SEO title suggestions, bullet points, product description, launch strategy.
-- **Owner:** Listing Optimization + SEO Keyword + Product Launch Agents.
+### A5. AI Listing Generator
+
+- **Purpose:** Produce marketplace-ready listing copy per opportunity.
+- **Generates:** Title, bullet points, product description, keyword list — tailored to the selected marketplace.
+- **Surfaces in:** Listing tab of the Opportunity Detail page.
+- **Owner:** Listing Optimization + SEO Keyword Agents.
 
 ---
 
 ## B. Advanced Features
 
-### B1. Product Gap Finder
-- Detects products with **high demand + weak competitors + poor listings**.
-- Uses Competition Agent's `listingQuality` scores and demand signals; flags gaps where top listings underperform.
+### B1. Keyword Intelligence
 
-### B2. Product Bundle Generator
-- Suggests complementary product bundles to lift average order value.
-- Uses co-purchase signals + embedding similarity; outputs bundle sets with combined margin.
+- Marketplace-specific keyword generation (Amazon, Etsy, Walmart, eBay, TikTok Shop).
+- Segments into primary, secondary, long-tail, and backend keywords.
+- Displayed in the Listing tab alongside listing copy.
 
-### B3. AI Brand Builder
-- Generates **brand names, logo concepts, packaging concepts, brand positioning**.
-- Model-driven (Claude); concepts only — not production art.
+### B2. PPC / Ads Campaign Structure
 
-### B4. Review Intelligence
-- Mines competitor reviews to surface customer **pain points** and unmet needs.
-- Clusters review embeddings; ranks pain points by frequency × negativity; feeds Listing Optimization.
+- Generates a PPC campaign structure: ad groups, keyword match types, and suggested bids.
+- Shown in the Ads tab of the Opportunity Detail page.
 
-### B5. Keyword Intelligence
-- Marketplace-specific keyword generation for **Amazon, Etsy, Walmart, eBay**.
-- Segments into primary/secondary/long-tail/backend; powered by SEO Keyword Agent.
+### B3. Growth Signals
 
-### B6. Listing Generator
-- Produces complete, marketplace-ready listings automatically (title, bullets, description, keywords, price) from an opportunity.
+- Surfaces trend and growth signals for the opportunity's niche.
+- Shown in the Growth tab of the Opportunity Detail page.
+
+### B4. Supplier RFQ Generator
+
+- Generates a Request for Quotation message for a selected supplier.
+- Accessible from the Supplier Profile Drawer (outreach tools: email, WhatsApp, SMS, portal link).
 
 ---
 
 ## C. Recommendation
 
 ### C1. AI Recommendation
-- Combines all sub-scores into **Launch / Hold / Reject** with a **confidence %**.
-- Example (Handmade Wooden Desk Organizer → Amazon USA): Demand 91, Competition 42, Margin 87, Shipping 82, Opportunity 89 → **Launch**, Confidence 92%.
-- Always includes the score breakdown for explainability.
+
+- Combines all sub-scores into a **Launch / Hold / Reject** verdict with a **confidence %**.
+- Score breakdown is always shown for explainability.
+- Displayed as a badge on every result row in the Scout table and as the primary output on the Recommendation tab of the Opportunity Detail page.
+- The Recommendation page (`/recommendations`) groups all evaluated opportunities by their verdict.
 
 ---
 
 ## D. Discovery Loop
 
-- **Continuous re-scoring:** scheduled crawls refresh demand/competition/price; opportunities re-scored; users notified of material changes (e.g. score crosses a threshold).
+- **On-demand re-scan:** Pro users can trigger an additional AI scan from the Scout page bottom bar ("Scan for More" button). Each scan runs the full 7-stage pipeline.
+- **Free plan cap:** 5 total searches; 10 results per marketplace per search. Results beyond the cap are shown as locked gate rows with an "Upgrade to Pro" CTA.
+
+---
+
+## E. UI Features
+
+### E1. LIVE AI Scan Progress Panel
+
+- Displayed during an active Scout search directly on the Scout page.
+- Animates through 7 sequential stages: Discovering → Demand → Competition → Suppliers → Profit → Scoring → Verdicts.
+- Each stage shows a spinner and label; completed stages check off.
+- Collapses and reveals the results table when all stages complete.
+
+### E2. Bottom Bar & Scan for More
+
+- Persistent bar at the bottom of the Scout results view.
+- Shows: total result count, count of hot opportunities, Launch-verdict count, profitable-product count.
+- **Pro users:** "Scan for More" button triggers an additional AI scan appending new results.
+- **Free users:** button replaced with an "Upgrade to Pro" CTA.
+
+### E3. Supplier Profile Drawer
+
+- Opens from the View button in the Suppliers tab sourcing-candidates table.
+- Shows full supplier profile: name, country flag, platform, unit cost, trust %, MOQ, lead time, feasibility rating.
+- Outreach tools: email, WhatsApp, SMS, supplier portal link.
+- Includes RFQ Generator to produce a ready-to-send quotation request.
+
+### E4. Search More Suppliers
+
+- Shown as a card at the bottom of the Suppliers tab sourcing-candidates table.
+- **Free users:** Inline ProGate blocks the action (10 supplier cap per product); shows upgrade prompt.
+- **Pro users:** Fetches additional sourcing candidates via API and appends to the table.
+
+### E5. Global Supplier Map
+
+- Interactive Leaflet 1.9.4 map rendered inside an iframe on the Suppliers tab.
+- Basemap toggle: street map (default) or satellite (Esri World Imagery).
+- Pins display 5-decimal GPS coordinates and a Google Maps deep-link for each supplier.
+- Header bar shows total supplier count; map legend explains pin types.
+- **Full-screen modal:** expand button opens the map in a fixed inset-0 modal with a smooth open animation. ESC key or close button dismisses it.
+
+---
+
+## F. Auth & Access
+
+- **Authentication methods:** Passkey / WebAuthn (primary) + email/password fallback.
+- **Session storage:** JWT stored in localStorage as `bs_access_token` and `bs_user`.
+- **Plans:** Free and Pro. Plan stored on the user record.
+- **Admin access:** Users with `role=admin` or email `sellbodr@gmail.com` can access `/admin`.
+- **Admin panel (`/admin`):** User list with inline plan/role editing, AI provider key management, platform stats.
+
+---
+
+## G. Other Shipped Pages
+
+| Route | Description |
+|-------|-------------|
+| `/scout` | Main product discovery page |
+| `/opportunity/[id]` | Opportunity Detail (10 tabs: Overview, Research, Suppliers, Profitability, Competition, Listing, Ads, Growth, Recommendation, Report) |
+| `/recommendations` | All opportunities grouped by Launch / Hold / Reject verdict |
+| `/reports` | Generate, copy, and view reports per opportunity |
+| `/guide` | User Guide — 7 sections with sticky table of contents |
+| `/admin` | Admin panel (admin-role users only) |
+| `/login` | Email/password + passkey sign-in |
+| `/register` | Account creation |
+| `/privacy` | Privacy policy |
+| `/terms` | Terms of service |
+
+PWA support is active: the app is installable on Android, iOS, and desktop via the PWA install banner.
 
 ---
 
 ## Feature → Tier Matrix
 
-| Feature | Starter | Pro | Agency | Enterprise |
-|---------|:--:|:--:|:--:|:--:|
-| Opportunity discovery | limited | ✓ | ✓ | ✓ |
-| Multi-marketplace | 1 | all | all | all + custom |
-| Profitability engine | ✓ | ✓ | ✓ | ✓ |
-| Launch Advisor | basic | ✓ | ✓ | ✓ |
-| Advanced finders (Gap/Bundle/Review/Keyword) | — | ✓ | ✓ | ✓ |
-| AI Brand Builder | — | ✓ | ✓ | ✓ |
-| Portfolios + multi-user | — | — | ✓ | ✓ |
-| Reports (PDF) | watermarked | ✓ | ✓ | ✓ |
-| API access | — | — | — | ✓ |
-| White-label | — | — | — | ✓ |
+| Feature | Free | Pro |
+|---------|:----:|:---:|
+| Scout search (marketplace dropdown) | 5 total searches | Unlimited |
+| Results per marketplace per search | 10 (rest locked) | Unlimited |
+| Marketplaces available | All 9 selectable | All 9 selectable |
+| Opportunity Score + recommendation badge | ✓ | ✓ |
+| Opportunity Detail (all 10 tabs) | ✓ | ✓ |
+| Profitability waterfall chart | ✓ | ✓ |
+| AI Listing Generator | ✓ | ✓ |
+| Ads / PPC campaign structure | ✓ | ✓ |
+| Growth tab | ✓ | ✓ |
+| Suppliers per product | 10 (rest ProGated) | Unlimited |
+| Search More Suppliers | — (ProGate shown) | ✓ |
+| Scan for More (bottom bar) | — (upgrade CTA) | ✓ |
+| Supplier Profile Drawer + RFQ | ✓ | ✓ |
+| Global Supplier Map + full-screen modal | ✓ | ✓ |
+| Reports (generate / copy / view) | ✓ | ✓ |
+| User Guide (/guide) | ✓ | ✓ |
+| PWA install | ✓ | ✓ |
+| Admin panel | admin role only | admin role only |
 
-(See `monetization.md` for limits and `uiux.md` for where each surfaces.)
+(See `monetization.md` for billing details and `uiux.md` for component-level documentation.)

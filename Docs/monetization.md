@@ -6,47 +6,56 @@ Pricing, plans, metering, and billing implementation.
 
 ## 1. Plans & Tiers
 
-| | **Starter** | **Pro Seller** | **Agency** | **Enterprise** |
-|---|---|---|---|---|
-| Price (indicative) | Free / low | Mid monthly | Higher monthly | Custom |
-| Searches | Limited (e.g. 5/mo) | Unlimited* | Unlimited* | Unlimited* |
-| Marketplaces | 1 (Amazon USA) | All active | All active | All + custom |
-| Advanced analytics | — | ✓ | ✓ | ✓ |
-| Advanced finders (Gap/Bundle/Review/Keyword) | — | ✓ | ✓ | ✓ |
-| AI Brand Builder | — | ✓ | ✓ | ✓ |
-| Multi-user | — | — | ✓ (seats) | ✓ |
-| Portfolio management | — | — | ✓ | ✓ |
-| Reports | watermarked | ✓ | ✓ | ✓ |
-| API access | — | — | — | ✓ |
-| White-label | — | — | — | ✓ |
-| Support | community | standard | priority | dedicated + SLA |
+| | **Free** | **Pro** | **Organisation** |
+|---|---|---|---|
+| Price | $0 — no credit card required | $49 / month | Custom (contact sales) |
+| AI searches (total lifetime) | 5 | Unlimited | Unlimited |
+| Opportunity results per marketplace per search | 10 | Unlimited | Unlimited |
+| Suppliers per product | 10 | Unlimited | Unlimited |
+| Opportunity Score display | Gauge visible (preview only) | Full 7-dimension breakdown | Full 7-dimension breakdown |
+| Recommendation badge | Basic badge visible | Full Launch / Hold / Reject + confidence | Full Launch / Hold / Reject + confidence |
+| Wishlist / saves | Supported | Supported | Supported |
+| Profitability model | ProGate (locked) | ✓ | ✓ |
+| AI Listing Generator | ProGate (locked) | ✓ | ✓ |
+| Ads campaign structure | ProGate (locked) | ✓ | ✓ |
+| Growth signals | ProGate (locked) | ✓ | ✓ |
+| Recommendations dashboard | ProGate (locked) | ✓ | ✓ |
+| Reports & export | ProGate (locked) | ✓ | ✓ |
+| Marketplace Intelligence | ProGate (locked) | ✓ | ✓ |
+| Supplier sourcing map | ProGate (locked) | ✓ | ✓ |
+| AI providers | Groq + Mistral (free tier) | All (Claude, GPT-4, Groq, Mistral, etc.) | All |
+| Multi-seat / team | — | — | ✓ |
+| API access | — | — | ✓ |
+| White-label reports | — | — | ✓ |
+| Support | Community | Standard | Dedicated account manager + SLA |
 
-\* "Unlimited" governed by fair-use + per-pipeline model-cost budgets to prevent abuse.
+**Plan enforcement:** plan stored in `user.plan` column (`free` \| `pro`); JWT carries a `plan` claim consumed by the `EntitlementGuard`. Role `admin` or email `sellbodr@gmail.com` bypasses all limits. Free search quota is enforced server-side and returns HTTP `429` with `limitReached: true` when the 5-search ceiling is reached.
 
 ---
 
 ## 2. Pricing Model
 
-- **Subscription** (per org/seat) is the primary revenue line.
-- **Usage-based add-ons** for heavy consumers: extra search packs, bulk scoring credits, additional API call volume, premium report exports.
-- **Enterprise**: annual contracts, custom marketplaces, volume API pricing, white-label fee.
+- **Subscription** (per seat for Pro; per org for Organisation) is the primary revenue line.
+- Free tier is permanently free with hard lifetime caps (5 searches); no time-limited trial — value is demonstrated within the cap.
+- Organisation pricing is negotiated annually and covers multi-seat access, API volume, and optional white-label configuration.
 
 ---
 
 ## 3. Metering
 
-Tracked in `subscriptions.usage_meters` (jsonb) and Redis counters (real-time), reconciled to Stripe:
+Tracked in `subscriptions.usage_meters` (jsonb) and Redis counters (real-time), reconciled to Stripe where applicable:
 
-| Meter | Unit | Used for |
-|-------|------|----------|
-| `searches` | count/period | Starter limit, fair-use |
-| `opportunities_scored` | count | analytics, soft caps |
-| `api_calls` | count | Enterprise billing |
-| `reports_generated` | count | add-on packs |
-| `model_cost_usd` | micro-USD | per-pipeline budget guard |
+| Meter | Unit | Limit (Free) | Limit (Pro / Org) | Enforcement |
+|-------|------|--------------|-------------------|-------------|
+| `searches` | total count (lifetime) | 5 | Unlimited | Hard — HTTP `429` + `limitReached: true` |
+| `results_per_search` | count per marketplace per run | 10 | Unlimited | Hard — truncated server-side |
+| `suppliers_per_product` | count | 10 | Unlimited | Hard — truncated server-side |
+| `api_calls` | count/period | — | Per Organisation contract | Hard — `429` |
+| `model_cost_usd` | micro-USD | Groq/Mistral only | All providers; per-pipeline budget guard | Circuit-break on overrun |
 
-- Soft limit → warn banner; hard limit → upgrade prompt / `402`/`429`.
-- Model-cost budget per pipeline scales with plan; exceeding it circuit-breaks the run.
+- All ProGate dashboards (Profitability, Listing, Ads, Growth, Recommendations, Reports, Marketplace Intelligence) return a gate response for Free users — no data is fetched.
+- AI provider routing: Free users are restricted to Groq and Mistral free-tier endpoints. Pro/Org users have access to all configured providers (Claude, GPT-4o, Groq, Mistral, etc.) via the model gateway.
+- Hard limits return `429`; gated pages show a ProGate upgrade prompt. There are no soft-limit warn banners at this stage.
 
 ---
 
@@ -76,8 +85,9 @@ sequenceDiagram
 
 ## 5. Free → Paid Conversion
 
-- Starter delivers one full, real opportunity (watermarked report) to demonstrate value.
-- Upgrade nudges at natural friction points: marketplace lock, advanced finder lock, search limit, watermark.
+- Free delivers real search results (up to 10 results per marketplace, 10 suppliers per product) and shows the Opportunity Score gauge and recommendation badge — enough to demonstrate value within 5 searches.
+- Upgrade nudges fire at natural friction points: hitting the 5-search ceiling (hard block with upgrade prompt), attempting to open any ProGate dashboard, or trying to view the full score breakdown or profitability model.
+- Wishlist is available on Free to encourage save behaviour before upgrading.
 
 ---
 

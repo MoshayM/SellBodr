@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { api, getUser, isAdmin, getGuestKey, setGuestKey } from '@/lib/api';
 
-type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide';
+type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide' | 'api-keys';
 
 // Free-tier providers — available to guest users (stored in localStorage)
 const FREE_PROVIDERS = [
@@ -45,6 +45,149 @@ const COUNTRIES  = [
   { code: 'ID', name: 'Indonesia' },      { code: 'OTHER', name: 'Other' },
 ];
 
+function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
+  const [keys, setKeys]       = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newKey, setNewKey]   = useState<string | null>(null);
+  const [copied, setCopied]   = useState(false);
+  const [error, setError]     = useState('');
+
+  useEffect(() => {
+    if (isGuest) return;
+    setLoading(true);
+    api.settings.listApiKeys()
+      .then(setKeys)
+      .catch(() => setKeys([]))
+      .finally(() => setLoading(false));
+  }, [isGuest]);
+
+  async function createKey() {
+    if (!newName.trim()) { setError('Name is required'); return; }
+    setError('');
+    setCreating(true);
+    try {
+      const result = await api.settings.createApiKey(newName.trim());
+      setNewKey(result.key || result.apiKey || result.token || JSON.stringify(result));
+      setKeys(prev => [result, ...prev]);
+      setNewName('');
+    } catch {
+      setError('Failed to create key. Try again.');
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function deleteKey(id: string) {
+    if (!confirm('Delete this API key? This cannot be undone.')) return;
+    await api.settings.deleteApiKey(id).catch(() => {});
+    setKeys(prev => prev.filter(k => k.id !== id));
+  }
+
+  function copyKey(text: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (isGuest) return (
+    <div className="card-dark p-8 text-center">
+      <div className="text-3xl mb-3">🗝️</div>
+      <p className="text-white/40 text-sm">Sign in to manage your API keys</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h3 className="font-semibold text-white mb-0.5">Developer API Keys</h3>
+        <p className="text-xs text-white/40">Use these keys to access the SellBodr REST API programmatically. Keys are scoped to your account and plan.</p>
+      </div>
+
+      {/* New key revealed */}
+      {newKey && (
+        <div className="card-dark p-4 border border-emerald-500/25 bg-emerald-500/6">
+          <div className="text-xs font-semibold text-emerald-300 mb-2">✅ New API key created — copy it now, it won't be shown again</div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs font-mono text-emerald-200 bg-black/30 px-3 py-2 rounded-lg break-all">{newKey}</code>
+            <button onClick={() => copyKey(newKey)}
+              className="shrink-0 text-xs px-3 py-2 rounded-lg border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 transition-colors">
+              {copied ? '✓' : 'Copy'}
+            </button>
+          </div>
+          <button onClick={() => setNewKey(null)} className="text-xs text-white/25 mt-2 hover:text-white/50">Dismiss</button>
+        </div>
+      )}
+
+      {/* Create new key form */}
+      <div className="card-dark p-4 space-y-3">
+        <div className="text-xs font-semibold text-white/50 uppercase tracking-widest">Create New Key</div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newName}
+            onChange={e => { setNewName(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && createKey()}
+            placeholder="Key name (e.g. My App, Production)"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+          />
+          <button onClick={createKey} disabled={creating}
+            className="btn-primary text-sm px-4 disabled:opacity-50 rounded-xl whitespace-nowrap">
+            {creating ? '⟳' : '+ Create'}
+          </button>
+        </div>
+        {error && <p className="text-xs text-rose-400">{error}</p>}
+      </div>
+
+      {/* Key list */}
+      <div className="card-dark overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/8 text-xs font-semibold text-white/40 uppercase tracking-widest">
+          Active Keys {keys.length > 0 && `(${keys.length})`}
+        </div>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin text-2xl text-violet-400">⟳</div>
+          </div>
+        ) : keys.length === 0 ? (
+          <div className="p-8 text-center text-white/30 text-sm">No API keys yet. Create one above.</div>
+        ) : (
+          <div className="divide-y divide-white/4">
+            {keys.map((k: any) => (
+              <div key={k.id} className="px-4 py-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white/80">{k.name}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <code className="text-xs text-white/30 font-mono">{k.prefix || k.keyPreview || 'sk-...'}</code>
+                    {k.createdAt && (
+                      <span className="text-[10px] text-white/20">Created {new Date(k.createdAt).toLocaleDateString()}</span>
+                    )}
+                    {k.lastUsed && (
+                      <span className="text-[10px] text-white/20">Last used {new Date(k.lastUsed).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                </div>
+                <button onClick={() => deleteKey(k.id)}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-rose-500/20 text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/8 transition-all">
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Usage note */}
+      <div className="card-dark p-4 border border-white/5">
+        <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-2">Usage</div>
+        <pre className="text-xs text-white/50 font-mono bg-black/20 p-3 rounded-lg overflow-x-auto">{`curl https://sellbodr.com/api/v1/opportunities \\
+  -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
+        <p className="text-xs text-white/30 mt-2">API access is available on Organisation plan. Free and Pro keys are rate-limited to 100 requests/day.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('marketplaces');
   const [user, setUser] = useState<any>(null);
@@ -65,6 +208,7 @@ export default function SettingsPage() {
     { key: 'marketplaces', label: 'Marketplaces', icon: '🛒' },
     { key: 'security',     label: 'Security',     icon: '🛡️' },
     { key: 'guide',        label: 'Guide',        icon: '📖' },
+    { key: 'api-keys' as Tab, label: 'API Keys', icon: '🗝️' },
   ];
 
   return (
@@ -95,6 +239,9 @@ export default function SettingsPage() {
       {tab === 'marketplaces' && <MarketplacesTab />}
       {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
       {tab === 'guide'        && <UserGuideTab />}
+
+      {/* ── API Keys ── */}
+      {tab === 'api-keys' && <ApiKeysPanel isGuest={isGuest} />}
     </div>
   );
 }

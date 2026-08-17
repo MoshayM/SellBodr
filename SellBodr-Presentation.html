@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SellBodr — Find Products in India. Sell Globally.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #020817;
+    --surface: #0f172a;
+    --gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
+    --violet: #7c3aed;
+    --indigo: #4f46e5;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+    --white: #ffffff;
+    --muted: rgba(255,255,255,0.5);
+    --card-bg: rgba(255,255,255,0.03);
+    --card-border: rgba(255,255,255,0.08);
+    --font: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--font);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Dot grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  /* ── Slide base ── */
+  .slide {
+    position: fixed; inset: 0;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 80px 80px;
+    z-index: 1;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 24px;
+    background: rgba(2,8,23,0.92);
+    border-top: 1px solid var(--card-border);
+    backdrop-filter: blur(12px);
+  }
+  #progress-track {
+    flex: 1; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+  }
+  #progress {
+    height: 100%; width: 0; background: var(--gradient); border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  #counter {
+    font-size: 12px; color: var(--muted); font-family: var(--mono); white-space: nowrap; min-width: 48px; text-align: right;
+  }
+  #fs-btn {
+    background: none; border: 1px solid var(--card-border); color: var(--muted);
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+    font-family: var(--font); transition: all 0.2s;
+  }
+  #fs-btn:hover { border-color: var(--violet); color: var(--white); }
+
+  /* ── Typography helpers ── */
+  .slide-title {
+    font-size: clamp(26px, 3.5vw, 48px);
+    font-weight: 800;
+    background: var(--gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .slide-subtitle {
+    font-size: clamp(13px, 1.4vw, 18px);
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 36px;
+    max-width: 700px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--muted); font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .badge.violet { border-color: rgba(124,58,237,0.4); color: #a78bfa; background: rgba(124,58,237,0.08); }
+  .badge.emerald { border-color: rgba(16,185,129,0.4); color: var(--emerald); background: rgba(16,185,129,0.08); }
+  .badge.amber { border-color: rgba(245,158,11,0.4); color: var(--amber); background: rgba(245,158,11,0.08); }
+  .badge.rose { border-color: rgba(244,63,94,0.4); color: var(--rose); background: rgba(244,63,94,0.08); }
+  .badge.indigo { border-color: rgba(79,70,229,0.4); color: #818cf8; background: rgba(79,70,229,0.08); }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .gradient-text {
+    background: var(--gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .mono { font-family: var(--mono); }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 1 — TITLE
+  ══════════════════════════════════════════════ */
+  #slide-1 {
+    gap: 0;
+    justify-content: center;
+  }
+  .logo-mark {
+    width: 100px; height: 100px; margin-bottom: 28px;
+  }
+  .logo-mark circle { }
+  .s1-title {
+    font-size: clamp(52px, 7vw, 96px);
+    font-weight: 900;
+    background: var(--gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .s1-tagline {
+    font-size: clamp(18px, 2.2vw, 28px);
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .s1-desc {
+    font-size: clamp(13px, 1.4vw, 17px);
+    color: var(--muted);
+    margin-bottom: 48px;
+    max-width: 560px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .s1-bottom {
+    font-size: 13px; color: var(--muted); font-family: var(--mono);
+    border-top: 1px solid var(--card-border); padding-top: 24px; width: 100%;
+    text-align: center; max-width: 600px;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+  ══════════════════════════════════════════════ */
+  #slide-2 .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%; max-width: 900px;
+    margin-bottom: 24px;
+  }
+  .problem-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.3s;
+  }
+  .problem-card:hover { border-color: rgba(124,58,237,0.35); }
+  .problem-num {
+    font-size: 11px; font-family: var(--mono); color: var(--muted);
+    background: rgba(124,58,237,0.12); border-radius: 6px;
+    padding: 2px 8px; display: inline-block; width: fit-content;
+    border: 1px solid rgba(124,58,237,0.2);
+  }
+  .problem-icon { font-size: 24px; line-height: 1; }
+  .problem-q { font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.4; }
+  .s2-bottom {
+    font-size: 14px; color: var(--muted); text-align: center;
+    border: 1px solid var(--card-border); border-radius: 8px;
+    padding: 14px 28px; max-width: 700px;
+  }
+  .s2-bottom span { color: var(--violet); font-weight: 700; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+  ══════════════════════════════════════════════ */
+  #slide-3 .big-statement {
+    font-size: clamp(15px, 1.8vw, 22px);
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    text-align: center;
+    max-width: 760px;
+    line-height: 1.65;
+    margin-bottom: 48px;
+    padding: 32px 40px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+  }
+  .big-statement strong { color: var(--white); }
+  .key-numbers {
+    display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+  }
+  .key-num {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 12px;
+    padding: 20px 32px;
+    text-align: center;
+  }
+  .key-num .num { font-size: 36px; font-weight: 900; color: var(--white); display: block; letter-spacing: -1px; }
+  .key-num .lbl { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 4px; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 4 — HOW IT WORKS
+  ══════════════════════════════════════════════ */
+  #slide-4 .steps-row {
+    display: flex; gap: 0; width: 100%; max-width: 900px; position: relative;
+  }
+  .step-card {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative;
+    margin: 0 8px;
+  }
+  .step-num {
+    font-size: 11px; font-family: var(--mono);
+    background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text;
+    font-weight: 700; letter-spacing: 1px;
+  }
+  .step-icon { font-size: 36px; }
+  .step-name { font-size: 20px; font-weight: 800; color: var(--white); }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .step-arrow {
+    position: absolute; right: -20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px; color: var(--violet); z-index: 2;
+    display: flex; align-items: center;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 5 — AI PIPELINE
+  ══════════════════════════════════════════════ */
+  #slide-5 .pipeline {
+    display: flex; align-items: stretch; width: 100%; max-width: 960px;
+    gap: 4px; flex-wrap: wrap; justify-content: center;
+  }
+  .pipeline-stage {
+    flex: 1; min-width: 110px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 18px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    text-align: center;
+    position: relative;
+    animation: stageFadeIn 0.6s ease both;
+  }
+  .pipeline-stage:nth-child(1) { animation-delay: 0.05s; border-color: rgba(124,58,237,0.3); }
+  .pipeline-stage:nth-child(2) { animation-delay: 0.15s; border-color: rgba(16,185,129,0.3); }
+  .pipeline-stage:nth-child(3) { animation-delay: 0.25s; border-color: rgba(245,158,11,0.3); }
+  .pipeline-stage:nth-child(4) { animation-delay: 0.35s; border-color: rgba(79,70,229,0.3); }
+  .pipeline-stage:nth-child(5) { animation-delay: 0.45s; border-color: rgba(244,63,94,0.3); }
+  .pipeline-stage:nth-child(6) { animation-delay: 0.55s; border-color: rgba(124,58,237,0.3); }
+  .pipeline-stage:nth-child(7) { animation-delay: 0.65s; border-color: rgba(16,185,129,0.4); }
+  @keyframes stageFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .stage-icon { font-size: 22px; }
+  .stage-name { font-size: 11px; font-weight: 700; color: var(--white); font-family: var(--mono); letter-spacing: 0.5px; }
+  .stage-desc { font-size: 10px; color: var(--muted); line-height: 1.4; }
+  .pipeline-arrow {
+    display: flex; align-items: center; color: rgba(255,255,255,0.2); font-size: 16px; flex-shrink: 0;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 6 — OPPORTUNITY SCORE
+  ══════════════════════════════════════════════ */
+  #slide-6 .score-layout {
+    display: flex; gap: 48px; align-items: center; width: 100%; max-width: 900px;
+  }
+  .score-gauge-wrap {
+    display: flex; flex-direction: column; align-items: center; flex-shrink: 0; gap: 12px;
+  }
+  .gauge-svg { width: 260px; height: 160px; }
+  .score-value {
+    font-size: 64px; font-weight: 900; color: var(--emerald);
+    line-height: 1; letter-spacing: -2px; text-align: center;
+  }
+  .score-label { font-size: 14px; font-family: var(--mono); text-align: center; color: var(--emerald); }
+  .score-right { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .zones-row { display: flex; gap: 10px; }
+  .zone-badge { border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; }
+  .zone-badge .zr { font-size: 18px; font-weight: 800; }
+  .zone-badge .zl { font-size: 10px; font-family: var(--mono); opacity: 0.8; }
+  .zone-badge.reject { background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: var(--rose); }
+  .zone-badge.hold { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--amber); }
+  .zone-badge.launch { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--emerald); }
+  .sub-scores {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .sub-score-chip {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; font-weight: 600; color: var(--white);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sub-score-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gradient); flex-shrink: 0; }
+  .score-note { font-size: 11px; color: var(--muted); line-height: 1.5; padding: 12px 16px; background: rgba(124,58,237,0.06); border: 1px solid rgba(124,58,237,0.15); border-radius: 8px; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 7 — FEATURE OVERVIEW
+  ══════════════════════════════════════════════ */
+  #slide-7 .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 100%; max-width: 900px;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-2px); }
+  .feature-icon { font-size: 22px; }
+  .feature-name { font-size: 14px; font-weight: 700; color: var(--white); }
+  .feature-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 8 — SUPPLIER MAP
+  ══════════════════════════════════════════════ */
+  #slide-8 .map-layout {
+    display: flex; gap: 36px; align-items: center; width: 100%; max-width: 960px;
+  }
+  .map-left { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .map-feature { display: flex; gap: 12px; align-items: flex-start; }
+  .map-feature-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gradient); flex-shrink: 0; margin-top: 5px; }
+  .map-feature-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+  .map-feature-text strong { color: var(--white); }
+  .map-right { flex: 1; }
+  .map-mock {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; overflow: hidden; padding: 0;
+    position: relative; height: 280px;
+  }
+  .map-mock-bg {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0a1628 0%, #0e2240 50%, #091926 100%);
+    position: relative; overflow: hidden;
+  }
+  .map-grid-lines {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-pin {
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; cursor: default;
+  }
+  .map-pin-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    animation: pinPulse 2s ease-in-out infinite;
+  }
+  @keyframes pinPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+  .map-pin-label { font-size: 8px; font-family: var(--mono); color: rgba(255,255,255,0.7); white-space: nowrap; }
+  .map-controls {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .map-ctrl-btn {
+    background: rgba(15,23,42,0.9); border: 1px solid var(--card-border);
+    border-radius: 6px; padding: 6px 10px; font-size: 10px; color: var(--muted);
+    font-family: var(--mono); cursor: default;
+  }
+  .map-legend {
+    position: absolute; bottom: 12px; left: 12px;
+    display: flex; gap: 12px;
+    background: rgba(15,23,42,0.85); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 9 — MARKETPLACES
+  ══════════════════════════════════════════════ */
+  #slide-9 .mkts-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    width: 100%; max-width: 720px; margin-bottom: 20px;
+  }
+  .mkt-badge {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.3s;
+  }
+  .mkt-badge:hover { border-color: rgba(124,58,237,0.4); }
+  .mkt-icon { font-size: 22px; }
+  .mkt-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .mkt-region { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .mkts-coming {
+    font-size: 12px; color: var(--muted); text-align: center;
+    padding: 10px 20px; border: 1px dashed var(--card-border); border-radius: 8px;
+    max-width: 500px;
+  }
+  .mkts-note {
+    font-size: 12px; color: var(--muted); text-align: center; margin-top: 12px; max-width: 620px; line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 10 — PRICING
+  ══════════════════════════════════════════════ */
+  #slide-10 .plans-row {
+    display: flex; gap: 20px; width: 100%; max-width: 900px; align-items: stretch;
+  }
+  .plan-card {
+    flex: 1; background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 28px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: transform 0.2s;
+  }
+  .plan-card:hover { transform: translateY(-3px); }
+  .plan-card.featured {
+    background: rgba(124,58,237,0.07);
+    border-color: rgba(124,58,237,0.4);
+    position: relative; overflow: hidden;
+  }
+  .plan-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute; top: 14px; right: -24px;
+    background: var(--gradient); color: white; font-size: 9px;
+    font-weight: 700; padding: 3px 32px; transform: rotate(45deg);
+    letter-spacing: 1px; transform-origin: center;
+    top: 18px; right: -18px;
+  }
+  .plan-name { font-size: 18px; font-weight: 800; color: var(--white); }
+  .plan-price { display: flex; align-items: baseline; gap: 4px; }
+  .plan-price .amount { font-size: 40px; font-weight: 900; color: var(--white); letter-spacing: -1px; }
+  .plan-price .period { font-size: 13px; color: var(--muted); }
+  .plan-divider { height: 1px; background: var(--card-border); }
+  .plan-features { display: flex; flex-direction: column; gap: 8px; }
+  .plan-feature { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.4; }
+  .plan-feature::before { content: '✓'; color: var(--emerald); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .plan-btn {
+    margin-top: auto; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    text-align: center; cursor: pointer; border: none; font-family: var(--font);
+    transition: opacity 0.2s;
+  }
+  .plan-btn:hover { opacity: 0.85; }
+  .plan-btn.outline { background: transparent; border: 1px solid var(--card-border); color: var(--white); }
+  .plan-btn.gradient { background: var(--gradient); color: var(--white); }
+  .plan-btn.dark { background: var(--surface); border: 1px solid var(--card-border); color: var(--white); }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 11 — TECH STACK
+  ══════════════════════════════════════════════ */
+  #slide-11 .stack-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 860px;
+  }
+  .stack-group { display: flex; flex-direction: column; gap: 10px; }
+  .stack-category {
+    font-size: 11px; font-family: var(--mono); font-weight: 600;
+    color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;
+    border-left: 2px solid var(--violet); padding-left: 10px;
+  }
+  .stack-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stack-tag {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 500; color: var(--white);
+    font-family: var(--mono);
+    transition: border-color 0.2s;
+  }
+  .stack-tag:hover { border-color: rgba(124,58,237,0.5); }
+  .stack-tag.violet { border-color: rgba(124,58,237,0.35); color: #a78bfa; }
+  .stack-tag.emerald { border-color: rgba(16,185,129,0.35); color: var(--emerald); }
+  .stack-tag.amber { border-color: rgba(245,158,11,0.35); color: var(--amber); }
+  .stack-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; padding: 10px 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; max-width: 860px; width: 100%; font-family: var(--mono); }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 12 — ARCHITECTURE
+  ══════════════════════════════════════════════ */
+  #slide-12 .arch-diagram {
+    display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 820px;
+  }
+  .arch-row { display: flex; gap: 12px; align-items: center; justify-content: center; }
+  .arch-box {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 12px 18px; text-align: center; min-width: 120px;
+    font-size: 12px; font-family: var(--mono); font-weight: 600; color: var(--white);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .arch-box.violet-border { border-color: rgba(124,58,237,0.5); }
+  .arch-box.indigo-border { border-color: rgba(79,70,229,0.5); }
+  .arch-box.emerald-border { border-color: rgba(16,185,129,0.5); }
+  .arch-box.amber-border { border-color: rgba(245,158,11,0.5); }
+  .arch-box.rose-border { border-color: rgba(244,63,94,0.5); }
+  .arch-box-label { font-size: 9px; color: var(--muted); font-weight: 400; }
+  .arch-arrow { font-size: 18px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+  .arch-arrow.down { transform: rotate(90deg); }
+  .arch-group {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 13 — AUTHENTICATION
+  ══════════════════════════════════════════════ */
+  #slide-13 .auth-layout {
+    display: flex; gap: 36px; width: 100%; max-width: 900px; align-items: flex-start;
+  }
+  .auth-flow { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .auth-step {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 14px 18px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .auth-step-num {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--gradient);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; flex-shrink: 0; color: white;
+  }
+  .auth-step-content { flex: 1; }
+  .auth-step-name { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .auth-step-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .auth-security { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .auth-security-title { font-size: 13px; font-weight: 700; color: var(--muted); font-family: var(--mono); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .auth-security-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5;
+  }
+  .auth-security-item::before { content: '🔒'; flex-shrink: 0; font-size: 13px; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 14 — ROADMAP / SHIPPED
+  ══════════════════════════════════════════════ */
+  #slide-14 .roadmap-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    width: 100%; max-width: 960px;
+  }
+  .phase-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 18px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .phase-card.shipped { border-color: rgba(16,185,129,0.3); }
+  .phase-card.progress { border-color: rgba(245,158,11,0.3); }
+  .phase-card.planned { border-color: rgba(255,255,255,0.08); }
+  .phase-header { display: flex; align-items: center; gap: 8px; }
+  .phase-icon { font-size: 14px; }
+  .phase-name { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--white); }
+  .phase-status { font-size: 9px; font-family: var(--mono); padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+  .phase-status.shipped { background: rgba(16,185,129,0.15); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3); }
+  .phase-status.progress { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .phase-status.planned { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--card-border); }
+  .phase-items { display: flex; flex-direction: column; gap: 6px; }
+  .phase-item { font-size: 11px; color: rgba(255,255,255,0.65); line-height: 1.4; display: flex; gap: 6px; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 15 — COMPETITIVE ADVANTAGE
+  ══════════════════════════════════════════════ */
+  #slide-15 .adv-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    width: 100%; max-width: 860px;
+  }
+  .adv-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 24px 22px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+  .adv-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-2px); }
+  .adv-icon { font-size: 28px; }
+  .adv-name { font-size: 16px; font-weight: 800; color: var(--white); }
+  .adv-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 16 — ENGINEERING HIGHLIGHTS
+  ══════════════════════════════════════════════ */
+  #slide-16 .eng-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+    width: 100%; max-width: 900px;
+  }
+  .eng-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 18px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .eng-bullet {
+    display: inline-block; width: 24px; height: 24px; border-radius: 6px;
+    background: var(--gradient); font-size: 12px; font-weight: 800;
+    text-align: center; line-height: 24px; flex-shrink: 0; color: white;
+  }
+  .eng-name { font-size: 13px; font-weight: 700; color: var(--white); }
+  .eng-detail { font-size: 11px; color: var(--muted); line-height: 1.5; font-family: var(--mono); }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 17 — DEMO FLOW
+  ══════════════════════════════════════════════ */
+  #slide-17 .demo-flow {
+    display: flex; flex-wrap: wrap; gap: 10px; width: 100%; max-width: 900px; justify-content: center;
+  }
+  .demo-step {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    min-width: 200px; flex: 0 0 auto;
+  }
+  .demo-step-num {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--gradient);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: white; flex-shrink: 0;
+    font-family: var(--mono);
+  }
+  .demo-step-text { font-size: 12px; color: rgba(255,255,255,0.8); font-family: var(--mono); line-height: 1.3; }
+  .demo-tip {
+    margin-top: 16px; font-size: 13px; color: var(--muted); text-align: center;
+    max-width: 700px; line-height: 1.5;
+    border: 1px solid rgba(16,185,129,0.2); border-radius: 8px; padding: 12px 20px;
+    background: rgba(16,185,129,0.04);
+  }
+
+  /* ══════════════════════════════════════════════
+     SLIDE 18 — CALL TO ACTION
+  ══════════════════════════════════════════════ */
+  #slide-18 { gap: 0; }
+  .cta-tagline {
+    font-size: clamp(13px, 1.4vw, 17px); color: var(--muted); text-align: center;
+    margin-bottom: 16px; font-family: var(--mono);
+  }
+  .cta-main {
+    font-size: clamp(28px, 3.5vw, 48px); font-weight: 900; color: var(--white);
+    text-align: center; line-height: 1.2; margin-bottom: 12px; max-width: 700px;
+  }
+  .cta-main span { background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; background-clip: text; }
+  .cta-sub {
+    font-size: clamp(14px, 1.5vw, 18px); color: var(--muted); text-align: center;
+    margin-bottom: 40px;
+  }
+  .cta-btns { display: flex; gap: 16px; margin-bottom: 48px; flex-wrap: wrap; justify-content: center; }
+  .cta-btn {
+    padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: var(--font); border: none; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .cta-btn.primary { background: var(--gradient); color: white; }
+  .cta-btn.primary:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.35); }
+  .cta-btn.secondary { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--white); }
+  .cta-btn.secondary:hover { border-color: rgba(124,58,237,0.5); transform: translateY(-2px); }
+  .cta-url {
+    font-size: 18px; font-family: var(--mono); color: rgba(255,255,255,0.4); margin-bottom: 40px;
+    letter-spacing: 0.5px;
+  }
+  .cta-url strong { color: rgba(255,255,255,0.7); }
+  .cta-footer {
+    font-size: 12px; color: rgba(255,255,255,0.25); font-family: var(--mono); text-align: center;
+    border-top: 1px solid var(--card-border); padding-top: 20px; width: 100%; text-align: center; max-width: 600px;
+  }
+
+  /* ══════════════════════════════════════════════
+     PRINT
+  ══════════════════════════════════════════════ */
+  @media print {
+    body { overflow: visible; background: #020817; }
+    body::before { display: none; }
+    #hud { display: none; }
+    .slide {
+      position: relative; page-break-after: always;
+      opacity: 1 !important; transform: none !important;
+      pointer-events: all !important;
+      width: 100vw; height: 100vh;
+      break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 1 — TITLE
+══════════════════════════════════════════ -->
+<section class="slide active" id="slide-1">
+  <svg class="logo-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="100%" stop-color="#4f46e5"/>
+      </linearGradient>
+      <filter id="glow">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+    </defs>
+    <circle cx="50" cy="50" r="48" fill="url(#logoGrad)" opacity="0.15"/>
+    <circle cx="50" cy="50" r="48" stroke="url(#logoGrad)" stroke-width="1.5" fill="none"/>
+    <circle cx="50" cy="50" r="38" fill="url(#logoGrad)" opacity="0.85" filter="url(#glow)"/>
+    <text x="50" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-weight="900" font-size="26" fill="white" letter-spacing="-1">SB</text>
+  </svg>
+  <h1 class="s1-title">SellBodr</h1>
+  <p class="s1-tagline">Find Products in India. Sell Globally.</p>
+  <p class="s1-desc">AI-Powered Cross-Border eCommerce Intelligence Platform that discovers which products to source in India and sell profitably on international marketplaces — in 60 seconds.</p>
+  <div class="s1-bottom">August 2026 &nbsp;·&nbsp; sellbodr.com</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-2">
+  <h2 class="slide-title">The 6 Questions Every Seller Struggles to Answer</h2>
+  <p class="slide-subtitle">Manual research takes weeks. Critical signals are siloed across dozens of tools.</p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-num">01</div>
+      <div class="problem-icon">🔍</div>
+      <div class="problem-q">Which products have strong demand on international marketplaces?</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">02</div>
+      <div class="problem-icon">⚔️</div>
+      <div class="problem-q">Which markets have low competition that I can actually win?</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">03</div>
+      <div class="problem-icon">💰</div>
+      <div class="problem-q">What are the real margins after fees, shipping, and duties?</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">04</div>
+      <div class="problem-icon">🌏</div>
+      <div class="problem-q">Which marketplace and country combination is best for me?</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">05</div>
+      <div class="problem-icon">🏭</div>
+      <div class="problem-q">Is sourcing from India actually feasible for this product?</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-num">06</div>
+      <div class="problem-icon">📊</div>
+      <div class="problem-q">What is the actual net profit after all costs and ads?</div>
+    </div>
+  </div>
+  <div class="s2-bottom">Answering all six takes weeks of research. <span>SellBodr answers them in 60 seconds.</span></div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-3">
+  <h2 class="slide-title">One Platform. Complete Cross-Border Intelligence.</h2>
+  <div class="big-statement">
+    SellBodr combines <strong>AI research agents</strong>, <strong>real supplier data</strong>, and <strong>marketplace intelligence</strong> into a single <strong>Opportunity Score</strong> — so you know exactly which products to launch and where, with a clear <strong>Launch / Hold / Reject</strong> verdict and a confidence percentage attached to every recommendation.
+  </div>
+  <div class="key-numbers">
+    <div class="key-num">
+      <span class="num">&lt; 60s</span>
+      <span class="lbl">to full scores</span>
+    </div>
+    <div class="key-num">
+      <span class="num">9</span>
+      <span class="lbl">marketplaces</span>
+    </div>
+    <div class="key-num">
+      <span class="num">10</span>
+      <span class="lbl">supplier platforms</span>
+    </div>
+    <div class="key-num">
+      <span class="num">0–100</span>
+      <span class="lbl">opportunity score</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 4 — HOW IT WORKS
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-4">
+  <h2 class="slide-title">3 Steps to Your First Global Sale</h2>
+  <p class="slide-subtitle">No setup, no API keys, no marketplace accounts required to get started.</p>
+  <div class="steps-row">
+    <div class="step-card">
+      <div class="step-num">STEP 01</div>
+      <div class="step-icon">🔭</div>
+      <div class="step-name">Scout</div>
+      <div class="step-desc">Pick a marketplace (Amazon US, Etsy, eBay…), enter a product idea or category, and hit Scan. SellBodr takes it from there.</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">STEP 02</div>
+      <div class="step-icon">📊</div>
+      <div class="step-name">Analyse</div>
+      <div class="step-desc">7 AI agents run in parallel — scoring demand, competition, margins, India sourcing feasibility, and full profitability. Live progress shown on screen.</div>
+      <div class="step-arrow">→</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">STEP 03</div>
+      <div class="step-icon">🚀</div>
+      <div class="step-name">Launch</div>
+      <div class="step-desc">Copy AI-written listing title, bullets, description, backend keywords, and PPC campaign structure. Paste directly into your marketplace seller account.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 5 — AI PIPELINE
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-5">
+  <h2 class="slide-title">7 AI Agents Work in Parallel</h2>
+  <p class="slide-subtitle">Each agent is specialized, versioned, and routes through the multi-provider AI gateway for cost tracking and fallback.</p>
+  <div class="pipeline">
+    <div class="pipeline-stage">
+      <div class="stage-icon">🔎</div>
+      <div class="stage-name">DISCOVER</div>
+      <div class="stage-desc">Scrapes marketplace categories, identifies trending niches, seeds opportunity candidates</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">📈</div>
+      <div class="stage-name">DEMAND</div>
+      <div class="stage-desc">Scores BSR, search volume, trend direction, seasonality signals</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">⚔️</div>
+      <div class="stage-name">COMPETE</div>
+      <div class="stage-desc">Review counts, ratings, listing quality, FBA density, brand concentration</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">🏭</div>
+      <div class="stage-name">SUPPLY</div>
+      <div class="stage-desc">Queries 10 supplier platforms, normalizes cost, MOQ, lead time, trust score</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">💰</div>
+      <div class="stage-name">PROFIT</div>
+      <div class="stage-desc">Full cost waterfall: source → freight → duties → fees → ads → net margin</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">🧮</div>
+      <div class="stage-name">SCORE</div>
+      <div class="stage-desc">Weighted composite of 7 sub-scores → Opportunity Score 0–100, versioned formula</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="stage-icon">✅</div>
+      <div class="stage-name">VERDICT</div>
+      <div class="stage-desc">Launch / Hold / Reject with confidence %, plain-language rationale, next steps</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 6 — OPPORTUNITY SCORE
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-6">
+  <h2 class="slide-title">The Opportunity Score — 0 to 100</h2>
+  <p class="slide-subtitle">One number that encodes demand, competition, margin, trend, and sourcing feasibility.</p>
+  <div class="score-layout">
+    <div class="score-gauge-wrap">
+      <svg class="gauge-svg" viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f43f5e"/>
+            <stop offset="45%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+        <!-- Track -->
+        <path d="M 20 140 A 110 110 0 0 1 240 140" stroke="rgba(255,255,255,0.08)" stroke-width="14" fill="none" stroke-linecap="round"/>
+        <!-- Reject zone -->
+        <path d="M 20 140 A 110 110 0 0 1 86 52" stroke="#f43f5e" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.7"/>
+        <!-- Hold zone -->
+        <path d="M 86 52 A 110 110 0 0 1 174 52" stroke="#f59e0b" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.7"/>
+        <!-- Launch zone -->
+        <path d="M 174 52 A 110 110 0 0 1 240 140" stroke="#10b981" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.7"/>
+        <!-- Needle at ~78 (launch zone) -->
+        <line x1="130" y1="140" x2="210" y2="68" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="130" cy="140" r="6" fill="white" opacity="0.9"/>
+        <!-- Labels -->
+        <text x="14" y="156" font-family="Inter" font-size="10" fill="#f43f5e" font-weight="700">0</text>
+        <text x="118" y="28" font-family="Inter" font-size="10" fill="#f59e0b" font-weight="700" text-anchor="middle">50</text>
+        <text x="242" y="156" font-family="Inter" font-size="10" fill="#10b981" font-weight="700">100</text>
+      </svg>
+      <div class="score-value">78</div>
+      <div class="score-label">LAUNCH ✓</div>
+    </div>
+    <div class="score-right">
+      <div class="zones-row">
+        <div class="zone-badge reject">
+          <div class="zr">0–49</div>
+          <div class="zl">REJECT</div>
+        </div>
+        <div class="zone-badge hold">
+          <div class="zr">50–69</div>
+          <div class="zl">HOLD</div>
+        </div>
+        <div class="zone-badge launch">
+          <div class="zr">70–100</div>
+          <div class="zl">LAUNCH</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);font-weight:500;">7 Sub-Score Dimensions</div>
+      <div class="sub-scores">
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Demand</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Competition</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Margin</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Saturation</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Trend</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Shipping</div>
+        <div class="sub-score-chip"><div class="sub-score-dot"></div>Marketplace Fit</div>
+      </div>
+      <div class="score-note">Score changes require a <strong>version bump</strong> (<span style="font-family:var(--mono);font-size:11px;color:#a78bfa;">scoreVersion</span>) so all historical recommendations remain reproducible and auditable over time.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 7 — FEATURE OVERVIEW
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-7">
+  <h2 class="slide-title">Everything Included</h2>
+  <p class="slide-subtitle">A complete cross-border intelligence workflow — no extra tools needed.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-name">AI Opportunity Scoring</div>
+      <div class="feature-desc">0–100 composite score across 7 dimensions. Versioned formulas ensure reproducible verdicts. Every number has a source and confidence level attached.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <div class="feature-name">Profitability Engine</div>
+      <div class="feature-desc">Full cost waterfall: source cost → packaging → air / sea freight → import duties → marketplace fees → PPC ads → net profit in USD. Adjustable assumptions.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏭</div>
+      <div class="feature-name">Supplier Sourcing</div>
+      <div class="feature-desc">10 supplier platforms including IndiaMART, Alibaba, TradeIndia, and others. Trust scores, MOQ, lead time, and per-platform quality profiles in one view.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🗺</div>
+      <div class="feature-name">Global Supplier Map</div>
+      <div class="feature-desc">Interactive satellite map (Leaflet.js) with every verified supplier pinned. Emerald pins for Indian sourcing, indigo for global. Full-screen modal with 5-decimal GPS + Google Maps link.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <div class="feature-name">AI Launch Assets</div>
+      <div class="feature-desc">One-click generation of marketplace-optimised title, bullet points, description, backend keywords, and a structured PPC campaign ready to paste into Seller Central.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <div class="feature-name">Growth Intelligence</div>
+      <div class="feature-desc">Trend signals from Google Trends, competitor teardown, review sentiment analysis, and seasonal demand forecasting to time your launch correctly.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 8 — SUPPLIER MAP
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-8">
+  <h2 class="slide-title">Global Supplier Map</h2>
+  <p class="slide-subtitle">Every verified supplier — pinned worldwide. India-first sourcing intelligence at a glance.</p>
+  <div class="map-layout">
+    <div class="map-left">
+      <div class="map-feature">
+        <div class="map-feature-dot"></div>
+        <div class="map-feature-text"><strong>5-decimal GPS precision</strong> for every supplier. Click any pin for exact coordinates and a direct Google Maps link — so you can verify supplier locations and calculate logistics routes.</div>
+      </div>
+      <div class="map-feature">
+        <div class="map-feature-dot"></div>
+        <div class="map-feature-text"><strong>Satellite / Street toggle</strong> — switch between standard map and satellite imagery to visually inspect industrial zones and supplier clusters across India.</div>
+      </div>
+      <div class="map-feature">
+        <div class="map-feature-dot"></div>
+        <div class="map-feature-text"><strong>Full-screen modal</strong> with ESC to close. The map runs inside an iframe sandbox to fully avoid Next.js SSR hydration issues with Leaflet.js.</div>
+      </div>
+      <div class="map-feature">
+        <div class="map-feature-dot"></div>
+        <div class="map-feature-text"><strong>Colour-coded pins:</strong> 🟢 Emerald for Indian suppliers (primary sourcing targets), 🔵 Indigo for global suppliers, with trust-score overlays on each popup.</div>
+      </div>
+      <div class="map-feature">
+        <div class="map-feature-dot"></div>
+        <div class="map-feature-text"><strong>India clusters auto-zoom</strong> — the map snaps to the highest-density supplier region for any product, surfacing the best sourcing corridors immediately.</div>
+      </div>
+    </div>
+    <div class="map-right">
+      <div class="map-mock">
+        <div class="map-mock-bg">
+          <div class="map-grid-lines"></div>
+          <!-- India pins -->
+          <div class="map-pin" style="left:62%;top:42%;">
+            <div class="map-pin-dot" style="background:#10b981;"></div>
+            <div class="map-pin-label" style="color:#10b981;">Mumbai</div>
+          </div>
+          <div class="map-pin" style="left:60%;top:37%;">
+            <div class="map-pin-dot" style="background:#10b981;"></div>
+            <div class="map-pin-label" style="color:#10b981;">Delhi</div>
+          </div>
+          <div class="map-pin" style="left:65%;top:50%;">
+            <div class="map-pin-dot" style="background:#10b981;"></div>
+            <div class="map-pin-label" style="color:#10b981;">Bangalore</div>
+          </div>
+          <div class="map-pin" style="left:58%;top:38%;">
+            <div class="map-pin-dot" style="background:#10b981;"></div>
+            <div class="map-pin-label" style="color:#10b981;">Jaipur</div>
+          </div>
+          <!-- Global pins -->
+          <div class="map-pin" style="left:25%;top:30%;">
+            <div class="map-pin-dot" style="background:#4f46e5;"></div>
+            <div class="map-pin-label" style="color:#818cf8;">New York</div>
+          </div>
+          <div class="map-pin" style="left:42%;top:22%;">
+            <div class="map-pin-dot" style="background:#4f46e5;"></div>
+            <div class="map-pin-label" style="color:#818cf8;">London</div>
+          </div>
+          <div class="map-pin" style="left:78%;top:38%;">
+            <div class="map-pin-dot" style="background:#4f46e5;"></div>
+            <div class="map-pin-label" style="color:#818cf8;">Shenzhen</div>
+          </div>
+          <div class="map-controls">
+            <div class="map-ctrl-btn">Satellite</div>
+            <div class="map-ctrl-btn">⛶ Full</div>
+            <div class="map-ctrl-btn">+ Zoom</div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>India Source</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#4f46e5;"></div>Global</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 9 — MARKETPLACES
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-9">
+  <h2 class="slide-title">9 Marketplaces. One Platform.</h2>
+  <p class="slide-subtitle">Platform-specific fee models, keyword strategies, and listing formats — built in for each.</p>
+  <div class="mkts-grid">
+    <div class="mkt-badge">
+      <div class="mkt-icon">🇺🇸</div>
+      <div><div class="mkt-name">Amazon US</div><div class="mkt-region">United States</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🇬🇧</div>
+      <div><div class="mkt-name">Amazon UK</div><div class="mkt-region">United Kingdom</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🇩🇪</div>
+      <div><div class="mkt-name">Amazon DE</div><div class="mkt-region">Germany</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🇨🇦</div>
+      <div><div class="mkt-name">Amazon CA</div><div class="mkt-region">Canada</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🇦🇺</div>
+      <div><div class="mkt-name">Amazon AU</div><div class="mkt-region">Australia</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🎨</div>
+      <div><div class="mkt-name">Etsy</div><div class="mkt-region">Global Handmade & Craft</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🛒</div>
+      <div><div class="mkt-name">eBay</div><div class="mkt-region">Global Auction & Fixed</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">🏪</div>
+      <div><div class="mkt-name">Walmart</div><div class="mkt-region">United States</div></div>
+    </div>
+    <div class="mkt-badge">
+      <div class="mkt-icon">📱</div>
+      <div><div class="mkt-name">TikTok Shop</div><div class="mkt-region">US · UK · SEA</div></div>
+    </div>
+  </div>
+  <div class="mkts-coming">⏳ Coming soon: Temu · Noon · Lazada · Shopee</div>
+  <div class="mkts-note">Each marketplace uses platform-specific fee models, keyword strategies, and listing formats. SellBodr knows the rules of every platform so you don't have to.</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 10 — PRICING
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-10">
+  <h2 class="slide-title">Simple, Transparent Pricing</h2>
+  <p class="slide-subtitle">Start free. Upgrade when you're ready to scale.</p>
+  <div class="plans-row">
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price"><span class="amount">$0</span><span class="period">forever</span></div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="plan-feature">5 product searches per month</div>
+        <div class="plan-feature">10 results per marketplace scan</div>
+        <div class="plan-feature">10 suppliers per product</div>
+        <div class="plan-feature">Score preview (overall only)</div>
+        <div class="plan-feature">1 marketplace at a time</div>
+      </div>
+      <button class="plan-btn outline">Get Started Free</button>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-name gradient-text">Pro</div>
+      <div class="plan-price"><span class="amount">$49</span><span class="period">/ month</span></div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="plan-feature">Unlimited searches + results + suppliers</div>
+        <div class="plan-feature">Full 7-dimension sub-scores</div>
+        <div class="plan-feature">All 9 marketplaces simultaneously</div>
+        <div class="plan-feature">AI listing, ads, and growth intelligence</div>
+        <div class="plan-feature">Interactive profitability charts</div>
+        <div class="plan-feature">Global supplier map (full-screen)</div>
+        <div class="plan-feature">PDF and CSV export reports</div>
+        <div class="plan-feature">All AI providers (Groq · Mistral · GPT-4)</div>
+        <div class="plan-feature">Priority support + user guide</div>
+      </div>
+      <button class="plan-btn gradient">Start Pro — $49/mo →</button>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Organisation</div>
+      <div class="plan-price"><span class="amount" style="font-size:32px;">Custom</span></div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="plan-feature">Everything in Pro</div>
+        <div class="plan-feature">Multi-seat team access (role-based)</div>
+        <div class="plan-feature">Full REST API access</div>
+        <div class="plan-feature">White-label PDF reports</div>
+        <div class="plan-feature">Dedicated onboarding manager</div>
+        <div class="plan-feature">Custom SLA + uptime guarantee</div>
+        <div class="plan-feature">Bulk scoring (100+ products/day)</div>
+      </div>
+      <button class="plan-btn dark">Contact Sales →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 11 — TECH STACK
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-11">
+  <h2 class="slide-title">Built on Modern, Production-Grade Stack</h2>
+  <p class="slide-subtitle">Every technology chosen for type safety, edge performance, and developer velocity.</p>
+  <div class="stack-grid">
+    <div class="stack-group">
+      <div class="stack-category">Frontend</div>
+      <div class="stack-tags">
+        <span class="stack-tag violet">Next.js 14</span>
+        <span class="stack-tag violet">TypeScript</span>
+        <span class="stack-tag violet">Tailwind CSS</span>
+        <span class="stack-tag">Framer Motion</span>
+        <span class="stack-tag">React Query</span>
+        <span class="stack-tag">ShadCN UI</span>
+        <span class="stack-tag">Leaflet.js</span>
+        <span class="stack-tag">PWA</span>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="stack-category">Backend</div>
+      <div class="stack-tags">
+        <span class="stack-tag emerald">NestJS</span>
+        <span class="stack-tag emerald">LibSQL (Turso)</span>
+        <span class="stack-tag emerald">JWT</span>
+        <span class="stack-tag emerald">WebAuthn</span>
+        <span class="stack-tag">Stripe</span>
+        <span class="stack-tag">Drizzle ORM</span>
+        <span class="stack-tag">BullMQ</span>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="stack-category">Infrastructure</div>
+      <div class="stack-tags">
+        <span class="stack-tag amber">Vercel</span>
+        <span class="stack-tag amber">Turborepo</span>
+        <span class="stack-tag amber">pnpm</span>
+        <span class="stack-tag">Playwright</span>
+        <span class="stack-tag">Docker</span>
+        <span class="stack-tag">GitHub Actions</span>
+      </div>
+    </div>
+    <div class="stack-group">
+      <div class="stack-category">AI Providers</div>
+      <div class="stack-tags">
+        <span class="stack-tag violet">Groq</span>
+        <span class="stack-tag violet">Mistral</span>
+        <span class="stack-tag violet">Claude (Anthropic)</span>
+        <span class="stack-tag violet">GPT-4o</span>
+        <span class="stack-tag">Multi-Provider Gateway</span>
+      </div>
+    </div>
+  </div>
+  <div class="stack-note">Turborepo monorepo: apps/web (Next.js 14) · apps/api (NestJS) · packages/core (scoring) · packages/agents · packages/connectors</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 12 — ARCHITECTURE
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-12">
+  <h2 class="slide-title">System Architecture</h2>
+  <p class="slide-subtitle">Modular, edge-first, AI-native architecture with clean separation between domain and infrastructure.</p>
+  <div class="arch-diagram">
+    <!-- Layer 1: User -->
+    <div class="arch-row">
+      <div class="arch-box violet-border" style="min-width:200px;">
+        <span>User Browser</span>
+        <span class="arch-box-label">Next.js App Router · PWA</span>
+      </div>
+    </div>
+    <div class="arch-row"><div class="arch-arrow down">↓</div></div>
+    <!-- Layer 2: Next.js on Vercel -->
+    <div class="arch-row">
+      <div class="arch-box indigo-border" style="min-width:200px;">
+        <span>Next.js on Vercel</span>
+        <span class="arch-box-label">App Router · Edge Middleware · API Routes</span>
+      </div>
+    </div>
+    <div class="arch-row"><div class="arch-arrow down">↓</div></div>
+    <!-- Layer 3: NestJS -->
+    <div class="arch-row">
+      <div class="arch-box emerald-border" style="min-width:300px;">
+        <span>NestJS Modular API</span>
+        <span class="arch-box-label">REST + WebSocket · JWT Auth · RBAC Guards · BullMQ Jobs</span>
+      </div>
+    </div>
+    <div class="arch-row"><div class="arch-arrow down">↓</div></div>
+    <!-- Layer 4: Services -->
+    <div class="arch-row" style="gap:16px;">
+      <div class="arch-box amber-border" style="flex:1;">
+        <span>Turso (LibSQL)</span>
+        <span class="arch-box-label">Edge Database · Drizzle ORM</span>
+      </div>
+      <div class="arch-box violet-border" style="flex:1;">
+        <span>AI Gateway</span>
+        <span class="arch-box-label">Groq · Mistral · Claude · GPT-4</span>
+      </div>
+      <div class="arch-box rose-border" style="flex:1;">
+        <span>Connectors</span>
+        <span class="arch-box-label">IndiaMART · Alibaba · Amazon · Etsy</span>
+      </div>
+      <div class="arch-box" style="flex:1;">
+        <span>Stripe</span>
+        <span class="arch-box-label">Billing · Webhooks · Entitlements</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 13 — AUTHENTICATION
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-13">
+  <h2 class="slide-title">Passwordless by Default</h2>
+  <p class="slide-subtitle">WebAuthn / Passkey authentication — no passwords stored, ever.</p>
+  <div class="auth-layout">
+    <div class="auth-flow">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-left:2px solid var(--violet);padding-left:10px;margin-bottom:4px;">Auth Flow</div>
+      <div class="auth-step">
+        <div class="auth-step-num">1</div>
+        <div class="auth-step-content">
+          <div class="auth-step-name">Register</div>
+          <div class="auth-step-desc">User enters email and selects a plan. Server issues a WebAuthn registration challenge. User authenticates via biometric (FaceID, TouchID, Windows Hello) or device PIN. Credential stored server-side — no password.</div>
+        </div>
+      </div>
+      <div class="auth-step">
+        <div class="auth-step-num">2</div>
+        <div class="auth-step-content">
+          <div class="auth-step-name">Login</div>
+          <div class="auth-step-desc">User enters email → server issues assertion challenge → browser invokes authenticator → biometric assertion sent back → server verifies signature → JWT issued with plan claim embedded.</div>
+        </div>
+      </div>
+      <div class="auth-step">
+        <div class="auth-step-num">3</div>
+        <div class="auth-step-content">
+          <div class="auth-step-name">Authorize</div>
+          <div class="auth-step-desc">JWT stored client-side. Plan claim (<span class="mono" style="font-size:10px;color:#a78bfa;">free | pro | org</span>) enforced server-side via <span class="mono" style="font-size:10px;color:#a78bfa;">EntitlementGuard</span> on every protected route. No client-side trust.</div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-security">
+      <div class="auth-security-title">Security Properties</div>
+      <div class="auth-security-item">RBAC roles: <strong>user</strong> and <strong>admin</strong>. Per-route guards enforce capabilities at the NestJS controller level.</div>
+      <div class="auth-security-item">Audit log on every mutation — who changed what, when, from which IP, plan tier at time of action.</div>
+      <div class="auth-security-item">Stripe webhook signature verification — all billing events cryptographically verified before plan upgrades are applied.</div>
+      <div class="auth-security-item">Graceful passkey fallback — accounts without a registered passkey receive a clear error rather than a silent failure.</div>
+      <div class="auth-security-item">Zero passwords in the database — WebAuthn credentials (public keys only) replace traditional password hashes entirely.</div>
+      <div class="auth-security-item">Rate limiting on auth endpoints via NestJS throttler guard — brute force protection by default.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 14 — ROADMAP / SHIPPED
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-14">
+  <h2 class="slide-title">Built &amp; Shipped — August 2026</h2>
+  <p class="slide-subtitle">From zero to production in a structured phased rollout, with every phase gate verified.</p>
+  <div class="roadmap-grid">
+    <div class="phase-card shipped">
+      <div class="phase-header">
+        <div class="phase-icon">✅</div>
+        <div class="phase-name">Phase 0</div>
+        <div class="phase-status shipped">DONE</div>
+      </div>
+      <div class="phase-items">
+        <div class="phase-item">✓ Turborepo monorepo setup</div>
+        <div class="phase-item">✓ WebAuthn / Passkey auth</div>
+        <div class="phase-item">✓ Turso database + Drizzle ORM</div>
+        <div class="phase-item">✓ Core scoring package</div>
+        <div class="phase-item">✓ Stripe billing integration</div>
+        <div class="phase-item">✓ RBAC + EntitlementGuard</div>
+      </div>
+    </div>
+    <div class="phase-card shipped">
+      <div class="phase-header">
+        <div class="phase-icon">✅</div>
+        <div class="phase-name">Phase 1</div>
+        <div class="phase-status shipped">DONE</div>
+      </div>
+      <div class="phase-items">
+        <div class="phase-item">✓ Scout page UI</div>
+        <div class="phase-item">✓ AI Opportunity Score (0–100)</div>
+        <div class="phase-item">✓ Launch / Hold / Reject verdicts</div>
+        <div class="phase-item">✓ Supplier discovery pipeline</div>
+        <div class="phase-item">✓ 10 supplier platforms integrated</div>
+        <div class="phase-item">✓ Live AI agent progress display</div>
+      </div>
+    </div>
+    <div class="phase-card shipped">
+      <div class="phase-header">
+        <div class="phase-icon">✅</div>
+        <div class="phase-name">Phase 2</div>
+        <div class="phase-status shipped">DONE</div>
+      </div>
+      <div class="phase-items">
+        <div class="phase-item">✓ 9 marketplace support</div>
+        <div class="phase-item">✓ AI Listing + Ads + Growth</div>
+        <div class="phase-item">✓ Profitability charts (full waterfall)</div>
+        <div class="phase-item">✓ Global Supplier Map (Leaflet)</div>
+        <div class="phase-item">✓ Admin panel + User Guide</div>
+        <div class="phase-item">✓ PWA install support</div>
+      </div>
+    </div>
+    <div class="phase-card planned">
+      <div class="phase-header">
+        <div class="phase-icon">🔄</div>
+        <div class="phase-name">Phase 3–4</div>
+        <div class="phase-status progress">NEXT</div>
+      </div>
+      <div class="phase-items">
+        <div class="phase-item" style="color:var(--amber);">🔄 Competition Analysis</div>
+        <div class="phase-item" style="color:var(--muted);">⬜ Public REST API</div>
+        <div class="phase-item" style="color:var(--muted);">⬜ White-label reports</div>
+        <div class="phase-item" style="color:var(--muted);">⬜ Bulk scoring (100+/day)</div>
+        <div class="phase-item" style="color:var(--muted);">⬜ Temu · Noon · Lazada</div>
+        <div class="phase-item" style="color:var(--muted);">⬜ Multi-seat org accounts</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 15 — COMPETITIVE ADVANTAGE
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-15">
+  <h2 class="slide-title">Why SellBodr Wins</h2>
+  <p class="slide-subtitle">Four structural advantages that competitors cannot easily replicate.</p>
+  <div class="adv-grid">
+    <div class="adv-card">
+      <div class="adv-icon">🇮🇳</div>
+      <div class="adv-name">India-First Sourcing</div>
+      <div class="adv-desc">Pre-integrated with IndiaMART, TradeIndia, and 8 other platforms. Verified supplier database with GPS coordinates, trust scores, and per-platform quality profiles. No other tool gives you sourcing intelligence at this depth for Indian suppliers.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon">🤖</div>
+      <div class="adv-name">End-to-End AI</div>
+      <div class="adv-desc">From product discovery through to listing copy, ads, and keyword strategy — one platform, zero tool-switching. The AI pipeline is fully integrated so each stage feeds the next, creating a seamless workflow that generic research tools cannot match.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon">📐</div>
+      <div class="adv-name">Reproducible Science</div>
+      <div class="adv-desc">Versioned scoring formulas: every score has a <span class="mono" style="font-size:11px;color:#a78bfa;">scoreVersion</span> so historical recommendations are auditable. Every AI number is accompanied by a source and a confidence level. Unverifiable data is flagged, never silently included.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon">⚡</div>
+      <div class="adv-name">60-Second Verdict</div>
+      <div class="adv-desc">Not a research dump — a clear <strong style="color:var(--emerald);">Launch</strong> / <strong style="color:var(--amber);">Hold</strong> / <strong style="color:var(--rose);">Reject</strong> recommendation with a confidence percentage, and a plain-language rationale. What takes a solo seller weeks takes SellBodr under a minute.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 16 — ENGINEERING HIGHLIGHTS
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-16">
+  <h2 class="slide-title">Engineering Highlights</h2>
+  <p class="slide-subtitle">Technical decisions that make SellBodr production-ready, extensible, and maintainable.</p>
+  <div class="eng-grid">
+    <div class="eng-card">
+      <div class="eng-bullet">1</div>
+      <div class="eng-name">Turborepo Monorepo</div>
+      <div class="eng-detail">apps/web + apps/api share packages/core scoring formulas. pnpm workspaces. Parallel build graph. Single version bump propagates across all consumers.</div>
+    </div>
+    <div class="eng-card">
+      <div class="eng-bullet">2</div>
+      <div class="eng-name">Multi-Provider AI Gateway</div>
+      <div class="eng-detail">Groq / Mistral / Claude / GPT-4 behind a unified interface. Free tier routes to cheaper models. Pro tier unlocks premium providers. Cost tracking per request.</div>
+    </div>
+    <div class="eng-card">
+      <div class="eng-bullet">3</div>
+      <div class="eng-name">WebAuthn / Passkey Auth</div>
+      <div class="eng-detail">Zero password storage. WebAuthn credentials (public key only) replace hashes. Biometric assertion flow. Graceful fallback for accounts without a registered passkey.</div>
+    </div>
+    <div class="eng-card">
+      <div class="eng-bullet">4</div>
+      <div class="eng-name">Leaflet in iframe Sandbox</div>
+      <div class="eng-detail">Leaflet.js requires browser globals unavailable during SSR. Solved by rendering the map inside an iframe that loads a standalone HTML file — clean SSR, no hydration errors.</div>
+    </div>
+    <div class="eng-card">
+      <div class="eng-bullet">5</div>
+      <div class="eng-name">Versioned Scoring Engine</div>
+      <div class="eng-detail">scoreVersion field on every Opportunity row. Formula changes require a version bump. Historical scores remain intact and reproducible for audit or comparison.</div>
+    </div>
+    <div class="eng-card">
+      <div class="eng-bullet">6</div>
+      <div class="eng-name">Turso / LibSQL at Edge</div>
+      <div class="eng-detail">Replaces traditional Postgres with a globally replicated SQLite-compatible edge database. Sub-5ms reads from Vercel edge functions. Drizzle ORM for type-safe queries.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 17 — DEMO FLOW
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-17">
+  <h2 class="slide-title">See It in 60 Seconds</h2>
+  <p class="slide-subtitle">A complete walkthrough from blank slate to launch-ready opportunity — 11 steps, under a minute.</p>
+  <div class="demo-flow">
+    <div class="demo-step">
+      <div class="demo-step-num">①</div>
+      <div class="demo-step-text">Go to <span style="color:#a78bfa;">/opportunities</span></div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">②</div>
+      <div class="demo-step-text">Select <span style="color:#10b981;">Amazon US</span> marketplace</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">③</div>
+      <div class="demo-step-text">Type <span style="color:#f59e0b;">"brass diyas"</span> in search</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">④</div>
+      <div class="demo-step-text">Click <span style="color:var(--white);font-weight:700;">Scan</span> → pipeline starts</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑤</div>
+      <div class="demo-step-text">Watch <span style="color:#a78bfa;">7 AI stages</span> run live in real-time</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑥</div>
+      <div class="demo-step-text">Browse <span style="color:var(--white);">ranked opportunities</span> by score</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑦</div>
+      <div class="demo-step-text">Click the <span style="color:#10b981;">highest-scored</span> result to open</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑧</div>
+      <div class="demo-step-text">Read <span style="color:var(--white);">score breakdown</span> + rationale</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑨</div>
+      <div class="demo-step-text">Open <span style="color:#a78bfa;">Suppliers tab</span> → view map pins</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑩</div>
+      <div class="demo-step-text">Open <span style="color:#a78bfa;">Profitability tab</span> → see cost waterfall</div>
+    </div>
+    <div class="demo-step">
+      <div class="demo-step-num">⑪</div>
+      <div class="demo-step-text">Open <span style="color:#a78bfa;">Listing tab</span> → copy AI listing + ads</div>
+    </div>
+  </div>
+  <div class="demo-tip">
+    Start with a broad category ("home decor", "yoga accessories") or go specific ("brass oil lamp", "handmade jute bag"). SellBodr returns ranked results either way — the score tells you exactly which one to launch.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 18 — CALL TO ACTION
+══════════════════════════════════════════ -->
+<section class="slide" id="slide-18">
+  <svg style="width:72px;height:72px;margin-bottom:20px;" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="100%" stop-color="#4f46e5"/>
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="48" fill="url(#logoGrad2)" opacity="0.15"/>
+    <circle cx="50" cy="50" r="48" stroke="url(#logoGrad2)" stroke-width="1.5" fill="none"/>
+    <circle cx="50" cy="50" r="38" fill="url(#logoGrad2)" opacity="0.85"/>
+    <text x="50" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-weight="900" font-size="26" fill="white" letter-spacing="-1">SB</text>
+  </svg>
+  <div class="cta-tagline">Find Products in India. Sell Globally.</div>
+  <div class="cta-main">Start Finding <span>Products</span> Today</div>
+  <div class="cta-sub">Free account. No credit card. 30 seconds to set up.</div>
+  <div class="cta-btns">
+    <a href="#" class="cta-btn primary" onclick="return false;">Create Free Account →</a>
+    <a href="#" class="cta-btn secondary" onclick="return false;">View User Guide</a>
+  </div>
+  <div class="cta-url"><strong>sellbodr.com</strong></div>
+  <div style="display:flex;gap:24px;margin-bottom:40px;flex-wrap:wrap;justify-content:center;">
+    <span class="badge emerald">✓ No credit card</span>
+    <span class="badge violet">✓ 30-second setup</span>
+    <span class="badge">✓ 9 marketplaces</span>
+    <span class="badge">✓ 10 supplier platforms</span>
+  </div>
+  <div class="cta-footer">SellBodr · Find Products in India. Sell Globally. · sellbodr.com · August 2026</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HUD
+══════════════════════════════════════════ -->
+<div id="hud">
+  <div id="progress-track"><div id="progress"></div></div>
+  <div id="counter">1 / 18</div>
+  <button id="fs-btn" onclick="toggleFullscreen()">⛶ Fullscreen (F)</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+      e.preventDefault(); goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault(); goTo(current - 1);
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleFullscreen();
+    } else if (e.key === 'Escape') {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    // Don't advance on button/link clicks
+    if (e.target.closest('button, a, #hud')) return;
+    goTo(current + 1);
+  });
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function() {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) goTo(current + 1);
+      else goTo(current - 1);
+    }
+  }, { passive: true });
+
+  goTo(0);
+</script>
+</body>
+</html>
