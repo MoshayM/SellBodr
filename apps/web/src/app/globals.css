@@ -26,13 +26,17 @@
 
 /* ── Dash app theme variables — light ─────────────────────── */
 html:not(.dark) .dash-area {
-  --nav-bg: rgba(255,255,255,0.92);
-  --nav-border: rgba(15,23,42,0.08);
-  --glass-bg: rgba(255,255,255,0.85);
-  --glass-border: rgba(15,23,42,0.08);
-  --dropdown-bg: #FFFFFF;
-  --dropdown-border: rgba(15,23,42,0.1);
-  --scrollbar: rgba(15,23,42,0.15);
+  --nav-bg: rgba(232,236,244,0.97);
+  --nav-border: rgba(184,193,212,0.5);
+  --glass-bg: #E8ECF4;
+  --glass-border: rgba(184,193,212,0.4);
+  --dropdown-bg: #E8ECF4;
+  --dropdown-border: rgba(184,193,212,0.45);
+  --scrollbar: #b8c1d4;
+  --neo-bg: #E8ECF4;
+  --neo-sd: #b8c1d4;
+  --neo-sl: #ffffff;
+  background-color: #E8ECF4;
 }
 
 *, *::before, *::after {
@@ -252,10 +256,11 @@ img {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-/* Light glass — only inside the authenticated dash area */
+/* Neumorphic glass — only inside the authenticated dash area */
 html:not(.dark) .dash-area .glass {
-  background: rgba(255,255,255,0.85);
-  border: 1px solid rgba(15,23,42,0.08);
+  background: #E8ECF4;
+  border: none;
+  box-shadow: 6px 6px 12px #b8c1d4, -6px -6px 12px #ffffff;
 }
 
 .glass-card {
@@ -265,11 +270,11 @@ html:not(.dark) .dash-area .glass {
   border: 1px solid rgba(255,255,255,0.07);
 }
 
-/* Light glass-card — only inside the authenticated dash area */
+/* Neumorphic glass-card — only inside the authenticated dash area */
 html:not(.dark) .dash-area .glass-card {
-  background: rgba(255,255,255,0.96);
-  border: 1px solid rgba(15,23,42,0.08);
-  box-shadow: 0 2px 12px rgba(15,23,42,0.06);
+  background: #E8ECF4;
+  border: none;
+  box-shadow: 12px 12px 24px #b8c1d4, -12px -12px 24px #ffffff;
 }
 
 /* ── Glow effects ─────────────────────────────────────── */
@@ -283,8 +288,9 @@ html:not(.dark) .dash-area .glass-card {
 .scrollbar-dark::-webkit-scrollbar { width: 4px; }
 .scrollbar-dark::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-html:not(.dark) .dash-area .scrollbar-dark { scrollbar-color: rgba(15,23,42,0.15) transparent; }
-html:not(.dark) .dash-area .scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); }
+html:not(.dark) .dash-area .scrollbar-dark { scrollbar-color: #b8c1d4 #E8ECF4; }
+html:not(.dark) .dash-area .scrollbar-dark::-webkit-scrollbar-thumb { background: #b8c1d4; border-radius: 4px; }
+html:not(.dark) .dash-area .scrollbar-dark::-webkit-scrollbar-track { background: #E8ECF4; }
 
 /* ── Delay utilities ──────────────────────────────────── */
 
@@ -297,9 +303,25 @@ html:not(.dark) .dash-area .scrollbar-dark::-webkit-scrollbar-thumb { background
 .delay-1000 { animation-delay: 1s; }
 
 /* ═══════════════════════════════════════════════════════════════
-   Sun Mode (Light) — opposite of Moon Mode
-   Scoped to html:not(.dark) so landing/auth pages stay dark.
+   Sun Mode — Neumorphic 3D Design System
+   Base: #E8ECF4 · Shadow dark: #b8c1d4 · Shadow light: #fff
+   Scoped to html:not(.dark) — landing/auth stay dark.
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── Neumorphic keyframes ────────────────────────────────────── */
+@keyframes neo-accent-pulse {
+  0%, 100% { box-shadow: 5px 5px 10px #b8c1d4, -5px -5px 10px #ffffff; }
+  50%       { box-shadow: 7px 7px 16px #b8c1d4, -7px -7px 16px #ffffff, 0 0 18px rgba(124,58,237,0.22); }
+}
+@keyframes neo-float-card {
+  0%, 100% { box-shadow: 12px 12px 24px #b8c1d4, -12px -12px 24px #ffffff; transform: translateY(0); }
+  50%       { box-shadow: 14px 14px 28px #b8c1d4, -14px -14px 28px #ffffff; transform: translateY(-3px); }
+}
+
+/* ── Nav bar shadow ──────────────────────────────────────────── */
+html:not(.dark) .dash-area header {
+  box-shadow: 0 4px 20px rgba(184,193,212,0.55), 0 1px 0 rgba(255,255,255,0.8);
+}
 
 /* ── Sticky filter bar ──────────────────────────────────────── */
 
@@ -310,101 +332,172 @@ html:not(.dark) .dash-area .scrollbar-dark::-webkit-scrollbar-thumb { background
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 html:not(.dark) .dash-area .filter-bar-inner {
-  background: rgba(255,255,255,0.97);
-  border-bottom-color: rgba(15,23,42,0.08);
-  box-shadow: 0 2px 20px rgba(15,23,42,0.06);
+  background: #E8ECF4;
+  border-bottom: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 6px 20px rgba(184,193,212,0.5), 0 -2px 0 rgba(255,255,255,0.85);
 }
 html:not(.dark) .dash-area .filter-bar-inner input,
 html:not(.dark) .dash-area .filter-bar-inner select {
-  background: rgba(15,23,42,0.05) !important;
-  border-color: rgba(15,23,42,0.14) !important;
-  color: rgb(15,23,42) !important;
+  background: #E8ECF4 !important;
+  border: none !important;
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff !important;
+  border-radius: 10px;
+  color: #2D3748 !important;
+  transition: box-shadow 0.2s ease !important;
 }
-html:not(.dark) .dash-area .filter-bar-inner input::placeholder { color: rgba(15,23,42,0.38) !important; }
-html:not(.dark) .dash-area .filter-bar-inner option { background: #ffffff; color: rgb(15,23,42); }
+html:not(.dark) .dash-area .filter-bar-inner input:focus,
+html:not(.dark) .dash-area .filter-bar-inner select:focus {
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff, 0 0 0 2px rgba(124,58,237,0.3) !important;
+  outline: none !important;
+}
+html:not(.dark) .dash-area .filter-bar-inner input::placeholder { color: #94A3B8 !important; }
+html:not(.dark) .dash-area .filter-bar-inner option { background: #E8ECF4; color: #2D3748; }
 
-/* ── chip ────────────────────────────────────────────────────── */
-html:not(.dark) .dash-area .chip { background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.12); color: rgba(15,23,42,0.65); }
-html:not(.dark) .dash-area .chip:hover { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); color: #6d28d9; }
+/* ── chip → neumorphic raised pill ──────────────────────────── */
+html:not(.dark) .dash-area .chip {
+  background: #E8ECF4;
+  border: none;
+  box-shadow: 4px 4px 8px #b8c1d4, -4px -4px 8px #ffffff;
+  color: #64748B;
+  transition: all 0.2s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+html:not(.dark) .dash-area .chip:hover {
+  box-shadow: 6px 6px 12px #b8c1d4, -6px -6px 12px #ffffff;
+  color: #7C3AED;
+  transform: translateY(-2px) scale(1.03);
+}
 html:not(.dark) .dash-area .chip.active {
-  background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(99,102,241,0.08) 100%);
-  border-color: rgba(124,58,237,0.35); color: #6d28d9; box-shadow: 0 2px 10px rgba(124,58,237,0.12);
+  background: #E8ECF4;
+  border: none;
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff;
+  color: #7C3AED;
+  transform: scale(0.97);
 }
 
-/* ── tab-pill ────────────────────────────────────────────────── */
-html:not(.dark) .dash-area .tab-pill-bar { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.08); }
-html:not(.dark) .dash-area .tab-pill { color: rgba(15,23,42,0.5); }
-html:not(.dark) .dash-area .tab-pill:hover { color: rgba(15,23,42,0.8); background: rgba(15,23,42,0.05); }
+/* ── tab-pill → neumorphic trough + raised active ────────────── */
+html:not(.dark) .dash-area .tab-pill-bar {
+  background: #E8ECF4;
+  border: none;
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff;
+}
+html:not(.dark) .dash-area .tab-pill { color: #94A3B8; background: transparent; }
+html:not(.dark) .dash-area .tab-pill:hover { color: #64748B; background: transparent; }
 html:not(.dark) .dash-area .tab-pill.active {
-  color: #5b21b6;
-  background: linear-gradient(135deg, rgba(124,58,237,0.14) 0%, rgba(99,102,241,0.09) 100%);
-  border-color: rgba(124,58,237,0.28); box-shadow: 0 2px 12px rgba(124,58,237,0.12);
+  color: #7C3AED;
+  background: #E8ECF4;
+  border: none;
+  box-shadow: 5px 5px 10px #b8c1d4, -5px -5px 10px #ffffff;
+  animation: neo-accent-pulse 2.5s ease-in-out infinite;
 }
 
-/* ── btn-secondary ───────────────────────────────────────────── */
-html:not(.dark) .dash-area .btn-secondary { background: rgba(15,23,42,0.06); border-color: rgba(15,23,42,0.14); color: rgba(15,23,42,0.8); box-shadow: 0 2px 8px rgba(15,23,42,0.05); }
-html:not(.dark) .dash-area .btn-secondary:hover { background: rgba(15,23,42,0.09); border-color: rgba(15,23,42,0.22); }
+/* ── btn-secondary → neumorphic raised ───────────────────────── */
+html:not(.dark) .dash-area .btn-secondary {
+  background: #E8ECF4;
+  border: none;
+  color: #4A5568;
+  box-shadow: 5px 5px 10px #b8c1d4, -5px -5px 10px #ffffff;
+  transition: all 0.2s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+html:not(.dark) .dash-area .btn-secondary:hover {
+  box-shadow: 7px 7px 14px #b8c1d4, -7px -7px 14px #ffffff;
+  color: #7C3AED;
+  transform: translateY(-2px);
+}
+html:not(.dark) .dash-area .btn-secondary:active {
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff;
+  transform: translateY(0);
+}
 
-/* ── input-dark ──────────────────────────────────────────────── */
-html:not(.dark) .dash-area .input-dark { background: #ffffff; border-color: rgba(15,23,42,0.15); color: rgb(15,23,42); }
-html:not(.dark) .dash-area .input-dark:hover { border-color: rgba(15,23,42,0.25); }
-html:not(.dark) .dash-area .input-dark::placeholder { color: rgba(15,23,42,0.35); }
+/* ── input-dark → neumorphic inset ──────────────────────────── */
+html:not(.dark) .dash-area .input-dark {
+  background: #E8ECF4;
+  border: none;
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff;
+  color: #2D3748;
+  transition: box-shadow 0.2s ease;
+}
+html:not(.dark) .dash-area .input-dark:hover { box-shadow: inset 4px 4px 9px #b8c1d4, inset -4px -4px 9px #ffffff; }
+html:not(.dark) .dash-area .input-dark::placeholder { color: #94A3B8; }
+html:not(.dark) .dash-area .input-dark:focus {
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff, 0 0 0 2px rgba(124,58,237,0.3);
+}
 
-/* ── text-white/X → dark-on-light ───────────────────────────── */
-html:not(.dark) .dash-area .text-white    { color: rgb(15,23,42); }
-html:not(.dark) .dash-area .text-white\/90 { color: rgba(15,23,42,0.90); }
-html:not(.dark) .dash-area .text-white\/80 { color: rgba(15,23,42,0.85); }
-html:not(.dark) .dash-area .text-white\/70 { color: rgba(15,23,42,0.75); }
-html:not(.dark) .dash-area .text-white\/60 { color: rgba(15,23,42,0.65); }
-html:not(.dark) .dash-area .text-white\/55 { color: rgba(15,23,42,0.60); }
-html:not(.dark) .dash-area .text-white\/50 { color: rgba(15,23,42,0.55); }
-html:not(.dark) .dash-area .text-white\/40 { color: rgba(15,23,42,0.48); }
-html:not(.dark) .dash-area .text-white\/35 { color: rgba(15,23,42,0.42); }
-html:not(.dark) .dash-area .text-white\/30 { color: rgba(15,23,42,0.38); }
-html:not(.dark) .dash-area .text-white\/25 { color: rgba(15,23,42,0.32); }
-html:not(.dark) .dash-area .text-white\/20 { color: rgba(15,23,42,0.28); }
-html:not(.dark) .dash-area .hover\:text-white:hover     { color: rgb(15,23,42) !important; }
-html:not(.dark) .dash-area .hover\:text-white\/70:hover { color: rgba(15,23,42,0.75) !important; }
-html:not(.dark) .dash-area .hover\:text-white\/80:hover { color: rgba(15,23,42,0.85) !important; }
-/* Keep white text on coloured primary buttons */
+/* ── text-white/X → neumorphic slate scale ───────────────────── */
+html:not(.dark) .dash-area .text-white    { color: #1E293B; }
+html:not(.dark) .dash-area .text-white\/90 { color: #2D3748; }
+html:not(.dark) .dash-area .text-white\/80 { color: #374151; }
+html:not(.dark) .dash-area .text-white\/70 { color: #4A5568; }
+html:not(.dark) .dash-area .text-white\/60 { color: #64748B; }
+html:not(.dark) .dash-area .text-white\/55 { color: #6B7A8D; }
+html:not(.dark) .dash-area .text-white\/50 { color: #718096; }
+html:not(.dark) .dash-area .text-white\/40 { color: #94A3B8; }
+html:not(.dark) .dash-area .text-white\/35 { color: #9DAEBB; }
+html:not(.dark) .dash-area .text-white\/30 { color: #A0AEC0; }
+html:not(.dark) .dash-area .text-white\/25 { color: #AEBCC8; }
+html:not(.dark) .dash-area .text-white\/20 { color: #B8C4D0; }
+html:not(.dark) .dash-area .hover\:text-white:hover     { color: #1E293B !important; }
+html:not(.dark) .dash-area .hover\:text-white\/70:hover { color: #4A5568 !important; }
+html:not(.dark) .dash-area .hover\:text-white\/80:hover { color: #374151 !important; }
 html:not(.dark) .dash-area .btn-primary,
 html:not(.dark) .dash-area .btn-primary * { color: #ffffff; }
 
-/* ── bg-white/X → subtle slate tint ─────────────────────────── */
-html:not(.dark) .dash-area .bg-white\/5  { background-color: rgba(15,23,42,0.03) !important; }
-html:not(.dark) .dash-area .bg-white\/10 { background-color: rgba(15,23,42,0.07) !important; }
-html:not(.dark) .dash-area .hover\:bg-white\/5:hover  { background-color: rgba(15,23,42,0.04) !important; }
-html:not(.dark) .dash-area .hover\:bg-white\/10:hover { background-color: rgba(15,23,42,0.07) !important; }
-html:not(.dark) .dash-area .focus\:bg-white\/8:focus  { background-color: rgba(15,23,42,0.06) !important; }
+/* ── bg-white/X → neumorphic base tints ─────────────────────── */
+html:not(.dark) .dash-area .bg-white\/5  { background-color: #E8ECF4 !important; }
+html:not(.dark) .dash-area .bg-white\/10 { background-color: rgba(184,193,212,0.25) !important; }
+html:not(.dark) .dash-area .hover\:bg-white\/5:hover  { background-color: rgba(124,58,237,0.06) !important; }
+html:not(.dark) .dash-area .hover\:bg-white\/10:hover { background-color: rgba(124,58,237,0.08) !important; }
+html:not(.dark) .dash-area .focus\:bg-white\/8:focus  { background-color: rgba(124,58,237,0.05) !important; }
 
-/* ── border-white/X → subtle dark border ────────────────────── */
-html:not(.dark) .dash-area .border-white\/5  { border-color: rgba(15,23,42,0.06) !important; }
-html:not(.dark) .dash-area .border-white\/8  { border-color: rgba(15,23,42,0.08) !important; }
-html:not(.dark) .dash-area .border-white\/10 { border-color: rgba(15,23,42,0.10) !important; }
-html:not(.dark) .dash-area .border-white\/20 { border-color: rgba(15,23,42,0.18) !important; }
-html:not(.dark) .dash-area .hover\:border-white\/20:hover { border-color: rgba(15,23,42,0.20) !important; }
+/* ── border-white/X → subtle neumorphic border ───────────────── */
+html:not(.dark) .dash-area .border-white\/5  { border-color: rgba(184,193,212,0.4) !important; }
+html:not(.dark) .dash-area .border-white\/8  { border-color: rgba(184,193,212,0.5) !important; }
+html:not(.dark) .dash-area .border-white\/10 { border-color: rgba(184,193,212,0.55) !important; }
+html:not(.dark) .dash-area .border-white\/20 { border-color: rgba(184,193,212,0.7) !important; }
+html:not(.dark) .dash-area .hover\:border-white\/20:hover { border-color: rgba(124,58,237,0.4) !important; }
 
-/* ── Marketplace dropdown portal (outside .dash-area) ────────── */
-html:not(.dark) .bg-\[\#0d1526\] {
-  background-color: #ffffff !important;
-  border-color: rgba(15,23,42,0.12) !important;
-  box-shadow: 0 16px 48px rgba(15,23,42,0.12), 0 4px 16px rgba(15,23,42,0.06) !important;
+/* ── Table dark: Tailwind overrides for neumorphic base ──────── */
+html:not(.dark) .dash-area .bg-slate-50\/80   { background-color: rgba(184,193,212,0.15) !important; }
+html:not(.dark) .dash-area .border-slate-200  { border-color: rgba(184,193,212,0.5) !important; }
+html:not(.dark) .dash-area .divide-slate-100 > tr + tr { border-top-color: rgba(184,193,212,0.35) !important; }
+/* Image placeholder in light mode */
+html:not(.dark) .dash-area .bg-slate-200 {
+  background-color: #E8ECF4 !important;
+  box-shadow: inset 2px 2px 5px #b8c1d4, inset -2px -2px 5px #ffffff;
 }
-html:not(.dark) .bg-\[\#0d1526\] .bg-\[\#0d1526\] { background-color: #f1f5f9 !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-white    { color: rgba(15,23,42,0.9) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-white\/70 { color: rgba(15,23,42,0.75) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-white\/50 { color: rgba(15,23,42,0.55) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-white\/30 { color: rgba(15,23,42,0.38) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .bg-white\/5 { background-color: rgba(15,23,42,0.04) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .border-white\/5  { border-color: rgba(15,23,42,0.06) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .border-white\/10 { border-color: rgba(15,23,42,0.10) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .hover\:bg-white\/5:hover { background-color: rgba(15,23,42,0.05) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .hover\:text-white:hover  { color: rgba(15,23,42,0.95) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .bg-violet-500\/20 { background-color: rgba(124,58,237,0.12) !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-violet-300 { color: #6d28d9 !important; }
-html:not(.dark) .bg-\[\#0d1526\] .text-violet-400 { color: #7c3aed !important; }
-html:not(.dark) .bg-\[\#0d1526\] input { background: rgba(15,23,42,0.04) !important; border-color: rgba(15,23,42,0.12) !important; color: rgb(15,23,42) !important; }
-html:not(.dark) .bg-\[\#0d1526\] input::placeholder { color: rgba(15,23,42,0.38) !important; }
+
+/* ── Row hover — neumorphic violet tint ──────────────────────── */
+html:not(.dark) .dash-area .hover\:bg-violet-500\/\[0\.06\]:hover {
+  background-color: rgba(124,58,237,0.05) !important;
+}
+
+/* ── Marketplace dropdown portal ─────────────────────────────── */
+html:not(.dark) .bg-\[\#0d1526\] {
+  background-color: #E8ECF4 !important;
+  border: none !important;
+  box-shadow: 12px 12px 28px #b8c1d4, -12px -12px 28px #ffffff !important;
+}
+html:not(.dark) .bg-\[\#0d1526\] .bg-\[\#0d1526\] { background-color: rgba(184,193,212,0.25) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-white    { color: #1E293B !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-white\/70 { color: #4A5568 !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-white\/50 { color: #64748B !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-white\/30 { color: #94A3B8 !important; }
+html:not(.dark) .bg-\[\#0d1526\] .bg-white\/5   { background-color: rgba(184,193,212,0.15) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .border-white\/5  { border-color: rgba(184,193,212,0.4) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .border-white\/10 { border-color: rgba(184,193,212,0.5) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .hover\:bg-white\/5:hover { background-color: rgba(124,58,237,0.06) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .hover\:text-white:hover  { color: #1E293B !important; }
+html:not(.dark) .bg-\[\#0d1526\] .bg-violet-500\/20 { background-color: rgba(124,58,237,0.14) !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-violet-300 { color: #7C3AED !important; }
+html:not(.dark) .bg-\[\#0d1526\] .text-violet-400 { color: #6D28D9 !important; }
+html:not(.dark) .bg-\[\#0d1526\] input {
+  background: #E8ECF4 !important;
+  border: none !important;
+  box-shadow: inset 3px 3px 7px #b8c1d4, inset -3px -3px 7px #ffffff !important;
+  color: #2D3748 !important;
+}
+html:not(.dark) .bg-\[\#0d1526\] input::placeholder { color: #94A3B8 !important; }
 
 @layer components {
   .score-green { @apply text-green-400 bg-green-500/20 border-green-500/30; }
