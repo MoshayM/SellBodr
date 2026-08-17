@@ -27,9 +27,40 @@ const STEPS = [
 ];
 
 const PLANS = [
-  { name: 'Free', price: '$0', period: '', desc: 'Discover opportunities with a free account', features: ['AI-scored opportunity feed', 'Basic profit indicators', 'Score previews', 'Wishlist (save up to 10)'], cta: 'Create Free Account', ctaHref: '/register', highlight: false },
-  { name: 'Pro', price: '$49', period: '/mo', desc: 'Unlimited AI power for serious sellers', features: ['Unlimited AI searches', 'Full 7-dimension scoring', 'Supplier sourcing', 'AI listing generator', 'Priority support', 'Export reports'], cta: 'Start Free Trial', ctaHref: '/register', highlight: true },
-  { name: 'Organisation', price: 'Custom', period: '', desc: 'For agencies and large catalogues', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated account manager', 'SLA guarantee'], cta: 'Contact Sales', ctaHref: 'mailto:sales@sellbodr.com', highlight: false },
+  {
+    name: 'Starter',
+    price: '$0',
+    period: '',
+    desc: 'Explore the platform with no commitment',
+    features: [
+      '3 AI product scans per month',
+      'Opportunity Score preview',
+      'Top 5 results per scan',
+      'Basic profit indicator',
+      'Wishlist — save up to 10 products',
+    ],
+    cta: 'Start for Free',
+    ctaHref: '/register',
+    highlight: false,
+  },
+  {
+    name: 'Pro',
+    price: '$9',
+    period: '/mo',
+    desc: 'Full AI intelligence. Unlimited scans. Real profits.',
+    features: [
+      'Unlimited AI product scans',
+      'Full 7-dimension Opportunity Score',
+      'Complete India supplier database',
+      'AI listing generator (title, bullets, keywords)',
+      'Landed-cost profit model with full P&L',
+      'Unlimited wishlist & CSV export',
+      'Priority support',
+    ],
+    cta: 'Start 7-Day Free Trial',
+    ctaHref: '/register?plan=pro',
+    highlight: true,
+  },
 ];
 
 const STATS = [
@@ -348,10 +379,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <div className="text-sm text-emerald-400 font-medium mb-3 uppercase tracking-widest">Simple pricing</div>
-            <h2 className="text-4xl sm:text-5xl font-black mb-4">Start free, <span className="text-gradient">scale fast</span></h2>
-            <p className="text-white/40 text-lg">No credit card required for Starter. Cancel Pro anytime.</p>
+            <h2 className="text-4xl sm:text-5xl font-black mb-4">Full AI power for <span className="text-gradient">less than a coffee</span></h2>
+            <p className="text-white/40 text-lg max-w-xl mx-auto">Start free with no credit card. Upgrade to Pro for $9/mo and get unlimited AI scans, full scoring, and supplier data.</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {PLANS.map((p, i) => (
               <motion.div
                 key={p.name}
@@ -367,10 +398,13 @@ export default function LandingPage() {
                   </div>
                 )}
                 <div className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-2">{p.name}</div>
-                <div className="flex items-baseline gap-1 mb-2">
+                <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-black text-white">{p.price}</span>
                   <span className="text-white/40 text-sm">{p.period}</span>
                 </div>
+                {p.highlight && (
+                  <div className="text-xs text-emerald-400/80 mb-2">7-day free trial · Cancel anytime</div>
+                )}
                 <p className="text-white/40 text-sm mb-6">{p.desc}</p>
                 <ul className="space-y-2.5 flex-1 mb-7">
                   {p.features.map(f => (
@@ -386,6 +420,11 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+          <motion.p
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="text-center text-white/30 text-xs mt-6">
+            No credit card required for Starter · Pro includes a 7-day free trial · Prices in USD
+          </motion.p>
         </div>
       </section>
 
