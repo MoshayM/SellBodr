@@ -78,10 +78,11 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <Link href="/register?plan=pro"
               className="inline-flex items-center gap-2 text-sm font-bold px-7 py-3.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.5)] hover:shadow-[0_0_30px_rgba(124,58,237,0.75)] transition-all duration-200 border border-violet-400/30">
-              Upgrade to Pro
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M2 8a.75.75 0 0 1 .75-.75h8.69L8.22 4.03a.75.75 0 0 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H2.75A.75.75 0 0 1 2 8Z" clipRule="evenodd" />
-              </svg>
+              Start Pro →
+            </Link>
+            <Link href="/login"
+              className="inline-flex items-center gap-2 text-sm font-medium px-5 py-3.5 rounded-xl text-white/55 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-200">
+              Sign in
             </Link>
           </div>
 
