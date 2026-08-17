@@ -45,6 +45,57 @@ const COUNTRIES  = [
   { code: 'ID', name: 'Indonesia' },      { code: 'OTHER', name: 'Other' },
 ];
 
+function ApiKeyRow({ apiKey: k, onDelete }: { apiKey: any; onDelete: (id: string) => void }) {
+  const [usage, setUsage] = useState<{ calls: number; quota: number; resetAt: string | null } | null>(null);
+
+  useEffect(() => {
+    api.settings.getApiKeyUsage(k.id)
+      .then(setUsage)
+      .catch(() => setUsage(null));
+  }, [k.id]);
+
+  const pct = usage && usage.quota > 0 ? Math.min(100, (usage.calls / usage.quota) * 100) : 0;
+  const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#7c3aed';
+
+  return (
+    <div className="px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-white/80">{k.name}</div>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <code className="text-xs text-white/30 font-mono">{k.prefix || k.keyPreview || 'sk-...'}</code>
+            {k.createdAt && (
+              <span className="text-[10px] text-white/20">Created {new Date(k.createdAt).toLocaleDateString()}</span>
+            )}
+            {k.lastUsed && (
+              <span className="text-[10px] text-white/20">Last used {new Date(k.lastUsed).toLocaleDateString()}</span>
+            )}
+          </div>
+          {/* Usage meter */}
+          {usage && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-white/30">API Usage</span>
+                <span className="text-[10px] text-white/40 font-mono">{usage.calls.toLocaleString()} / {usage.quota.toLocaleString()} calls</span>
+              </div>
+              <div className="h-1 bg-white/8 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: barColor }} />
+              </div>
+              {usage.resetAt && (
+                <div className="text-[10px] text-white/20 mt-0.5">Resets {new Date(usage.resetAt).toLocaleDateString()}</div>
+              )}
+            </div>
+          )}
+        </div>
+        <button onClick={() => onDelete(k.id)}
+          className="text-xs px-2.5 py-1.5 rounded-lg border border-rose-500/20 text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/8 transition-all shrink-0">
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
   const [keys, setKeys]       = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -154,24 +205,7 @@ function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
         ) : (
           <div className="divide-y divide-white/4">
             {keys.map((k: any) => (
-              <div key={k.id} className="px-4 py-3 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-white/80">{k.name}</div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <code className="text-xs text-white/30 font-mono">{k.prefix || k.keyPreview || 'sk-...'}</code>
-                    {k.createdAt && (
-                      <span className="text-[10px] text-white/20">Created {new Date(k.createdAt).toLocaleDateString()}</span>
-                    )}
-                    {k.lastUsed && (
-                      <span className="text-[10px] text-white/20">Last used {new Date(k.lastUsed).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </div>
-                <button onClick={() => deleteKey(k.id)}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-rose-500/20 text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/8 transition-all">
-                  Delete
-                </button>
-              </div>
+              <ApiKeyRow key={k.id} apiKey={k} onDelete={deleteKey} />
             ))}
           </div>
         )}

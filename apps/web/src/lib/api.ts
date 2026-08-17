@@ -98,6 +98,9 @@ export const api = {
     generateBundle: (id: string) => request<any>(`/opportunities/${id}/bundle`, { method: 'POST', body: '{}' }),
     getCompetition: (id: string) => request<any>(`/opportunities/${id}/competition`),
     bulkScan:       (keywords: string[], marketplace: string) => request<any>('/opportunities/bulk-scan', { method: 'POST', body: JSON.stringify({ keywords, marketplace }) }),
+    submitFeedback: (id: string, data: { rating: 'up' | 'down'; note?: string }) =>
+      request<{ success: boolean }>(`/opportunities/${id}/feedback`, { method: 'POST', body: JSON.stringify(data) }),
+    rescore: (id: string) => request<any>(`/opportunities/${id}/rescore`, { method: 'POST', body: '{}' }),
   },
   billing: {
     getSubscription: () => request<any>('/billing/subscription'),
@@ -138,6 +141,8 @@ export const api = {
     getUsers: () => request<any[]>('/admin/users'),
     updateUser: (userId: string, changes: { plan?: string; role?: string }) =>
       request<{ success: boolean }>('/admin/users', { method: 'PATCH', body: JSON.stringify({ userId, ...changes }) }),
+    getAuditLog: (limit = 50) => request<any[]>(`/admin/audit-log?limit=${limit}`),
+    getSystemHealth: () => request<any>('/admin/health'),
   },
   team: {
     list:   ()                                    => request<any[]>('/team/members'),
@@ -158,6 +163,7 @@ export const api = {
       request<any>('/settings/api-keys', { method: 'POST', body: JSON.stringify({ name }) }),
     deleteApiKey: (id: string) =>
       request<{ success: boolean }>(`/settings/api-keys/${id}`, { method: 'DELETE' }),
+    getApiKeyUsage: (id: string) => request<{ calls: number; quota: number; resetAt: string | null }>(`/settings/api-keys/${id}/usage`),
   },
 };
 

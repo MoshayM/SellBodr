@@ -382,7 +382,7 @@ export default function OpportunityDetailPage() {
   const [moreNote, setMoreNote] = useState('');
   const [showSupplierGate, setShowSupplierGate] = useState(false);
 
-  const { data: opp, isLoading } = useQuery({
+  const { data: opp, isLoading, refetch } = useQuery({
     queryKey: ['opportunity', id],
     queryFn: () => api.opportunities.get(id),
     enabled: !!id,
@@ -423,6 +423,15 @@ export default function OpportunityDetailPage() {
 
   const genBundle = useMutation({
     mutationFn: () => api.opportunities.generateBundle(id),
+  });
+
+  const rescore = useMutation({
+    mutationFn: () => api.opportunities.rescore(id),
+    onSuccess: () => refetch(),
+  });
+
+  const submitFeedback = useMutation({
+    mutationFn: (data: { rating: 'up' | 'down'; note?: string }) => api.opportunities.submitFeedback(id, data),
   });
 
   if (isLoading) return (
@@ -487,6 +496,11 @@ export default function OpportunityDetailPage() {
               </span>
               <span className="text-xs text-white/40 capitalize">{opp.product?.category?.replace(/_/g, ' ')}</span>
               <span className="text-[10px] text-white/25 font-mono">v{opp.scoreVersion}</span>
+              {opp.scoredAt && (
+                <span className="text-[10px] text-white/25">
+                  Scored {Math.round((Date.now() - new Date(opp.scoredAt).getTime()) / 3600000)}h ago
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
@@ -497,12 +511,21 @@ export default function OpportunityDetailPage() {
               )}
             </div>
           </div>
-          <button
-            onClick={() => { setGenLoading(true); genAssets.mutate(); }}
-            disabled={genLoading}
-            className="btn-primary text-sm disabled:opacity-50 w-full sm:w-auto whitespace-nowrap">
-            {genLoading ? '⟳ Generating…' : '✨ Generate Launch Assets'}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => { setGenLoading(true); genAssets.mutate(); }}
+              disabled={genLoading}
+              className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
+              {genLoading ? '⟳ Generating…' : '✨ Generate Launch Assets'}
+            </button>
+            <button
+              onClick={() => rescore.mutate()}
+              disabled={rescore.isPending}
+              title="Re-run the AI scoring pipeline on this opportunity"
+              className="text-xs px-3 py-2 rounded-xl border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-all disabled:opacity-40 whitespace-nowrap">
+              {rescore.isPending ? '⟳ Rescoring…' : rescore.isSuccess ? '✓ Rescored' : '↻ Re-score'}
+            </button>
+          </div>
         </div>
 
         {/* Sub-scores row */}
@@ -2004,6 +2027,33 @@ export default function OpportunityDetailPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Seller feedback */}
+          <div className="border-t border-white/8 pt-4 mt-4">
+            <div className="text-xs font-semibold text-white/35 uppercase tracking-widest mb-3">Was this recommendation accurate?</div>
+            {submitFeedback.isSuccess ? (
+              <div className="flex items-center gap-2 text-sm text-emerald-400">
+                <span>✓</span>
+                <span>Thank you — your feedback helps improve AI accuracy.</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={() => submitFeedback.mutate({ rating: 'up' })}
+                  disabled={submitFeedback.isPending}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-emerald-500/25 text-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/50 transition-all text-sm disabled:opacity-40">
+                  👍 Yes, accurate
+                </button>
+                <button
+                  onClick={() => submitFeedback.mutate({ rating: 'down' })}
+                  disabled={submitFeedback.isPending}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-rose-500/20 text-rose-400/60 hover:bg-rose-500/8 hover:text-rose-400 hover:border-rose-500/35 transition-all text-sm disabled:opacity-40">
+                  👎 Not accurate
+                </button>
+                <span className="text-[10px] text-white/20">Feedback trains the AI scoring model</span>
+              </div>
+            )}
           </div>
         </div>
       )}

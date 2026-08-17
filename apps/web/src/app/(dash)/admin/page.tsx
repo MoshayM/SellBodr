@@ -28,10 +28,14 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [providerDraft, setProviderDraft] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'users' | 'providers'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health'>('users');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [health, setHealth] = useState<any>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     if (!isAdmin()) { router.replace('/opportunities'); return; }
@@ -62,6 +66,18 @@ export default function AdminPage() {
       showToast('Updated successfully');
     } catch { showToast('Update failed'); }
     setUpdating(null);
+  }
+
+  async function loadAuditLog() {
+    setAuditLoading(true);
+    try { setAuditLog(await api.admin.getAuditLog()); } catch { setAuditLog([]); }
+    setAuditLoading(false);
+  }
+
+  async function loadHealth() {
+    setHealthLoading(true);
+    try { setHealth(await api.admin.getSystemHealth()); } catch { setHealth(null); }
+    setHealthLoading(false);
   }
 
   async function saveProviders() {
@@ -125,6 +141,12 @@ export default function AdminPage() {
         </button>
         <button className={`tab-pill${activeTab === 'providers' ? ' active' : ''}`} onClick={() => setActiveTab('providers')}>
           AI Provider Keys ({providers.filter(p => p.isSet).length}/{providers.length})
+        </button>
+        <button className={`tab-pill${activeTab === 'audit' ? ' active' : ''}`} onClick={() => { setActiveTab('audit'); if (!auditLog.length) loadAuditLog(); }}>
+          Audit Log
+        </button>
+        <button className={`tab-pill${activeTab === 'health' ? ' active' : ''}`} onClick={() => { setActiveTab('health'); if (!health) loadHealth(); }}>
+          System Health
         </button>
       </div>
 
@@ -242,6 +264,159 @@ export default function AdminPage() {
               className="w-full btn-primary text-sm disabled:opacity-50">
               {saving ? '⟳ Saving…' : '💾 Save Provider Keys'}
             </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Audit Log Tab ── */}
+      {activeTab === 'audit' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h2 className="font-semibold text-white">Audit Log</h2>
+              <p className="text-xs text-white/35 mt-0.5">Security events, access changes, and system mutations</p>
+            </div>
+            <button onClick={loadAuditLog} disabled={auditLoading}
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-colors disabled:opacity-40">
+              {auditLoading ? '⟳ Loading…' : '↻ Refresh'}
+            </button>
+          </div>
+          <div className="card-dark rounded-xl overflow-hidden">
+            {auditLoading ? (
+              <div className="p-10 text-center"><div className="animate-spin text-2xl text-violet-400">⟳</div></div>
+            ) : auditLog.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="text-3xl mb-3">📋</div>
+                <p className="text-sm text-white/35">No audit events yet — actions will appear here as users interact with the platform.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {auditLog.map((entry: any, i: number) => {
+                  const actionColors: Record<string, string> = {
+                    login: 'text-emerald-400', logout: 'text-slate-400',
+                    plan_change: 'text-violet-400', role_change: 'text-amber-400',
+                    api_key_create: 'text-blue-400', api_key_delete: 'text-rose-400',
+                    scan: 'text-cyan-400', export: 'text-indigo-400',
+                  };
+                  const color = actionColors[entry.action] || 'text-white/50';
+                  return (
+                    <div key={entry.id || i} className="px-4 py-3 flex items-start gap-3 hover:bg-white/[0.02] transition-colors">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: color.replace('text-', '').includes('emerald') ? '#34d399' : color.includes('rose') ? '#fb7185' : color.includes('violet') ? '#a78bfa' : color.includes('amber') ? '#fbbf24' : color.includes('blue') ? '#60a5fa' : color.includes('cyan') ? '#22d3ee' : '#6b7280' }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-xs font-bold font-mono uppercase ${color}`}>{entry.action || 'unknown'}</span>
+                          {entry.userEmail && <span className="text-xs text-white/50">{entry.userEmail}</span>}
+                          {entry.targetEmail && entry.targetEmail !== entry.userEmail && (
+                            <span className="text-xs text-white/30">→ {entry.targetEmail}</span>
+                          )}
+                        </div>
+                        {entry.metadata && Object.keys(entry.metadata).length > 0 && (
+                          <p className="text-[11px] text-white/30 mt-0.5 font-mono">{JSON.stringify(entry.metadata)}</p>
+                        )}
+                        {entry.description && (
+                          <p className="text-xs text-white/40 mt-0.5">{entry.description}</p>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-white/20 shrink-0 text-right">
+                        {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '—'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── System Health Tab ── */}
+      {activeTab === 'health' && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h2 className="font-semibold text-white">System Health</h2>
+              <p className="text-xs text-white/35 mt-0.5">Pipeline metrics, agent status, and model availability</p>
+            </div>
+            <button onClick={loadHealth} disabled={healthLoading}
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-colors disabled:opacity-40">
+              {healthLoading ? '⟳' : '↻ Refresh'}
+            </button>
+          </div>
+
+          {healthLoading ? (
+            <div className="card-dark p-10 text-center"><div className="animate-spin text-2xl text-violet-400">⟳</div></div>
+          ) : health ? (
+            <>
+              {/* Status banner */}
+              <div className={`card-dark p-4 border flex items-center gap-3 ${health.status === 'healthy' ? 'border-emerald-500/25 bg-emerald-500/5' : health.status === 'degraded' ? 'border-amber-500/25 bg-amber-500/5' : 'border-rose-500/25 bg-rose-500/5'}`}>
+                <span className="text-2xl">{health.status === 'healthy' ? '✅' : health.status === 'degraded' ? '⚠️' : '🔴'}</span>
+                <div>
+                  <div className={`font-semibold capitalize ${health.status === 'healthy' ? 'text-emerald-300' : health.status === 'degraded' ? 'text-amber-300' : 'text-rose-300'}`}>{health.status || 'unknown'}</div>
+                  <div className="text-xs text-white/40">{health.message || 'All systems operational'}</div>
+                </div>
+                {health.uptime && <div className="ml-auto text-right"><div className="text-xs font-mono text-white/50">{health.uptime}</div><div className="text-[10px] text-white/25">uptime</div></div>}
+              </div>
+
+              {/* Metric grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Scans Today',    value: health.scansToday ?? '—',    icon: '🔭', color: 'text-cyan-300' },
+                  { label: 'Avg Score',      value: health.avgScore ? Math.round(health.avgScore) : '—', icon: '🎯', color: 'text-violet-300' },
+                  { label: 'Pipeline P95',   value: health.pipelineP95ms ? `${health.pipelineP95ms}ms` : '—', icon: '⚡', color: 'text-amber-300' },
+                  { label: 'Error Rate',     value: health.errorRate != null ? `${(health.errorRate * 100).toFixed(1)}%` : '—', icon: '🛑', color: health.errorRate > 0.05 ? 'text-rose-400' : 'text-emerald-300' },
+                ].map(m => (
+                  <div key={m.label} className="card-dark p-4">
+                    <div className="text-xl mb-1">{m.icon}</div>
+                    <div className={`text-2xl font-black ${m.color}`}>{m.value}</div>
+                    <div className="text-[10px] text-white/35 mt-0.5">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Agent health */}
+              {health.agents && (
+                <div className="card-dark overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/8 text-xs font-semibold text-white/40 uppercase tracking-widest">Agent Status</div>
+                  <div className="divide-y divide-white/4">
+                    {Object.entries(health.agents as Record<string, any>).map(([name, status]: [string, any]) => (
+                      <div key={name} className="px-4 py-3 flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${status?.healthy !== false ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                        <div className="flex-1 text-sm text-white/70 capitalize">{name.replace(/_/g, ' ')}</div>
+                        {status?.latencyMs && <span className="text-xs text-white/30 font-mono">{status.latencyMs}ms</span>}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status?.healthy !== false ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`}>
+                          {status?.healthy !== false ? 'healthy' : 'down'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Model availability */}
+              {health.models && (
+                <div className="card-dark overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/8 text-xs font-semibold text-white/40 uppercase tracking-widest">Model Availability</div>
+                  <div className="divide-y divide-white/4">
+                    {Object.entries(health.models as Record<string, any>).map(([model, info]: [string, any]) => (
+                      <div key={model} className="px-4 py-3 flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${info?.available !== false ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                        <div className="flex-1 text-sm text-white/70 font-mono text-xs">{model}</div>
+                        {info?.costPer1k && <span className="text-[10px] text-white/30">${info.costPer1k}/1k tok</span>}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${info?.available !== false ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
+                          {info?.available !== false ? 'available' : 'unavailable'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="card-dark p-10 text-center">
+              <div className="text-3xl mb-3">🩺</div>
+              <p className="text-sm text-white/35 mb-3">Health data not available — the API endpoint may not be implemented yet.</p>
+              <p className="text-xs text-white/20 font-mono">GET /admin/health</p>
+            </div>
           )}
         </div>
       )}

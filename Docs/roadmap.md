@@ -2,7 +2,7 @@
 
 A phased plan from MVP to Enterprise. Each phase is shippable and gated by the success criteria listed.
 
-> **Status as of August 2026:** Phases 0, 1, and 2 are fully shipped. Phase 3 is mostly complete. Phase 4 is partially started.
+> **Status as of August 2026:** Phases 0–3 are fully shipped. Phase 4 is mostly complete (frontend). Phase 5 feedback loop and freshness UI are shipped; continuous crawl pipeline is not yet started.
 
 ---
 
@@ -91,20 +91,23 @@ A phased plan from MVP to Enterprise. Each phase is shippable and gated by the s
 - ✅ White-label theming — Settings → White-label tab (brand name, tagline, logo URL, primary/accent colour pickers, live preview); Organisation-tier gate
 - ✅ Future marketplaces: Temu, Noon, Lazada, Shopee — fully supported in marketplace dropdown via DB-driven config + PLATFORM_NAMES mapping
 - ✅ Bulk scoring — Bulk Scan page covers batch opportunity discovery
-- ⬜ API usage metering (per-contract quotas for Organisation API keys)
-- ⬜ Advanced observability (Grafana/Prometheus dashboards, SLOs)
-- ⬜ Model routing + eval harness hardening
-- ⬜ SOC2-readiness (audit logs, access reviews, encryption posture)
+- ✅ API usage metering UI — per-key usage bar (calls / quota / reset date) in Settings → API Keys
+- ✅ SOC2-readiness (frontend) — Admin Audit Log tab (event feed: action type, user, metadata, timestamps); System Health tab (pipeline metrics, agent status, model availability grid)
+- ⬜ SOC2-readiness (backend) — server-side audit event emission, access reviews, encryption posture
+- ⬜ Advanced observability — Grafana/Prometheus dashboards, SLOs (infrastructure work)
+- ⬜ Model routing + eval harness hardening — backend/infra
 
 **Exit:** Enterprises integrate via API and white-label; platform meets scale + compliance bars.
 
 ---
 
-## ⬜ Phase 5 — Continuous Discovery Loop (NOT STARTED)
+## 🔄 Phase 5 — Continuous Discovery Loop (IN PROGRESS)
 
-- ⬜ Always-on crawl + re-score pipeline (opportunities refresh automatically)
-- ⬜ Feedback loop: realized seller outcomes retrain scoring weights
-- ⬜ Marketplace expansion playbook (add a new marketplace in < 2 weeks)
+- ✅ Feedback loop (frontend) — Seller feedback widget on Recommendation tab (👍/👎 "Was this accurate?"); feeds `POST /opportunities/:id/feedback` for model retraining signals
+- ✅ Re-score on demand — "↻ Re-score" button on every opportunity detail header; "Scored X ago" freshness indicator
+- ⬜ Always-on crawl pipeline — server-side background re-scoring (infrastructure work)
+- ⬜ Realized seller outcomes — track actual sales performance to retrain scoring weights
+- ⬜ Marketplace expansion playbook — add a new marketplace in < 2 weeks (process doc)
 
 ---
 
@@ -115,8 +118,8 @@ graph LR
   P0[Phase 0: Foundations ✅] --> P1[Phase 1: MVP Amazon USA ✅]
   P1 --> P2[Phase 2: Launch Assets + Multi-MP ✅]
   P2 --> P3[Phase 3: Advanced Intelligence 🔄]
-  P3 --> P4[Phase 4: Enterprise & Scale ⬜]
-  P4 --> P5[Phase 5: Continuous Discovery ⬜]
+  P3 --> P4[Phase 4: Enterprise & Scale 🔄]
+  P4 --> P5[Phase 5: Continuous Discovery 🔄]
 ```
 
 ## Release Gates
