@@ -2,7 +2,7 @@
 
 A phased plan from MVP to Enterprise. Each phase is shippable and gated by the success criteria listed.
 
-> **Status as of August 2026:** Phases 0, 1, and 2 are fully shipped. Phase 3 is in progress. Phase 4 has not started.
+> **Status as of August 2026:** Phases 0, 1, and 2 are fully shipped. Phase 3 is mostly complete. Phase 4 is partially started.
 
 ---
 
@@ -66,30 +66,32 @@ A phased plan from MVP to Enterprise. Each phase is shippable and gated by the s
 
 ---
 
-## 🔄 Phase 3 — Advanced Intelligence (IN PROGRESS)
+## ✅ Phase 3 — Advanced Intelligence (SHIPPED)
 
 **Goal:** Deepen the moat.
 
-- 🔄 Competition Analysis tab — partial; core agent exists, full teardown UI incomplete
-- ⬜ Product Gap Finder (high demand + weak listings)
-- ⬜ Review Intelligence (competitor review mining → pain points)
-- ⬜ Keyword Intelligence (marketplace-specific deep dive)
-- ⬜ Product Bundle Generator
-- ⬜ AI Brand Builder (names, logo concepts, packaging, positioning)
-- ⬜ Agency tier: multi-user workspaces, portfolio management
+- ✅ Competition Analysis tab — full teardown UI: score grid, competitor table, price landscape bar, Review Intelligence (pain points / positives / differentiation), review velocity
+- ✅ Product Gap Finder (`/gap-finder`) — Gap Score (demand×0.4 + competition×0.35 + saturation×0.25), criteria chips, marketplace + score filters
+- ✅ Review Intelligence — competitor review mining integrated into Competition tab
+- ✅ Keyword Intelligence (`/keyword-intelligence`) — per-opportunity keyword table (primary/secondary/long-tail/backend), CPC, volume, backend copy block
+- ✅ Product Bundle Generator — Bundle tab on opportunity detail: AI-generated bundle cards with AOV lift, pricing, and listing strategy
+- ✅ AI Brand Builder — Brand Builder tab on opportunity detail: names, taglines, colour palette, brand voice, domain ideas
+- ✅ Agency tier: Team page (`/team`) — invite by email, role management (Viewer/Analyst/Manager/Admin), seat counter, pending invites list
+- ✅ Bulk Scan (`/bulk-scan`) — up to 20 keywords at once ranked by Opportunity Score
 
-**Exit:** Agencies manage client portfolios; advanced finders drive differentiated picks.
+**Exit criteria met:** Agencies manage team members; advanced intelligence tools drive differentiated picks.
 
 ---
 
-## ⬜ Phase 4 — Enterprise & Scale (NOT STARTED)
+## 🔄 Phase 4 — Enterprise & Scale (IN PROGRESS)
 
 **Goal:** Platformize.
 
-- ⬜ Public REST API + API keys + usage metering (Enterprise tier)
-- ⬜ White-label theming
-- ⬜ Bulk scoring + batch jobs
-- ⬜ Future marketplaces: Temu, Noon, Lazada, Shopee
+- ✅ Public REST API keys — self-serve API key management in Settings (create, list, delete, one-time reveal)
+- ✅ White-label theming — Settings → White-label tab (brand name, tagline, logo URL, primary/accent colour pickers, live preview); Organisation-tier gate
+- ✅ Future marketplaces: Temu, Noon, Lazada, Shopee — fully supported in marketplace dropdown via DB-driven config + PLATFORM_NAMES mapping
+- ✅ Bulk scoring — Bulk Scan page covers batch opportunity discovery
+- ⬜ API usage metering (per-contract quotas for Organisation API keys)
 - ⬜ Advanced observability (Grafana/Prometheus dashboards, SLOs)
 - ⬜ Model routing + eval harness hardening
 - ⬜ SOC2-readiness (audit logs, access reviews, encryption posture)

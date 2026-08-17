@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { api, getUser, isAdmin, getGuestKey, setGuestKey } from '@/lib/api';
 
-type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide' | 'api-keys';
+type Tab = 'ai-keys' | 'security' | 'marketplaces' | 'guide' | 'api-keys' | 'white-label';
 
 // Free-tier providers — available to guest users (stored in localStorage)
 const FREE_PROVIDERS = [
@@ -188,6 +188,206 @@ function ApiKeysPanel({ isGuest }: { isGuest: boolean }) {
   );
 }
 
+const WL_STORAGE_KEY = 'bs_whitelabel';
+
+function WhiteLabelPanel({ user }: { user: any }) {
+  const isOrg = user?.plan === 'organisation' || user?.role === 'admin';
+
+  const [settings, setSettings] = useState(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem(WL_STORAGE_KEY) || '{}'); } catch { return {}; }
+  });
+
+  const [saved, setSaved] = useState(false);
+
+  function update(key: string, value: string) {
+    setSettings((prev: any) => ({ ...prev, [key]: value }));
+  }
+
+  function save() {
+    localStorage.setItem(WL_STORAGE_KEY, JSON.stringify(settings));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }
+
+  function reset() {
+    if (!confirm('Reset all white-label settings to default?')) return;
+    localStorage.removeItem(WL_STORAGE_KEY);
+    setSettings({});
+  }
+
+  const previewColor  = settings.primaryColor  || '#7c3aed';
+  const previewAccent = settings.accentColor    || '#4f46e5';
+  const previewName   = settings.brandName      || 'SellBodr';
+  const previewTagline = settings.tagline       || 'Find Products in India. Sell Globally.';
+
+  if (!isOrg) return (
+    <div className="card-dark p-8 text-center">
+      <div className="text-4xl mb-4">🎨</div>
+      <h3 className="text-lg font-bold text-white mb-2">White-label is an Organisation feature</h3>
+      <p className="text-sm text-white/45 mb-5 max-w-sm mx-auto leading-relaxed">
+        Replace the SellBodr brand with your own logo, colours, and name — perfect for agencies and resellers.
+      </p>
+      <div className="grid grid-cols-2 gap-3 mb-5 text-left max-w-sm mx-auto">
+        {[
+          { icon: '🏷️', text: 'Custom brand name & tagline' },
+          { icon: '🎨', text: 'Primary & accent colour control' },
+          { icon: '🖼️', text: 'Logo URL (PNG/SVG)' },
+          { icon: '🌐', text: 'Custom domain support' },
+        ].map(f => (
+          <div key={f.text} className="flex items-start gap-2">
+            <span className="text-base shrink-0">{f.icon}</span>
+            <span className="text-xs text-white/50 leading-relaxed">{f.text}</span>
+          </div>
+        ))}
+      </div>
+      <a href="mailto:sellbodr@gmail.com?subject=Organisation Plan Enquiry"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white text-sm"
+        style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+        Contact us for pricing →
+      </a>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="font-semibold text-white mb-0.5">White-label Settings</h3>
+          <p className="text-xs text-white/40">Customise branding across your organisation's workspace. Changes apply to all team members.</p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button onClick={reset} className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/35 hover:text-white/70 transition-colors">Reset</button>
+          <button onClick={save} className="text-xs px-4 py-1.5 rounded-lg font-semibold text-white transition-all"
+            style={{ background: saved ? '#10b981' : 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+            {saved ? '✓ Saved' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Fields */}
+        <div className="space-y-4">
+
+          {/* Brand name */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Brand Name</label>
+            <input type="text" value={settings.brandName || ''} onChange={e => update('brandName', e.target.value)}
+              placeholder="SellBodr"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+          </div>
+
+          {/* Tagline */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Tagline</label>
+            <input type="text" value={settings.tagline || ''} onChange={e => update('tagline', e.target.value)}
+              placeholder="Find Products in India. Sell Globally."
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+          </div>
+
+          {/* Logo URL */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Logo URL <span className="text-white/20 normal-case font-normal">(PNG / SVG)</span></label>
+            <input type="url" value={settings.logoUrl || ''} onChange={e => update('logoUrl', e.target.value)}
+              placeholder="https://example.com/logo.svg"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+            {settings.logoUrl && (
+              <div className="mt-2 w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden bg-white/5">
+                <img src={settings.logoUrl} alt="Logo preview" className="w-8 h-8 object-contain"
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              </div>
+            )}
+          </div>
+
+          {/* Primary colour */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Primary Colour</label>
+            <div className="flex items-center gap-3">
+              <input type="color" value={settings.primaryColor || '#7c3aed'} onChange={e => update('primaryColor', e.target.value)}
+                className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer" />
+              <input type="text" value={settings.primaryColor || '#7c3aed'} onChange={e => update('primaryColor', e.target.value)}
+                placeholder="#7c3aed"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono outline-none focus:border-violet-500/50" />
+            </div>
+          </div>
+
+          {/* Accent colour */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Accent Colour</label>
+            <div className="flex items-center gap-3">
+              <input type="color" value={settings.accentColor || '#4f46e5'} onChange={e => update('accentColor', e.target.value)}
+                className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer" />
+              <input type="text" value={settings.accentColor || '#4f46e5'} onChange={e => update('accentColor', e.target.value)}
+                placeholder="#4f46e5"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono outline-none focus:border-violet-500/50" />
+            </div>
+          </div>
+
+          {/* Custom domain */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Custom Domain <span className="text-white/20 normal-case font-normal">(contact support to activate)</span></label>
+            <input type="text" value={settings.customDomain || ''} onChange={e => update('customDomain', e.target.value)}
+              placeholder="app.yourcompany.com"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+          </div>
+
+          {/* Support email */}
+          <div>
+            <label className="text-xs font-semibold text-white/40 uppercase tracking-widest block mb-1.5">Support Email <span className="text-white/20 normal-case font-normal">(shown to your team)</span></label>
+            <input type="email" value={settings.supportEmail || ''} onChange={e => update('supportEmail', e.target.value)}
+              placeholder="support@yourcompany.com"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50" />
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div>
+          <div className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">Live Preview</div>
+          <div className="rounded-2xl overflow-hidden border border-white/8" style={{ background: '#020817' }}>
+            {/* Nav bar preview */}
+            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8" style={{ background: 'rgba(255,255,255,0.03)' }}>
+              {settings.logoUrl
+                ? <img src={settings.logoUrl} alt="" className="w-7 h-7 object-contain rounded"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                : <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-black"
+                    style={{ background: `linear-gradient(135deg, ${previewColor}, ${previewAccent})` }}>
+                    {previewName.slice(0, 2).toUpperCase()}
+                  </div>
+              }
+              <div>
+                <div className="text-xs font-black text-white leading-none">{previewName}</div>
+                <div className="text-[8px] text-white/30 leading-none mt-0.5">eCommerce Intelligence</div>
+              </div>
+            </div>
+            {/* Hero preview */}
+            <div className="p-5">
+              <div className="text-2xl font-black text-white mb-1">Scout</div>
+              <div className="text-xs text-white/40 mb-4">{previewTagline}</div>
+              <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-xs font-bold"
+                style={{ background: `linear-gradient(135deg, ${previewColor}, ${previewAccent})` }}>
+                ＋ New Scan
+              </div>
+              {/* Fake card */}
+              <div className="mt-4 p-3 rounded-xl border border-white/8 bg-white/3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-semibold text-white/70">Brass Diya Set (5 pcs)</div>
+                  <div className="text-xs font-black" style={{ color: previewColor }}>82</div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="text-[10px] px-2 py-0.5 rounded-full text-white font-bold"
+                    style={{ background: `linear-gradient(135deg, ${previewColor}, ${previewAccent})` }}>LAUNCH</div>
+                  <div className="text-[10px] text-white/35">+$14.20/unit</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-[10px] text-white/25 mt-2 text-center">Preview updates live as you type</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>('marketplaces');
   const [user, setUser] = useState<any>(null);
@@ -209,6 +409,7 @@ export default function SettingsPage() {
     { key: 'security',     label: 'Security',     icon: '🛡️' },
     { key: 'guide',        label: 'Guide',        icon: '📖' },
     { key: 'api-keys' as Tab, label: 'API Keys', icon: '🗝️' },
+    { key: 'white-label' as Tab, label: 'White-label', icon: '🎨' },
   ];
 
   return (
@@ -242,6 +443,7 @@ export default function SettingsPage() {
 
       {/* ── API Keys ── */}
       {tab === 'api-keys' && <ApiKeysPanel isGuest={isGuest} />}
+      {tab === 'white-label' && <WhiteLabelPanel user={user} />}
     </div>
   );
 }

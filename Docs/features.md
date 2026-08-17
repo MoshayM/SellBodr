@@ -49,7 +49,8 @@ Functional specification for shipped features only. Each entry documents what is
 
 - Marketplace-specific keyword generation (Amazon, Etsy, Walmart, eBay, TikTok Shop).
 - Segments into primary, secondary, long-tail, and backend keywords.
-- Displayed in the Listing tab alongside listing copy.
+- Standalone page (`/keyword-intelligence`): per-opportunity selector, keyword type/competition filter chips, keyword table (type badge, volume, competition, CPC), backend search terms copy block.
+- Also displayed in the Listing tab alongside listing copy.
 
 ### B2. PPC / Ads Campaign Structure
 
@@ -65,6 +66,45 @@ Functional specification for shipped features only. Each entry documents what is
 
 - Generates a Request for Quotation message for a selected supplier.
 - Accessible from the Supplier Profile Drawer (outreach tools: email, WhatsApp, SMS, portal link).
+
+### B5. Competition Analysis
+
+- Full competitor teardown on the Competition tab of Opportunity Detail.
+- Score grid + market gap alert + deterministic competitor table derived from opportunity sub-scores.
+- Price landscape bar chart; Review Intelligence (pain points, positive themes, differentiation suggestions); review velocity bars per competitor.
+
+### B6. AI Brand Builder
+
+- Accessed from the Brand Builder tab of Opportunity Detail (Pro/Org gated).
+- Generate button → AI produces: brand name options with rationale, positioning statement, taglines, colour palette, brand voice, domain ideas.
+
+### B7. Product Bundle Generator
+
+- Accessed from the Bundle tab of Opportunity Detail (Pro/Org gated).
+- Generate button → AI produces bundle cards: product combination, pricing, AOV lift %, listing title, and strategy note.
+
+### B8. Gap Finder (`/gap-finder`)
+
+- Calculates a Gap Score per opportunity: `demand×0.4 + competition×0.35 + saturation×0.25`.
+- Criteria chip filters: Low Reviews, High Demand, Weak Listings, Low Saturation.
+- Marketplace + min gap score + sort controls.
+- Clicking a result navigates to the opportunity's Competition tab.
+- Pro gate.
+
+### B9. Bulk Scan (`/bulk-scan`)
+
+- Text area input: up to 20 product keywords (one per line), live counter, over-limit warning.
+- Marketplace selector; results ranked by Opportunity Score with RecommendationBadge.
+- Pro gate.
+
+### B10. Team Management (`/team`)
+
+- Available to Organisation plan users (and admin override).
+- Invite team members by email; set role at invite time (Viewer, Analyst, Manager, Admin).
+- Pending invites list with cancel action.
+- Members list with inline role edit and remove controls.
+- Seat usage counter; role reference table.
+- Non-Organisation users see an upgrade prompt explaining the feature.
 
 ---
 
@@ -139,10 +179,15 @@ Functional specification for shipped features only. Each entry documents what is
 
 | Route | Description |
 |-------|-------------|
-| `/scout` | Main product discovery page |
-| `/opportunity/[id]` | Opportunity Detail (10 tabs: Overview, Research, Suppliers, Profitability, Competition, Listing, Ads, Growth, Recommendation, Report) |
+| `/opportunities` | Scout — main product discovery page |
+| `/opportunities/[id]` | Opportunity Detail (12 tabs: Overview, Research, Suppliers, Profitability, Competition, Listing, Ads, Growth, Brand Builder, Bundle, Recommendation, Report) |
 | `/recommendations` | All opportunities grouped by Launch / Hold / Reject verdict |
 | `/reports` | Generate, copy, and view reports per opportunity |
+| `/gap-finder` | Gap Finder — high-demand / low-competition niche discovery |
+| `/keyword-intelligence` | Keyword Intelligence — per-opportunity keyword deep-dive |
+| `/bulk-scan` | Bulk Scan — up to 20 keywords scored at once (Pro) |
+| `/team` | Team management — invite members, manage roles (Organisation) |
+| `/settings` | Account settings: AI Keys, Security, Marketplaces, API Keys, White-label |
 | `/guide` | User Guide — 7 sections with sticky table of contents |
 | `/admin` | Admin panel (admin-role users only) |
 | `/login` | Email/password + passkey sign-in |
@@ -156,25 +201,34 @@ PWA support is active: the app is installable on Android, iOS, and desktop via t
 
 ## Feature → Tier Matrix
 
-| Feature | Free | Pro |
-|---------|:----:|:---:|
-| Scout search (marketplace dropdown) | 5 total searches | Unlimited |
-| Results per marketplace per search | 10 (rest locked) | Unlimited |
-| Marketplaces available | All 9 selectable | All 9 selectable |
-| Opportunity Score + recommendation badge | ✓ | ✓ |
-| Opportunity Detail (all 10 tabs) | ✓ | ✓ |
-| Profitability waterfall chart | ✓ | ✓ |
-| AI Listing Generator | ✓ | ✓ |
-| Ads / PPC campaign structure | ✓ | ✓ |
-| Growth tab | ✓ | ✓ |
-| Suppliers per product | 10 (rest ProGated) | Unlimited |
-| Search More Suppliers | — (ProGate shown) | ✓ |
-| Scan for More (bottom bar) | — (upgrade CTA) | ✓ |
-| Supplier Profile Drawer + RFQ | ✓ | ✓ |
-| Global Supplier Map + full-screen modal | ✓ | ✓ |
-| Reports (generate / copy / view) | ✓ | ✓ |
-| User Guide (/guide) | ✓ | ✓ |
-| PWA install | ✓ | ✓ |
-| Admin panel | admin role only | admin role only |
+| Feature | Free | Pro | Organisation |
+|---------|:----:|:---:|:------------:|
+| Scout search (marketplace dropdown) | 5 total searches | Unlimited | Unlimited |
+| Results per marketplace per search | 10 (rest locked) | Unlimited | Unlimited |
+| Marketplaces available | All 13 (incl. Temu/Noon/Lazada/Shopee) | All 13 | All 13 |
+| Opportunity Score + recommendation badge | ✓ | ✓ | ✓ |
+| Opportunity Detail (all 12 tabs) | ✓ | ✓ | ✓ |
+| Profitability waterfall chart | ✓ | ✓ | ✓ |
+| AI Listing Generator | ✓ | ✓ | ✓ |
+| Ads / PPC campaign structure | ✓ | ✓ | ✓ |
+| Growth tab | ✓ | ✓ | ✓ |
+| Competition tab (full teardown) | ✓ | ✓ | ✓ |
+| Brand Builder tab | — (ProGate) | ✓ | ✓ |
+| Bundle Generator tab | — (ProGate) | ✓ | ✓ |
+| Suppliers per product | 10 (rest ProGated) | Unlimited | Unlimited |
+| Search More Suppliers | — (ProGate shown) | ✓ | ✓ |
+| Scan for More (bottom bar) | — (upgrade CTA) | ✓ | ✓ |
+| Supplier Profile Drawer + RFQ | ✓ | ✓ | ✓ |
+| Global Supplier Map + full-screen modal | ✓ | ✓ | ✓ |
+| Gap Finder | — (ProGate) | ✓ | ✓ |
+| Keyword Intelligence | — (ProGate) | ✓ | ✓ |
+| Bulk Scan (up to 20 keywords) | — (ProGate) | ✓ | ✓ |
+| Reports (generate / copy / view) | ✓ | ✓ | ✓ |
+| API Keys (self-serve) | — | — | ✓ |
+| White-label Settings | — | — | ✓ |
+| Team Management (multi-seat) | — | — | ✓ |
+| User Guide (/guide) | ✓ | ✓ | ✓ |
+| PWA install | ✓ | ✓ | ✓ |
+| Admin panel | admin role only | admin role only | admin role only |
 
 (See `monetization.md` for billing details and `uiux.md` for component-level documentation.)

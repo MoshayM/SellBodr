@@ -139,6 +139,14 @@ export const api = {
     updateUser: (userId: string, changes: { plan?: string; role?: string }) =>
       request<{ success: boolean }>('/admin/users', { method: 'PATCH', body: JSON.stringify({ userId, ...changes }) }),
   },
+  team: {
+    list:   ()                                    => request<any[]>('/team/members'),
+    invite: (email: string, role: string)         => request<any>('/team/invite',          { method: 'POST', body: JSON.stringify({ email, role }) }),
+    remove: (userId: string)                      => request<{ success: boolean }>(`/team/members/${userId}`, { method: 'DELETE' }),
+    update: (userId: string, role: string)        => request<any>(`/team/members/${userId}`, { method: 'PATCH', body: JSON.stringify({ role }) }),
+    getInvites: ()                                => request<any[]>('/team/invites'),
+    cancelInvite: (inviteId: string)              => request<{ success: boolean }>(`/team/invites/${inviteId}`, { method: 'DELETE' }),
+  },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
       request<{ success: boolean }>('/settings/change-password', { method: 'POST', body: JSON.stringify(data) }),

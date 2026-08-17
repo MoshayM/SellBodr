@@ -21,6 +21,7 @@ const ALL_PAGES: NavPage[] = [
   { href: '/gap-finder',           label: 'Gap Finder',   icon: '🔍', desc: 'Find high-demand niches with weak competition', badge: 'NEW' },
   { href: '/keyword-intelligence', label: 'Keywords',     icon: '🔤', desc: 'Deep keyword research & search intelligence' },
   { href: '/bulk-scan',            label: 'Bulk Scan',    icon: '⚡', desc: 'Scan multiple products at once (Pro)' },
+  { href: '/team', label: 'Team', icon: '👥', desc: 'Manage team members and invitations' },
   { href: '/recommendation', label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
   { href: '/reports',        label: 'Reports',         icon: '📊', desc: 'Export and analyse your data' },
   { href: '/wishlist',       label: 'Wishlist',        icon: '🌟', desc: 'Saved & bookmarked opportunities' },
