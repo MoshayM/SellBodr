@@ -6,9 +6,26 @@ import { motion } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 
 const PLANS = [
-  { id: 'free', name: 'Free', price: '$0', desc: 'Discover cross-border opportunities', features: ['AI-scored opportunity feed', 'Marketplace price comparisons', 'Basic profit indicators', 'Wishlist — save up to 10 products'], color: 'border-emerald-500/40', highlight: false, startLabel: 'Get Started Free' },
-  { id: 'pro', name: 'Pro', price: '$49/mo', desc: 'Unlimited AI power for serious sellers', features: ['Unlimited AI scans & sourcing', 'Supplier database + MOQ data', 'Full profit model & cost waterfall', 'AI listing generator', 'Deep research & trend data', 'Export reports'], color: 'border-violet-500/60', highlight: true, startLabel: 'Start Pro Trial' },
-  { id: 'enterprise', name: 'Organisation', price: 'Custom', desc: 'For agencies & teams', features: ['Everything in Pro', 'Multi-seat access', 'API access', 'White-label reports', 'Dedicated manager', 'SLA guarantee'], color: 'border-cyan-500/30', startLabel: 'Contact Sales' },
+  {
+    id: 'free',
+    name: 'Starter',
+    price: '$0',
+    desc: 'Explore the platform with no commitment',
+    features: ['3 AI product scans per month', 'Opportunity Score preview', 'Top 5 results per scan', 'Basic profit indicator', 'Wishlist — save up to 10 products'],
+    color: 'border-emerald-500/40',
+    highlight: false,
+    startLabel: 'Start for Free',
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '$9/mo',
+    desc: 'Full AI intelligence. Unlimited scans. Real profits.',
+    features: ['Unlimited AI product scans', 'Full 7-dimension Opportunity Score', 'Complete India supplier database', 'AI listing generator (title, bullets, keywords)', 'Landed-cost profit model with full P&L', 'Unlimited wishlist & CSV export', 'Priority support'],
+    color: 'border-violet-500/60',
+    highlight: true,
+    startLabel: 'Start 7-Day Free Trial',
+  },
 ];
 
 export default function RegisterPage() {
@@ -123,7 +140,7 @@ export default function RegisterPage() {
               <h2 className="text-3xl font-black text-white mb-2">Create your account</h2>
               <p className="text-white/40 text-sm">Free forever · Upgrade to Pro anytime · No credit card required to start</p>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4 mb-6">
+            <div className="grid sm:grid-cols-2 gap-4 mb-6">
               {PLANS.map(p => (
                 <motion.button
                   key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
