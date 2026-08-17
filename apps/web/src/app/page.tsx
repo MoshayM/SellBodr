@@ -6,12 +6,12 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ParticleCanvas } from '@/components/ui/ParticleCanvas';
 
 const FEATURES = [
-  { icon: '🎯', title: 'AI Opportunity Scoring', desc: 'Every product scored 0–100 across demand, competition, margin, and trend — instantly.', color: 'from-violet-500/20 to-purple-500/10' },
-  { icon: '💰', title: 'Landed-Cost Profit Model', desc: 'Full P&L: product cost + freight + duties + marketplace fees + ads = real net profit.', color: 'from-emerald-500/20 to-green-500/10' },
-  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 76 markets.', color: 'from-cyan-500/20 to-blue-500/10' },
-  { icon: '🏭', title: 'India Supplier Sourcing', desc: 'Verified IndiaMART & Alibaba suppliers with MOQ, lead time, and export capability data.', color: 'from-orange-500/20 to-amber-500/10' },
-  { icon: '📈', title: 'Trend Intelligence', desc: 'Google Trends, seasonal demand, and rising search queries across all target countries.', color: 'from-pink-500/20 to-rose-500/10' },
-  { icon: '🚀', title: 'AI Launch Assets', desc: 'SEO-optimised title, bullets, description, keywords, and pricing — ready to publish.', color: 'from-indigo-500/20 to-blue-500/10' },
+  { icon: '🎯', title: 'AI Opportunity Scoring', desc: 'Every product scored 0–100 across demand, competition, margin, trend, saturation, shipping, and marketplace fit — instantly.', color: 'from-violet-500/20 to-purple-500/10' },
+  { icon: '💰', title: 'Landed-Cost Profit Model', desc: 'Full P&L: product cost + freight + duties + marketplace fees + ad spend = real net profit per unit.', color: 'from-emerald-500/20 to-green-500/10' },
+  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 76 global markets.', color: 'from-cyan-500/20 to-blue-500/10' },
+  { icon: '🗺', title: 'Global Supplier Map', desc: 'Interactive satellite map pins every verified supplier worldwide. Click for precise coordinates, city, and direct Google Maps links.', color: 'from-orange-500/20 to-amber-500/10' },
+  { icon: '⚡', title: 'Live AI Scan Progress', desc: 'Watch 7 AI stages run in real time — Discovering → Demand → Competition → Suppliers → Profit → Scoring → Verdicts.', color: 'from-pink-500/20 to-rose-500/10' },
+  { icon: '🚀', title: 'AI Launch Assets', desc: 'SEO-optimised title, bullets, description, keywords, and pricing — generated and ready to publish in seconds.', color: 'from-indigo-500/20 to-blue-500/10' },
 ];
 
 const CARDS = [
@@ -21,9 +21,9 @@ const CARDS = [
 ];
 
 const STEPS = [
-  { n: '01', title: 'Enter a product idea', desc: 'Type any product category or keyword. SellBodr searches 10,000+ India-sourced products.' },
-  { n: '02', title: 'AI scores every opportunity', desc: 'Our 7-dimension AI engine scores demand, competition, margin, trend, shipping fit, and more.' },
-  { n: '03', title: 'Launch with confidence', desc: 'Get supplier contacts, profit models, and AI-written listings — ready to publish in hours.' },
+  { n: '01', title: 'Scout the market', desc: 'Pick a marketplace (Amazon, Etsy, eBay…) and a product keyword. Watch 7 live AI stages discover, score, and rank every opportunity in real time.' },
+  { n: '02', title: 'Analyse & compare', desc: 'Every result shows a 0–100 Opportunity Score, full P&L model, verified India suppliers on a live satellite map, and a Launch / Hold / Reject verdict.' },
+  { n: '03', title: 'Launch with confidence', desc: 'Generate SEO-optimised titles, bullet points, keywords, and pricing in one click — then contact suppliers directly from within the platform.' },
 ];
 
 const PLANS = [
@@ -36,7 +36,7 @@ const STATS = [
   { value: '10K+', label: 'Products analysed' },
   { value: '76', label: 'Marketplaces covered' },
   { value: '$2.4M', label: 'Seller profits tracked' },
-  { value: '48h', label: 'From search to launch' },
+  { value: '< 60s', label: 'From search to scores' },
 ];
 
 function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; delay: number; className?: string }) {
@@ -159,6 +159,7 @@ export default function LandingPage() {
           <a href="#features" className="hover:text-white transition-colors">Features</a>
           <a href="#how" className="hover:text-white transition-colors">How it works</a>
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+          <Link href="/guide" className="hover:text-white transition-colors">User Guide</Link>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2 hidden sm:block">Sign in</Link>
@@ -467,6 +468,7 @@ export default function LandingPage() {
           </div>
           <p className="text-white/25 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>
           <div className="flex items-center gap-6 text-sm text-white/40">
+            <Link href="/guide" className="hover:text-white transition-colors">User Guide</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="/login" className="hover:text-white transition-colors">Sign in</Link>
