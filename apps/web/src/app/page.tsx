@@ -447,6 +447,21 @@ export default function LandingPage() {
               )}
             </div>
 
+            {/* Windows .exe download */}
+            <div className="mt-4 pt-4 border-t border-white/8 flex justify-center">
+              <a
+                href="https://github.com/MoshayM/SellBodr/releases/latest/download/SellBodr-Setup.exe"
+                className="glass rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-white/70 hover:bg-blue-500/10 hover:border-blue-500/30 border border-transparent transition-all"
+                download
+              >
+                <span className="text-2xl">🪟</span>
+                <div className="text-left">
+                  <div className="font-semibold text-white text-xs">Windows Desktop App</div>
+                  <div className="text-blue-400/80 text-xs">Download .exe installer (64-bit)</div>
+                </div>
+              </a>
+            </div>
+
             {isInstalled && (
               <p className="mt-4 text-sm text-emerald-400 font-medium">✓ SellBodr is installed on this device</p>
             )}

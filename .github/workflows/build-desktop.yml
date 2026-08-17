@@ -1,0 +1,63 @@
+name: Build Desktop App (.exe)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/desktop/package.json
+
+      - name: Convert PNG icon to ICO (ImageMagick)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path apps/desktop/assets | Out-Null
+          magick apps/web/public/icons/icon-512.png `
+            -define icon:auto-resize="256,128,64,48,32,16" `
+            apps/desktop/assets/icon.ico
+
+      - name: Install Electron dependencies
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build Windows installer + portable
+        working-directory: apps/desktop
+        run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SellBodr-Windows
+          path: |
+            apps/desktop/dist/*.exe
+          retention-days: 30
+
+      - name: Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/desktop/dist/*.exe
+          body: |
+            ## SellBodr Desktop — Windows
+
+            **Download the installer below** → run `SellBodr-Setup-*.exe` → follow the wizard.
+
+            Or grab the portable `.exe` (no install needed, just double-click).
+
+            **System requirements:** Windows 10/11 64-bit, internet connection.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
