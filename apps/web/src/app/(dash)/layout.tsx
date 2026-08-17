@@ -85,10 +85,12 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [wishlistCount, setWishlistCount] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
 
-  const userMenuRef   = useRef<HTMLDivElement>(null);
-  const desktopBtnRef = useRef<HTMLButtonElement>(null);
-  const mobileBtnRef  = useRef<HTMLButtonElement>(null);
+  const userMenuRef    = useRef<HTMLDivElement>(null);
+  const desktopWrapRef = useRef<HTMLDivElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileBtnRef   = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [fromDesktop, setFromDesktop] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -125,34 +127,43 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     return () => document.removeEventListener('mousedown', onDown);
   }, [userMenuOpen]);
 
-  /* ⌘K global shortcut — anchors to desktop bar */
+  /* ⌘K global shortcut */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        const ref = desktopBtnRef.current ?? mobileBtnRef.current;
-        if (ref) openSearch(ref.getBoundingClientRect());
+        if (window.innerWidth >= 768) {
+          /* Desktop — focus the nav bar input directly */
+          desktopInputRef.current?.focus();
+          const rect = desktopWrapRef.current?.getBoundingClientRect();
+          if (rect) { setAnchor(rect); setFromDesktop(true); setSearchOpen(true); }
+        } else {
+          /* Mobile — open floating dropdown with its own input */
+          const ref = mobileBtnRef.current;
+          if (ref) { setSearchQuery(''); setAnchor(ref.getBoundingClientRect()); setFromDesktop(false); setSearchOpen(true); }
+        }
       }
-      if (e.key === 'Escape') setSearchOpen(false);
+      if (e.key === 'Escape') closeSearch();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Focus input when dropdown opens */
+  /* Focus mobile input when mobile dropdown opens */
   useEffect(() => {
-    if (searchOpen) {
-      setSearchQuery('');
+    if (searchOpen && !fromDesktop) {
       setTimeout(() => searchInputRef.current?.focus(), 40);
     }
-  }, [searchOpen]);
+  }, [searchOpen, fromDesktop]);
 
-  function openSearch(rect: DOMRect) {
+  function openSearch(rect: DOMRect, isDesktop = false) {
     setAnchor(rect);
+    setFromDesktop(isDesktop);
     setSearchOpen(true);
   }
 
-  function closeSearch() { setSearchOpen(false); }
+  function closeSearch() { setSearchOpen(false); setSearchQuery(''); }
 
   function logout() { clearAuth(); setUser(null); router.replace('/login'); }
 
@@ -200,19 +211,21 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             : '8px 16px 32px #b8c1d4, -8px 8px 24px #b8c1d4, 0 2px 0 rgba(255,255,255,0.9)',
         }}>
 
-        {/* Input row */}
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b"
-          style={{ borderColor: 'var(--dropdown-border)' }}>
-          <span className="text-gray-400 dark:text-white/35 shrink-0"><SearchIcon /></span>
-          <input
-            ref={searchInputRef}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search pages & features..."
-            className="flex-1 bg-transparent text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none min-w-0"
-          />
-          <kbd className="text-gray-400 dark:text-white/50 text-[10px] border border-gray-200 dark:border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
-        </div>
+        {/* Input row — mobile only; desktop uses the nav bar search input directly */}
+        {!fromDesktop && (
+          <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b"
+            style={{ borderColor: 'var(--dropdown-border)' }}>
+            <span className="text-gray-400 dark:text-white/35 shrink-0"><SearchIcon /></span>
+            <input
+              ref={searchInputRef}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search pages & features..."
+              className="flex-1 bg-transparent text-sm text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none min-w-0"
+            />
+            <kbd className="text-gray-400 dark:text-white/50 text-[10px] border border-gray-200 dark:border-white/10 rounded px-1.5 py-0.5 font-mono shrink-0">ESC</kbd>
+          </div>
+        )}
 
         {/* Results */}
         <div className="py-1 max-h-72 overflow-y-auto scrollbar-dark">
@@ -303,17 +316,36 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         {/* Page title — mobile only */}
         <span className="sm:hidden text-sm font-semibold text-gray-600 dark:text-white/65 truncate flex-1 min-w-0 pl-1">{pageName}</span>
 
-        {/* Desktop search bar */}
+        {/* Desktop search bar — real input; results appear in dropdown below */}
         <div className="hidden md:flex flex-1 justify-center max-w-xl">
-          <button
-            ref={desktopBtnRef}
-            onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="flex items-center gap-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.07] border border-gray-200 hover:border-gray-300 dark:border-white/8 dark:hover:border-white/16 rounded-xl px-4 py-2 text-xs text-gray-500 dark:text-white/55 transition-all duration-200 w-full max-w-md group"
-            aria-label="Search (⌘K)">
-            <span className="text-gray-400 dark:text-white/30 group-hover:text-gray-600 dark:group-hover:text-white/50 transition-colors shrink-0"><SearchIcon /></span>
-            <span className="flex-1 text-left">Search everything...</span>
-            <kbd className="text-[10px] bg-gray-200 dark:bg-white/5 rounded px-1.5 py-1 border border-gray-300 dark:border-white/8 font-mono text-gray-500 dark:text-white/50">⌘K</kbd>
-          </button>
+          <div ref={desktopWrapRef} className="w-full max-w-md">
+            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-2 transition-all duration-200 border ${
+              searchOpen && fromDesktop
+                ? 'bg-white dark:bg-white/[0.07] border-violet-400/50 dark:border-violet-500/40 shadow-sm'
+                : 'bg-gray-100 hover:bg-gray-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.07] border-gray-200 hover:border-gray-300 dark:border-white/8 dark:hover:border-white/16'
+            }`}>
+              <span className="text-gray-400 dark:text-white/30 shrink-0"><SearchIcon /></span>
+              <input
+                ref={desktopInputRef}
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  if (!searchOpen) {
+                    const rect = desktopWrapRef.current?.getBoundingClientRect();
+                    if (rect) { setAnchor(rect); setFromDesktop(true); setSearchOpen(true); }
+                  }
+                }}
+                onFocus={() => {
+                  const rect = desktopWrapRef.current?.getBoundingClientRect();
+                  if (rect) { setAnchor(rect); setFromDesktop(true); setSearchOpen(true); }
+                }}
+                placeholder="Search everything..."
+                className="flex-1 bg-transparent text-sm text-gray-700 dark:text-white/70 placeholder-gray-400 dark:placeholder-white/40 outline-none min-w-0"
+                aria-label="Search (⌘K)"
+              />
+              <kbd className="text-[10px] bg-gray-200 dark:bg-white/5 rounded px-1.5 py-1 border border-gray-300 dark:border-white/8 font-mono text-gray-500 dark:text-white/50 shrink-0">⌘K</kbd>
+            </div>
+          </div>
         </div>
 
         {/* Right actions */}
