@@ -114,6 +114,21 @@ const TABLES = [
     content TEXT DEFAULT '{}',
     createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS "OpportunityReport" (
+    id TEXT PRIMARY KEY, opportunityId TEXT NOT NULL,
+    content TEXT DEFAULT '{}',
+    createdAt INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "BrandAsset" (
+    id TEXT PRIMARY KEY, opportunityId TEXT UNIQUE NOT NULL,
+    content TEXT DEFAULT '{}',
+    createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "BundleResult" (
+    id TEXT PRIMARY KEY, opportunityId TEXT UNIQUE NOT NULL,
+    content TEXT DEFAULT '{}',
+    createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 // Columns added to existing tables — SQLite has no ALTER TABLE ADD COLUMN IF NOT EXISTS,

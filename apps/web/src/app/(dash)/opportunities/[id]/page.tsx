@@ -443,6 +443,36 @@ export default function OpportunityDetailPage() {
     enabled: !!id && tab === 'Listing',
   });
 
+  const { data: savedAds } = useQuery({
+    queryKey: ['ads', id],
+    queryFn: () => api.opportunities.getAds(id),
+    enabled: !!id && !isGuest,
+  });
+
+  const { data: savedGrowth } = useQuery({
+    queryKey: ['growth', id],
+    queryFn: () => api.opportunities.getGrowth(id),
+    enabled: !!id && !isGuest,
+  });
+
+  const { data: savedBrand } = useQuery({
+    queryKey: ['brand', id],
+    queryFn: () => api.opportunities.getBrand(id),
+    enabled: !!id && !isGuest,
+  });
+
+  const { data: savedBundle } = useQuery({
+    queryKey: ['bundle', id],
+    queryFn: () => api.opportunities.getBundle(id),
+    enabled: !!id && !isGuest,
+  });
+
+  const { data: reportHistory } = useQuery<any[]>({
+    queryKey: ['reports', id],
+    queryFn: () => api.opportunities.getReports(id),
+    enabled: !!id && !isGuest,
+  });
+
   const genAssets = useMutation({
     mutationFn: () => api.opportunities.generateAssets(id),
     onSuccess: () => {
@@ -454,25 +484,37 @@ export default function OpportunityDetailPage() {
 
   const genReport = useMutation({
     mutationFn: () => api.opportunities.generateReport(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports', id] }),
+    onError: (e: any) => alert(e?.message || 'Report generation failed — check AI keys in Settings'),
+  });
+
+  const deleteReport = useMutation({
+    mutationFn: (reportId: string) => api.opportunities.deleteReport(id, reportId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports', id] }),
   });
 
   const genAds = useMutation({
     mutationFn: () => api.opportunities.generateAds(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ads', id] }),
     onError: (e: any) => alert(e?.message || 'Ad generation failed — check your AI keys in Settings'),
   });
 
   const genGrowth = useMutation({
     mutationFn: () => api.opportunities.generateGrowth(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['growth', id] }),
     onError: (e: any) => alert(e?.message || 'Playbook generation failed — check your AI keys in Settings'),
   });
 
   const genBrand = useMutation({
     mutationFn: () => api.opportunities.generateBrand(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['brand', id] }),
     onError: (e: any) => alert(e?.message || 'Brand generation failed — check your AI keys in Settings'),
   });
 
   const genBundle = useMutation({
     mutationFn: () => api.opportunities.generateBundle(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bundle', id] }),
+    onError: (e: any) => alert(e?.message || 'Bundle generation failed — check your AI keys in Settings'),
   });
 
   const rescore = useMutation({
@@ -1455,7 +1497,9 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Ads ── */}
-      {!isGuest && tab === 'Ads' && (
+      {!isGuest && tab === 'Ads' && (() => {
+        const ads = (genAds.data ?? savedAds) as any;
+        return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1465,12 +1509,12 @@ export default function OpportunityDetailPage() {
               </div>
               <GenProgressButton
                 isPending={genAds.isPending}
-                icon="✨" label={genAds.data ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
+                icon="✨" label={ads ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
                 onClick={() => genAds.mutate()}
               />
             </div>
 
-            {!genAds.data && !genAds.isPending && (
+            {!ads && !genAds.isPending && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {['Facebook', 'Instagram', 'YouTube', 'Google'].map(p => (
                   <div key={p} className="card-dark p-4 text-center opacity-50">
@@ -1492,8 +1536,7 @@ export default function OpportunityDetailPage() {
               </div>
             )}
 
-            {genAds.data && (() => {
-              const ads = genAds.data as any;
+            {ads && !genAds.isPending && (() => {
               return (
                 <div className="space-y-4">
                   {/* Facebook */}
@@ -1640,10 +1683,13 @@ export default function OpportunityDetailPage() {
             })()}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Growth ── */}
-      {!isGuest && tab === 'Growth' && (
+      {!isGuest && tab === 'Growth' && (() => {
+        const g = (genGrowth.data ?? savedGrowth) as any;
+        return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1653,12 +1699,12 @@ export default function OpportunityDetailPage() {
               </div>
               <GenProgressButton
                 isPending={genGrowth.isPending}
-                icon="🚀" label={genGrowth.data ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
+                icon="🚀" label={g ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
                 onClick={() => genGrowth.mutate()}
               />
             </div>
 
-            {!genGrowth.data && !genGrowth.isPending && (
+            {!g && !genGrowth.isPending && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 opacity-50">
                 {['Quick Wins', 'Listing Optimization', 'Pricing Strategy', 'Review Strategy', 'Launch Sequence', 'PPC Plan'].map(s => (
                   <div key={s} className="card-dark p-3 text-center text-sm text-white/40">{s}</div>
@@ -1675,8 +1721,7 @@ export default function OpportunityDetailPage() {
               </div>
             )}
 
-            {genGrowth.data && (() => {
-              const g = genGrowth.data as any;
+            {g && !genGrowth.isPending && (() => {
               return (
                 <div className="space-y-5">
                   {/* Quick Wins */}
@@ -1831,10 +1876,13 @@ export default function OpportunityDetailPage() {
             })()}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Brand Builder ── */}
-      {!isGuest && tab === 'Brand Builder' && (
+      {!isGuest && tab === 'Brand Builder' && (() => {
+        const b = (genBrand.data ?? savedBrand) as any;
+        return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1844,12 +1892,12 @@ export default function OpportunityDetailPage() {
               </div>
               <GenProgressButton
                 isPending={genBrand.isPending}
-                icon="🎨" label={genBrand.data ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
+                icon="🎨" label={b ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
                 onClick={() => genBrand.mutate()}
               />
             </div>
 
-            {!genBrand.data && !genBrand.isPending && (
+            {!b && !genBrand.isPending && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {['Brand Names', 'Positioning', 'Taglines', 'Colour Palette', 'Brand Voice', 'Domain Ideas'].map((item, i) => (
                   <div key={item} className="card-dark p-4 text-center opacity-40">
@@ -1867,8 +1915,7 @@ export default function OpportunityDetailPage() {
               </div>
             )}
 
-            {genBrand.data && (() => {
-              const b = genBrand.data as any;
+            {b && !genBrand.isPending && (() => {
               return (
                 <div className="space-y-5">
                   {/* Brand names */}
@@ -1977,10 +2024,14 @@ export default function OpportunityDetailPage() {
             })()}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Bundle Generator ── */}
-      {!isGuest && tab === 'Bundle' && (
+      {!isGuest && tab === 'Bundle' && (() => {
+        const bundleData = (genBundle.data ?? savedBundle) as any;
+        const bundles: any[] = bundleData?.bundles || (Array.isArray(bundleData) ? bundleData : []);
+        return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1990,12 +2041,12 @@ export default function OpportunityDetailPage() {
               </div>
               <GenProgressButton
                 isPending={genBundle.isPending}
-                icon="📦" label={genBundle.data ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
+                icon="📦" label={bundleData ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
                 onClick={() => genBundle.mutate()}
               />
             </div>
 
-            {!genBundle.data && !genBundle.isPending && (
+            {!bundleData && !genBundle.isPending && (
               <div className="p-8 text-center opacity-50">
                 <div className="text-4xl mb-3">📦</div>
                 <p className="text-sm text-white/40">Generate 3–5 bundle ideas with margin models</p>
@@ -2009,9 +2060,7 @@ export default function OpportunityDetailPage() {
               </div>
             )}
 
-            {genBundle.data && (() => {
-              const data = genBundle.data as any;
-              const bundles: any[] = data.bundles || data || [];
+            {bundleData && !genBundle.isPending && (() => {
               return (
                 <div className="space-y-4">
                   {bundles.map((bundle: any, i: number) => (
@@ -2041,8 +2090,9 @@ export default function OpportunityDetailPage() {
                         {/* Pricing */}
                         <div className="flex flex-wrap gap-4 text-xs">
                           {bundle.bundlePrice && <div><span className="text-white/55">Bundle price: </span><span className="text-white font-semibold">{bundle.bundlePrice}</span></div>}
-                          {bundle.sourceTotal && <div><span className="text-white/55">Source total: </span><span className="text-amber-400">{bundle.sourceTotal}</span></div>}
-                          {bundle.aov && <div><span className="text-white/55">AOV lift: </span><span className="text-emerald-400 font-semibold">{bundle.aov}</span></div>}
+                          {(bundle.individualTotal || bundle.sourceTotal) && <div><span className="text-white/55">Individual total: </span><span className="text-amber-400">{bundle.individualTotal || bundle.sourceTotal}</span></div>}
+                          {(bundle.aovLift || bundle.aov) && <div><span className="text-white/55">AOV lift: </span><span className="text-emerald-400 font-semibold">{bundle.aovLift || bundle.aov}</span></div>}
+                          {bundle.targetBuyer && <div><span className="text-white/55">Target: </span><span className="text-white/70">{bundle.targetBuyer}</span></div>}
                         </div>
 
                         {/* Listing title */}
@@ -2056,19 +2106,19 @@ export default function OpportunityDetailPage() {
                           </div>
                         )}
 
-                        {/* Strategy note */}
-                        {bundle.strategy && (
-                          <p className="text-xs text-white/45 italic border-l-2 border-violet-500/30 pl-3">{bundle.strategy}</p>
+                        {/* Strategy / rationale note */}
+                        {(bundle.rationale || bundle.strategy) && (
+                          <p className="text-xs text-white/45 italic border-l-2 border-violet-500/30 pl-3">{bundle.rationale || bundle.strategy}</p>
                         )}
                       </div>
                     </div>
                   ))}
 
                   {/* Inventory ratio */}
-                  {data.inventoryRatio && (
+                  {bundleData.inventoryRatio && (
                     <div className="card-dark p-4">
                       <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-2">📦 Inventory Ratio Recommendation</div>
-                      <p className="text-sm text-white/65">{data.inventoryRatio}</p>
+                      <p className="text-sm text-white/65">{bundleData.inventoryRatio}</p>
                     </div>
                   )}
                 </div>
@@ -2076,7 +2126,8 @@ export default function OpportunityDetailPage() {
             })()}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Recommendation ── */}
       {!isGuest && tab === 'Recommendation' && (
@@ -2143,38 +2194,98 @@ export default function OpportunityDetailPage() {
 
       {/* ── Report ── */}
       {!isGuest && tab === 'Report' && (
-        <div className="card-dark p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white">Opportunity Report</h2>
+        <div className="space-y-4">
+          {/* Header + Generate button */}
+          <div className="card-dark p-4 sm:p-6 flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="font-semibold text-white">Opportunity Report</h2>
+              <p className="text-xs text-white/40 mt-0.5">Each generation is saved — newest at top, full history below</p>
+            </div>
             <GenProgressButton
               isPending={genReport.isPending}
-              icon="📄" label="Generate Report" pendingLabel="Building report…"
+              icon="📄" label={reportHistory?.length ? '↻ Generate New Report' : 'Generate Report'} pendingLabel="Building report…"
               onClick={() => genReport.mutate()}
             />
           </div>
-          {genReport.data ? (
-            <div className="space-y-3">
-              {Object.entries(((genReport.data as any).content || {}) as Record<string, any>).map(([key, val]) => (
-                <div key={key}>
-                  <div className="text-xs font-semibold text-white/55 uppercase tracking-widest mb-1.5">{key.replace(/_/g, ' ')}</div>
-                  {typeof val === 'string' ? (
-                    <p className="text-sm text-white/80 leading-relaxed">{val}</p>
-                  ) : Array.isArray(val) ? (
-                    <ul className="space-y-1">{(val as any[]).map((v, i) => (
-                      <li key={i} className="text-sm text-white/80 flex gap-2"><span className="text-green-500 shrink-0">&#x2022;</span>{String(v)}</li>
-                    ))}</ul>
-                  ) : (
-                    <p className="text-sm text-white/80">{JSON.stringify(val)}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center text-white/55">
+
+          {/* Empty state */}
+          {!reportHistory?.length && !genReport.isPending && (
+            <div className="card-dark p-8 text-center text-white/55">
               <div className="text-3xl mb-2">📊</div>
-              <p className="text-sm">Generate a full opportunity report with all data</p>
+              <p className="text-sm">Generate a full opportunity report — it will be saved here permanently</p>
             </div>
           )}
+
+          {/* History list — newest first */}
+          {(reportHistory || []).map((report: any, i: number) => (
+            <div key={report.id} className={`card-dark overflow-hidden border ${i === 0 ? 'border-violet-500/25' : 'border-white/6 opacity-80'}`}>
+              {/* Entry header */}
+              <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between gap-3"
+                style={{ background: i === 0 ? 'rgba(124,58,237,0.06)' : undefined }}>
+                <div className="flex items-center gap-2 min-w-0">
+                  {i === 0 && (
+                    <span className="text-[10px] font-bold bg-violet-600 text-white px-2 py-0.5 rounded-full shrink-0">Latest</span>
+                  )}
+                  {i > 0 && (
+                    <span className="text-[10px] font-medium bg-white/8 text-white/50 px-2 py-0.5 rounded-full shrink-0">#{(reportHistory?.length ?? 0) - i}</span>
+                  )}
+                  <span className="text-xs text-white/40 truncate">
+                    {new Date(report.createdAt).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  {report.verdict && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                      report.verdict === 'LAUNCH' ? 'bg-emerald-500/15 text-emerald-400' :
+                      report.verdict === 'REJECT' ? 'bg-red-500/15 text-red-400' :
+                      'bg-amber-500/15 text-amber-400'
+                    }`}>{report.verdict}</span>
+                  )}
+                  {report.score != null && (
+                    <span className="text-[10px] text-white/40 shrink-0">Score: {report.score}/100</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => deleteReport.mutate(report.id)}
+                  disabled={deleteReport.isPending}
+                  title="Delete this report"
+                  className="shrink-0 text-xs text-white/25 hover:text-red-400 hover:bg-red-500/10 px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-40 flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                    <path fillRule="evenodd" d="M5 3.25V4H2.75a.75.75 0 0 0 0 1.5h.3l.815 8.15A1.5 1.5 0 0 0 5.357 15h5.285a1.5 1.5 0 0 0 1.493-1.35l.815-8.15h.3a.75.75 0 0 0 0-1.5H11v-.75A2.25 2.25 0 0 0 8.75 1h-1.5A2.25 2.25 0 0 0 5 3.25Zm2.25-.75a.75.75 0 0 0-.75.75V4h3v-.75a.75.75 0 0 0-.75-.75h-1.5ZM6.05 6a.75.75 0 0 1 .787.713l.275 5.5a.75.75 0 0 1-1.498.075l-.275-5.5A.75.75 0 0 1 6.05 6Zm3.9 0a.75.75 0 0 1 .712.787l-.275 5.5a.75.75 0 0 1-1.498-.075l.275-5.5a.75.75 0 0 1 .786-.711Z" clipRule="evenodd" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+
+              {/* Report sections */}
+              <div className="p-4 sm:p-5 space-y-4">
+                {(['executive_summary','market_opportunity','sourcing_advantage','financial_projection','risk_factors','recommended_actions'] as const).map(key => {
+                  const val = report[key];
+                  if (!val) return null;
+                  const labels: Record<string, string> = {
+                    executive_summary: 'Executive Summary',
+                    market_opportunity: 'Market Opportunity',
+                    sourcing_advantage: 'Sourcing Advantage',
+                    financial_projection: 'Financial Projection',
+                    risk_factors: 'Risk Factors',
+                    recommended_actions: 'Recommended Actions',
+                  };
+                  const icons: Record<string, string> = {
+                    executive_summary: '📋', market_opportunity: '📈', sourcing_advantage: '🇮🇳',
+                    financial_projection: '💰', risk_factors: '⚠️', recommended_actions: '🚀',
+                  };
+                  return (
+                    <div key={key}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-sm">{icons[key]}</span>
+                        <span className="text-xs font-semibold text-white/55 uppercase tracking-widest">{labels[key]}</span>
+                        <CopyButton text={String(val)} />
+                      </div>
+                      <p className="text-sm text-white/80 leading-relaxed">{String(val)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
       <SupplierProfileDrawer

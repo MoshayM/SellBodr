@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
 import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
+import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 45;
@@ -54,6 +55,22 @@ function staticBrand(title: string, category: string) {
   };
 }
 
+// GET — load persisted brand asset
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getDb();
+    await ensureSchema(db);
+    const r = await db.execute({
+      sql: `SELECT content FROM "BrandAsset" WHERE opportunityId = ?`,
+      args: [params.id],
+    });
+    if (!r.rows.length) return NextResponse.json(null);
+    return NextResponse.json(JSON.parse(String((r.rows[0] as any).content || 'null')));
+  } catch (err: any) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Auth is optional — expired/missing token falls back to free-tier, never 500s
@@ -86,7 +103,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const available = PROVIDERS.filter(p =>
       p.available() && (!freeOnly || (FREE_PROVIDER_IDS as readonly string[]).includes(p.id))
     );
-    if (!available.length) return NextResponse.json(staticBrand(title, category));
+    if (!available.length) {
+      const content = staticBrand(title, category);
+      const now = Date.now();
+      const ex = await db.execute({ sql: `SELECT id FROM "BrandAsset" WHERE opportunityId = ?`, args: [params.id] });
+      if (ex.rows.length) {
+        await db.execute({ sql: `UPDATE "BrandAsset" SET content=?, updatedAt=? WHERE opportunityId=?`, args: [JSON.stringify(content), now, params.id] });
+      } else {
+        await db.execute({ sql: `INSERT INTO "BrandAsset" (id, opportunityId, content, createdAt, updatedAt) VALUES (?,?,?,?,?)`, args: [uuidv4(), params.id, JSON.stringify(content), now, now] });
+      }
+      return NextResponse.json(content);
+    }
 
     const best = available.sort((a, b) => b.quality - a.quality)[0];
     const messages = [
@@ -123,7 +150,26 @@ Make everything specific to this product. Colours must be valid hex codes.`,
     ];
 
     const result = await tryProvider<any>(best, best.discoveryModel, messages, { maxTokens: 1200 });
-    return NextResponse.json(result?.result ?? staticBrand(title, category));
+    const content = result?.result ?? staticBrand(title, category);
+
+    const now = Date.now();
+    const existing = await db.execute({
+      sql: `SELECT id FROM "BrandAsset" WHERE opportunityId = ?`,
+      args: [params.id],
+    });
+    if (existing.rows.length) {
+      await db.execute({
+        sql: `UPDATE "BrandAsset" SET content=?, updatedAt=? WHERE opportunityId=?`,
+        args: [JSON.stringify(content), now, params.id],
+      });
+    } else {
+      await db.execute({
+        sql: `INSERT INTO "BrandAsset" (id, opportunityId, content, createdAt, updatedAt) VALUES (?,?,?,?,?)`,
+        args: [uuidv4(), params.id, JSON.stringify(content), now, now],
+      });
+    }
+
+    return NextResponse.json(content);
   } catch (err: any) {
     console.error('Brand generation error:', err);
     return NextResponse.json({ message: 'Brand generation failed' }, { status: 500 });

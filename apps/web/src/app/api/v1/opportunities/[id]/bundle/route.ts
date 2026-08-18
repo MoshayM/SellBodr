@@ -3,6 +3,7 @@ import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
 import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
+import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 45;
@@ -72,8 +73,25 @@ function staticBundles(title: string, category: string, mkt: string) {
   };
 }
 
+// GET — load persisted bundle result
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getDb();
+    await ensureSchema(db);
+    const r = await db.execute({
+      sql: `SELECT content, updatedAt FROM "BundleResult" WHERE opportunityId = ?`,
+      args: [params.id],
+    });
+    if (!r.rows.length) return NextResponse.json(null);
+    const row = r.rows[0] as any;
+    return NextResponse.json(JSON.parse(String(row.content || 'null')));
+  } catch (err: any) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+// POST — generate and persist bundle result
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  // Auth optional — expired/missing token falls back to free-tier
   let freeOnly = true;
   const token = req.headers.get('authorization')?.split(' ')[1];
   if (token) {
@@ -106,12 +124,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const available = PROVIDERS.filter(p =>
       p.available() && (!freeOnly || (FREE_PROVIDER_IDS as readonly string[]).includes(p.id))
     );
-    if (!available.length) return NextResponse.json(staticBundles(title, category, mkt));
 
-    const best = available.sort((a, b) => b.quality - a.quality)[0];
-    const result = await tryProvider<any>(best, best.discoveryModel, [
-      { role: 'system', content: 'You are an expert eCommerce product bundling strategist. Return ONLY valid JSON.' },
-      { role: 'user', content: `Create 5 profitable bundle ideas for:
+    let content: any = staticBundles(title, category, mkt);
+    if (available.length) {
+      const best = available.sort((a, b) => b.quality - a.quality)[0];
+      const result = await tryProvider<any>(best, best.discoveryModel, [
+        { role: 'system', content: 'You are an expert eCommerce product bundling strategist. Return ONLY valid JSON.' },
+        { role: 'user', content: `Create 5 profitable bundle ideas for:
 Product: ${title}
 Category: ${category}
 Marketplace: ${mkt} (${country})
@@ -119,9 +138,28 @@ Marketplace: ${mkt} (${country})
 Return JSON exactly:
 {"bundles":[{"name":"...","products":["product1","product2","product3"],"bundlePrice":"$XX.XX","individualTotal":"$XX.XX","margin":"XX%","aovLift":"+$XX","rationale":"...","targetBuyer":"...","competitionLevel":"Low|Medium|High"},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."}]}
 Make bundles specific and realistic for ${mkt}.` },
-    ], { maxTokens: 1200 });
+      ], { maxTokens: 1200 });
+      if (result?.result) content = result.result;
+    }
 
-    return NextResponse.json(result?.result ?? staticBundles(title, category, mkt));
+    const now = Date.now();
+    const existing = await db.execute({
+      sql: `SELECT id FROM "BundleResult" WHERE opportunityId = ?`,
+      args: [params.id],
+    });
+    if (existing.rows.length) {
+      await db.execute({
+        sql: `UPDATE "BundleResult" SET content=?, updatedAt=? WHERE opportunityId=?`,
+        args: [JSON.stringify(content), now, params.id],
+      });
+    } else {
+      await db.execute({
+        sql: `INSERT INTO "BundleResult" (id, opportunityId, content, createdAt, updatedAt) VALUES (?,?,?,?,?)`,
+        args: [uuidv4(), params.id, JSON.stringify(content), now, now],
+      });
+    }
+
+    return NextResponse.json(content);
   } catch (err: any) {
     console.error('Bundle generation error:', err);
     return NextResponse.json({ message: 'Bundle generation failed' }, { status: 500 });

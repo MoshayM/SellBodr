@@ -54,6 +54,22 @@ function staticAds(title: string, category: string, mkt: string, country: string
   };
 }
 
+// GET — load persisted ad campaign draft
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getDb();
+    await ensureSchema(db);
+    const r = await db.execute({
+      sql: `SELECT content FROM "AdCampaignDraft" WHERE opportunityId = ? ORDER BY createdAt DESC LIMIT 1`,
+      args: [params.id],
+    });
+    if (!r.rows.length) return NextResponse.json(null);
+    return NextResponse.json(JSON.parse(String((r.rows[0] as any).content || 'null')));
+  } catch (err: any) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Auth is optional — expired/missing token falls back to free-tier, never 500s
