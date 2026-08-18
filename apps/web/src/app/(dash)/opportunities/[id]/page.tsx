@@ -412,14 +412,17 @@ export default function OpportunityDetailPage() {
 
   const genAds = useMutation({
     mutationFn: () => api.opportunities.generateAds(id),
+    onError: (e: any) => alert(e?.message || 'Ad generation failed — check your AI keys in Settings'),
   });
 
   const genGrowth = useMutation({
     mutationFn: () => api.opportunities.generateGrowth(id),
+    onError: (e: any) => alert(e?.message || 'Playbook generation failed — check your AI keys in Settings'),
   });
 
   const genBrand = useMutation({
     mutationFn: () => api.opportunities.generateBrand(id),
+    onError: (e: any) => alert(e?.message || 'Brand generation failed — check your AI keys in Settings'),
   });
 
   const genBundle = useMutation({
@@ -429,6 +432,7 @@ export default function OpportunityDetailPage() {
   const rescore = useMutation({
     mutationFn: () => api.opportunities.rescore(id),
     onSuccess: () => refetch(),
+    onError: (e: any) => alert(e?.message || 'Re-score failed — please try again'),
   });
 
   const submitFeedback = useMutation({
