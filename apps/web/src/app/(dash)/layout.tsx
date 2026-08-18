@@ -472,16 +472,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             </div>
           )}
 
-          {/* Mobile "More" button */}
-          <button onClick={() => setMenuOpen(true)}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/5 active:bg-gray-200 dark:active:bg-white/10 transition-colors touch-manipulation"
-            aria-label="Navigation menu">
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
-              <rect width="18" height="2" rx="1" fill="currentColor"/>
-              <rect y="6" width="14" height="2" rx="1" fill="currentColor"/>
-              <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
-            </svg>
-          </button>
         </div>
       </header>
 
@@ -600,18 +590,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             <span className={`text-[22px] leading-none transition-transform duration-200 ${isHome ? 'scale-110' : ''}`}>🎯</span>
             <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-violet-600 dark:text-violet-300' : ''}`}>Scout</span>
           </Link>
-
-          <button
-            onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 dark:text-white/50 active:text-gray-700 dark:active:text-white/70 transition-colors touch-manipulation"
-            aria-label="Search">
-            <span className="text-gray-400 dark:text-white/50">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-            </span>
-            <span className="text-[10px] font-medium leading-none">Search</span>
-          </button>
 
           <Link href="/wishlist"
             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
