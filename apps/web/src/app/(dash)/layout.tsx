@@ -355,15 +355,21 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           <button
             ref={mobileBtnRef}
             onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/5 active:bg-gray-200 dark:active:bg-white/10 transition-colors touch-manipulation"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-gray-600 dark:text-white/65 hover:bg-gray-100 dark:hover:bg-white/8 active:bg-gray-200 dark:active:bg-white/10 transition-colors touch-manipulation"
             aria-label="Search">
             <SearchIcon />
           </button>
 
-          {/* Theme toggle — pill switch */}
+          {/* Theme toggle — compact icon on mobile, pill on desktop */}
           <button
             onClick={toggleTheme}
-            className="relative flex items-center gap-1 h-8 px-2 rounded-full border transition-all duration-200 touch-manipulation shrink-0"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200 touch-manipulation shrink-0 text-gray-600 dark:text-white/65 hover:bg-gray-100 dark:hover:bg-white/8 active:bg-gray-200 dark:active:bg-white/10"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+            {isDark ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="hidden md:flex relative items-center gap-1 h-8 px-2 rounded-full border transition-all duration-200 touch-manipulation shrink-0"
             style={{
               background: isDark ? 'rgba(124,58,237,0.12)' : 'rgba(15,23,42,0.06)',
               borderColor: isDark ? 'rgba(124,58,237,0.3)' : 'rgba(15,23,42,0.12)',
@@ -377,9 +383,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             </span>
           </button>
 
-          {/* Wishlist */}
+          {/* Wishlist — hidden on mobile (available in bottom nav) */}
           <Link href="/wishlist"
-            className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors touch-manipulation ${
+            className={`hidden md:flex relative w-9 h-9 items-center justify-center rounded-xl transition-colors touch-manipulation ${
               path === '/wishlist'
                 ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400'
                 : 'text-gray-500 dark:text-white/50 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-amber-500 dark:hover:text-amber-400'
@@ -395,9 +401,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             )}
           </Link>
 
-          {/* User Guide */}
+          {/* User Guide — hidden on mobile (available in hamburger drawer) */}
           <Link href="/guide"
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors touch-manipulation ${
+            className={`hidden md:flex w-9 h-9 items-center justify-center rounded-xl transition-colors touch-manipulation ${
               path === '/guide' || path.startsWith('/guide/')
                 ? 'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400'
                 : 'text-gray-500 dark:text-white/40 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-violet-600 dark:hover:text-violet-300'
