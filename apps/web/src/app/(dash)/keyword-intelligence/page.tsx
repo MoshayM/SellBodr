@@ -163,8 +163,33 @@ export default function KeywordIntelligencePage() {
             </div>
           </div>
 
-          {/* Keyword table */}
-          <div className="card-dark overflow-hidden">
+          {/* Keyword mobile cards */}
+          <div className="md:hidden space-y-1.5">
+            {filtered.length === 0 ? (
+              <div className="card-dark rounded-xl p-8 text-center text-white/50 text-sm">No keywords match filters</div>
+            ) : filtered.map((kw, i) => (
+              <div key={i} className="card-dark rounded-xl px-4 py-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-white/85 leading-snug truncate">{kw.keyword}</div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded"
+                      style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: '#fff' }}>
+                      {kw.type}
+                    </span>
+                    <span className="text-[11px] text-white/40">Vol: <span className="font-semibold" style={{ color: volColor(kw.volume) }}>{kw.volume}</span></span>
+                    <span className="text-[11px] text-white/40">Comp: <span className="font-semibold" style={{ color: compColor(kw.competition) }}>{kw.competition}</span></span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[10px] text-white/35 leading-none mb-0.5">CPC</div>
+                  <div className="text-xs font-semibold text-white/60">{kw.cpc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Keyword table — desktop */}
+          <div className="hidden md:block card-dark overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/8">

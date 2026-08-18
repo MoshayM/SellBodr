@@ -201,8 +201,57 @@ export default function WishlistPage() {
           </button>
         </div>
       ) : (
-        /* Wishlist table */
-        <div className="card-dark rounded-2xl overflow-hidden">
+        {/* Mobile card list */}
+        <div className="sm:hidden space-y-2">
+          {filtered.map((opp: any) => {
+            const code = opp.marketplace?.code || '';
+            const cc   = countryCode(code);
+            const net  = opp.profitModel?.netProfitMinor ?? 0;
+            const sig  = (opp.score?.signal || opp.recommendation || '').toLowerCase();
+            const score = Math.round(opp.score?.opportunity || 0);
+            const scoreColor = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+            return (
+              <div key={opp.id} className="card-dark rounded-xl p-4 flex flex-col gap-3">
+                {/* Top: title + score */}
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-white text-sm leading-snug line-clamp-2">
+                      {opp.product?.title || 'Unnamed product'}
+                    </div>
+                    <div className="text-xs text-white/45 mt-1 leading-snug">
+                      {cc ? flag(cc) : '🛒'} {platformOf(code)}{cc ? ` · ${cc}` : ''}
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 shrink-0"
+                    style={{ color: scoreColor, borderColor: scoreColor+'60', backgroundColor: scoreColor+'12' }}>
+                    {score}
+                  </div>
+                </div>
+                {/* Middle: signal + net profit */}
+                <div className="flex items-center justify-between gap-2">
+                  <RecommendationBadge rec={sig} />
+                  <span className={`text-sm font-bold tabular-nums ${net >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {net < 0 ? '-' : '+'}{usd(Math.abs(net))}/unit
+                  </span>
+                </div>
+                {/* Bottom: actions */}
+                <div className="flex items-center gap-2 pt-1 border-t border-white/8">
+                  <Link href={`/opportunities/${opp.id}`}
+                    className="flex-1 text-center text-xs px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-colors shadow-[0_0_8px_rgba(124,58,237,0.4)] whitespace-nowrap">
+                    Full Report →
+                  </Link>
+                  <button onClick={() => handleRemove(opp.id)}
+                    className="px-3 py-2 rounded-lg border border-white/10 text-white/50 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/8 transition-colors text-xs">
+                    Remove
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block card-dark rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/8 text-[11px] text-white/55 uppercase tracking-widest">

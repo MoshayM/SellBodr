@@ -167,31 +167,39 @@ export default function BulkScanPage() {
           </div>
           {results
             .sort((a: any, b: any) => (b.score?.opportunity || 0) - (a.score?.opportunity || 0))
-            .map((opp: any, i: number) => (
-              <div key={opp.id || i}
-                onClick={() => opp.id && router.push(`/opportunities/${opp.id}`)}
-                className={`card-dark p-4 flex items-center gap-4 ${opp.id ? 'cursor-pointer hover:bg-white/3 transition-colors' : ''}`}>
-                <div className="text-xl font-black text-white/50 w-6 shrink-0">{i + 1}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-white mb-1 line-clamp-1">{opp.product?.title || opp.keyword}</div>
-                  <div className="flex flex-wrap gap-3 text-xs text-white/40">
-                    <span>{opp.marketplace?.name}</span>
+            .map((opp: any, i: number) => {
+              const score = Math.round(opp.score?.opportunity || 0);
+              const scoreColor = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+              return (
+                <div key={opp.id || i}
+                  onClick={() => opp.id && router.push(`/opportunities/${opp.id}`)}
+                  className={`card-dark rounded-xl p-4 ${opp.id ? 'cursor-pointer hover:bg-white/3 transition-colors' : ''}`}>
+                  {/* Top row: rank + title + score ring */}
+                  <div className="flex items-start gap-3">
+                    <div className="text-lg font-black text-white/30 w-6 shrink-0 mt-0.5">{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-white leading-snug line-clamp-2">{opp.product?.title || opp.keyword}</div>
+                      {opp.marketplace?.name && (
+                        <div className="text-[11px] text-white/40 mt-0.5 leading-none">{opp.marketplace.name}</div>
+                      )}
+                    </div>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 shrink-0"
+                      style={{ color: scoreColor, borderColor: scoreColor+'60', backgroundColor: scoreColor+'12' }}>
+                      {score}
+                    </div>
+                  </div>
+                  {/* Bottom row: recommendation + profit */}
+                  <div className="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-white/6 ml-9">
+                    <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence || 0)} />
                     {opp.profitModel?.netProfit > 0 && (
-                      <span className="text-emerald-400">+${(opp.profitModel.netProfit / 100).toFixed(2)}/unit</span>
+                      <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                        +${(opp.profitModel.netProfit / 100).toFixed(2)}/unit
+                      </span>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-center">
-                    <div className="text-lg font-black" style={{
-                      color: (opp.score?.opportunity || 0) >= 70 ? '#10b981' : (opp.score?.opportunity || 0) >= 50 ? '#f59e0b' : '#ef4444'
-                    }}>{Math.round(opp.score?.opportunity || 0)}</div>
-                    <div className="text-[10px] text-white/50">score</div>
-                  </div>
-                  <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence || 0)} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       )}
     </div>

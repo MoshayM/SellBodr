@@ -1183,8 +1183,201 @@ export default function OpportunitiesPage() {
         </div>
       </div>
 
-      {/* ── Table ────────────────────────────────────────────── */}
-      <div className="card-dark rounded-xl overflow-hidden">
+      {/* ── Mobile card list (< md) ──────────────────────────── */}
+      <div className="md:hidden space-y-2">
+        {isLoading ? (
+          [1,2,3].map(i => (
+            <div key={i} className="card-dark rounded-xl p-4 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-lg dark:bg-white/8 bg-slate-200 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 dark:bg-white/10 bg-slate-200 rounded w-3/4" />
+                  <div className="h-2.5 dark:bg-white/6 bg-slate-100 rounded w-1/2" />
+                </div>
+                <div className="w-10 h-10 rounded-full dark:bg-white/8 bg-slate-200 shrink-0" />
+              </div>
+            </div>
+          ))
+        ) : displayed.length === 0 ? (
+          <div className="card-dark rounded-xl py-14 text-center">
+            <div className="text-4xl mb-3">🎯</div>
+            <p className="font-medium text-white/70 mb-1">
+              {allOpps.length === 0 ? 'No opportunities yet' : 'No results match your filters'}
+            </p>
+            <p className="text-sm text-white/40">
+              {allOpps.length === 0 ? 'Click + New Search to discover products' : 'Try adjusting the filters above'}
+            </p>
+          </div>
+        ) : (
+          (isFree ? displayed.slice(0, 10) : displayed).map((opp: any) => {
+            const mpCode   = opp.marketplace?.code || '';
+            const cc       = countryCode(mpCode);
+            const ts       = trendSource(mpCode);
+            const tStr     = trendStrengthLabel(opp.score?.trend ?? 0);
+            const tenure   = trendTenure(opp.createdAt);
+            const region   = regionName(mpCode);
+            const isOpen   = expandedId === opp.id;
+            const netMinor = opp.profitModel?.trueNetMinor ?? opp.profitModel?.netProfitMinor;
+            const currency = opp.marketplace?.currency || '';
+            const score    = Math.round(opp.score?.opportunity || 0);
+            const scoreColor = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+
+            return (
+              <div key={opp.id}
+                className="card-dark rounded-xl overflow-hidden transition-all duration-200"
+                style={isOpen ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.5)' } : undefined}>
+
+                {/* Card header — always visible, tap to expand */}
+                <button className="w-full text-left p-3.5 flex items-center gap-3"
+                  onClick={() => setExpandedId(isOpen ? null : opp.id)}>
+                  {/* Thumbnail */}
+                  <div className="w-11 h-11 rounded-lg overflow-hidden dark:bg-white/8 bg-slate-200 shrink-0 relative">
+                    {opp.product?.imageUrl
+                      ? <img src={opp.product.imageUrl} alt={opp.product.title} loading="lazy"
+                          width="44" height="44" className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div>'; }} />
+                      : <div className="w-full h-full flex items-center justify-center text-base">🎯</div>}
+                  </div>
+
+                  {/* Title + meta */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold dark:text-white text-slate-900 text-sm leading-snug line-clamp-2">{opp.product?.title}</div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      {opp.product?.category && (
+                        <span className="text-[10px] dark:text-white/45 text-slate-500 leading-none truncate max-w-[120px]">
+                          {opp.product.category.replace(/_/g,' ')}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border leading-none"
+                        style={{ color: tenure.color, borderColor: tenure.color+'40', backgroundColor: tenure.color+'15' }}>
+                        {tenure.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Score ring + chevron */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2"
+                      style={{ color: scoreColor, borderColor: scoreColor+'60', backgroundColor: scoreColor+'12' }}>
+                      {score}
+                    </div>
+                    <svg className={`w-4 h-4 dark:text-white/30 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Collapsed summary row */}
+                {!isOpen && (
+                  <div className="px-3.5 pb-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs dark:text-white/50 text-slate-500">
+                        {cc ? flag(cc) : '🛒'} {platformOf(mpCode)}
+                      </span>
+                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {netMinor != null && (
+                        <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
+                        </span>
+                      )}
+                      <Link href={`/opportunities/${opp.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Expanded body */}
+                {isOpen && (
+                  <div className="border-t dark:border-white/8 border-slate-200">
+                    {/* Trend + Region */}
+                    <div className="grid grid-cols-2 gap-0 divide-x dark:divide-white/8 divide-slate-200">
+                      <div className="px-3.5 py-3">
+                        <div className="text-[10px] dark:text-white/35 text-slate-400 uppercase tracking-widest mb-1.5 font-semibold">Trend</div>
+                        <div className="text-[11px] font-semibold leading-tight" style={{ color: ts.color }}>
+                          {ts.icon} {ts.label}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="text-[10px] dark:text-white/40 text-slate-500">{tStr.label}</span>
+                          <div className="flex-1 h-1 dark:bg-white/10 bg-slate-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width:`${opp.score?.trend??0}%`, backgroundColor: tStr.color }} />
+                          </div>
+                          <span className="text-[10px] font-bold" style={{ color: tStr.color }}>{Math.round(opp.score?.trend??0)}</span>
+                        </div>
+                      </div>
+                      <div className="px-3.5 py-3">
+                        <div className="text-[10px] dark:text-white/35 text-slate-400 uppercase tracking-widest mb-1.5 font-semibold">Marketplace</div>
+                        <div className="text-sm font-medium dark:text-white/80 text-slate-700 leading-snug">
+                          {cc ? flag(cc) : '🛒'} {platformOf(mpCode)}
+                        </div>
+                        <div className="text-[10px] dark:text-white/45 text-slate-500 leading-snug mt-0.5">{region}</div>
+                      </div>
+                    </div>
+
+                    {/* Signal + Profit */}
+                    <div className="px-3.5 py-2.5 flex items-center justify-between gap-3 border-t dark:border-white/8 border-slate-200">
+                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                      {netMinor != null && (
+                        <div className="text-right">
+                          <div className="text-[10px] dark:text-white/35 text-slate-400 leading-none mb-0.5">Net Profit</div>
+                          <span className={`text-sm font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}/unit
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="px-3.5 pb-3.5 pt-2 flex items-center gap-2 border-t dark:border-white/8 border-slate-200">
+                      <Link href={`/opportunities/${opp.id}`}
+                        className="flex-1 text-center text-xs font-bold px-3 py-2 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.45)] transition-all">
+                        Full Report →
+                      </Link>
+                      <button
+                        onClick={e => toggleWishlist(e, opp.id)}
+                        className={`p-2 rounded-lg border transition-all ${
+                          wishlist.has(opp.id)
+                            ? 'bg-amber-500/15 border-amber-500/35 text-amber-400'
+                            : 'dark:bg-white/5 bg-slate-100 dark:border-white/10 border-slate-200 dark:text-white/50 text-slate-500'
+                        }`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                          <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+
+        {/* Free gate — mobile */}
+        {isFree && displayed.length > 10 && (
+          <div className="card-dark rounded-xl py-10 text-center border border-violet-500/20"
+            style={{ background: 'linear-gradient(to top,rgba(124,58,237,0.08),transparent)' }}>
+            <div className="text-3xl mb-3">🔒</div>
+            <p className="text-sm font-semibold dark:text-white text-slate-900 mb-1">
+              {displayed.length - 10} more results locked
+            </p>
+            <p className="text-xs dark:text-white/40 text-slate-500 mb-4 px-8 leading-snug">
+              Upgrade to Pro for unlimited AI scans &amp; full results
+            </p>
+            <Link href="/register?plan=pro"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] transition-all">
+              Upgrade to Pro →
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* ── Table (desktop ≥ md) ─────────────────────────────── */}
+      <div className="hidden md:block card-dark rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[800px]">
             <thead className="dark:bg-white/5 bg-slate-50/80 border-b dark:border-white/10 border-slate-200">
