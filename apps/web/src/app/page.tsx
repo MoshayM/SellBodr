@@ -64,10 +64,10 @@ const PLANS = [
 ];
 
 const STATS = [
-  { value: '9', label: 'Marketplaces covered' },
+  { value: '9', label: 'Marketplace platforms' },
+  { value: '37', label: 'Countries covered' },
   { value: '7', label: 'AI scoring dimensions' },
-  { value: '< 60s', label: 'From search to scores' },
-  { value: '100%', label: 'AI-powered analysis' },
+  { value: '< 60s', label: 'Scan to scores' },
 ];
 
 function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; delay: number; className?: string }) {
@@ -220,7 +220,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-white/70 mb-8 border border-white/10"
           >
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            AI-powered · 9 marketplaces · Live data
+            AI-powered · 9 marketplaces · 37 countries · Live data
           </motion.div>
 
           <motion.h1
