@@ -1235,8 +1235,14 @@ export default function OpportunitiesPage() {
                     {opp.product?.imageUrl
                       ? <img src={opp.product.imageUrl} alt={opp.product.title} loading="lazy"
                           width="44" height="44" className="w-full h-full object-cover"
-                          onError={e => { (e.target as HTMLImageElement).parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div>'; }} />
-                      : <div className="w-full h-full flex items-center justify-center text-base">🎯</div>}
+                          onError={e => {
+                            const el = e.target as HTMLImageElement;
+                            if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>'; return; }
+                            el.dataset.fb = '1';
+                            const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join(',');
+                            el.src = `https://loremflickr.com/44/44/${kw || 'product'}`;
+                          }} />
+                      : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
                   </div>
 
                   {/* Title + meta */}
@@ -1438,9 +1444,16 @@ export default function OpportunitiesPage() {
                                   loading="lazy" decoding="async" width="40" height="40"
                                   className="w-full h-full object-cover"
                                   onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1'; }}
-                                  style={{ opacity: 0, transition: 'opacity 0.25s ease' }}
-                                  onError={e => { (e.target as HTMLImageElement).parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div>'; }} />
-                              : <div className="w-full h-full flex items-center justify-center text-base">🎯</div>}
+                                  style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+                                  onError={e => {
+                                    const el = e.target as HTMLImageElement;
+                                    if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px">📦</div>'; return; }
+                                    el.dataset.fb = '1';
+                                    el.style.opacity = '0';
+                                    const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join(',');
+                                    el.src = `https://loremflickr.com/40/40/${kw || 'product'}`;
+                                  }} />
+                              : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
                           </div>
                           <div className="min-w-0">
                             <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
