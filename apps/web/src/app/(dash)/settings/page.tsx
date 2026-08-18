@@ -576,13 +576,15 @@ export default function SettingsPage() {
   }, []);
 
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    ...(isUserAdmin ? [{ key: 'ai-keys' as Tab, label: 'AI Keys', icon: '🔑' }] : []),
+    ...(isUserAdmin ? [
+      { key: 'ai-keys'     as Tab, label: 'AI Keys',     icon: '🔑' },
+      { key: 'api-keys'    as Tab, label: 'API Keys',    icon: '🗝️' },
+      { key: 'white-label' as Tab, label: 'White-label', icon: '🎨' },
+    ] : []),
     { key: 'marketplaces', label: 'Marketplaces', icon: '🛒' },
     { key: 'security',     label: 'Security',     icon: '🛡️' },
     { key: 'guide',        label: 'Guide',        icon: '📖' },
-    { key: 'api-keys' as Tab, label: 'API Keys', icon: '🗝️' },
-    { key: 'white-label' as Tab, label: 'White-label', icon: '🎨' },
-    { key: 'data-export' as Tab, label: 'Data & Privacy', icon: '📦' },
+    { key: 'data-export',  label: 'Data & Privacy', icon: '📦' },
   ];
 
   return (
@@ -610,14 +612,12 @@ export default function SettingsPage() {
       </div>
 
       {tab === 'ai-keys'      && isUserAdmin && <AiProviderKeysTab />}
+      {tab === 'api-keys'     && isUserAdmin && <ApiKeysPanel isGuest={isGuest} />}
+      {tab === 'white-label'  && isUserAdmin && <WhiteLabelPanel user={user} />}
       {tab === 'marketplaces' && <MarketplacesTab />}
       {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
       {tab === 'guide'        && <UserGuideTab />}
-
-      {/* ── API Keys ── */}
-      {tab === 'api-keys' && <ApiKeysPanel isGuest={isGuest} />}
-      {tab === 'white-label' && <WhiteLabelPanel user={user} />}
-      {tab === 'data-export' && <DataExportPanel user={user} isGuest={isGuest} />}
+      {tab === 'data-export'  && <DataExportPanel user={user} isGuest={isGuest} />}
     </div>
   );
 }
