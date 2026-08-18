@@ -1015,20 +1015,34 @@ export default function OpportunityDetailPage() {
                   const barPct = Math.min(92, (r.value / maxDivRef) * 100);
                   const rowH = r.isNet ? 30 : r.isSubtotal ? 24 : 20;
                   const barH = r.isNet ? 'h-3.5' : r.isSubtotal ? 'h-3' : 'h-2';
+                  // Adaptive label: inside bar when it's large enough to hold text
+                  const inside = barPct > 55;
+                  // Text size scaled to bar height so it fits inside
+                  const inlineSz = r.isNet ? 'text-[10px]' : r.isSubtotal ? 'text-[9px]' : 'text-[8px]';
+                  // Padding clears rounded cap of bar (half of bar height in px)
+                  const capPad = r.isNet ? 8 : r.isSubtotal ? 7 : 5;
                   return (
                     <div key={r.label}>
                       {r.isSubtotal && <div className="profit-sep h-px my-1" />}
                       {r.isNet && <div className="profit-sep-lg h-px my-1.5" />}
                       <div className="flex items-center" style={{ height: rowH }}>
-                        {/* Left — costs */}
-                        <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0 split-divider-l overflow-hidden">
+                        {/* Left — costs (bar grows rightward to center) */}
+                        <div className="flex-1 flex items-center justify-end overflow-hidden split-divider-l">
                           {!r.positive && (
                             <>
-                              <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
-                                -{f(r.value)}
-                              </span>
-                              <div className={`${barH} rounded-l-full shrink-0`}
-                                style={{ width: `${barPct}%`, maxWidth: 'calc(100% - 3.5rem)', background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
+                              {!inside && (
+                                <span className={`text-[10px] font-mono shrink-0 mr-1.5 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                                  -{f(r.value)}
+                                </span>
+                              )}
+                              <div className={`${barH} rounded-l-full shrink-0 flex items-center justify-start`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden', paddingLeft: inside ? capPad : 0 }}>
+                                {inside && (
+                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap ${r.isNet ? 'font-bold text-white' : r.isSubtotal ? 'text-indigo-100/90' : 'text-white/85'}`}>
+                                    -{f(r.value)}
+                                  </span>
+                                )}
+                              </div>
                             </>
                           )}
                         </div>
@@ -1038,15 +1052,23 @@ export default function OpportunityDetailPage() {
                             {r.label}
                           </span>
                         </div>
-                        {/* Right — revenue */}
-                        <div className="flex-1 flex items-center justify-start gap-1.5 min-w-0 split-divider-r overflow-hidden">
+                        {/* Right — revenue (bar grows leftward from center) */}
+                        <div className="flex-1 flex items-center justify-start overflow-hidden split-divider-r">
                           {r.positive && (
                             <>
-                              <div className={`${barH} rounded-r-full shrink-0`}
-                                style={{ width: `${barPct}%`, maxWidth: 'calc(100% - 3.5rem)', background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
-                              <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
-                                +{f(r.value)}
-                              </span>
+                              <div className={`${barH} rounded-r-full shrink-0 flex items-center justify-end`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden', paddingRight: inside ? capPad : 0 }}>
+                                {inside && (
+                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap ${r.isNet ? 'font-bold text-white' : 'text-white/85'}`}>
+                                    +{f(r.value)}
+                                  </span>
+                                )}
+                              </div>
+                              {!inside && (
+                                <span className={`text-[10px] font-mono shrink-0 ml-1.5 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                                  +{f(r.value)}
+                                </span>
+                              )}
                             </>
                           )}
                         </div>
