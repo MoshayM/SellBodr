@@ -112,7 +112,7 @@ export default function LoginPage() {
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-10 grid grid-cols-3 gap-4">
-            {[{ val: '91', label: 'Avg score top picks' }, { val: '76', label: 'Marketplaces' }, { val: '48h', label: 'To first listing' }].map(s => (
+            {[{ val: '7', label: 'AI score dimensions' }, { val: '9', label: 'Marketplaces' }, { val: '< 60s', label: 'Scan to verdict' }].map(s => (
               <div key={s.label} className="glass rounded-xl p-4 text-center">
                 <div className="text-2xl font-black text-gradient mb-1">{s.val}</div>
                 <div className="text-white/35 text-xs leading-snug">{s.label}</div>
@@ -122,8 +122,11 @@ export default function LoginPage() {
         </div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="relative z-10 glass rounded-xl p-5">
-          <p className="text-white/50 text-sm italic leading-relaxed">"Found a $22 net-margin product in 30 minutes. Used to take weeks of research."</p>
-          <p className="text-white/30 text-xs mt-2">— Rahul M., Amazon US seller</p>
+          <p className="text-white/50 text-sm leading-relaxed">Every opportunity is scored across 7 AI dimensions — demand, competition, margin, trend, saturation, shipping, and marketplace fit — giving you a clear Launch / Hold / Reject verdict.</p>
+          <div className="flex items-center gap-2 mt-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <p className="text-white/30 text-xs">Real-time AI analysis · No hallucinated data</p>
+          </div>
         </motion.div>
       </div>
 

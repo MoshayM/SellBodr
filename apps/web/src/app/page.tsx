@@ -64,10 +64,10 @@ const PLANS = [
 ];
 
 const STATS = [
-  { value: '10K+', label: 'Products analysed' },
-  { value: '76', label: 'Marketplaces covered' },
-  { value: '$2.4M', label: 'Seller profits tracked' },
+  { value: '9', label: 'Marketplaces covered' },
+  { value: '7', label: 'AI scoring dimensions' },
   { value: '< 60s', label: 'From search to scores' },
+  { value: '100%', label: 'AI-powered analysis' },
 ];
 
 function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; delay: number; className?: string }) {
@@ -90,7 +90,7 @@ function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; de
         className="glass-card rounded-2xl p-4 w-56 select-none cursor-default shadow-2xl animate-pulse-glow"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-white/50 font-medium">OPPORTUNITY</span>
+          <span className="text-[10px] text-white/35 font-medium tracking-widest">EXAMPLE</span>
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${card.badge}`}>{card.market}</span>
         </div>
         <div className="text-sm font-semibold text-white mb-3">{card.product}</div>
@@ -193,7 +193,10 @@ export default function LandingPage() {
           <Link href="/guide" className="hover:text-white transition-colors">User Guide</Link>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2 hidden sm:block">Sign in</Link>
+          <Link href="/login"
+            className="text-sm font-semibold text-white/90 hover:text-white transition-all px-4 py-2 rounded-lg border border-white/15 hover:border-violet-400/50 hover:bg-violet-500/10 bg-white/5">
+            Sign in
+          </Link>
           <Link href="/register" className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Sign Up Free</Link>
           <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-lg shadow-lg shadow-violet-500/30">
             Start Pro →
@@ -257,27 +260,24 @@ export default function LandingPage() {
               Start Pro →
             </Link>
           </motion.div>
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-sm text-white/35 mb-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 mb-12 text-sm"
           >
-            No account needed to browse.{' '}
-            <Link href="/register" className="text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2">
-              Create Free Account
+            <span className="text-white/45">
+              No credit card needed.{' '}
+              <Link href="/register" className="text-violet-300 hover:text-violet-200 font-semibold transition-colors">
+                Create Free Account →
+              </Link>
+            </span>
+            <span className="hidden sm:block text-white/20">·</span>
+            <Link href="/login"
+              className="inline-flex items-center gap-1.5 text-white/75 hover:text-white font-semibold transition-colors border border-white/15 hover:border-violet-400/50 hover:bg-violet-500/8 px-4 py-1.5 rounded-lg">
+              Sign in →
             </Link>
-            {' '}to run AI scans.
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.85 }}
-            className="text-xs text-white/30 mb-12"
-          >
-            Already have an account?{' '}
-            <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2">Sign in</Link>
-          </motion.p>
+          </motion.div>
 
           {/* Floating opportunity cards */}
           <div className="flex items-end justify-center gap-4 sm:gap-6 flex-wrap">
@@ -532,7 +532,7 @@ export default function LandingPage() {
           <h2 className="text-5xl sm:text-6xl font-black mb-6 leading-tight">
             Start scouting <span className="text-gradient">today</span>
           </h2>
-          <p className="text-white/40 text-lg mb-10">Join 500+ sellers discovering India's best cross-border opportunities with AI.</p>
+          <p className="text-white/40 text-lg mb-10">AI-powered intelligence to source in India and sell on the world's top marketplaces.</p>
           <Link href="/register" className="btn-primary text-lg px-10 py-5 min-h-0 rounded-2xl shadow-2xl shadow-violet-500/30 inline-flex">
             Create Free Account →
           </Link>
