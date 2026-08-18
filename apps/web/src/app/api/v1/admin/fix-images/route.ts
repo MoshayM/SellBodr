@@ -5,8 +5,9 @@ import { ensureSchema } from '@/lib/schema';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-// One-shot admin endpoint: patches all products that still have dead source.unsplash.com URLs.
+// Admin endpoint: patches all products with broken image URLs.
 // GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>
+// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&debug=1  — returns all stored imageUrls, no writes
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
   const validSecret = process.env.ADMIN_SECRET || process.env.JWT_ACCESS_SECRET;
@@ -17,8 +18,24 @@ export async function GET(req: NextRequest) {
   const db = await getDb();
   await ensureSchema(db);
 
+  // Debug mode: return all imageUrls so we can see what's stored
+  if (req.nextUrl.searchParams.get('debug') === '1') {
+    const all = await db.execute(
+      `SELECT id, title, imageUrl FROM "Product" ORDER BY createdAt DESC LIMIT 50`
+    );
+    return NextResponse.json({
+      count: all.rows.length,
+      products: all.rows.map(r => ({ id: r.id, title: r.title, imageUrl: r.imageUrl })),
+    });
+  }
+
   const result = await db.execute(
-    `SELECT id, title, category FROM "Product" WHERE imageUrl LIKE '%source.unsplash.com%' OR imageUrl IS NULL OR imageUrl = ''`
+    `SELECT id, title, category, imageUrl FROM "Product"
+     WHERE imageUrl IS NULL OR imageUrl = ''
+        OR imageUrl LIKE '%source.unsplash.com%'
+        OR imageUrl LIKE '%picsum.photos%'
+        OR imageUrl LIKE '%pollinations.ai%'
+        OR imageUrl LIKE '%placeholder%'`
   );
 
   let fixed = 0;
@@ -35,7 +52,6 @@ export async function GET(req: NextRequest) {
 
     let imageUrl = `https://loremflickr.com/400/300/${kwPath}`;
 
-    // Try Google CSE first if keys available
     const gKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
     const gCx  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
     if (gKey && gCx) {
