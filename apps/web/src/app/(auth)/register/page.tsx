@@ -49,7 +49,7 @@ export default function RegisterPage() {
     return (e: React.ChangeEvent<HTMLInputElement>) => { setForm(f => ({ ...f, [field]: e.target.value })); setError(''); };
   }
 
-  async function registerWithPasskey(platformOnly = true) {
+  async function registerWithPasskey() {
     if (!form.name.trim()) { setError('Please enter your name'); return; }
     if (!form.email.trim()) { setError('Please enter your email'); return; }
     setError(''); setPasskeyLoading(true);
@@ -58,15 +58,9 @@ export default function RegisterPage() {
       const { challengeId, ...options } = beginData;
 
       const { startRegistration } = await import('@simplewebauthn/browser');
-      // Platform-only: forces Windows Hello PIN/fingerprint or Touch ID — no USB prompt
-      const finalOptions = platformOnly ? {
-        ...options,
-        authenticatorSelection: {
-          ...(options.authenticatorSelection ?? {}),
-          authenticatorAttachment: 'platform' as const,
-        },
-      } : options;
-      const attResp = await startRegistration(finalOptions);
+      // Use server options as-is — server allows platform (Windows Hello PIN/fingerprint/face,
+      // Touch ID) and cross-platform authenticators so all device types work
+      const attResp = await startRegistration(options);
 
       const auth = await api.passkeys.registerComplete(
         challengeId,
@@ -226,7 +220,7 @@ export default function RegisterPage() {
                   {/* Primary: platform passkey (Windows Hello / Touch ID / PIN) */}
                   <motion.button
                     type="button"
-                    onClick={() => registerWithPasskey(true)}
+                    onClick={() => registerWithPasskey()}
                     disabled={passkeyLoading || loading}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
@@ -239,12 +233,12 @@ export default function RegisterPage() {
                     ) : (
                       <>
                         <FingerprintIcon className="w-5 h-5 shrink-0" />
-                        Create &amp; use passkey — PIN / fingerprint / face
+                        Create &amp; use passkey
                       </>
                     )}
                   </motion.button>
                   <p className="text-center text-white/25 text-xs -mt-1">
-                    Works on laptops &amp; phones — uses your device PIN, fingerprint or face. No USB key needed.
+                    Works on all devices — set a PIN, use fingerprint, face ID, or a security key. Your device will guide you.
                   </p>
                   <button type="button" onClick={() => { setUsePassword(true); setError(''); }}
                     className="w-full text-center text-sm text-white/30 hover:text-white/55 transition-colors">

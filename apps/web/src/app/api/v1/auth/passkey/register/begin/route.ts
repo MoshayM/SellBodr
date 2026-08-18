@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
       authenticatorSelection: {
         residentKey: 'preferred',
         userVerification: 'preferred',
-        authenticatorAttachment: 'platform',
+        // no authenticatorAttachment — allows platform (Windows Hello PIN, Touch ID) AND
+        // cross-platform (USB security keys) so desktop users without biometrics can still proceed
       },
     });
 

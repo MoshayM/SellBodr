@@ -8,7 +8,7 @@ import { ParticleCanvas } from '@/components/ui/ParticleCanvas';
 const FEATURES = [
   { icon: '🎯', title: 'AI Opportunity Scoring', desc: 'Every product scored 0–100 across demand, competition, margin, trend, saturation, shipping, and marketplace fit — instantly.', color: 'from-violet-500/20 to-purple-500/10' },
   { icon: '💰', title: 'Landed-Cost Profit Model', desc: 'Full P&L: product cost + freight + duties + marketplace fees + ad spend = real net profit per unit.', color: 'from-emerald-500/20 to-green-500/10' },
-  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 76 global markets.', color: 'from-cyan-500/20 to-blue-500/10' },
+  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 9 major global marketplaces.', color: 'from-cyan-500/20 to-blue-500/10' },
   { icon: '🗺', title: 'Global Supplier Map', desc: 'Interactive satellite map pins every verified supplier worldwide. Click for precise coordinates, city, and direct Google Maps links.', color: 'from-orange-500/20 to-amber-500/10' },
   { icon: '⚡', title: 'Live AI Scan Progress', desc: 'Watch 7 AI stages run in real time — Discovering → Demand → Competition → Suppliers → Profit → Scoring → Verdicts.', color: 'from-pink-500/20 to-rose-500/10' },
   { icon: '🚀', title: 'AI Launch Assets', desc: 'SEO-optimised title, bullets, description, keywords, and pricing — generated and ready to publish in seconds.', color: 'from-indigo-500/20 to-blue-500/10' },
@@ -197,9 +197,8 @@ export default function LandingPage() {
             className="text-sm font-semibold text-white/90 hover:text-white transition-all px-4 py-2 rounded-lg border border-white/15 hover:border-violet-400/50 hover:bg-violet-500/10 bg-white/5">
             Sign in
           </Link>
-          <Link href="/register" className="hidden sm:block text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Sign Up Free</Link>
           <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-lg shadow-lg shadow-violet-500/30">
-            Start Pro →
+            Sign Up Free →
           </Link>
         </div>
       </motion.nav>
