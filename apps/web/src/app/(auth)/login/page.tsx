@@ -138,145 +138,153 @@ export default function LoginPage() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md relative z-10">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-black text-white mb-2">Welcome back</h2>
-            <p className="text-white/40 text-sm">Sign in to your SellBodr account</p>
-          </div>
 
-          {/* Passkey button */}
-          <motion.button
-            onClick={loginWithPasskey}
-            disabled={passkeyLoading || loading}
-            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-            className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 mb-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
-            {passkeyLoading ? (
-              <>
-                <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full block shrink-0" />
-                Waiting for passkey…
-              </>
-            ) : (
-              <>
-                <FingerprintIcon className="w-5 h-5 shrink-0" />
-                Sign in with Passkey
-              </>
-            )}
-          </motion.button>
-          <p className="text-center text-white/25 text-xs mb-6">
-            Windows Hello PIN · Mac Touch ID · Face ID · device fingerprint
-          </p>
+          {/* Card container — matches dashboard card feel */}
+          <div className="glass-card rounded-3xl p-7 sm:p-9 relative overflow-hidden"
+            style={{ boxShadow: '0 0 0 1px rgba(124,58,237,0.15), 0 24px 64px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.06)' }}>
+            {/* Subtle violet glow at top */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px"
+              style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.6),transparent)' }} />
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 h-px bg-white/8" />
-            <span className="text-white/25 text-xs">OR USE PASSWORD</span>
-            <div className="flex-1 h-px bg-white/8" />
-          </div>
-
-          <form onSubmit={submitPassword} className="space-y-4" noValidate>
-            <div>
-              <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                required autoComplete="email" inputMode="email" placeholder="you@example.com"
-                className="input-dark"
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
-                <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Forgot password?</a>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                  required autoComplete="current-password" placeholder="••••••••"
-                  className="input-dark pr-12"
-                />
-                <button type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
-                  {showPw ? '🙈' : '👁️'}
-                </button>
-              </div>
+            <div className="text-center mb-7">
+              <h2 className="text-2xl font-black text-white mb-1.5">Welcome back</h2>
+              <p className="text-white/40 text-sm">Sign in to your SellBodr account</p>
             </div>
 
-            {error && (
-              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
-                {error}
-              </motion.div>
-            )}
-
-            <motion.button type="submit" disabled={loading || passkeyLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-              className="btn-secondary w-full text-base py-3.5 min-h-0 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
-              {loading ? (
-                <span className="flex items-center gap-2 justify-center">
+            {/* Passkey button */}
+            <motion.button
+              onClick={loginWithPasskey}
+              disabled={passkeyLoading || loading}
+              whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+              className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 mb-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+              {passkeyLoading ? (
+                <>
                   <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                    className="w-4 h-4 border-2 border-white/40 border-t-transparent rounded-full block" />
-                  Signing in...
-                </span>
-              ) : 'Sign in with Password →'}
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full block shrink-0" />
+                  Waiting for passkey…
+                </>
+              ) : (
+                <>
+                  <FingerprintIcon className="w-5 h-5 shrink-0" />
+                  Sign in with Passkey
+                </>
+              )}
             </motion.button>
-          </form>
+            <p className="text-center text-white/25 text-xs mb-6">
+              Windows Hello PIN · Mac Touch ID · Face ID · device fingerprint
+            </p>
 
-          <p className="text-center text-white/35 text-sm mt-8">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
-              Start free →
-            </Link>
-          </p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-white/8" />
+              <span className="text-white/25 text-xs">OR USE PASSWORD</span>
+              <div className="flex-1 h-px bg-white/8" />
+            </div>
 
-
-          <div className="flex items-center justify-center gap-6 mt-6 flex-wrap">
-            {['🔒 256-bit SSL', '🛡️ SOC2 ready', '🌍 99.9% uptime'].map(b => (
-              <span key={b} className="text-white/20 text-xs">{b}</span>
-            ))}
-          </div>
-
-          {!isInstalled && (
-            installPrompt ? (
-              <motion.button onClick={handleInstall}
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="mt-5 w-full p-3.5 rounded-xl flex items-center gap-3 text-left touch-manipulation group relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(99,102,241,0.07))', border: '1px solid rgba(124,58,237,0.35)', boxShadow: '0 0 20px rgba(124,58,237,0.1)' }}>
-                {/* Shimmer overlay */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.08),transparent)', backgroundSize: '200% 100%' }} />
-                <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)' }}>
-                  <img src="/icons/icon.svg" alt="" className="w-7 h-7"
-                    style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.8))' }} />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-violet-400 animate-pulse" />
+            <form onSubmit={submitPassword} className="space-y-4" noValidate>
+              <div>
+                <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  required autoComplete="email" inputMode="email" placeholder="you@example.com"
+                  className="input-dark"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
+                  <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Forgot password?</a>
                 </div>
-                <div className="flex-1 min-w-0 relative">
-                  <div className="text-sm font-bold text-white leading-snug">Install SellBodr App</div>
-                  <div className="text-[11px] text-violet-300/70 leading-snug mt-0.5">Works offline · Loads instantly · No app store needed</div>
+                <div className="relative">
+                  <input
+                    type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                    required autoComplete="current-password" placeholder="••••••••"
+                    className="input-dark pr-12"
+                  />
+                  <button type="button" onClick={() => setShowPw(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
+                    {showPw ? '🙈' : '👁️'}
+                  </button>
                 </div>
-                <div className="relative flex flex-col items-center gap-0.5 shrink-0">
-                  <motion.span
-                    animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                    className="text-violet-300 text-base">↓</motion.span>
-                  <span className="text-[10px] text-violet-400 font-semibold">Install</span>
-                </div>
+              </div>
+
+              {error && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
+                  {error}
+                </motion.div>
+              )}
+
+              <motion.button type="submit" disabled={loading || passkeyLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                className="btn-secondary w-full text-base py-3.5 min-h-0 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                {loading ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                      className="w-4 h-4 border-2 border-white/40 border-t-transparent rounded-full block" />
+                    Signing in...
+                  </span>
+                ) : 'Sign in with Password →'}
               </motion.button>
-            ) : isIOS ? (
-              <div className="mt-5 p-3.5 rounded-xl flex items-center gap-3"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
-                  <img src="/icons/icon.svg" alt="" className="w-7 h-7"
-                    style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-white/70 leading-snug">Add to iPhone / iPad</div>
-                  <div className="text-[11px] text-white/40 leading-snug mt-0.5">
-                    In Safari: tap <span className="text-white/60 font-medium">Share ↑</span> → <span className="text-white/60 font-medium">Add to Home Screen</span>
+            </form>
+
+            <p className="text-center text-white/35 text-sm mt-7">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+                Start free →
+              </Link>
+            </p>
+
+            {!isInstalled && (
+              installPrompt ? (
+                <motion.button onClick={handleInstall}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  className="mt-5 w-full p-3.5 rounded-xl flex items-center gap-3 text-left touch-manipulation group relative overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(99,102,241,0.07))', border: '1px solid rgba(124,58,237,0.35)', boxShadow: '0 0 20px rgba(124,58,237,0.1)' }}>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.08),transparent)', backgroundSize: '200% 100%' }} />
+                  <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)' }}>
+                    <img src="/icons/icon.svg" alt="" className="w-7 h-7"
+                      style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.8))' }} />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-violet-400 animate-pulse" />
+                  </div>
+                  <div className="flex-1 min-w-0 relative">
+                    <div className="text-sm font-bold text-white leading-snug">Install SellBodr App</div>
+                    <div className="text-[11px] text-violet-300/70 leading-snug mt-0.5">Works offline · Loads instantly · No app store needed</div>
+                  </div>
+                  <div className="relative flex flex-col items-center gap-0.5 shrink-0">
+                    <motion.span animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                      className="text-violet-300 text-base">↓</motion.span>
+                    <span className="text-[10px] text-violet-400 font-semibold">Install</span>
+                  </div>
+                </motion.button>
+              ) : isIOS ? (
+                <div className="mt-5 p-3.5 rounded-xl flex items-center gap-3"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                    <img src="/icons/icon.svg" alt="" className="w-7 h-7"
+                      style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.6))' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-white/70 leading-snug">Add to iPhone / iPad</div>
+                    <div className="text-[11px] text-white/40 leading-snug mt-0.5">
+                      In Safari: tap <span className="text-white/60 font-medium">Share ↑</span> → <span className="text-white/60 font-medium">Add to Home Screen</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : null
-          )}
+              ) : null
+            )}
+          </div>
 
-          <div className="flex items-center justify-center gap-4 mt-4">
+          {/* Footer links outside card */}
+          <div className="flex items-center justify-center gap-6 mt-5 flex-wrap">
+            {[{ icon: '🔒', text: '256-bit SSL' }, { icon: '🛡️', text: 'SOC2 ready' }, { icon: '🌍', text: '99.9% uptime' }].map(b => (
+              <span key={b.text} className="flex items-center gap-1.5 text-white/25 text-xs">
+                <span>{b.icon}</span>{b.text}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center justify-center gap-4 mt-3">
             <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40 transition-colors">Privacy Policy</Link>
             <span className="text-white/10 text-xs">·</span>
             <Link href="/terms" className="text-white/20 text-xs hover:text-white/40 transition-colors">Terms of Service</Link>

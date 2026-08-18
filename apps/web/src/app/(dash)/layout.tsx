@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clearAuth, getUser, isAdmin } from '@/lib/api';
 import { getWishlistCount } from '@/lib/wishlist';
-import { PWAInstallBanner } from '@/components/ui/PWAInstallBanner';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 import { useTheme } from '@/components/ui/ThemeProvider';
 
@@ -565,7 +564,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         </div>
       </main>
 
-      <PWAInstallBanner />
       <CurrencyWidget />
 
       {/* ── Mobile bottom tab bar ── */}

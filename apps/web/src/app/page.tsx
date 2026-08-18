@@ -302,7 +302,7 @@ export default function LandingPage() {
 
       {/* ── Stats ───────────────────────────────────────────── */}
       <section className="py-16 px-6 border-y border-white/5">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4">
           {STATS.map((s, i) => (
             <motion.div
               key={s.label}
@@ -310,10 +310,12 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="text-center"
+              className="glass-card rounded-2xl p-5 text-center relative overflow-hidden group hover:-translate-y-1 transition-transform duration-200"
             >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: 'radial-gradient(circle at 50% 0%, rgba(124,58,237,0.08) 0%, transparent 70%)' }} />
               <div className="text-3xl sm:text-4xl font-black text-gradient mb-1">{s.value}</div>
-              <div className="text-sm text-white/40">{s.label}</div>
+              <div className="text-xs text-white/40 leading-snug">{s.label}</div>
             </motion.div>
           ))}
         </div>
@@ -354,7 +356,7 @@ export default function LandingPage() {
             <div className="text-sm text-cyan-400 font-medium mb-3 uppercase tracking-widest">Simple 3-step flow</div>
             <h2 className="text-4xl sm:text-5xl font-black">From idea to <span className="text-gradient-purple">first sale</span></h2>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-5">
             {STEPS.map((s, i) => (
               <motion.div
                 key={s.n}
@@ -362,12 +364,17 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="relative"
+                className="glass-card rounded-2xl p-6 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-200"
               >
-                <div className="text-6xl font-black text-white/5 mb-4">{s.n}</div>
-                <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
-                <p className="text-white/40 leading-relaxed">{s.desc}</p>
-                {i < 2 && <div className="hidden md:block absolute top-8 right-0 translate-x-1/2 text-white/15 text-2xl">→</div>}
+                <div className="absolute top-0 left-0 right-0 h-px"
+                  style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.4),transparent)' }} />
+                <div className="text-5xl font-black mb-4 leading-none"
+                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.25),rgba(99,102,241,0.1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {s.n}
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{s.desc}</p>
+                {i < 2 && <div className="hidden md:block absolute top-8 -right-3 z-10 text-white/20 text-xl">→</div>}
               </motion.div>
             ))}
           </div>
@@ -390,14 +397,23 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`relative glass-card rounded-2xl p-7 flex flex-col ${p.highlight ? 'border-violet-500/50 animate-pulse-glow' : ''}`}
+                className={`relative glass-card rounded-2xl p-7 flex flex-col overflow-hidden ${p.highlight ? 'border-violet-500/40 animate-pulse-glow' : ''}`}
               >
+                {/* Accent top line */}
+                <div className="absolute top-0 left-0 right-0 h-px"
+                  style={{ background: p.highlight ? 'linear-gradient(90deg,transparent,rgba(124,58,237,0.8),rgba(99,102,241,0.6),transparent)' : 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)' }} />
+                {/* Pro inner glow */}
                 {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-24 pointer-events-none"
+                    style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.12) 0%, transparent 70%)' }} />
+                )}
+                {p.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg shadow-violet-500/40 z-10">
                     MOST POPULAR
                   </div>
                 )}
-                <div className="text-sm font-semibold text-white/50 uppercase tracking-widest mb-2">{p.name}</div>
+                <div className="text-xs font-semibold uppercase tracking-widest mb-2"
+                  style={{ color: p.highlight ? 'rgba(196,181,253,0.7)' : 'rgba(255,255,255,0.4)' }}>{p.name}</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-black text-white">{p.price}</span>
                   <span className="text-white/40 text-sm">{p.period}</span>
