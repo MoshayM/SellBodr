@@ -988,14 +988,14 @@ export default function OpportunityDetailPage() {
             <div className="card-dark p-5">
               <div className="flex items-center mb-2">
                 <div className="flex-1 text-right pr-2">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-red-400/60">← Costs</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-red-400/70">← Costs</span>
                 </div>
                 <div className="w-[90px] shrink-0 text-center">
-                  <div className="text-[10px] font-bold uppercase tracking-wide text-white/40">{platform}</div>
-                  <div className="text-[8px] text-white/50 mt-px">Cost Breakdown</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wide dark:text-white/40 text-slate-500">{platform}</div>
+                  <div className="text-[8px] dark:text-white/50 text-slate-400 mt-px">Cost Breakdown</div>
                 </div>
                 <div className="flex-1 pl-2">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-400/60">Revenue →</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-500/70">Revenue →</span>
                 </div>
               </div>
               <div className="flex items-center justify-center gap-5 mb-4">
@@ -1006,7 +1006,7 @@ export default function OpportunityDetailPage() {
                 ] as { c: string; label: string }[]).map(({ c, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-sm" style={{ background: c }} />
-                    <span className="text-[10px] text-white/55">{label}</span>
+                    <span className="text-[10px] dark:text-white/55 text-slate-500">{label}</span>
                   </div>
                 ))}
               </div>
@@ -1030,7 +1030,7 @@ export default function OpportunityDetailPage() {
                           {!r.positive && (
                             <>
                               {/* Outside label: always desktop, mobile only when bar is small */}
-                              <span className={`text-[10px] font-mono shrink-0 mr-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                              <span className={`text-[10px] font-mono shrink-0 mr-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-400' : 'dark:text-white/55 text-slate-500'}`}>
                                 -{f(r.value)}
                               </span>
                               {/* Bar — mobile: padded to fit inside label; desktop: no padding */}
@@ -1048,7 +1048,7 @@ export default function OpportunityDetailPage() {
                         </div>
                         {/* Center label */}
                         <div className="w-[80px] sm:w-[90px] shrink-0 flex items-center justify-center px-1">
-                          <span className={`text-center leading-tight ${r.isNet ? 'text-[11px] font-bold text-white/90' : r.isSubtotal ? 'text-[10px] font-semibold text-indigo-400' : 'text-[10px] text-white/45'}`}>
+                          <span className={`text-center leading-tight ${r.isNet ? 'text-[11px] font-bold dark:text-white/90 text-slate-800' : r.isSubtotal ? 'text-[10px] font-semibold text-indigo-500' : 'text-[10px] dark:text-white/45 text-slate-500'}`}>
                             {r.label}
                           </span>
                         </div>
@@ -1067,7 +1067,7 @@ export default function OpportunityDetailPage() {
                                 )}
                               </div>
                               {/* Outside label: always desktop, mobile only when bar is small */}
-                              <span className={`text-[10px] font-mono shrink-0 ml-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                              <span className={`text-[10px] font-mono shrink-0 ml-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-emerald-500' : 'dark:text-white/55 text-slate-500'}`}>
                                 +{f(r.value)}
                               </span>
                             </>
@@ -1087,7 +1087,7 @@ export default function OpportunityDetailPage() {
                   background: trueNet >= 0 ? 'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.03))' : 'linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03))',
                   border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
                 }}>
-                <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className="text-[10px] font-semibold dark:text-white/55 text-slate-500 uppercase tracking-widest">Net Profit / Unit</div>
                 <div className={`text-4xl font-black tabular-nums leading-none my-2 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
                   style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
                   {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
