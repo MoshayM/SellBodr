@@ -114,7 +114,9 @@ Return JSON exactly: {"subject":"...","body":"...","whatsappMessage":"..."}
     if (!result) return NextResponse.json(buildStaticRfq(supplier, product, marketplace));
     return NextResponse.json(result.result);
   } catch (err: any) {
-    if (err.message === 'Unauthorized') return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (err.message === 'Unauthorized' || err?.code?.startsWith('ERR_JWT')) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
     console.error('RFQ generation error:', err);
     return NextResponse.json({ message: 'RFQ generation failed' }, { status: 500 });
   }

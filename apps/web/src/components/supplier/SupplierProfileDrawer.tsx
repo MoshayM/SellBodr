@@ -64,10 +64,11 @@ export function SupplierProfileDrawer({ supplierId, open, onClose, context }: Dr
   const [rfqLoading, setRfqLoading] = useState(false);
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
 
-  const { data: supplier, isLoading } = useQuery({
+  const { data: supplier, isLoading, error } = useQuery({
     queryKey: ['supplier-profile', supplierId],
     queryFn: () => api.suppliers.getProfile(supplierId!),
     enabled: open && !!supplierId,
+    retry: false,
   });
 
   const { data: outreach } = useQuery({
@@ -149,7 +150,21 @@ export function SupplierProfileDrawer({ supplierId, open, onClose, context }: Dr
             <div className="animate-spin text-3xl text-green-600">&#x27F3;</div>
           </div>
         ) : !supplier ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400">Supplier not found</div>
+          <div className="flex-1 flex items-center justify-center px-6">
+            <div className="text-center">
+              <div className="text-3xl mb-3">
+                {(error as any)?.message?.includes('ailed') ? '⚠️' : '🔍'}
+              </div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                {(error as any)?.message?.includes('ailed') ? 'Could not load supplier' : 'Supplier not found'}
+              </p>
+              <p className="text-xs text-gray-400 leading-snug">
+                {(error as any)?.message?.includes('ailed')
+                  ? 'There was a problem reaching the server. Try closing and reopening.'
+                  : 'This supplier may have been removed or the link is invalid.'}
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
             {/* Identity */}

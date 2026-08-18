@@ -175,7 +175,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       marketplace: { code: sc.mCode, country: sc.mCountry, currency: sc.mCurrency },
     });
   } catch (err: any) {
-    if (err.message === 'Unauthorized') return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (err.message === 'Unauthorized' || err?.code?.startsWith('ERR_JWT')) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Supplier GET error:', err);
     return NextResponse.json({ message: 'Failed to load supplier' }, { status: 500 });
   }
