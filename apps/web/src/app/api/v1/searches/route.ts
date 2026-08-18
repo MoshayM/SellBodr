@@ -25,11 +25,28 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── Product image: Unsplash Source API — real photos, no AI hallucination ────
-function productImageUrl(_productId: string, title: string, category: string): string {
-  const words = [...title.split(' ').slice(0, 4), category.replace(/_/g, ' ').split(' ')[0]]
-    .filter(Boolean).map(w => w.toLowerCase());
-  return `https://source.unsplash.com/400x300/?${encodeURIComponent(words.join(','))}`;
+// ── Product image: Unsplash API (key required) → loremflickr fallback ───────
+async function productImageUrl(_productId: string, title: string, category: string): Promise<string> {
+  const words = [...title.split(' ').slice(0, 3), category.replace(/_/g, ' ').split(' ')[0]]
+    .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+  const kwPath = words.slice(0, 2).join(',') || 'product';
+  const kwQuery = words.join(' ') || title.split(' ').slice(0, 2).join(' ');
+
+  const key = process.env.UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_API_KEY || process.env.UNSPLASH_KEY;
+  if (key) {
+    try {
+      const res = await fetch(
+        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(kwQuery)}&orientation=landscape&client_id=${key}`,
+        { signal: AbortSignal.timeout(4000) }
+      );
+      if (res.ok) {
+        const data = await res.json() as any;
+        const url = data?.urls?.small || data?.urls?.regular;
+        if (url) return url;
+      }
+    } catch { /* fall through */ }
+  }
+  return `https://loremflickr.com/400/300/${kwPath}`;
 }
 
 // ── Indian city coordinates (for map pins) ────────────────────────────────────
@@ -411,7 +428,7 @@ export async function POST(req: NextRequest) {
       const margin    = saleMinor > 0 ? (net / saleMinor) * 100 : 0;
       const roi       = srcMinor  > 0 ? (net / srcMinor)  * 100 : 0;
 
-      const imgUrl = productImageUrl(productId, c.title, c.category ?? '');
+      const imgUrl = await productImageUrl(productId, c.title, c.category ?? '');
 
       const desc = [
         c.description ?? '',

@@ -478,8 +478,8 @@ export default function OpportunityDetailPage() {
                 onError={e => {
                   const el = e.target as HTMLImageElement;
                   el.onerror = null;
-                  const q = encodeURIComponent((opp.product?.title || 'product').split(' ').slice(0, 4).join(','));
-                  el.src = `https://source.unsplash.com/128x128/?${q}`;
+                  const words = (opp.product?.title || 'product').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+                  el.src = `https://loremflickr.com/128/128/${words.join(',') || 'product'}`;
                 }}
               />
             ) : (

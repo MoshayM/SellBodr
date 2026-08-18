@@ -136,10 +136,10 @@ export async function GET(req: NextRequest) {
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
       const storedUrl = (r.pImageUrl as string) || '';
-      const needsImage = !storedUrl || storedUrl.includes('loremflickr.com') || storedUrl.includes('picsum.photos') || storedUrl.includes('pollinations.ai');
+      const needsImage = !storedUrl || storedUrl.includes('source.unsplash.com') || storedUrl.includes('picsum.photos') || storedUrl.includes('pollinations.ai');
       const imageUrl = needsImage ? (() => {
-        const words = [...String(r.pTitle || '').split(' ').slice(0, 4), String(r.pCategory || '').replace(/_/g, ' ').split(' ')[0]].filter(Boolean).map(w => w.toLowerCase());
-        return `https://source.unsplash.com/400x300/?${encodeURIComponent(words.join(','))}`;
+        const words = [...String(r.pTitle || '').split(' ').slice(0, 3), String(r.pCategory || '').replace(/_/g, ' ').split(' ')[0]].filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+        return `https://loremflickr.com/400/300/${words.slice(0, 2).join(',') || 'product'}`;
       })() : storedUrl;
 
       const currency = (r.pmCurrency ?? r.mCurrency ?? 'USD') as string;
