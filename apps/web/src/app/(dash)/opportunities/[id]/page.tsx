@@ -10,6 +10,45 @@ import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Brand Builder', 'Bundle', 'Recommendation', 'Report'];
 
+/* Animated progress button — shows icon + label + live % counter while pending */
+function GenProgressButton({
+  isPending, icon, label, pendingLabel, onClick, disabled = false, className = '',
+}: {
+  isPending: boolean; icon: string; label: string; pendingLabel: string;
+  onClick?: () => void; disabled?: boolean; className?: string;
+}) {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    if (!isPending) { setPct(0); return; }
+    let v = 0;
+    const id = setInterval(() => {
+      const step = v < 60 ? 4 : v < 80 ? 1.2 : v < 90 ? 0.4 : 0.1;
+      v = Math.min(92, v + step);
+      setPct(Math.round(v));
+      if (v >= 92) clearInterval(id);
+    }, 280);
+    return () => clearInterval(id);
+  }, [isPending]);
+
+  if (isPending) {
+    return (
+      <button disabled className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold whitespace-nowrap select-none ${className}`}
+        style={{ boxShadow: '0 4px 15px rgba(124,58,237,0.4)' }}>
+        <span className="pointer-events-none absolute inset-0 -translate-x-full [animation:btn-sweep_1.8s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <span className="shrink-0 text-base">{icon}</span>
+        <span className="truncate max-w-[130px]">{pendingLabel}</span>
+        <span className="ml-auto pl-2 text-white/55 text-xs font-mono tabular-nums shrink-0">{pct}%</span>
+      </button>
+    );
+  }
+  return (
+    <button onClick={onClick} disabled={disabled}
+      className={`btn-primary text-sm disabled:opacity-50 whitespace-nowrap ${className}`}>
+      {icon} {label}
+    </button>
+  );
+}
+
 function minor(v: number) { return (v / 100).toFixed(2); }
 
 // ── Trade Intelligence Data ────────────────────────────────────────────────────
@@ -517,18 +556,17 @@ export default function OpportunityDetailPage() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button
+            <GenProgressButton
+              isPending={genLoading}
+              icon="✨" label="Generate Launch Assets" pendingLabel="Launch assets…"
               onClick={() => { setGenLoading(true); genAssets.mutate(); }}
-              disabled={genLoading}
-              className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
-              {genLoading ? '⟳ Generating…' : '✨ Generate Launch Assets'}
-            </button>
+            />
             <button
               onClick={() => rescore.mutate()}
               disabled={rescore.isPending}
               title="Re-run the AI scoring pipeline on this opportunity"
               className="text-xs px-3 py-2 rounded-xl border border-white/10 text-white/40 hover:text-white hover:border-white/25 transition-all disabled:opacity-40 whitespace-nowrap">
-              {rescore.isPending ? '⟳ Rescoring…' : rescore.isSuccess ? '✓ Rescored' : '↻ Re-score'}
+              {rescore.isPending ? '↻ Rescoring…' : rescore.isSuccess ? '✓ Rescored' : '↻ Re-score'}
             </button>
           </div>
         </div>
@@ -1418,10 +1456,11 @@ export default function OpportunityDetailPage() {
                 <h2 className="font-semibold text-white">Ad Campaign Generator</h2>
                 <p className="text-xs text-white/40 mt-0.5">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
               </div>
-              <button onClick={() => genAds.mutate()} disabled={genAds.isPending}
-                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
-                {genAds.isPending ? '⟳ Generating…' : genAds.data ? '↻ Regenerate' : '✨ Generate Ads'}
-              </button>
+              <GenProgressButton
+                isPending={genAds.isPending}
+                icon="✨" label={genAds.data ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
+                onClick={() => genAds.mutate()}
+              />
             </div>
 
             {!genAds.data && !genAds.isPending && (
@@ -1605,10 +1644,11 @@ export default function OpportunityDetailPage() {
                 <h2 className="font-semibold text-white">Growth Playbook</h2>
                 <p className="text-xs text-white/40 mt-0.5">Personalized strategy for this product &amp; marketplace</p>
               </div>
-              <button onClick={() => genGrowth.mutate()} disabled={genGrowth.isPending}
-                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
-                {genGrowth.isPending ? '⟳ Generating…' : genGrowth.data ? '↻ Refresh' : '🚀 Build Playbook'}
-              </button>
+              <GenProgressButton
+                isPending={genGrowth.isPending}
+                icon="🚀" label={genGrowth.data ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
+                onClick={() => genGrowth.mutate()}
+              />
             </div>
 
             {!genGrowth.data && !genGrowth.isPending && (
@@ -1795,10 +1835,11 @@ export default function OpportunityDetailPage() {
                 <h2 className="font-semibold text-white">AI Brand Builder</h2>
                 <p className="text-xs text-white/40 mt-0.5">Generate brand names, positioning, and visual direction</p>
               </div>
-              <button onClick={() => genBrand.mutate()} disabled={genBrand.isPending}
-                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
-                {genBrand.isPending ? '⟳ Generating…' : genBrand.data ? '↻ Regenerate' : '✨ Build Brand'}
-              </button>
+              <GenProgressButton
+                isPending={genBrand.isPending}
+                icon="🎨" label={genBrand.data ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
+                onClick={() => genBrand.mutate()}
+              />
             </div>
 
             {!genBrand.data && !genBrand.isPending && (

@@ -159,6 +159,11 @@ img {
   100% { background-position: 400% center; }
 }
 
+@keyframes btn-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+
 @keyframes slide-up {
   from { transform: translateY(30px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
