@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge, ScoreBadge } from '@/components/ui/ScoreGauge';
@@ -32,12 +32,15 @@ function GenProgressButton({
 
   if (isPending) {
     return (
-      <button disabled className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold whitespace-nowrap select-none ${className}`}
-        style={{ boxShadow: '0 4px 15px rgba(124,58,237,0.4)' }}>
-        <span className="pointer-events-none absolute inset-0 -translate-x-full [animation:btn-sweep_1.8s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        <span className="shrink-0 text-base">{icon}</span>
-        <span className="truncate max-w-[130px]">{pendingLabel}</span>
-        <span className="ml-auto pl-2 text-white/55 text-xs font-mono tabular-nums shrink-0">{pct}%</span>
+      <button disabled
+        className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl text-white text-sm font-semibold whitespace-nowrap select-none ${className}`}
+        style={{ background: 'rgba(88,28,220,0.45)', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}>
+        {/* fill bar grows left → right */}
+        <span className="absolute inset-y-0 left-0 rounded-xl transition-[width] duration-300 ease-out"
+          style={{ width: `${pct}%`, background: 'linear-gradient(to right,#7c3aed,#6366f1)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)' }} />
+        <span className="relative z-10 shrink-0">{icon}</span>
+        <span className="relative z-10 truncate max-w-[130px]">{pendingLabel}</span>
+        <span className="relative z-10 ml-auto pl-2 text-white/70 text-xs font-mono tabular-nums shrink-0">{pct}%</span>
       </button>
     );
   }
@@ -415,7 +418,7 @@ export default function OpportunityDetailPage() {
     setIsGuest(!localStorage.getItem('bs_access_token'));
     setIsFree(!isPro());
   }, []);
-  const [genLoading, setGenLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
   const [extraSuppliers, setExtraSuppliers] = useState<any[]>([]);
   const [fetchingMore, setFetchingMore] = useState(false);
@@ -442,7 +445,11 @@ export default function OpportunityDetailPage() {
 
   const genAssets = useMutation({
     mutationFn: () => api.opportunities.generateAssets(id),
-    onSuccess: () => setGenLoading(false),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listing', id] });
+      queryClient.invalidateQueries({ queryKey: ['keywords', id] });
+    },
+    onError: (e: any) => alert(e?.message || 'Launch assets generation failed — check AI keys in Settings'),
   });
 
   const genReport = useMutation({
@@ -557,9 +564,9 @@ export default function OpportunityDetailPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <GenProgressButton
-              isPending={genLoading}
-              icon="✨" label="Generate Launch Assets" pendingLabel="Launch assets…"
-              onClick={() => { setGenLoading(true); genAssets.mutate(); }}
+              isPending={genAssets.isPending}
+              icon="✨" label={genAssets.isSuccess ? '↻ Regenerate Assets' : 'Generate Launch Assets'} pendingLabel="Launch assets…"
+              onClick={() => genAssets.mutate()}
             />
             <button
               onClick={() => rescore.mutate()}
@@ -1981,10 +1988,11 @@ export default function OpportunityDetailPage() {
                 <h2 className="font-semibold text-white">Bundle Generator</h2>
                 <p className="text-xs text-white/40 mt-0.5">AI-designed product bundles that increase AOV and reduce competition</p>
               </div>
-              <button onClick={() => genBundle.mutate()} disabled={genBundle.isPending}
-                className="btn-primary text-sm disabled:opacity-50 whitespace-nowrap">
-                {genBundle.isPending ? '⟳ Generating…' : genBundle.data ? '↻ Regenerate' : '📦 Generate Bundles'}
-              </button>
+              <GenProgressButton
+                isPending={genBundle.isPending}
+                icon="📦" label={genBundle.data ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
+                onClick={() => genBundle.mutate()}
+              />
             </div>
 
             {!genBundle.data && !genBundle.isPending && (

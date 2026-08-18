@@ -1,0 +1,129 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
+import { getDb } from '@/lib/db';
+import { ensureSchema } from '@/lib/schema';
+import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 45;
+
+const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
+
+function staticBundles(title: string, category: string, mkt: string) {
+  const cat = category.replace(/_/g, ' ') || 'product';
+  return {
+    bundles: [
+      {
+        name: `Premium ${title} Starter Kit`,
+        products: [title, `${cat} Care Kit`, 'Branded Packaging Box', 'Thank You Card'],
+        bundlePrice: '$49.99',
+        individualTotal: '$62.00',
+        margin: '38%',
+        aovLift: '+$18',
+        rationale: 'The most popular bundle type — bundles the hero product with care/maintenance items. Reduces competition by creating a unique ASIN not directly comparable to competitors.',
+        targetBuyer: 'First-time buyers, gift shoppers',
+        competitionLevel: 'Low — unique bundle ASIN',
+      },
+      {
+        name: `${title} Gift Set`,
+        products: [title, `${cat} Pouch`, 'Gift Wrapping', 'Personalised Note Card'],
+        bundlePrice: '$44.99',
+        individualTotal: '$55.00',
+        margin: '34%',
+        aovLift: '+$14',
+        rationale: 'Gift sets command a premium during holidays and peak gifting seasons. Easy to photograph for lifestyle imagery.',
+        targetBuyer: 'Gift buyers, seasonal shoppers',
+        competitionLevel: 'Low — premium positioning',
+      },
+      {
+        name: `Value 3-Pack ${title}`,
+        products: [`${title} x3`, 'Bulk Packaging'],
+        bundlePrice: '$34.99',
+        individualTotal: '$45.00',
+        margin: '42%',
+        aovLift: '+$12',
+        rationale: 'Multi-packs appeal to repeat buyers and reduce shipping cost per unit. Strong for Subscribe & Save enrollment.',
+        targetBuyer: 'Repeat buyers, households',
+        competitionLevel: 'Medium — common strategy',
+      },
+      {
+        name: `${title} Complete Collection`,
+        products: [title, `${cat} Variant A`, `${cat} Variant B`, 'Storage Bag'],
+        bundlePrice: '$79.99',
+        individualTotal: '$95.00',
+        margin: '36%',
+        aovLift: '+$35',
+        rationale: 'Premium complete set for buyers who want everything. Highest AOV lift. Works best for fashion, home decor, and lifestyle categories.',
+        targetBuyer: 'Enthusiast buyers, collectors',
+        competitionLevel: 'Low — highest price point deters imitators',
+      },
+      {
+        name: `${mkt} Bestseller Bundle`,
+        products: [title, `Complementary ${cat} Accessory`, 'Quick-Start Guide'],
+        bundlePrice: '$39.99',
+        individualTotal: '$48.00',
+        margin: '33%',
+        aovLift: '+$11',
+        rationale: `Marketplace-specific bundle optimised for ${mkt} search algorithms. Adding a guide/instructions increases perceived value.`,
+        targetBuyer: 'Price-conscious buyers on Amazon',
+        competitionLevel: 'Medium',
+      },
+    ],
+  };
+}
+
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  // Auth optional — expired/missing token falls back to free-tier
+  let freeOnly = true;
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, ACCESS_SECRET);
+      freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
+    } catch { /* treat as free guest */ }
+  }
+
+  try {
+    const db = getDb();
+    await ensureSchema(db);
+
+    const r = await db.execute({
+      sql: `SELECT p.title, p.category, m.code as mCode, m.country as mCountry
+            FROM "Opportunity" o
+            LEFT JOIN "Product" p ON o.productId = p.id
+            LEFT JOIN "Marketplace" m ON o.marketplaceId = m.id
+            WHERE o.id = ?`,
+      args: [params.id],
+    });
+    if (!r.rows.length) return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    const opp = r.rows[0] as any;
+
+    const title    = String(opp.title    || '');
+    const category = String(opp.category || '').replace(/_/g, ' ');
+    const mkt      = String(opp.mCode    || '').replace(/_/g, ' ').toUpperCase();
+    const country  = String(opp.mCountry || '').toUpperCase();
+
+    const available = PROVIDERS.filter(p =>
+      p.available() && (!freeOnly || (FREE_PROVIDER_IDS as readonly string[]).includes(p.id))
+    );
+    if (!available.length) return NextResponse.json(staticBundles(title, category, mkt));
+
+    const best = available.sort((a, b) => b.quality - a.quality)[0];
+    const result = await tryProvider<any>(best, best.discoveryModel, [
+      { role: 'system', content: 'You are an expert eCommerce product bundling strategist. Return ONLY valid JSON.' },
+      { role: 'user', content: `Create 5 profitable bundle ideas for:
+Product: ${title}
+Category: ${category}
+Marketplace: ${mkt} (${country})
+
+Return JSON exactly:
+{"bundles":[{"name":"...","products":["product1","product2","product3"],"bundlePrice":"$XX.XX","individualTotal":"$XX.XX","margin":"XX%","aovLift":"+$XX","rationale":"...","targetBuyer":"...","competitionLevel":"Low|Medium|High"},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."},{"name":"...","products":[...],"bundlePrice":"...","individualTotal":"...","margin":"...","aovLift":"...","rationale":"...","targetBuyer":"...","competitionLevel":"..."}]}
+Make bundles specific and realistic for ${mkt}.` },
+    ], { maxTokens: 1200 });
+
+    return NextResponse.json(result?.result ?? staticBundles(title, category, mkt));
+  } catch (err: any) {
+    console.error('Bundle generation error:', err);
+    return NextResponse.json({ message: 'Bundle generation failed' }, { status: 500 });
+  }
+}
