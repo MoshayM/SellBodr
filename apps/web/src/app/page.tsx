@@ -8,7 +8,7 @@ import { ParticleCanvas } from '@/components/ui/ParticleCanvas';
 const FEATURES = [
   { icon: '🎯', title: 'AI Opportunity Scoring', desc: 'Every product scored 0–100 across demand, competition, margin, trend, saturation, shipping, and marketplace fit — instantly.', color: 'from-violet-500/20 to-purple-500/10' },
   { icon: '💰', title: 'Landed-Cost Profit Model', desc: 'Full P&L: product cost + freight + duties + marketplace fees + ad spend = real net profit per unit.', color: 'from-emerald-500/20 to-green-500/10' },
-  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 76 marketplace–country combinations.', color: 'from-cyan-500/20 to-blue-500/10' },
+  { icon: '🔬', title: 'Deep Market Research', desc: 'Competitor analysis, review mining, price trends, and saturation scores across 9 major global marketplaces.', color: 'from-cyan-500/20 to-blue-500/10' },
   { icon: '🗺', title: 'Global Supplier Map', desc: 'Interactive satellite map pins every verified supplier worldwide. Click for precise coordinates, city, and direct Google Maps links.', color: 'from-orange-500/20 to-amber-500/10' },
   { icon: '⚡', title: 'Live AI Scan Progress', desc: 'Watch 7 AI stages run in real time — Discovering → Demand → Competition → Suppliers → Profit → Scoring → Verdicts.', color: 'from-pink-500/20 to-rose-500/10' },
   { icon: '🚀', title: 'AI Launch Assets', desc: 'SEO-optimised title, bullets, description, keywords, and pricing — generated and ready to publish in seconds.', color: 'from-indigo-500/20 to-blue-500/10' },
@@ -64,7 +64,7 @@ const PLANS = [
 ];
 
 const STATS = [
-  { value: '76', label: 'Marketplaces covered' },
+  { value: '9', label: 'Marketplaces covered' },
   { value: '7', label: 'AI scoring dimensions' },
   { value: '< 60s', label: 'From search to scores' },
   { value: '100%', label: 'AI-powered analysis' },
@@ -220,7 +220,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-white/70 mb-8 border border-white/10"
           >
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            AI-powered · 76 marketplaces · Live data
+            AI-powered · 9 marketplaces · Live data
           </motion.div>
 
           <motion.h1

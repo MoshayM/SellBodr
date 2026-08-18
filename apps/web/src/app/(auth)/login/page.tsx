@@ -190,7 +190,7 @@ export default function LoginPage() {
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-10 grid grid-cols-3 gap-4">
-            {[{ val: '7', label: 'AI score dimensions' }, { val: '76', label: 'Marketplaces' }, { val: '< 60s', label: 'Scan to verdict' }].map(s => (
+            {[{ val: '7', label: 'AI score dimensions' }, { val: '9', label: 'Marketplaces' }, { val: '< 60s', label: 'Scan to verdict' }].map(s => (
               <div key={s.label} className="glass rounded-xl p-4 text-center">
                 <div className="text-2xl font-black text-gradient mb-1">{s.val}</div>
                 <div className="text-white/35 text-xs leading-snug">{s.label}</div>
