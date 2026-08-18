@@ -2146,11 +2146,11 @@ export default function OpportunityDetailPage() {
         <div className="card-dark p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-white">Opportunity Report</h2>
-            <button onClick={() => genReport.mutate()}
-              disabled={genReport.isPending}
-              className="btn-primary text-sm disabled:opacity-50">
-              {genReport.isPending ? '&#x27F3; Generating…' : '📄 Generate Report'}
-            </button>
+            <GenProgressButton
+              isPending={genReport.isPending}
+              icon="📄" label="Generate Report" pendingLabel="Building report…"
+              onClick={() => genReport.mutate()}
+            />
           </div>
           {genReport.data ? (
             <div className="space-y-3">
