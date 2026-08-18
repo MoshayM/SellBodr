@@ -1015,12 +1015,11 @@ export default function OpportunityDetailPage() {
                   const barPct = Math.min(92, (r.value / maxDivRef) * 100);
                   const rowH = r.isNet ? 30 : r.isSubtotal ? 24 : 20;
                   const barH = r.isNet ? 'h-3.5' : r.isSubtotal ? 'h-3' : 'h-2';
-                  // Adaptive label: inside bar when it's large enough to hold text
+                  // Mobile only: move label inside bar when bar is wide (> 55%)
+                  // Desktop (md+): label always stays outside — original design unchanged
                   const inside = barPct > 55;
-                  // Text size scaled to bar height so it fits inside
+                  // Text size matches bar height so it fits cleanly inside (mobile only)
                   const inlineSz = r.isNet ? 'text-[10px]' : r.isSubtotal ? 'text-[9px]' : 'text-[8px]';
-                  // Padding clears rounded cap of bar (half of bar height in px)
-                  const capPad = r.isNet ? 8 : r.isSubtotal ? 7 : 5;
                   return (
                     <div key={r.label}>
                       {r.isSubtotal && <div className="profit-sep h-px my-1" />}
@@ -1030,15 +1029,16 @@ export default function OpportunityDetailPage() {
                         <div className="flex-1 flex items-center justify-end overflow-hidden split-divider-l">
                           {!r.positive && (
                             <>
-                              {!inside && (
-                                <span className={`text-[10px] font-mono shrink-0 mr-1.5 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
-                                  -{f(r.value)}
-                                </span>
-                              )}
-                              <div className={`${barH} rounded-l-full shrink-0 flex items-center justify-start`}
-                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden', paddingLeft: inside ? capPad : 0 }}>
+                              {/* Outside label: always desktop, mobile only when bar is small */}
+                              <span className={`text-[10px] font-mono shrink-0 mr-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                                -{f(r.value)}
+                              </span>
+                              {/* Bar — mobile: padded to fit inside label; desktop: no padding */}
+                              <div className={`${barH} rounded-l-full shrink-0 flex items-center justify-start ${inside ? 'pl-1.5 md:pl-0' : ''}`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden' }}>
+                                {/* Inside label — mobile only */}
                                 {inside && (
-                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap ${r.isNet ? 'font-bold text-white' : r.isSubtotal ? 'text-indigo-100/90' : 'text-white/85'}`}>
+                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap md:hidden ${r.isNet ? 'font-bold text-white' : r.isSubtotal ? 'text-indigo-100/90' : 'text-white/85'}`}>
                                     -{f(r.value)}
                                   </span>
                                 )}
@@ -1056,19 +1056,20 @@ export default function OpportunityDetailPage() {
                         <div className="flex-1 flex items-center justify-start overflow-hidden split-divider-r">
                           {r.positive && (
                             <>
-                              <div className={`${barH} rounded-r-full shrink-0 flex items-center justify-end`}
-                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden', paddingRight: inside ? capPad : 0 }}>
+                              {/* Bar — mobile: padded to fit inside label; desktop: no padding */}
+                              <div className={`${barH} rounded-r-full shrink-0 flex items-center justify-end ${inside ? 'pr-1.5 md:pr-0' : ''}`}
+                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}`, overflow: 'hidden' }}>
+                                {/* Inside label — mobile only */}
                                 {inside && (
-                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap ${r.isNet ? 'font-bold text-white' : 'text-white/85'}`}>
+                                  <span className={`${inlineSz} leading-none font-mono whitespace-nowrap md:hidden ${r.isNet ? 'font-bold text-white' : 'text-white/85'}`}>
                                     +{f(r.value)}
                                   </span>
                                 )}
                               </div>
-                              {!inside && (
-                                <span className={`text-[10px] font-mono shrink-0 ml-1.5 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
-                                  +{f(r.value)}
-                                </span>
-                              )}
+                              {/* Outside label: always desktop, mobile only when bar is small */}
+                              <span className={`text-[10px] font-mono shrink-0 ml-1.5 ${inside ? 'hidden md:inline' : ''} ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                                +{f(r.value)}
+                              </span>
                             </>
                           )}
                         </div>
