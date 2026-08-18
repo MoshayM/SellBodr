@@ -128,9 +128,9 @@ export const PROVIDERS: Provider[] = [
     callJSON: callMistral,
   },
   {
-    id: 'groq', name: 'Groq (Llama/Mixtral)', quality: 0.75,
+    id: 'groq', name: 'Groq (Llama)', quality: 0.75,
     discoveryModel:  'llama-3.1-8b-instant',
-    validationModel: 'mixtral-8x7b-32768',
+    validationModel: 'llama-3.3-70b-versatile',
     available: () => !!process.env.GROQ_API_KEY?.trim(),
     callJSON: callGroq,
   },
@@ -246,8 +246,8 @@ export function titleSimilarity(a: string, b: string): number {
 
 export const MODELS = {
   FLASH:    'llama-3.1-8b-instant',
-  BALANCED: 'mixtral-8x7b-32768',
-  CAPABLE:  'llama-3.1-70b-versatile',
+  BALANCED: 'llama-3.1-8b-instant',
+  CAPABLE:  'llama-3.3-70b-versatile',
 } as const;
 
 export async function groqChat(
