@@ -201,6 +201,7 @@ export default function WishlistPage() {
           </button>
         </div>
       ) : (
+        <>
         {/* Mobile card list */}
         <div className="sm:hidden space-y-2">
           {filtered.map((opp: any) => {
@@ -316,6 +317,7 @@ export default function WishlistPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );
