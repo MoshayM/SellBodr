@@ -9,7 +9,8 @@ export const maxDuration = 60;
 // GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
-  if (secret !== process.env.ADMIN_SECRET && secret !== process.env.JWT_SECRET) {
+  const validSecret = process.env.ADMIN_SECRET || process.env.JWT_ACCESS_SECRET;
+  if (!validSecret || secret !== validSecret) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
