@@ -28,12 +28,17 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const token = req.headers.get('authorization')?.split(' ')[1];
-    if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    const { payload: tokenPayload } = await jwtVerify(token, ACCESS_SECRET);
-    const freeOnly = tokenPayload.role !== 'admin' && tokenPayload.plan !== 'pro';
+  // Auth is optional — expired/missing token falls back to free-tier scoring
+  let freeOnly = true;
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, ACCESS_SECRET);
+      freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
+    } catch { /* invalid/expired token — treat as free guest */ }
+  }
 
+  try {
     const db = getDb();
     await ensureSchema(db);
 

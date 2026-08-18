@@ -56,10 +56,15 @@ function staticAds(title: string, category: string, mkt: string, country: string
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Auth is optional — expired/missing token falls back to free-tier, never 500s
+    let freeOnly = true;
     const token = req.headers.get('authorization')?.split(' ')[1];
-    if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    const { payload: tokenPayload } = await jwtVerify(token, ACCESS_SECRET);
-    const freeOnly = tokenPayload.role !== 'admin' && tokenPayload.plan !== 'pro';
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, ACCESS_SECRET);
+        freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
+      } catch { /* invalid/expired token — treat as free guest */ }
+    }
 
     const db = getDb();
     await ensureSchema(db);
@@ -148,7 +153,6 @@ Make content specific, conversion-focused, and platform-native. Avoid generic ma
 
     return NextResponse.json(content);
   } catch (err: any) {
-    if (err.message === 'Unauthorized') return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     console.error('Ads generation error:', err);
     return NextResponse.json({ message: 'Ad generation failed' }, { status: 500 });
   }

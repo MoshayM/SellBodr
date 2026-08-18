@@ -56,10 +56,15 @@ function staticBrand(title: string, category: string) {
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Auth is optional — expired/missing token falls back to free-tier, never 500s
+    let freeOnly = true;
     const token = req.headers.get('authorization')?.split(' ')[1];
-    if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    const { payload: tokenPayload } = await jwtVerify(token, ACCESS_SECRET);
-    const freeOnly = tokenPayload.role !== 'admin' && tokenPayload.plan !== 'pro';
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, ACCESS_SECRET);
+        freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
+      } catch { /* invalid/expired token — treat as free guest */ }
+    }
 
     const db = getDb();
     await ensureSchema(db);
@@ -124,3 +129,4 @@ Make everything specific to this product. Colours must be valid hex codes.`,
     return NextResponse.json({ message: 'Brand generation failed' }, { status: 500 });
   }
 }
+
