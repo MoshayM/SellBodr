@@ -67,7 +67,7 @@ const STATS = [
   { value: '9', label: 'Marketplace platforms' },
   { value: '37', label: 'Countries covered' },
   { value: '7', label: 'AI scoring dimensions' },
-  { value: '< 60s', label: 'Scan to scores' },
+  { value: '< 60s', label: 'First opportunity scored' },
 ];
 
 function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; delay: number; className?: string }) {
@@ -259,9 +259,9 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.85 }}
-            className="text-white/30 text-sm mb-12"
+            className="text-white/50 text-sm mb-12"
           >
-            Free to start · No credit card
+            Free to start · No credit card · Cancel anytime
           </motion.p>
 
           {/* Floating opportunity cards */}
@@ -300,7 +300,7 @@ export default function LandingPage() {
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ background: 'radial-gradient(circle at 50% 0%, rgba(124,58,237,0.08) 0%, transparent 70%)' }} />
               <div className="text-3xl sm:text-4xl font-black text-gradient mb-1">{s.value}</div>
-              <div className="text-xs text-white/40 leading-snug">{s.label}</div>
+              <div className="text-xs text-white/60 leading-snug">{s.label}</div>
             </motion.div>
           ))}
         </div>
@@ -312,7 +312,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <div className="text-sm text-violet-400 font-medium mb-3 uppercase tracking-widest">Platform capabilities</div>
             <h2 className="text-4xl sm:text-5xl font-black mb-4">Everything you need to <span className="text-gradient">sell globally</span></h2>
-            <p className="text-white/40 text-lg max-w-2xl mx-auto">From product discovery to live listing — the complete AI stack for cross-border sellers.</p>
+            <p className="text-white/65 text-lg max-w-2xl mx-auto">From product discovery to live listing — the complete AI stack for cross-border sellers.</p>
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f, i) => (
@@ -327,7 +327,7 @@ export default function LandingPage() {
               >
                 <div className="text-3xl mb-4">{f.icon}</div>
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-gradient transition-all">{f.title}</h3>
-                <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
+                <p className="text-white/65 text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -358,7 +358,7 @@ export default function LandingPage() {
                   {s.n}
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
-                <p className="text-white/40 text-sm leading-relaxed">{s.desc}</p>
+                <p className="text-white/65 text-sm leading-relaxed">{s.desc}</p>
                 {i < 2 && <div className="hidden md:block absolute top-8 -right-3 z-10 text-white/20 text-xl">→</div>}
               </motion.div>
             ))}
@@ -372,7 +372,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <div className="text-sm text-emerald-400 font-medium mb-3 uppercase tracking-widest">Simple pricing</div>
             <h2 className="text-4xl sm:text-5xl font-black mb-4">Full AI power for <span className="text-gradient">less than a coffee</span></h2>
-            <p className="text-white/40 text-lg max-w-xl mx-auto">Start free with no credit card. Upgrade to Pro for $9/mo and get unlimited AI scans, full scoring, and supplier data.</p>
+            <p className="text-white/65 text-lg max-w-xl mx-auto">Start free — no credit card. Upgrade to Pro for $9/mo and unlock unlimited AI scans, full scoring, and live supplier data.</p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {PLANS.map((p, i) => (
@@ -398,7 +398,7 @@ export default function LandingPage() {
                   </div>
                 )}
                 <div className="text-xs font-semibold uppercase tracking-widest mb-2"
-                  style={{ color: p.highlight ? 'rgba(196,181,253,0.7)' : 'rgba(255,255,255,0.4)' }}>{p.name}</div>
+                  style={{ color: p.highlight ? 'rgba(196,181,253,0.9)' : 'rgba(255,255,255,0.7)' }}>{p.name}</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-4xl font-black text-white">{p.price}</span>
                   <span className="text-white/40 text-sm">{p.period}</span>
@@ -406,16 +406,18 @@ export default function LandingPage() {
                 {p.highlight && (
                   <div className="text-xs text-emerald-400/80 mb-2">7-day free trial · Cancel anytime</div>
                 )}
-                <p className="text-white/40 text-sm mb-6">{p.desc}</p>
+                <p className="text-white/65 text-sm mb-6">{p.desc}</p>
                 <ul className="space-y-2.5 flex-1 mb-7">
                   {p.features.map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/70">
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
                       <span className="text-emerald-400 text-base flex-shrink-0">✓</span>{f}
                     </li>
                   ))}
                 </ul>
                 <Link href={p.ctaHref}
-                  className={p.highlight ? 'btn-primary text-sm justify-center min-h-0 py-3' : 'btn-secondary text-sm justify-center min-h-0 py-3'}>
+                  className={p.highlight
+                    ? 'btn-primary text-sm justify-center min-h-0 py-3'
+                    : 'inline-flex items-center justify-center text-sm py-3 px-6 rounded-xl font-semibold text-white border-2 border-white/35 hover:border-violet-400/70 hover:bg-violet-500/8 hover:text-white transition-all duration-200 w-full'}>
                   {p.cta}
                 </Link>
               </motion.div>
@@ -423,7 +425,7 @@ export default function LandingPage() {
           </div>
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="text-center text-white/30 text-xs mt-6">
+            className="text-center text-white/50 text-xs mt-6">
             No credit card required for Starter · Pro includes a 7-day free trial · Prices in USD
           </motion.p>
         </div>
@@ -435,7 +437,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="text-4xl mb-4">📱</div>
             <h2 className="text-3xl font-black mb-3">Available on every device</h2>
-            <p className="text-white/40 mb-8 max-w-lg mx-auto">Install SellBodr as an app on Android, iOS, Mac, or Windows — works offline, loads instantly.</p>
+            <p className="text-white/65 mb-8 max-w-lg mx-auto">Install SellBodr as an app on Android, iOS, Mac, or Windows — works offline, loads instantly.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {/* Android / Chrome — clickable if prompt available */}
               {installPrompt ? (
@@ -517,11 +519,11 @@ export default function LandingPage() {
           <h2 className="text-5xl sm:text-6xl font-black mb-6 leading-tight">
             Start scouting <span className="text-gradient">today</span>
           </h2>
-          <p className="text-white/40 text-lg mb-10">AI-powered intelligence to source in India and sell on the world's top marketplaces.</p>
+          <p className="text-white/65 text-lg mb-10">AI-powered intelligence to source in India and sell on the world's top marketplaces.</p>
           <Link href="/register" className="btn-primary text-lg px-10 py-5 min-h-0 rounded-2xl shadow-2xl shadow-violet-500/30 inline-flex">
             Start scouting →
           </Link>
-          <p className="text-white/25 text-sm mt-5">Free to start · No credit card · Cancel anytime</p>
+          <p className="text-white/50 text-sm mt-5">Free to start · No credit card · Cancel anytime</p>
         </motion.div>
       </section>
 
@@ -534,7 +536,7 @@ export default function LandingPage() {
             <span className="font-bold text-white">SellBodr</span>
           </div>
           <p className="text-white/25 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>
-          <div className="flex items-center gap-6 text-sm text-white/40">
+          <div className="flex items-center gap-6 text-sm text-white/55">
             <Link href="/guide" className="hover:text-white transition-colors">User Guide</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>

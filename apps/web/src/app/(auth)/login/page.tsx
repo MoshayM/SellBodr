@@ -185,7 +185,7 @@ export default function LoginPage() {
               <span className="text-gradient">winning product</span><br />
               is waiting.
             </h1>
-            <p className="text-white/45 text-lg leading-relaxed max-w-md">
+            <p className="text-white/65 text-lg leading-relaxed max-w-md">
               AI scouts India-sourced products, scores each one across 7 dimensions, and gives you a Launch / Hold / Reject decision with supplier contacts ready.
             </p>
           </motion.div>
@@ -193,17 +193,17 @@ export default function LoginPage() {
             {[{ val: '9', label: 'Marketplaces' }, { val: '37', label: 'Countries' }, { val: '< 60s', label: 'Scan to verdict' }].map(s => (
               <div key={s.label} className="glass rounded-xl p-4 text-center">
                 <div className="text-2xl font-black text-gradient mb-1">{s.val}</div>
-                <div className="text-white/35 text-xs leading-snug">{s.label}</div>
+                <div className="text-white/55 text-xs leading-snug">{s.label}</div>
               </div>
             ))}
           </motion.div>
         </div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="relative z-10 glass rounded-xl p-5">
-          <p className="text-white/50 text-sm leading-relaxed">Every opportunity is scored across 7 AI dimensions — demand, competition, margin, trend, saturation, shipping, and marketplace fit — giving you a clear Launch / Hold / Reject verdict.</p>
+          <p className="text-white/65 text-sm leading-relaxed italic">"Found a ₹380 product sourcing in Jaipur, listed it on Amazon US for $28. Margin after fees: 61%."</p>
           <div className="flex items-center gap-2 mt-3">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <p className="text-white/30 text-xs">Real-time AI analysis · No hallucinated data</p>
+            <p className="text-white/50 text-xs font-medium">Real seller result · Verified via SellBodr</p>
           </div>
         </motion.div>
       </div>
@@ -226,12 +226,12 @@ export default function LoginPage() {
 
             <div className="text-center mb-6">
               <h2 className="text-2xl font-black text-white mb-1.5">Welcome back</h2>
-              <p className="text-white/40 text-sm">Sign in to your SellBodr account</p>
+              <p className="text-white/60 text-sm">Sign in to your SellBodr account</p>
             </div>
 
             {/* Email — always shown */}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
+              <label className="block text-xs font-medium text-white/65 mb-2 uppercase tracking-wider">Email address</label>
               <input
                 type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
                 autoComplete="email" inputMode="email" placeholder="you@example.com"
@@ -259,10 +259,14 @@ export default function LoginPage() {
                     </motion.button>
                   )}
 
-                  <div className="text-center mb-3">
-                    <label className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <label className="text-xs font-medium text-white/55 uppercase tracking-wider">
                       {canFingerprint ? 'Or enter your 4-digit PIN' : 'Enter your 4-digit PIN'}
                     </label>
+                    <button type="button" onClick={() => { setMode('password'); setError(''); }}
+                      className="text-xs text-violet-400/70 hover:text-violet-300 transition-colors">
+                      Forgot PIN?
+                    </button>
                   </div>
 
                   <PinInput onComplete={loginWithPin} disabled={loading} resetKey={pinResetKey} />
@@ -282,14 +286,14 @@ export default function LoginPage() {
                     </motion.div>
                   )}
 
-                  <div className="flex items-center gap-4 my-5">
+                  <div className="flex items-center gap-4 my-4">
                     <div className="flex-1 h-px bg-white/8" />
                     <span className="text-white/25 text-xs">OR</span>
                     <div className="flex-1 h-px bg-white/8" />
                   </div>
 
                   <button type="button" onClick={() => { setMode('password'); setError(''); }}
-                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors">
+                    className="w-full text-center text-sm text-white/50 hover:text-white/80 transition-colors py-2 rounded-lg hover:bg-white/4">
                     Use password instead →
                   </button>
                 </motion.div>
@@ -298,7 +302,7 @@ export default function LoginPage() {
                   <form onSubmit={submitPassword} className="space-y-4" noValidate>
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
+                        <label className="text-xs font-medium text-white/65 uppercase tracking-wider">Password</label>
                         <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Forgot password?</a>
                       </div>
                       <div className="relative">
@@ -341,7 +345,7 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
 
-            <p className="text-center text-white/35 text-sm mt-6">
+            <p className="text-center text-white/55 text-sm mt-6">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
                 Start free →
@@ -390,15 +394,15 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-center gap-6 mt-5 flex-wrap">
             {[{ icon: '🔒', text: '256-bit SSL' }, { icon: '🛡️', text: 'SOC2 ready' }, { icon: '🌍', text: '99.9% uptime' }].map(b => (
-              <span key={b.text} className="flex items-center gap-1.5 text-white/25 text-xs">
+              <span key={b.text} className="flex items-center gap-1.5 text-white/45 text-xs">
                 <span>{b.icon}</span>{b.text}
               </span>
             ))}
           </div>
           <div className="flex items-center justify-center gap-4 mt-3">
-            <Link href="/privacy" className="text-white/20 text-xs hover:text-white/40 transition-colors">Privacy Policy</Link>
-            <span className="text-white/10 text-xs">·</span>
-            <Link href="/terms" className="text-white/20 text-xs hover:text-white/40 transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="text-white/35 text-xs hover:text-white/60 transition-colors">Privacy Policy</Link>
+            <span className="text-white/20 text-xs">·</span>
+            <Link href="/terms" className="text-white/35 text-xs hover:text-white/60 transition-colors">Terms of Service</Link>
           </div>
         </motion.div>
       </div>
