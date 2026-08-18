@@ -124,6 +124,11 @@ export const api = {
     generateRfq: (id: string) =>
       request<any>(`/suppliers/${id}/rfq`, { method: 'POST', body: '{}' }),
   },
+  pin: {
+    set:    (pin: string) => request<{ success: boolean }>('/auth/pin/set', { method: 'POST', body: JSON.stringify({ pin }) }),
+    login:  (email: string, pin: string) => request<any>('/auth/pin/login', { method: 'POST', body: JSON.stringify({ email, pin }) }),
+    status: () => request<{ pinSet: boolean }>('/auth/pin/status'),
+  },
   passkeys: {
     list: () => request<any[]>('/passkeys'),
     delete: (id: string) => request<{ success: boolean }>(`/passkeys/${id}`, { method: 'DELETE' }),

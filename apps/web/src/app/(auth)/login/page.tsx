@@ -1,8 +1,8 @@
-﻿'use client';
-import { useState, useEffect, FormEvent } from 'react';
+'use client';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 import { ParticleCanvas } from '@/components/ui/ParticleCanvas';
 
@@ -11,19 +11,84 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+// Detect devices that have a physical fingerprint sensor (not Windows Hello PIN dialog)
+async function detectFingerprint(): Promise<boolean> {
+  if (typeof navigator === 'undefined') return false;
+  if (/Windows/i.test(navigator.userAgent)) return false; // skip Windows Hello
+  if (typeof PublicKeyCredential === 'undefined') return false;
+  try {
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch { return false; }
+}
+
+function PinInput({ onComplete, disabled, resetKey }: {
+  onComplete: (pin: string) => void;
+  disabled?: boolean;
+  resetKey?: number;
+}) {
+  const [digits, setDigits] = useState(['', '', '', '']);
+  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+
+  useEffect(() => {
+    setDigits(['', '', '', '']);
+    refs[0].current?.focus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
+
+  function handle(i: number, val: string) {
+    const d = val.replace(/\D/g, '').slice(-1);
+    const next = [...digits];
+    next[i] = d;
+    setDigits(next);
+    if (d && i < 3) refs[i + 1].current?.focus();
+    if (next.every(v => v !== '')) onComplete(next.join(''));
+  }
+
+  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) {
+      refs[i - 1].current?.focus();
+    }
+  }
+
+  return (
+    <div className="flex gap-3 justify-center my-2">
+      {digits.map((d, i) => (
+        <input
+          key={i}
+          ref={refs[i]}
+          type="password"
+          inputMode="numeric"
+          pattern="\d"
+          maxLength={1}
+          value={d}
+          disabled={disabled}
+          onChange={e => handle(i, e.target.value)}
+          onKeyDown={e => handleKey(i, e)}
+          className="w-14 h-14 text-center text-2xl font-black rounded-xl border-2 transition-all outline-none bg-white/5 text-white
+            border-white/15 focus:border-violet-500 focus:bg-violet-500/8 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.2)]
+            disabled:opacity-50 disabled:cursor-not-allowed"
+          autoComplete="off"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail]           = useState('');
-  const [password, setPassword]     = useState('');
-  const [error, setError]           = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [passkeyLoading, setPasskeyLoading] = useState(false);
-  const [showPw, setShowPw]         = useState(false);
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(false);
+  const [fpLoading, setFpLoading]     = useState(false);
+  const [showPw, setShowPw]           = useState(false);
+  const [mode, setMode]               = useState<'pin' | 'password'>('pin');
+  const [canFingerprint, setCanFingerprint] = useState(false);
+  const [pinResetKey, setPinResetKey] = useState(0);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isIOS, setIsIOS]           = useState(false);
+  const [isIOS, setIsIOS]             = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
-  // Already logged in → skip login page
   useEffect(() => {
     if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
   }, [router]);
@@ -39,6 +104,43 @@ export default function LoginPage() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
+  useEffect(() => {
+    detectFingerprint().then(setCanFingerprint);
+  }, []);
+
+  async function loginWithPin(pin: string) {
+    if (!email.trim()) { setError('Enter your email first'); return; }
+    setError(''); setLoading(true);
+    try {
+      const res = await api.pin.login(email.trim(), pin) as any;
+      saveAuth(res);
+      router.push('/opportunities');
+    } catch (err: any) {
+      setError(err?.message || 'Wrong PIN. Please try again.');
+      setPinResetKey(k => k + 1);
+    } finally { setLoading(false); }
+  }
+
+  async function loginWithFingerprint() {
+    setError(''); setFpLoading(true);
+    try {
+      const beginData = await api.passkeys.loginBegin(email || undefined);
+      const { challengeId, ...options } = beginData;
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+      // force platform-only so no USB key dialog appears
+      const assnResp = await startAuthentication({ ...options, userVerification: 'required' });
+      const auth = await api.passkeys.loginComplete(challengeId, assnResp) as any;
+      saveAuth(auth);
+      router.push('/opportunities');
+    } catch (err: any) {
+      if (err?.name === 'NotAllowedError') {
+        setError('Fingerprint scan cancelled. Enter your PIN instead.');
+      } else {
+        setError(err?.message || 'Fingerprint login failed. Use your PIN.');
+      }
+    } finally { setFpLoading(false); }
+  }
+
   async function submitPassword(e: FormEvent) {
     e.preventDefault();
     setError(''); setLoading(true);
@@ -51,42 +153,18 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   }
 
-  async function loginWithPasskey() {
-    setError(''); setPasskeyLoading(true);
-    try {
-      const beginData = await api.passkeys.loginBegin(email || undefined);
-      const { challengeId, ...options } = beginData;
-
-      const { startAuthentication } = await import('@simplewebauthn/browser');
-      const assnResp = await startAuthentication(options);
-
-      const auth = await api.passkeys.loginComplete(challengeId, assnResp) as any;
-      saveAuth(auth);
-      router.push('/opportunities');
-    } catch (err: any) {
-      if (err?.name === 'NotAllowedError') {
-        setError('Passkey prompt was cancelled. Try again or use your password below.');
-      } else if (err?.message?.toLowerCase().includes('no passkey')) {
-        setError(err.message + ' (Sign in with password first, then add a passkey in Settings → Security.)');
-      } else {
-        setError(err?.message || 'Passkey login failed. Try password instead.');
-      }
-    } finally { setPasskeyLoading(false); }
-  }
-
   async function handleInstall() {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === 'accepted') setIsInstalled(true);
-      setInstallPrompt(null);
-    }
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') setIsInstalled(true);
+    setInstallPrompt(null);
   }
 
   return (
     <div className="min-h-screen bg-[#020817] flex">
 
-      {/* ── Left panel ──────────────────────────────────────── */}
+      {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[48%] relative overflow-hidden p-12 xl:p-16">
         <ParticleCanvas className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 bg-gradient-to-br from-violet-950/70 via-indigo-950/50 to-[#020817]" />
@@ -108,7 +186,7 @@ export default function LoginPage() {
               is waiting.
             </h1>
             <p className="text-white/45 text-lg leading-relaxed max-w-md">
-              AI scouts 10,000+ India-sourced products, scores each one across 7 dimensions, and gives you a Launch / Hold / Reject decision with supplier contacts ready.
+              AI scouts India-sourced products, scores each one across 7 dimensions, and gives you a Launch / Hold / Reject decision with supplier contacts ready.
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-10 grid grid-cols-3 gap-4">
@@ -130,7 +208,7 @@ export default function LoginPage() {
         </motion.div>
       </div>
 
-      {/* ── Right panel ─────────────────────────────────────── */}
+      {/* Right panel */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-[#020817] via-violet-950/10 to-[#020817] lg:hidden" />
 
@@ -141,95 +219,129 @@ export default function LoginPage() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md relative z-10">
-
-          {/* Card container — matches dashboard card feel */}
           <div className="glass-card rounded-3xl p-7 sm:p-9 relative overflow-hidden"
             style={{ boxShadow: '0 0 0 1px rgba(124,58,237,0.15), 0 24px 64px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.06)' }}>
-            {/* Subtle violet glow at top */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px"
               style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.6),transparent)' }} />
 
-            <div className="text-center mb-7">
+            <div className="text-center mb-6">
               <h2 className="text-2xl font-black text-white mb-1.5">Welcome back</h2>
               <p className="text-white/40 text-sm">Sign in to your SellBodr account</p>
             </div>
 
-            {/* Passkey button */}
-            <motion.button
-              onClick={loginWithPasskey}
-              disabled={passkeyLoading || loading}
-              whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-              className="btn-primary w-full text-base py-4 min-h-0 shadow-xl shadow-violet-500/30 mb-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3">
-              {passkeyLoading ? (
-                <>
-                  <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full block shrink-0" />
-                  Waiting for passkey…
-                </>
-              ) : (
-                <>
-                  <FingerprintIcon className="w-5 h-5 shrink-0" />
-                  Sign in with Passkey
-                </>
-              )}
-            </motion.button>
-            <p className="text-center text-white/25 text-xs mb-6">
-              Windows Hello PIN · Mac Touch ID · Face ID · device fingerprint
-            </p>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 h-px bg-white/8" />
-              <span className="text-white/25 text-xs">OR USE PASSWORD</span>
-              <div className="flex-1 h-px bg-white/8" />
+            {/* Email — always shown */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
+              <input
+                type="email" value={email} onChange={e => { setEmail(e.target.value); setError(''); }}
+                autoComplete="email" inputMode="email" placeholder="you@example.com"
+                className="input-dark"
+              />
             </div>
 
-            <form onSubmit={submitPassword} className="space-y-4" noValidate>
-              <div>
-                <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wider">Email address</label>
-                <input
-                  type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  required autoComplete="email" inputMode="email" placeholder="you@example.com"
-                  className="input-dark"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
-                  <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Forgot password?</a>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                    required autoComplete="current-password" placeholder="••••••••"
-                    className="input-dark pr-12"
-                  />
-                  <button type="button" onClick={() => setShowPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
-                    {showPw ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
+            <AnimatePresence mode="wait">
+              {mode === 'pin' ? (
+                <motion.div key="pin-mode" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
 
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
-                  {error}
+                  {/* Fingerprint — only on Mac / iOS / Android */}
+                  {canFingerprint && (
+                    <motion.button
+                      type="button"
+                      onClick={loginWithFingerprint}
+                      disabled={fpLoading || loading}
+                      whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                      className="w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2.5 text-sm font-semibold text-white/80 hover:text-white transition-all border border-white/12 hover:border-violet-500/40 hover:bg-violet-500/8 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {fpLoading ? (
+                        <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                          className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full block" />
+                      ) : <FingerprintIcon className="w-5 h-5 text-violet-400" />}
+                      {fpLoading ? 'Scanning…' : 'Use fingerprint'}
+                    </motion.button>
+                  )}
+
+                  <div className="text-center mb-3">
+                    <label className="text-xs font-medium text-white/50 uppercase tracking-wider">
+                      {canFingerprint ? 'Or enter your 4-digit PIN' : 'Enter your 4-digit PIN'}
+                    </label>
+                  </div>
+
+                  <PinInput onComplete={loginWithPin} disabled={loading} resetKey={pinResetKey} />
+
+                  {loading && (
+                    <div className="flex items-center justify-center gap-2 mt-3 text-white/50 text-sm">
+                      <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                        className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full block" />
+                      Verifying…
+                    </div>
+                  )}
+
+                  {error && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm text-center">
+                      {error}
+                    </motion.div>
+                  )}
+
+                  <div className="flex items-center gap-4 my-5">
+                    <div className="flex-1 h-px bg-white/8" />
+                    <span className="text-white/25 text-xs">OR</span>
+                    <div className="flex-1 h-px bg-white/8" />
+                  </div>
+
+                  <button type="button" onClick={() => { setMode('password'); setError(''); }}
+                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors">
+                    Use password instead →
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div key="pw-mode" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                  <form onSubmit={submitPassword} className="space-y-4" noValidate>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
+                        <a href="#" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Forgot password?</a>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                          autoComplete="current-password" placeholder="••••••••"
+                          className="input-dark pr-12"
+                        />
+                        <button type="button" onClick={() => setShowPw(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors text-sm select-none">
+                          {showPw ? '🙈' : '👁️'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                        className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
+                        {error}
+                      </motion.div>
+                    )}
+
+                    <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                      className="btn-primary w-full text-base py-3.5 min-h-0 disabled:opacity-60 disabled:cursor-not-allowed">
+                      {loading ? (
+                        <span className="flex items-center gap-2 justify-center">
+                          <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
+                          Signing in…
+                        </span>
+                      ) : 'Sign in →'}
+                    </motion.button>
+                  </form>
+
+                  <button type="button" onClick={() => { setMode('pin'); setError(''); setPinResetKey(k => k + 1); }}
+                    className="w-full text-center text-sm text-white/35 hover:text-white/60 transition-colors mt-4">
+                    ← Use PIN instead
+                  </button>
                 </motion.div>
               )}
+            </AnimatePresence>
 
-              <motion.button type="submit" disabled={loading || passkeyLoading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                className="btn-secondary w-full text-base py-3.5 min-h-0 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                      className="w-4 h-4 border-2 border-white/40 border-t-transparent rounded-full block" />
-                    Signing in...
-                  </span>
-                ) : 'Sign in with Password →'}
-              </motion.button>
-            </form>
-
-            <p className="text-center text-white/35 text-sm mt-7">
+            <p className="text-center text-white/35 text-sm mt-6">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
                 Start free →
@@ -238,23 +350,20 @@ export default function LoginPage() {
 
             {!isInstalled && (
               installPrompt ? (
-                <motion.button onClick={handleInstall}
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                <motion.button onClick={handleInstall} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   className="mt-5 w-full p-3.5 rounded-xl flex items-center gap-3 text-left touch-manipulation group relative overflow-hidden"
                   style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(99,102,241,0.07))', border: '1px solid rgba(124,58,237,0.35)', boxShadow: '0 0 20px rgba(124,58,237,0.1)' }}>
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.08),transparent)', backgroundSize: '200% 100%' }} />
                   <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{ background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.3)' }}>
                     <img src="/icons/icon.svg" alt="" className="w-7 h-7"
                       style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.8))' }} />
                     <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-violet-400 animate-pulse" />
                   </div>
-                  <div className="flex-1 min-w-0 relative">
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-white leading-snug">Install SellBodr App</div>
                     <div className="text-[11px] text-violet-300/70 leading-snug mt-0.5">Works offline · Loads instantly · No app store needed</div>
                   </div>
-                  <div className="relative flex flex-col items-center gap-0.5 shrink-0">
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
                     <motion.span animate={{ y: [0, 3, 0] }} transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
                       className="text-violet-300 text-base">↓</motion.span>
                     <span className="text-[10px] text-violet-400 font-semibold">Install</span>
@@ -279,7 +388,6 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Footer links outside card */}
           <div className="flex items-center justify-center gap-6 mt-5 flex-wrap">
             {[{ icon: '🔒', text: '256-bit SSL' }, { icon: '🛡️', text: 'SOC2 ready' }, { icon: '🌍', text: '99.9% uptime' }].map(b => (
               <span key={b.text} className="flex items-center gap-1.5 text-white/25 text-xs">

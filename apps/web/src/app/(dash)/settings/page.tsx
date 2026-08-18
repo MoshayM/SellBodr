@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { api, getUser, isAdmin, getGuestKey, setGuestKey } from '@/lib/api';
@@ -1146,38 +1146,166 @@ function UserGuideTab() {
   );
 }
 
-// ── Security (Passkeys + Password) ────────────────────────────────────────────
+// ── Security (PIN + Fingerprint + Password) ───────────────────────────────────
 
 function SecurityTab() {
   return (
     <div className="space-y-8">
-      <PasskeysSection />
+      <PinSection />
+      <div className="border-t border-white/10 pt-8">
+        <FingerprintSection />
+      </div>
       <div className="border-t border-white/10 pt-8">
         <h3 className="text-sm font-semibold text-white mb-1">Password</h3>
-        <p className="text-xs text-white/40 mb-4">Change your account password. Passkey users can set a password as a backup.</p>
+        <p className="text-xs text-white/40 mb-4">Change your account password.</p>
         <PasswordForm />
       </div>
     </div>
   );
 }
 
-function PasskeysSection() {
+// Reusable 4-box PIN input
+function PinBoxes({ onComplete, disabled, resetKey }: { onComplete: (p: string) => void; disabled?: boolean; resetKey?: number }) {
+  const [digits, setDigits] = useState(['', '', '', '']);
+  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  useEffect(() => { setDigits(['', '', '', '']); refs[0].current?.focus(); }, [resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  function handle(i: number, val: string) {
+    const d = val.replace(/\D/g, '').slice(-1);
+    const next = [...digits]; next[i] = d; setDigits(next);
+    if (d && i < 3) refs[i + 1].current?.focus();
+    if (next.every(v => v !== '')) onComplete(next.join(''));
+  }
+  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !digits[i] && i > 0) refs[i - 1].current?.focus();
+  }
+  return (
+    <div className="flex gap-2.5 justify-center">
+      {digits.map((d, i) => (
+        <input key={i} ref={refs[i]} type="password" inputMode="numeric" pattern="\d" maxLength={1} value={d}
+          disabled={disabled} onChange={e => handle(i, e.target.value)} onKeyDown={e => handleKey(i, e)}
+          className="w-12 h-12 text-center text-xl font-black rounded-xl border-2 transition-all outline-none bg-white/5 text-white
+            border-white/15 focus:border-violet-500 focus:bg-violet-500/8 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.2)]
+            disabled:opacity-40 disabled:cursor-not-allowed"
+          autoComplete="off" />
+      ))}
+    </div>
+  );
+}
+
+function PinSection() {
+  const [pinSet, setPinSet]       = useState<boolean | null>(null);
+  const [mode, setMode]           = useState<'idle' | 'set'>('idle');
+  const [pin, setPin]             = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [resetKey, setResetKey]   = useState(0);
+  const [confirmKey, setConfirmKey] = useState(0);
+  const [saving, setSaving]       = useState(false);
+  const [success, setSuccess]     = useState(false);
+  const [error, setError]         = useState('');
+
+  useEffect(() => {
+    api.pin.status().then(r => setPinSet(r.pinSet)).catch(() => setPinSet(false));
+  }, []);
+
+  async function handleSave() {
+    if (pin.length !== 4) { setError('Please enter a 4-digit PIN'); return; }
+    if (pin !== confirmPin) {
+      setError('PINs do not match');
+      setPin(''); setConfirmPin('');
+      setResetKey(k => k + 1); setConfirmKey(k => k + 1);
+      return;
+    }
+    setError(''); setSaving(true);
+    try {
+      await api.pin.set(pin);
+      setPinSet(true); setSuccess(true); setMode('idle');
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to save PIN');
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            Fast Login PIN
+            {pinSet === true && <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">Active</span>}
+            {pinSet === false && <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">Not set</span>}
+          </h3>
+          <p className="text-xs text-white/40 mt-0.5">
+            4-digit PIN for instant sign-in on any device. No browser popup — just your digits.
+          </p>
+        </div>
+        {mode === 'idle' && (
+          <button onClick={() => { setMode('set'); setError(''); setResetKey(k => k + 1); setConfirmKey(k => k + 1); }}
+            className="btn-primary text-sm py-2 min-h-0">
+            {pinSet ? 'Change PIN' : 'Set PIN'}
+          </button>
+        )}
+      </div>
+
+      {success && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+          className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2 mb-3">
+          PIN saved! You can now use it to sign in.
+        </motion.div>
+      )}
+
+      {mode === 'set' && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-dark rounded-xl p-5 space-y-4">
+          <div className="text-center">
+            <p className="text-xs text-white/50 mb-3 uppercase tracking-wider">New PIN</p>
+            <PinBoxes onComplete={setPin} disabled={saving} resetKey={resetKey} />
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-white/50 mb-3 uppercase tracking-wider">Confirm PIN</p>
+            <PinBoxes onComplete={setConfirmPin} disabled={saving} resetKey={confirmKey} />
+          </div>
+
+          {error && (
+            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">{error}</div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={() => { setMode('idle'); setError(''); }}
+              className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white/70 border border-white/10 hover:border-white/20 transition-all">
+              Cancel
+            </button>
+            <button onClick={handleSave} disabled={saving || pin.length < 4 || confirmPin.length < 4}
+              className="flex-1 btn-primary text-sm py-2.5 min-h-0 disabled:opacity-40 flex items-center justify-center gap-2">
+              {saving ? (
+                <><motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />Saving…</>
+              ) : 'Save PIN'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function FingerprintSection() {
+  const [canFp, setCanFp]         = useState<boolean | null>(null);
   const [passkeys, setPasskeys]   = useState<any[]>([]);
   const [loading, setLoading]     = useState(true);
   const [adding, setAdding]       = useState(false);
   const [error, setError]         = useState('');
-  const [renameId, setRenameId]   = useState('');
-  const [renameName, setRenameName] = useState('');
   const [deleteId, setDeleteId]   = useState('');
 
-  function loadPasskeys() {
-    setLoading(true);
-    api.passkeys.list()
-      .then(rows => setPasskeys(rows))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }
-  useEffect(() => { loadPasskeys(); }, []);
+  useEffect(() => {
+    // Only show this section on non-Windows devices with biometric support
+    const isWindows = /Windows/i.test(navigator.userAgent);
+    if (isWindows) { setCanFp(false); setLoading(false); return; }
+    (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.() ?? Promise.resolve(false))
+      .then(ok => {
+        setCanFp(ok);
+        if (ok) api.passkeys.list().then(setPasskeys).catch(() => {}).finally(() => setLoading(false));
+        else setLoading(false);
+      }).catch(() => { setCanFp(false); setLoading(false); });
+  }, []);
 
   async function handleAdd() {
     setError(''); setAdding(true);
@@ -1185,117 +1313,68 @@ function PasskeysSection() {
       const beginData = await api.passkeys.registerBegin();
       const { challengeId, ...options } = beginData;
       const { startRegistration } = await import('@simplewebauthn/browser');
-      const attResp = await startRegistration(options);
-      const deviceName = `Passkey ${new Date().toLocaleDateString()}`;
+      const attResp = await startRegistration({ ...options, authenticatorSelection: { ...options.authenticatorSelection, authenticatorAttachment: 'platform' as const } });
+      const deviceName = `Fingerprint ${new Date().toLocaleDateString()}`;
       await api.passkeys.registerComplete(challengeId, deviceName, attResp);
-      loadPasskeys();
+      api.passkeys.list().then(setPasskeys).catch(() => {});
     } catch (err: any) {
-      if (err?.name === 'NotAllowedError') {
-        setError('Passkey setup was cancelled.');
-      } else {
-        setError(err?.message || 'Failed to add passkey.');
-      }
+      if (err?.name === 'NotAllowedError') setError('Fingerprint setup was cancelled.');
+      else setError(err?.message || 'Failed to add fingerprint.');
     } finally { setAdding(false); }
   }
 
   async function handleDelete(id: string) {
-    setDeleteId(id); setError('');
-    try {
-      await api.passkeys.delete(id);
-      setPasskeys(prev => prev.filter(p => p.id !== id));
-    } catch (err: any) {
-      setError(err?.message || 'Failed to delete passkey.');
-    } finally { setDeleteId(''); }
+    setDeleteId(id);
+    try { await api.passkeys.delete(id); setPasskeys(prev => prev.filter(p => p.id !== id)); }
+    catch (err: any) { setError(err?.message || 'Failed to remove.'); }
+    finally { setDeleteId(''); }
   }
 
-  async function handleRename(id: string) {
-    if (!renameName.trim()) return;
-    try {
-      await api.passkeys.rename(id, renameName.trim());
-      setPasskeys(prev => prev.map(p => p.id === id ? { ...p, name: renameName.trim() } : p));
-      setRenameId('');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to rename passkey.');
-    }
-  }
+  if (canFp === false) return null; // hide entirely on Windows / unsupported devices
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-white">Passkeys</h3>
+          <h3 className="text-sm font-semibold text-white">Fingerprint login</h3>
           <p className="text-xs text-white/40 mt-0.5">
-            Laptop: Windows Hello PIN or fingerprint · Mac: Touch ID · Mobile: Face ID or fingerprint.
-            No USB security key required.
+            Use your device fingerprint sensor as an instant login shortcut (Mac Touch ID, Android, iOS).
           </p>
         </div>
-        <button onClick={handleAdd} disabled={adding}
-          className="btn-primary text-sm py-2 min-h-0 disabled:opacity-60 flex items-center gap-2">
-          {adding ? (
-            <>
-              <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
-              Adding…
-            </>
-          ) : '+ Add Passkey'}
-        </button>
+        {canFp && (
+          <button onClick={handleAdd} disabled={adding}
+            className="btn-primary text-sm py-2 min-h-0 disabled:opacity-60 flex items-center gap-2">
+            {adding ? (
+              <><motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />Adding…</>
+            ) : '+ Add fingerprint'}
+          </button>
+        )}
       </div>
 
-      {error && (
-        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2 mb-3">{error}</div>
-      )}
+      {error && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 mb-3">{error}</div>}
 
       {loading ? (
-        <div className="text-center py-8 text-white/50 text-sm">Loading passkeys…</div>
+        <div className="text-center py-4 text-white/40 text-sm">Checking…</div>
       ) : passkeys.length === 0 ? (
-        <div className="card-dark rounded-xl p-6 text-center">
-          <div className="text-3xl mb-2">🔑</div>
-          <p className="text-sm text-white/50 mb-1">No passkeys registered</p>
-          <p className="text-xs text-white/50">Add a passkey to sign in with your fingerprint, Face ID, or device PIN.</p>
-        </div>
+        <div className="card-dark rounded-xl p-4 text-center text-white/40 text-sm">No fingerprints registered yet.</div>
       ) : (
         <div className="space-y-2">
           {passkeys.map(pk => (
             <div key={pk.id} className="card-dark rounded-xl px-4 py-3 flex items-center gap-3">
-              <div className="text-xl shrink-0">
-                {pk.deviceType === 'multiDevice' ? '☁️' : '📱'}
-              </div>
+              <span className="text-lg shrink-0">👆</span>
               <div className="flex-1 min-w-0">
-                {renameId === pk.id ? (
-                  <div className="flex gap-2">
-                    <input
-                      autoFocus value={renameName}
-                      onChange={e => setRenameName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleRename(pk.id); if (e.key === 'Escape') setRenameId(''); }}
-                      className="flex-1 px-2 py-1 bg-white/5 border border-violet-500 rounded text-sm text-white focus:outline-none"
-                    />
-                    <button onClick={() => handleRename(pk.id)} className="text-xs text-violet-400 hover:text-violet-300">Save</button>
-                    <button onClick={() => setRenameId('')} className="text-xs text-white/40 hover:text-white/60">Cancel</button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white truncate">{String(pk.name)}</span>
-                    {pk.backedUp && <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded">synced</span>}
-                  </div>
-                )}
-                <div className="text-xs text-white/50 mt-0.5">
+                <div className="text-sm font-medium text-white truncate">{String(pk.name)}</div>
+                <div className="text-xs text-white/40 mt-0.5">
                   Added {pk.createdAt ? new Date(Number(pk.createdAt)).toLocaleDateString() : '—'}
-                  {pk.lastUsedAt ? ` · Last used ${new Date(Number(pk.lastUsedAt)).toLocaleDateString()}` : ''}
+                  {pk.lastUsedAt ? ` · Used ${new Date(Number(pk.lastUsedAt)).toLocaleDateString()}` : ''}
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => { setRenameId(pk.id); setRenameName(String(pk.name)); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors text-sm"
-                  title="Rename">✏️</button>
-                <button
-                  onClick={() => handleDelete(pk.id)}
-                  disabled={deleteId === pk.id}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
-                  title="Remove passkey">
-                  {deleteId === pk.id ? '…' : '🗑'}
-                </button>
-              </div>
+              <button onClick={() => handleDelete(pk.id)} disabled={deleteId === pk.id}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                title="Remove">
+                {deleteId === pk.id ? '…' : '🗑'}
+              </button>
             </div>
           ))}
         </div>
