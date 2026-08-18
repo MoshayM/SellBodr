@@ -39,7 +39,7 @@ const PLANS = [
       'Basic profit indicator',
       'Wishlist — save up to 10 products',
     ],
-    cta: 'Start for Free',
+    cta: 'Start scouting',
     ctaHref: '/register',
     highlight: false,
   },
@@ -57,7 +57,7 @@ const PLANS = [
       'Unlimited wishlist & CSV export',
       'Priority support',
     ],
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Try Pro free for 7 days',
     ctaHref: '/register?plan=pro',
     highlight: true,
   },
@@ -192,13 +192,12 @@ export default function LandingPage() {
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
           <Link href="/guide" className="hover:text-white transition-colors">User Guide</Link>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/login"
-            className="text-sm font-semibold text-white/90 hover:text-white transition-all px-4 py-2 rounded-lg border border-white/15 hover:border-violet-400/50 hover:bg-violet-500/10 bg-white/5">
+        <div className="flex items-center gap-3">
+          <Link href="/login" className="text-sm text-white/50 hover:text-white/80 transition-colors">
             Sign in
           </Link>
           <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-lg shadow-lg shadow-violet-500/30">
-            Sign Up Free →
+            Get started
           </Link>
         </div>
       </motion.nav>
@@ -221,7 +220,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs text-white/70 mb-8 border border-white/10"
           >
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            AI-powered · 76 marketplaces · Live data
+            AI-powered · 9 marketplaces · Live data
           </motion.div>
 
           <motion.h1
@@ -250,33 +249,20 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center mb-4"
+            className="flex justify-center mb-4"
           >
-            <Link href="/register" className="btn-primary text-base px-8 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30 text-center">
-              Get Started Free →
-            </Link>
-            <Link href="/register?plan=pro" className="btn-secondary text-base px-8 py-4 min-h-0 rounded-xl text-center">
-              Start Pro →
+            <Link href="/register" className="btn-primary text-base px-10 py-4 min-h-0 rounded-xl shadow-xl shadow-violet-500/30">
+              Scout your first product →
             </Link>
           </motion.div>
-          <motion.div
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5 mb-12 text-sm"
+            transition={{ delay: 0.85 }}
+            className="text-white/30 text-sm mb-12"
           >
-            <span className="text-white/45">
-              No credit card needed.{' '}
-              <Link href="/register" className="text-violet-300 hover:text-violet-200 font-semibold transition-colors">
-                Create Free Account →
-              </Link>
-            </span>
-            <span className="hidden sm:block text-white/20">·</span>
-            <Link href="/login"
-              className="inline-flex items-center gap-1.5 text-white/75 hover:text-white font-semibold transition-colors border border-white/15 hover:border-violet-400/50 hover:bg-violet-500/8 px-4 py-1.5 rounded-lg">
-              Sign in →
-            </Link>
-          </motion.div>
+            Free to start · No credit card
+          </motion.p>
 
           {/* Floating opportunity cards */}
           <div className="flex items-end justify-center gap-4 sm:gap-6 flex-wrap">
@@ -533,9 +519,9 @@ export default function LandingPage() {
           </h2>
           <p className="text-white/40 text-lg mb-10">AI-powered intelligence to source in India and sell on the world's top marketplaces.</p>
           <Link href="/register" className="btn-primary text-lg px-10 py-5 min-h-0 rounded-2xl shadow-2xl shadow-violet-500/30 inline-flex">
-            Create Free Account →
+            Start scouting →
           </Link>
-          <p className="text-white/25 text-sm mt-5">No credit card · Cancel anytime · Free forever plan</p>
+          <p className="text-white/25 text-sm mt-5">Free to start · No credit card · Cancel anytime</p>
         </motion.div>
       </section>
 
