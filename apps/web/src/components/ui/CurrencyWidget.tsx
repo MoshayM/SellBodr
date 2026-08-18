@@ -159,7 +159,7 @@ export function CurrencyWidget() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 24, opacity: 0, scale: 0.97 }}
             transition={{ type: 'spring', damping: 32, stiffness: 380 }}
-            className="relative w-full sm:w-[440px] sm:mr-6 sm:mb-6 max-h-[92vh] sm:max-h-[86vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-black/70"
+            className="relative w-full sm:w-[440px] sm:mr-6 sm:mb-6 max-h-[82dvh] sm:max-h-[86vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-black/70"
             style={{ background: '#0a0f1e', border: '1px solid rgba(255,255,255,0.09)' }}>
 
             {/* Header */}
