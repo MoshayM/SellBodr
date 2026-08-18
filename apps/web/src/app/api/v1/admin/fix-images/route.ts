@@ -18,7 +18,6 @@ export async function GET(req: NextRequest) {
   const db = await getDb();
   await ensureSchema(db);
 
-  // Debug mode: return all imageUrls so we can see what's stored
   if (req.nextUrl.searchParams.get('debug') === '1') {
     const all = await db.execute(
       `SELECT id, title, imageUrl FROM "Product" ORDER BY createdAt DESC LIMIT 50`
@@ -35,7 +34,8 @@ export async function GET(req: NextRequest) {
         OR imageUrl LIKE '%source.unsplash.com%'
         OR imageUrl LIKE '%picsum.photos%'
         OR imageUrl LIKE '%pollinations.ai%'
-        OR imageUrl LIKE '%placeholder%'`
+        OR imageUrl LIKE '%placeholder%'
+        OR imageUrl LIKE '%loremflickr.com%'`
   );
 
   let fixed = 0;
@@ -47,10 +47,10 @@ export async function GET(req: NextRequest) {
 
     const words = [...title.split(' ').slice(0, 3), category.replace(/_/g, ' ').split(' ')[0]]
       .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-    const kwPath  = words.slice(0, 3).join(',') || 'product';
-    const kwQuery = title.trim() || words.join(' ');
+    const seed     = words.slice(0, 3).join('-') || 'product';
+    const kwQuery  = title.trim() || words.join(' ');
 
-    let imageUrl = `https://loremflickr.com/400/300/${kwPath}`;
+    let imageUrl = `https://picsum.photos/seed/${seed}/400/300`;
 
     const gKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
     const gCx  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
           const link = data?.items?.[0]?.link;
           if (link?.startsWith('http')) imageUrl = link;
         }
-      } catch { /* use loremflickr */ }
+      } catch { /* use picsum */ }
     }
 
     await db.execute({

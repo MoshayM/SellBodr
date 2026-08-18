@@ -1239,8 +1239,8 @@ export default function OpportunitiesPage() {
                             const el = e.target as HTMLImageElement;
                             if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>'; return; }
                             el.dataset.fb = '1';
-                            const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join(',');
-                            el.src = `https://loremflickr.com/44/44/${kw || 'product'}`;
+                            const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join('-');
+                            el.src = `https://picsum.photos/seed/${kw || 'product'}/44/44`;
                           }} />
                       : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
                   </div>
@@ -1450,8 +1450,8 @@ export default function OpportunitiesPage() {
                                     if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px">📦</div>'; return; }
                                     el.dataset.fb = '1';
                                     el.style.opacity = '0';
-                                    const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join(',');
-                                    el.src = `https://loremflickr.com/40/40/${kw || 'product'}`;
+                                    const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join('-');
+                                    el.src = `https://picsum.photos/seed/${kw || 'product'}/40/40`;
                                   }} />
                               : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
                           </div>

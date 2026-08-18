@@ -63,8 +63,9 @@ async function productImageUrl(_productId: string, title: string, category: stri
     } catch { /* fall through */ }
   }
 
-  // 3️⃣ loremflickr — no key needed, topic-relevant photo
-  return `https://loremflickr.com/400/300/${kwPath}`;
+  // 3️⃣ Picsum — reliable Cloudflare-backed CDN, seeded for consistency
+  const seed = words.slice(0, 3).join('-') || 'product';
+  return `https://picsum.photos/seed/${seed}/400/300`;
 }
 
 // ── Indian city coordinates (for map pins) ────────────────────────────────────

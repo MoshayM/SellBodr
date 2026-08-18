@@ -136,11 +136,12 @@ export async function GET(req: NextRequest) {
       const net     = Number(r.pmNet    ?? 0);
       const overhead = Math.max(0, landed - src);
       const storedUrl = (r.pImageUrl as string) || '';
-      const isBroken = !storedUrl || storedUrl.includes('source.unsplash.com') || storedUrl.includes('picsum.photos') || storedUrl.includes('pollinations.ai');
+      const isBroken = !storedUrl || storedUrl.includes('source.unsplash.com') || storedUrl.includes('pollinations.ai') || storedUrl.includes('loremflickr.com');
       const imageUrl = isBroken ? (() => {
         const words = [...String(r.pTitle || '').split(' ').slice(0, 4)]
           .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-        return `https://loremflickr.com/400/300/${words.slice(0, 3).join(',') || 'product'}`;
+        const seed = words.slice(0, 3).join('-') || 'product';
+        return `https://picsum.photos/seed/${seed}/400/300`;
       })() : storedUrl;
 
       const currency = (r.pmCurrency ?? r.mCurrency ?? 'USD') as string;
