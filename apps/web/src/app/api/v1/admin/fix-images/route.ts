@@ -52,18 +52,37 @@ export async function GET(req: NextRequest) {
 
     let imageUrl = `https://picsum.photos/seed/${seed}/400/300`;
 
-    const gKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
-    const gCx  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
-    if (gKey && gCx) {
+    // 1️⃣ Pexels
+    const pexelsKey = process.env.PEXELS_API_KEY;
+    if (pexelsKey) {
       try {
-        const url = `https://www.googleapis.com/customsearch/v1?key=${gKey}&cx=${gCx}&q=${encodeURIComponent(kwQuery + ' product')}&searchType=image&num=1&imgType=photo&imgSize=medium&safe=active&fields=items(link)`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+        const res = await fetch(
+          `https://api.pexels.com/v1/search?query=${encodeURIComponent(kwQuery)}&per_page=1&orientation=landscape`,
+          { headers: { Authorization: pexelsKey }, signal: AbortSignal.timeout(4000) }
+        );
         if (res.ok) {
           const data = await res.json() as any;
-          const link = data?.items?.[0]?.link;
-          if (link?.startsWith('http')) imageUrl = link;
+          const url = data?.photos?.[0]?.src?.medium || data?.photos?.[0]?.src?.small;
+          if (url) { imageUrl = url; }
         }
-      } catch { /* use picsum */ }
+      } catch { /* fall through */ }
+    }
+
+    // 2️⃣ Google CSE (when billing activates)
+    if (imageUrl.includes('picsum')) {
+      const gKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
+      const gCx  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
+      if (gKey && gCx) {
+        try {
+          const url = `https://www.googleapis.com/customsearch/v1?key=${gKey}&cx=${gCx}&q=${encodeURIComponent(kwQuery + ' product')}&searchType=image&num=1&imgType=photo&imgSize=medium&safe=active&fields=items(link)`;
+          const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+          if (res.ok) {
+            const data = await res.json() as any;
+            const link = data?.items?.[0]?.link;
+            if (link?.startsWith('http')) imageUrl = link;
+          }
+        } catch { /* use picsum */ }
+      }
     }
 
     await db.execute({

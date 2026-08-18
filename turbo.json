@@ -16,7 +16,8 @@
         "GOOGLE_API_KEY",
         "GOOGLE_CSE_ID",
         "UNSPLASH_ACCESS_KEY",
-        "ADMIN_SECRET"
+        "ADMIN_SECRET",
+        "PEXELS_API_KEY"
       ]
     },
     "dev": {

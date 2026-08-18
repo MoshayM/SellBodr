@@ -25,14 +25,30 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── Product image: Google CSE (real product photos) → Unsplash → loremflickr ─
+// ── Product image: Pexels → Google CSE → Unsplash → picsum fallback ──────────
 async function productImageUrl(_productId: string, title: string, category: string): Promise<string> {
   const words = [...title.split(' ').slice(0, 3), category.replace(/_/g, ' ').split(' ')[0]]
     .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-  const kwPath  = words.slice(0, 2).join(',') || 'product';
   const kwQuery = title.trim() || words.join(' ');
+  const seed    = words.slice(0, 3).join('-') || 'product';
 
-  // 1️⃣ Google Custom Search Image API — real product photos from shopping sites
+  // 1️⃣ Pexels — free, no billing, real product photos
+  const pexelsKey = process.env.PEXELS_API_KEY;
+  if (pexelsKey) {
+    try {
+      const res = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(kwQuery)}&per_page=1&orientation=landscape`,
+        { headers: { Authorization: pexelsKey }, signal: AbortSignal.timeout(4000) }
+      );
+      if (res.ok) {
+        const data = await res.json() as any;
+        const url = data?.photos?.[0]?.src?.medium || data?.photos?.[0]?.src?.small;
+        if (url) return url;
+      }
+    } catch { /* fall through */ }
+  }
+
+  // 2️⃣ Google Custom Search Image API — real product photos from shopping sites
   const gApiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
   const gCseId  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
   if (gApiKey && gCseId) {
@@ -47,8 +63,8 @@ async function productImageUrl(_productId: string, title: string, category: stri
     } catch { /* fall through */ }
   }
 
-  // 2️⃣ Unsplash API — high-quality thematic photo
-  const uKey = process.env.UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_API_KEY || process.env.UNSPLASH_KEY;
+  // 3️⃣ Unsplash API
+  const uKey = process.env.UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_API_KEY;
   if (uKey) {
     try {
       const res = await fetch(
@@ -63,8 +79,7 @@ async function productImageUrl(_productId: string, title: string, category: stri
     } catch { /* fall through */ }
   }
 
-  // 3️⃣ Picsum — reliable Cloudflare-backed CDN, seeded for consistency
-  const seed = words.slice(0, 3).join('-') || 'product';
+  // 4️⃣ Picsum — reliable Cloudflare CDN, seeded for consistency
   return `https://picsum.photos/seed/${seed}/400/300`;
 }
 
