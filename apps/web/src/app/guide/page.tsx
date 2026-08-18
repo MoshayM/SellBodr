@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
+// ── Guide content ─────────────────────────────────────────────────────────────
 const SECTIONS = [
   {
     id: 'scout',
@@ -109,8 +110,240 @@ const SECTIONS = [
   },
 ];
 
+const QUICK_QUESTIONS = [
+  'How do I run my first product search?',
+  'What does the Opportunity Score mean?',
+  'How do I contact a supplier?',
+  'What is included in the Pro plan?',
+  'How does the profit model work?',
+  'What is the Launch / Hold / Reject verdict?',
+  'How do I generate an AI listing?',
+  'What is Bulk Scan used for?',
+];
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+type Message = { role: 'user' | 'assistant'; content: string };
+
+// ── AI Chat Panel ─────────────────────────────────────────────────────────────
+function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [charWarn, setCharWarn] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef  = useRef<HTMLTextAreaElement>(null);
+  const MAX_CHARS = 600;
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  const send = useCallback(async (text: string) => {
+    const q = text.trim();
+    if (!q || loading) return;
+    if (q.length > MAX_CHARS) { setCharWarn(true); return; }
+    setCharWarn(false);
+    setInput('');
+
+    const next: Message[] = [...messages, { role: 'user', content: q }];
+    setMessages(next);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/v1/guide/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, history: messages.slice(-6) }),
+      });
+      const data = await res.json().catch(() => ({ answer: 'Something went wrong. Please try again.' }));
+      setMessages(prev => [...prev, { role: 'assistant', content: data.answer || 'Sorry, no response.' }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Network error. Please check your connection and try again.' }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [messages, loading]);
+
+  function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); }
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop — mobile only */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            onClick={onClose}
+          />
+
+          {/* Panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="fixed z-50 bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] max-w-[420px] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+            style={{ maxHeight: 'calc(100dvh - 8rem)', background: 'rgba(8,12,30,0.97)', border: '1px solid rgba(124,58,237,0.25)', backdropFilter: 'blur(20px)' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 shrink-0"
+              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.2),rgba(79,70,229,0.1))' }}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                  ✦
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white leading-tight">SellBodr Guide AI</div>
+                  <div className="text-[10px] text-white/40 leading-none">Ask anything about the app</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {messages.length > 0 && (
+                  <button onClick={() => setMessages([])}
+                    className="text-[10px] text-white/30 hover:text-white/60 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
+                    Clear
+                  </button>
+                )}
+                <button onClick={onClose}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors text-lg leading-none">
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="px-4 py-2 text-[10px] text-white/30 leading-snug border-b border-white/5 shrink-0">
+              AI responses are for guidance only. Not financial or legal advice.{' '}
+              <Link href="/terms" className="underline hover:text-white/50">Terms</Link>
+              {' · '}
+              <Link href="/privacy" className="underline hover:text-white/50">Privacy</Link>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
+              {messages.length === 0 && (
+                <div className="space-y-4">
+                  <p className="text-xs text-white/40 text-center leading-snug">
+                    Ask me anything about using SellBodr
+                  </p>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {QUICK_QUESTIONS.map(q => (
+                      <button key={q} onClick={() => send(q)}
+                        className="text-left text-xs px-3 py-2 rounded-lg text-white/55 hover:text-white border border-white/8 hover:border-violet-500/30 hover:bg-violet-500/8 transition-all leading-snug">
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {m.role === 'assistant' && (
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mr-2 mt-0.5 self-start"
+                      style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                      ✦
+                    </div>
+                  )}
+                  <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                    m.role === 'user'
+                      ? 'text-white rounded-br-sm'
+                      : 'text-white/80 border border-white/8 rounded-bl-sm'
+                  }`}
+                    style={m.role === 'user'
+                      ? { background: 'linear-gradient(135deg,rgba(124,58,237,0.85),rgba(79,70,229,0.85))' }
+                      : { background: 'rgba(255,255,255,0.04)' }
+                    }>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mr-2 mt-0.5"
+                    style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                    ✦
+                  </div>
+                  <div className="px-3.5 py-3 rounded-2xl rounded-bl-sm border border-white/8"
+                    style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    <span className="flex gap-1 items-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input */}
+            <div className="px-4 pb-4 pt-2 border-t border-white/8 shrink-0">
+              {charWarn && (
+                <p className="text-[10px] text-rose-400 mb-1.5">Question is too long (max {MAX_CHARS} characters)</p>
+              )}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={e => { setInput(e.target.value); if (charWarn) setCharWarn(false); }}
+                    onKeyDown={handleKey}
+                    placeholder="Ask about SellBodr…"
+                    rows={1}
+                    maxLength={MAX_CHARS + 20}
+                    disabled={loading}
+                    className="w-full resize-none bg-white/5 border border-white/10 focus:border-violet-500/50 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 outline-none transition-colors leading-snug disabled:opacity-50"
+                    style={{ maxHeight: '100px', overflowY: 'auto' }}
+                    onInput={e => {
+                      const el = e.currentTarget;
+                      el.style.height = 'auto';
+                      el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+                    }}
+                  />
+                  {input.length > MAX_CHARS * 0.8 && (
+                    <span className={`absolute bottom-1.5 right-2 text-[9px] tabular-nums ${input.length >= MAX_CHARS ? 'text-rose-400' : 'text-white/25'}`}>
+                      {input.length}/{MAX_CHARS}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => send(input)}
+                  disabled={loading || !input.trim()}
+                  className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-30"
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-[9px] text-white/20 mt-1.5 text-center leading-snug">
+                Only answers questions about the SellBodr app · Shift+Enter for new line
+              </p>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function GuidePage() {
-  const [active, setActive] = useState('scout');
+  const [active, setActive]     = useState('scout');
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#020817] text-white">
@@ -126,6 +359,17 @@ export default function GuidePage() {
           <span className="text-sm font-semibold text-white/50">User Guide</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* Ask AI — nav button */}
+          <button
+            onClick={() => setChatOpen(o => !o)}
+            className={`hidden sm:flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-lg border transition-all ${
+              chatOpen
+                ? 'border-violet-500/50 text-violet-300 bg-violet-500/10'
+                : 'border-white/10 text-white/60 hover:border-violet-500/30 hover:text-violet-300 hover:bg-violet-500/8'
+            }`}>
+            <span>✦</span>
+            Ask AI
+          </button>
           <Link href="/opportunities" className="text-sm text-white/50 hover:text-white transition-colors hidden sm:block">Open App</Link>
           <Link href="/register" className="text-xs px-4 py-2 rounded-lg font-semibold text-white"
             style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
@@ -151,7 +395,7 @@ export default function GuidePage() {
               <span className="mr-2">{s.icon}</span>{s.title}
             </button>
           ))}
-          <div className="mt-6 pt-4 border-t border-white/8">
+          <div className="mt-6 pt-4 border-t border-white/8 space-y-1">
             <Link href="/opportunities"
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-violet-400 hover:bg-violet-500/10 transition-all font-semibold">
               Open Scout →
@@ -177,6 +421,25 @@ export default function GuidePage() {
             <p className="text-white/45 text-lg leading-relaxed max-w-2xl">
               Everything you need to find products in India and sell them profitably on global marketplaces — from your first search to your first sale.
             </p>
+
+            {/* AI search call-to-action banner */}
+            <motion.button
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => setChatOpen(true)}
+              className="mt-6 w-full sm:max-w-xl flex items-center gap-3 px-4 py-3.5 rounded-xl border border-violet-500/25 hover:border-violet-500/50 transition-all group text-left"
+              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.08),rgba(79,70,229,0.04))' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 transition-transform group-hover:scale-110"
+                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                ✦
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">Ask the Guide AI anything</div>
+                <div className="text-xs text-white/35 truncate">How does the Opportunity Score work? How do I contact a supplier?…</div>
+              </div>
+              <div className="text-xs text-violet-400 font-semibold shrink-0 group-hover:translate-x-0.5 transition-transform">Ask →</div>
+            </motion.button>
           </motion.div>
 
           {/* Quick links — mobile */}
@@ -224,6 +487,14 @@ export default function GuidePage() {
                   </div>
                 ))}
               </div>
+
+              {/* Per-section quick ask */}
+              <button
+                onClick={() => { setChatOpen(true); }}
+                className={`mt-5 text-xs flex items-center gap-1.5 ${section.accent} opacity-60 hover:opacity-100 transition-opacity`}>
+                <span>✦</span>
+                <span>Have a question about {section.title.toLowerCase()}? Ask the Guide AI →</span>
+              </button>
             </motion.section>
           ))}
 
@@ -265,6 +536,26 @@ export default function GuidePage() {
           <Link href="/terms" className="hover:text-white/50 transition-colors">Terms</Link>
         </p>
       </footer>
+
+      {/* Floating Ask AI button */}
+      <AnimatePresence>
+        {!chatOpen && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            onClick={() => setChatOpen(true)}
+            className="fixed bottom-6 right-4 sm:right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm text-white shadow-xl shadow-violet-500/30 transition-shadow hover:shadow-violet-500/50"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+            <span className="text-base leading-none">✦</span>
+            <span>Ask Guide AI</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Chat panel */}
+      <GuideChat open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
