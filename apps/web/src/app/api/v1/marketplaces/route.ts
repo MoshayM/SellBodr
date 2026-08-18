@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const rows = result.rows.map(r => ({
       id: r.id, code: r.code, country: r.country, currency: r.currency,
       feeSchedule: r.feeSchedule, active: Boolean(r.active),
+      source: r.source ?? 'system',
       createdAt: r.createdAt,
     }));
     return NextResponse.json(rows);
@@ -37,10 +38,10 @@ export async function POST(req: NextRequest) {
     const id = crypto.randomUUID();
     const feeSchedule = JSON.stringify({ referralPct, fbaFeeMinor });
     await db.execute({
-      sql: 'INSERT INTO "Marketplace" (id,code,country,currency,feeSchedule,active,createdAt) VALUES (?,?,?,?,?,1,?)',
-      args: [id, clean, country, currency.toUpperCase(), feeSchedule, Date.now()],
+      sql: 'INSERT INTO "Marketplace" (id,code,country,currency,feeSchedule,active,source,createdAt) VALUES (?,?,?,?,?,1,?,?)',
+      args: [id, clean, country, currency.toUpperCase(), feeSchedule, 'user', Date.now()],
     });
-    return NextResponse.json({ id, code: clean, country, currency: currency.toUpperCase(), feeSchedule, active: true }, { status: 201 });
+    return NextResponse.json({ id, code: clean, country, currency: currency.toUpperCase(), feeSchedule, active: true, source: 'user' }, { status: 201 });
   } catch (err: any) {
     if (err.message?.includes('UNIQUE')) return NextResponse.json({ message: 'Marketplace already exists' }, { status: 409 });
     return NextResponse.json({ message: 'Failed to create marketplace' }, { status: 500 });

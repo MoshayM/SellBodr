@@ -185,6 +185,8 @@ const MIGRATIONS = [
   `ALTER TABLE "SourcingCandidate" ADD COLUMN verifiedBadge INTEGER DEFAULT 0`,
   `ALTER TABLE "SourcingCandidate" ADD COLUMN description TEXT`,
   `ALTER TABLE "User" ADD COLUMN plan TEXT DEFAULT 'free'`,
+  // Distinguish seeded/system marketplaces from user-added ones
+  `ALTER TABLE "Marketplace" ADD COLUMN source TEXT DEFAULT 'system'`,
   // Custom PIN fast-login (4-digit, bcrypt-hashed)
   `ALTER TABLE "User" ADD COLUMN pinHash TEXT`,
   `ALTER TABLE "User" ADD COLUMN pinAttempts INTEGER DEFAULT 0`,

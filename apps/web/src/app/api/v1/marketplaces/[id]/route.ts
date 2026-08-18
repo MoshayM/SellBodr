@@ -24,6 +24,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const db = getDb();
+    const check = await db.execute({ sql: 'SELECT source FROM "Marketplace" WHERE id=?', args: [params.id] });
+    if (!check.rows.length) return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    if ((check.rows[0].source ?? 'system') !== 'user') {
+      return NextResponse.json({ message: 'System marketplaces cannot be deleted — you can toggle them off instead.' }, { status: 403 });
+    }
     await db.execute({ sql: 'DELETE FROM "Marketplace" WHERE id=?', args: [params.id] });
     return NextResponse.json({ success: true });
   } catch (err: any) {

@@ -932,7 +932,7 @@ function MarketplacesTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-white/50">
-          Manage the marketplaces available for opportunity searches. Toggle active/inactive or add a custom marketplace.
+          Toggle built-in marketplaces on/off, or add your own custom marketplace. Built-in ones cannot be deleted (🔒).
         </p>
         <button onClick={() => { setShowForm(s => !s); setError(''); }}
           className="btn-primary text-sm shrink-0 ml-4">
@@ -1033,13 +1033,20 @@ function MarketplacesTab() {
                 </div>
               </div>
 
-              {/* Delete */}
-              <button onClick={() => handleDelete(mp.id)}
-                disabled={deleteId === mp.id}
-                title="Delete marketplace"
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40">
-                {deleteId === mp.id ? '…' : '🗑'}
-              </button>
+              {/* Delete — only for user-added marketplaces */}
+              {mp.source === 'user' ? (
+                <button onClick={() => handleDelete(mp.id)}
+                  disabled={deleteId === mp.id}
+                  title="Delete marketplace"
+                  className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40">
+                  {deleteId === mp.id ? '…' : '🗑'}
+                </button>
+              ) : (
+                <span title="Built-in marketplace — toggle on/off only"
+                  className="shrink-0 w-8 h-8 flex items-center justify-center text-white/15 text-sm select-none">
+                  🔒
+                </span>
+              )}
             </div>
           );
         })}
