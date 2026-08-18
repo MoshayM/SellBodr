@@ -10,6 +10,14 @@ const MARKETPLACES = [
   'Amazon US','Amazon UK','Amazon DE','Amazon CA','Amazon AU','Etsy','eBay','Walmart','TikTok Shop',
 ];
 
+const BULK_STAGES = [
+  { icon: '📋', label: 'Parsing keywords',     ms: 2000 },
+  { icon: '🔍', label: 'Scanning marketplace', ms: 5000 },
+  { icon: '🤖', label: 'AI scoring',           ms: 6000 },
+  { icon: '📊', label: 'Ranking results',      ms: 4000 },
+  { icon: '✅', label: 'Finalising',           ms: 2000 },
+];
+
 export default function BulkScanPage() {
   const router   = useRouter();
   const [isFree, setIsFree]   = useState(true);
@@ -30,6 +38,20 @@ export default function BulkScanPage() {
       setResults(Array.isArray(data) ? data : data.opportunities || []);
     },
   });
+
+  const [bulkStep, setBulkStep] = useState(0);
+  useEffect(() => {
+    if (!scan.isPending) { setBulkStep(0); return; }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cum = 0;
+    for (let i = 1; i < BULK_STAGES.length - 1; i++) {
+      cum += BULK_STAGES[i - 1].ms;
+      const idx = i;
+      timers.push(setTimeout(() => setBulkStep(idx), cum));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [scan.isPending]);
+  const bulkPct = Math.min(90, Math.round((bulkStep / (BULK_STAGES.length - 1)) * 100));
 
   if (isGuest || isFree) return (
     <ProGate
@@ -91,31 +113,57 @@ export default function BulkScanPage() {
 
           <button onClick={handleScan}
             disabled={scan.isPending || keywords.length === 0 || tooMany}
-            className="w-full btn-primary py-3 text-sm font-semibold disabled:opacity-40 rounded-xl">
-            {scan.isPending ? '&#x27F3; Scanning…' : `⚡ Scan ${keywords.length || ''} Product${keywords.length !== 1 ? 's' : ''}`}
+            className={`relative overflow-hidden w-full text-sm font-semibold inline-flex items-center justify-center gap-2 py-3 rounded-xl min-h-[48px] select-none transition-all duration-300 ${scan.isPending ? 'cursor-not-allowed' : 'btn-primary disabled:opacity-40'}`}
+            style={scan.isPending ? { background: 'linear-gradient(135deg,rgba(109,40,217,0.95) 0%,rgba(79,70,229,0.95) 100%)', boxShadow: '0 0 24px rgba(124,58,237,0.6),0 4px 16px rgba(124,58,237,0.3)' } : {}}>
+            {scan.isPending && (
+              <>
+                <span className="absolute inset-0 bg-white/10 transition-all duration-[900ms] ease-out pointer-events-none"
+                  style={{ clipPath: `inset(0 ${100 - bulkPct}% 0 0)` }} />
+                <span className="absolute inset-0 pointer-events-none animate-shimmer"
+                  style={{ background: 'linear-gradient(90deg,transparent 30%,rgba(255,255,255,0.15) 50%,transparent 70%)', backgroundSize: '200% 100%' }} />
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden pointer-events-none">
+                  <span className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-[900ms] ease-out" style={{ width: `${bulkPct}%` }} />
+                </span>
+              </>
+            )}
+            <span className="relative z-10 flex items-center gap-2">
+              {scan.isPending ? (
+                <>
+                  <span className="text-lg animate-pulse leading-none">{BULK_STAGES[bulkStep]?.icon}</span>
+                  <span className="truncate">{BULK_STAGES[bulkStep]?.label}…</span>
+                  <span className="text-[11px] text-violet-200/70 font-mono tabular-nums ml-1">{bulkPct}%</span>
+                </>
+              ) : keywords.length === 0 || tooMany
+                ? <>⚡ Scan Products</>
+                : <>⚡ Scan {keywords.length} Product{keywords.length !== 1 ? 's' : ''}</>}
+            </span>
           </button>
 
           <div className="card-dark p-4 text-xs text-white/55 space-y-1.5">
-            <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> AI scores all products in parallel</div>
-            <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> Results ranked by Opportunity Score</div>
-            <div className="flex items-center gap-2"><span className="text-emerald-400">&#x2713;</span> Click any result to open full analysis</div>
+            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> AI scores all products in parallel</div>
+            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Results ranked by Opportunity Score</div>
+            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Click any result to open full analysis</div>
           </div>
         </div>
       </div>
 
-      {/* Results */}
+      {/* Results loading */}
       {scan.isPending && (
         <div className="card-dark p-12 text-center">
-          <div className="animate-spin text-4xl text-violet-400 mb-4">&#x27F3;</div>
-          <p className="text-white/50 text-sm">Running AI scan on {keywords.length} product{keywords.length !== 1 ? 's' : ''}&hellip;</p>
-          <p className="text-white/50 text-xs mt-1">This may take up to 30 seconds</p>
+          <div className="text-5xl mb-4 animate-pulse leading-none">{BULK_STAGES[bulkStep]?.icon}</div>
+          <p className="text-white font-semibold mb-1">{BULK_STAGES[bulkStep]?.label}…</p>
+          <p className="text-white/50 text-sm mb-5">Running AI scan on {keywords.length} product{keywords.length !== 1 ? 's' : ''}</p>
+          <div className="max-w-xs mx-auto h-1.5 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 rounded-full transition-all duration-[900ms] ease-out" style={{ width: `${bulkPct}%` }} />
+          </div>
+          <p className="text-[11px] text-violet-300/60 font-mono mt-2">{bulkPct}%</p>
         </div>
       )}
 
       {!scan.isPending && results.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <div className="text-sm text-white/50">{results.length} result{results.length !== 1 ? 's' : ''} &#8212; ranked by Opportunity Score</div>
+            <div className="text-sm text-white/50">{results.length} result{results.length !== 1 ? 's' : ''} — ranked by Opportunity Score</div>
           </div>
           {results
             .sort((a: any, b: any) => (b.score?.opportunity || 0) - (a.score?.opportunity || 0))

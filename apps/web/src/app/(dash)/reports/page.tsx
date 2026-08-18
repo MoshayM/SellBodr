@@ -4,6 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 
+const REPORT_STAGES = [
+  { icon: '🔬', label: 'Analysing market',  ms: 2500 },
+  { icon: '💰', label: 'Profit deep-dive',  ms: 3000 },
+  { icon: '🏭', label: 'Supplier research', ms: 3000 },
+  { icon: '📊', label: 'Compiling report',  ms: 2500 },
+  { icon: '✅', label: 'Finalising',        ms: 1500 },
+];
+
 type Report = { id: string; product: any; marketplace: any; content: any; generatedAt: string };
 
 function ReportView({ content }: { content: any }) {
@@ -52,6 +60,20 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [generating, setGenerating] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const [reportStep, setReportStep] = useState(0);
+  useEffect(() => {
+    if (!generating) { setReportStep(0); return; }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cum = 0;
+    for (let i = 1; i < REPORT_STAGES.length - 1; i++) {
+      cum += REPORT_STAGES[i - 1].ms;
+      const idx = i;
+      timers.push(setTimeout(() => setReportStep(idx), cum));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [generating]);
+  const reportPct = Math.min(90, Math.round((reportStep / (REPORT_STAGES.length - 1)) * 100));
 
   if (isFree) return (
     <ProGate
@@ -114,6 +136,7 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
           {(opps as any[]).map((opp: any) => {
             const done = reports.some(r => r.id === opp.id);
+            const isThisGenerating = generating === opp.id;
             return (
               <div key={opp.id} className="card-dark rounded-xl p-4 flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -124,13 +147,34 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <button onClick={() => generate(opp)}
-                  disabled={generating === opp.id}
-                  className={`shrink-0 text-xs leading-none px-3 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 min-h-[36px] ${
-                    done
-                      ? 'border border-white/10 text-white/50 hover:bg-white/5'
-                      : 'bg-violet-600 text-white hover:bg-violet-500'
-                  }`}>
-                  {generating === opp.id ? 'Generating…' : done ? 'Regenerate' : 'Generate'}
+                  disabled={!!generating}
+                  className={`relative overflow-hidden shrink-0 text-xs font-medium inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-300 select-none min-h-[36px] min-w-[110px] ${
+                    isThisGenerating
+                      ? 'cursor-not-allowed'
+                      : done
+                        ? 'border border-white/10 text-white/50 hover:bg-white/5 disabled:opacity-50'
+                        : 'bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50'
+                  }`}
+                  style={isThisGenerating ? { background: 'linear-gradient(135deg,rgba(109,40,217,0.95) 0%,rgba(79,70,229,0.95) 100%)', boxShadow: '0 0 14px rgba(124,58,237,0.55)' } : {}}>
+                  {isThisGenerating && (
+                    <>
+                      <span className="absolute inset-0 bg-white/10 transition-all duration-[900ms] ease-out pointer-events-none"
+                        style={{ clipPath: `inset(0 ${100 - reportPct}% 0 0)` }} />
+                      <span className="absolute inset-0 pointer-events-none animate-shimmer"
+                        style={{ background: 'linear-gradient(90deg,transparent 30%,rgba(255,255,255,0.15) 50%,transparent 70%)', backgroundSize: '200% 100%' }} />
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden pointer-events-none">
+                        <span className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-[900ms] ease-out" style={{ width: `${reportPct}%` }} />
+                      </span>
+                    </>
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {isThisGenerating ? (
+                      <>
+                        <span className="animate-pulse leading-none">{REPORT_STAGES[reportStep]?.icon}</span>
+                        <span className="truncate">{REPORT_STAGES[reportStep]?.label}…</span>
+                      </>
+                    ) : done ? 'Regenerate' : 'Generate'}
+                  </span>
                 </button>
               </div>
             );

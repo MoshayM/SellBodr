@@ -4,6 +4,14 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
 
+const LISTING_STAGES = [
+  { icon: '✍️', label: 'Crafting SEO title',   ms: 2200 },
+  { icon: '📋', label: 'Writing bullets',       ms: 2500 },
+  { icon: '📝', label: 'Long-form description', ms: 2800 },
+  { icon: '🔍', label: 'Keyword research',      ms: 2000 },
+  { icon: '✨', label: 'Finalising listing',    ms: 1500 },
+];
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   function copy() {
@@ -47,6 +55,20 @@ export default function ListingPage() {
     mutationFn: () => api.opportunities.generateAssets(opp.id),
     onSuccess: () => refetch(),
   });
+
+  const [genStep, setGenStep] = useState(0);
+  useEffect(() => {
+    if (!gen.isPending) { setGenStep(0); return; }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let cum = 0;
+    for (let i = 1; i < LISTING_STAGES.length - 1; i++) {
+      cum += LISTING_STAGES[i - 1].ms;
+      const idx = i;
+      timers.push(setTimeout(() => setGenStep(idx), cum));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [gen.isPending]);
+  const genPct = Math.min(90, Math.round((genStep / (LISTING_STAGES.length - 1)) * 100));
 
   if (isFree) return (
     <ProGate
@@ -125,8 +147,28 @@ export default function ListingPage() {
               <p className="text-white font-semibold mb-1">No listing generated yet</p>
               <p className="text-sm text-white/40 mb-5">Generate AI-optimised title, bullets, description, and keyword strategy</p>
               <button onClick={() => gen.mutate()} disabled={gen.isPending}
-                className="btn-primary text-sm disabled:opacity-50">
-                {gen.isPending ? 'Generating…' : '✨ Generate Listing Assets'}
+                className={`relative overflow-hidden text-sm font-semibold inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl min-w-[240px] min-h-[48px] select-none transition-all duration-300 ${gen.isPending ? 'cursor-not-allowed' : 'btn-primary'}`}
+                style={gen.isPending ? { background: 'linear-gradient(135deg,rgba(109,40,217,0.95) 0%,rgba(79,70,229,0.95) 100%)', boxShadow: '0 0 24px rgba(124,58,237,0.6),0 4px 16px rgba(124,58,237,0.3)' } : {}}>
+                {gen.isPending && (
+                  <>
+                    <span className="absolute inset-0 bg-white/10 transition-all duration-[900ms] ease-out pointer-events-none"
+                      style={{ clipPath: `inset(0 ${100 - genPct}% 0 0)` }} />
+                    <span className="absolute inset-0 pointer-events-none animate-shimmer"
+                      style={{ background: 'linear-gradient(90deg,transparent 30%,rgba(255,255,255,0.15) 50%,transparent 70%)', backgroundSize: '200% 100%' }} />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 overflow-hidden pointer-events-none">
+                      <span className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-300 to-indigo-300 transition-all duration-[900ms] ease-out" style={{ width: `${genPct}%` }} />
+                    </span>
+                  </>
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  {gen.isPending ? (
+                    <>
+                      <span className="text-lg animate-pulse leading-none">{LISTING_STAGES[genStep]?.icon}</span>
+                      <span className="truncate">{LISTING_STAGES[genStep]?.label}…</span>
+                      <span className="text-[11px] text-violet-200/70 font-mono tabular-nums ml-1">{genPct}%</span>
+                    </>
+                  ) : <>✨ Generate Listing Assets</>}
+                </span>
               </button>
             </div>
           )}
@@ -186,8 +228,20 @@ export default function ListingPage() {
 
               <div className="pt-2">
                 <button onClick={() => gen.mutate()} disabled={gen.isPending}
-                  className="text-xs text-white/50 hover:text-white/70 underline disabled:opacity-40 transition-colors">
-                  {gen.isPending ? 'Regenerating…' : '↺ Regenerate assets'}
+                  className={`relative overflow-hidden text-xs font-medium inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all duration-300 select-none min-w-[140px] justify-center ${gen.isPending ? 'cursor-not-allowed border-violet-500/30' : 'border-white/10 text-white/50 hover:text-white/70 hover:border-white/20 hover:bg-white/5'}`}
+                  style={gen.isPending ? { background: 'linear-gradient(135deg,rgba(109,40,217,0.85) 0%,rgba(79,70,229,0.85) 100%)' } : {}}>
+                  {gen.isPending && (
+                    <span className="absolute inset-0 pointer-events-none animate-shimmer"
+                      style={{ background: 'linear-gradient(90deg,transparent 30%,rgba(255,255,255,0.12) 50%,transparent 70%)', backgroundSize: '200% 100%' }} />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {gen.isPending ? (
+                      <>
+                        <span className="animate-pulse leading-none">{LISTING_STAGES[genStep]?.icon}</span>
+                        <span>{LISTING_STAGES[genStep]?.label}…</span>
+                      </>
+                    ) : <>↺ Regenerate assets</>}
+                  </span>
                 </button>
               </div>
             </>
