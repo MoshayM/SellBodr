@@ -25,18 +25,34 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
   return 'reject';
 }
 
-// ── Product image: Unsplash API (key required) → loremflickr fallback ───────
+// ── Product image: Google CSE (real product photos) → Unsplash → loremflickr ─
 async function productImageUrl(_productId: string, title: string, category: string): Promise<string> {
   const words = [...title.split(' ').slice(0, 3), category.replace(/_/g, ' ').split(' ')[0]]
     .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-  const kwPath = words.slice(0, 2).join(',') || 'product';
-  const kwQuery = words.join(' ') || title.split(' ').slice(0, 2).join(' ');
+  const kwPath  = words.slice(0, 2).join(',') || 'product';
+  const kwQuery = title.trim() || words.join(' ');
 
-  const key = process.env.UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_API_KEY || process.env.UNSPLASH_KEY;
-  if (key) {
+  // 1️⃣ Google Custom Search Image API — real product photos from shopping sites
+  const gApiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
+  const gCseId  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
+  if (gApiKey && gCseId) {
+    try {
+      const url = `https://www.googleapis.com/customsearch/v1?key=${gApiKey}&cx=${gCseId}&q=${encodeURIComponent(kwQuery + ' product')}&searchType=image&num=1&imgType=photo&imgSize=medium&safe=active&fields=items(link)`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        const data = await res.json() as any;
+        const link = data?.items?.[0]?.link;
+        if (link && link.startsWith('http')) return link;
+      }
+    } catch { /* fall through */ }
+  }
+
+  // 2️⃣ Unsplash API — high-quality thematic photo
+  const uKey = process.env.UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_API_KEY || process.env.UNSPLASH_KEY;
+  if (uKey) {
     try {
       const res = await fetch(
-        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(kwQuery)}&orientation=landscape&client_id=${key}`,
+        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(kwQuery)}&orientation=landscape&client_id=${uKey}`,
         { signal: AbortSignal.timeout(4000) }
       );
       if (res.ok) {
@@ -46,6 +62,8 @@ async function productImageUrl(_productId: string, title: string, category: stri
       }
     } catch { /* fall through */ }
   }
+
+  // 3️⃣ loremflickr — no key needed, topic-relevant photo
   return `https://loremflickr.com/400/300/${kwPath}`;
 }
 

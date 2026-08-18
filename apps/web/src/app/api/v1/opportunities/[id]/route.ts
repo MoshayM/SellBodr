@@ -49,10 +49,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       scoreVersion: row.sVersion ?? '2.0.0',
       product: (() => {
         const stored = String(row.pImageUrl || '');
-        const needsImage = !stored || stored.includes('source.unsplash.com') || stored.includes('picsum.photos') || stored.includes('pollinations.ai');
-        const imageUrl = needsImage ? (() => {
-          const words = [...String(row.pTitle || '').split(' ').slice(0, 3), String(row.pCategory || '').replace(/_/g, ' ').split(' ')[0]].filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-          return `https://loremflickr.com/400/300/${words.slice(0, 2).join(',') || 'product'}`;
+        const isBroken = !stored || stored.includes('source.unsplash.com') || stored.includes('picsum.photos') || stored.includes('pollinations.ai');
+        const imageUrl = isBroken ? (() => {
+          const words = [...String(row.pTitle || '').split(' ').slice(0, 4)]
+            .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+          return `https://loremflickr.com/400/300/${words.slice(0, 3).join(',') || 'product'}`;
         })() : stored;
         return { id: row.pId, title: row.pTitle, category: row.pCategory, imageUrl, description: row.pDesc };
       })(),
