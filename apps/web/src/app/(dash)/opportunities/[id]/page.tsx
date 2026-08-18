@@ -530,10 +530,10 @@ export default function OpportunityDetailPage() {
         </div>
 
         {/* Sub-scores row */}
-        <div className="flex gap-2 sm:gap-3 mt-4 pt-4 border-t border-white/5 flex-wrap">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-2 gap-y-3 sm:gap-3 mt-4 pt-4 border-t border-white/5">
           {sub.map(({ label, value }) => (
-            <div key={label} className="text-center">
-              <div className="text-[10px] text-white/55 mb-1">{label}</div>
+            <div key={label} className="text-center min-w-0">
+              <div className="text-[10px] text-white/55 mb-1 truncate leading-tight">{label}</div>
               <ScoreBadge score={value || 0} />
             </div>
           ))}
@@ -1021,29 +1021,29 @@ export default function OpportunityDetailPage() {
                       {r.isNet && <div className="profit-sep-lg h-px my-1.5" />}
                       <div className="flex items-center" style={{ height: rowH }}>
                         {/* Left — costs */}
-                        <div className="flex-1 flex items-center justify-end gap-2 min-w-0 split-divider-l">
+                        <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0 split-divider-l overflow-hidden">
                           {!r.positive && (
                             <>
                               <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
                                 -{f(r.value)}
                               </span>
-                              <div className={`${barH} rounded-l-full flex-shrink-0`}
-                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
+                              <div className={`${barH} rounded-l-full shrink-0`}
+                                style={{ width: `${barPct}%`, maxWidth: 'calc(100% - 3.5rem)', background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
                             </>
                           )}
                         </div>
                         {/* Center label */}
-                        <div className="w-[90px] shrink-0 flex items-center justify-center px-1">
+                        <div className="w-[80px] sm:w-[90px] shrink-0 flex items-center justify-center px-1">
                           <span className={`text-center leading-tight ${r.isNet ? 'text-[11px] font-bold text-white/90' : r.isSubtotal ? 'text-[10px] font-semibold text-indigo-400' : 'text-[10px] text-white/45'}`}>
                             {r.label}
                           </span>
                         </div>
                         {/* Right — revenue */}
-                        <div className="flex-1 flex items-center justify-start gap-2 min-w-0 split-divider-r">
+                        <div className="flex-1 flex items-center justify-start gap-1.5 min-w-0 split-divider-r overflow-hidden">
                           {r.positive && (
                             <>
-                              <div className={`${barH} rounded-r-full flex-shrink-0`}
-                                style={{ width: `${barPct}%`, background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
+                              <div className={`${barH} rounded-r-full shrink-0`}
+                                style={{ width: `${barPct}%`, maxWidth: 'calc(100% - 3.5rem)', background: r.grad, boxShadow: `0 0 6px ${r.glow}` }} />
                               <span className={`text-[10px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
                                 +{f(r.value)}
                               </span>
