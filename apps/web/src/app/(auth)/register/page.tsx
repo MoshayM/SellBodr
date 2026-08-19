@@ -24,7 +24,7 @@ const PLANS = [
     features: ['Unlimited AI product scans', 'Full 7-dimension Opportunity Score', 'Complete India supplier database', 'AI listing generator (title, bullets, keywords)', 'Landed-cost profit model with full P&L', 'Unlimited wishlist & CSV export', 'Priority support'],
     color: 'border-violet-500/60',
     highlight: true,
-    startLabel: 'Start 7-Day Free Trial',
+    startLabel: 'Start Pro',
   },
 ];
 

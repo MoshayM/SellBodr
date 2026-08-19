@@ -104,7 +104,7 @@ const SECTIONS = [
     steps: [
       { title: 'Free plan', body: 'Free accounts get AI-scored opportunity feeds, 10 results per marketplace, 10 suppliers per product, and score previews. No credit card required.' },
       { title: 'Pro plan ($49/mo)', body: 'Pro unlocks unlimited searches, full supplier database, supplier map, profitability models, AI listing generator, ads, growth signals, and export reports.' },
-      { title: 'Upgrade', body: 'Click any 🔒 locked feature or "Upgrade to Pro" from the avatar menu or any ProGate screen. You can also start a free trial from the pricing page.' },
+      { title: 'Upgrade', body: 'Click any 🔒 locked feature or "Upgrade to Pro" from the avatar menu or any ProGate screen.' },
       { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Admins can manage AI provider keys under Settings → AI Keys.' },
     ],
   },

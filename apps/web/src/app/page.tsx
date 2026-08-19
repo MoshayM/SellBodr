@@ -57,7 +57,7 @@ const PLANS = [
       'Unlimited wishlist & CSV export',
       'Priority support',
     ],
-    cta: 'Try Pro free for 7 days',
+    cta: 'Upgrade to Pro',
     ctaHref: '/register?plan=pro',
     highlight: true,
   },
@@ -404,7 +404,7 @@ export default function LandingPage() {
                   <span className="text-white/40 text-sm">{p.period}</span>
                 </div>
                 {p.highlight && (
-                  <div className="text-xs text-emerald-400/80 mb-2">7-day free trial · Cancel anytime</div>
+                  <div className="text-xs text-emerald-400/80 mb-2">Cancel anytime</div>
                 )}
                 <p className="text-white/65 text-sm mb-6">{p.desc}</p>
                 <ul className="space-y-2.5 flex-1 mb-7">
@@ -426,7 +426,7 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="text-center text-white/50 text-xs mt-6">
-            No credit card required for Starter · Pro includes a 7-day free trial · Prices in USD
+            No credit card required for Starter · Prices in USD
           </motion.p>
         </div>
       </section>
