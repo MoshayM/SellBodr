@@ -42,7 +42,7 @@ export function RecommendationBadge({ rec, confidence }: { rec: string; confiden
       bg:   'linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.10) 100%)',
       border: 'rgba(16,185,129,0.38)',
       text: '#34d399',
-      glow: '0 2px 8px rgba(16,185,129,0.22), inset 0 1px 0 rgba(255,255,255,0.07)',
+      glow: '0 2px 5px rgba(16,185,129,0.13), inset 0 1px 0 rgba(255,255,255,0.05)',
       icon: '🚀',
       anim: 'animate-badge-launch',
     },

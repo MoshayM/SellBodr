@@ -190,8 +190,8 @@ img {
 }
 
 @keyframes badge-launch {
-  0%,100% { box-shadow: 0 0 6px rgba(16,185,129,0.18), 0 1px 0 rgba(255,255,255,0.06); }
-  50%     { box-shadow: 0 0 12px rgba(16,185,129,0.32), 0 0 20px rgba(16,185,129,0.09), 0 1px 0 rgba(255,255,255,0.08); }
+  0%,100% { box-shadow: 0 0 4px rgba(16,185,129,0.10), 0 1px 0 rgba(255,255,255,0.04); }
+  50%     { box-shadow: 0 0 8px rgba(16,185,129,0.20), 0 0 14px rgba(16,185,129,0.05), 0 1px 0 rgba(255,255,255,0.06); }
 }
 @keyframes badge-hold {
   0%,100% { box-shadow: 0 0 6px rgba(245,158,11,0.16); }
