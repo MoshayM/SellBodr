@@ -306,7 +306,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               style={{ background: isDark ? 'linear-gradient(135deg,#fff 20%,#c4b5fd 100%)' : 'linear-gradient(135deg,#7c3aed 20%,#6366f1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               SellBodr
             </div>
-            <div className="text-[8px] font-semibold text-gray-500 dark:text-white/60 uppercase tracking-[0.18em] leading-none mt-0.5">
+            <div className="text-[8px] font-semibold text-gray-600 dark:text-white/60 uppercase tracking-[0.18em] leading-none mt-0.5">
               eCommerce Intelligence
             </div>
           </div>
