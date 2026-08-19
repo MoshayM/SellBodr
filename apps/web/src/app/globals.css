@@ -190,16 +190,16 @@ img {
 }
 
 @keyframes badge-launch {
-  0%,100% { box-shadow: 0 0 10px rgba(16,185,129,0.3), 0 0 20px rgba(16,185,129,0.12); }
-  50%     { box-shadow: 0 0 18px rgba(16,185,129,0.5), 0 0 36px rgba(16,185,129,0.2); }
+  0%,100% { box-shadow: 0 0 6px rgba(16,185,129,0.18), 0 1px 0 rgba(255,255,255,0.06); }
+  50%     { box-shadow: 0 0 12px rgba(16,185,129,0.32), 0 0 20px rgba(16,185,129,0.09), 0 1px 0 rgba(255,255,255,0.08); }
 }
 @keyframes badge-hold {
-  0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.25), 0 0 20px rgba(245,158,11,0.1); }
-  50%     { box-shadow: 0 0 16px rgba(245,158,11,0.45), 0 0 32px rgba(245,158,11,0.2); }
+  0%,100% { box-shadow: 0 0 6px rgba(245,158,11,0.16); }
+  50%     { box-shadow: 0 0 10px rgba(245,158,11,0.3), 0 0 18px rgba(245,158,11,0.08); }
 }
 @keyframes badge-reject {
-  0%,100% { box-shadow: 0 0 8px rgba(239,68,68,0.2); }
-  50%     { box-shadow: 0 0 14px rgba(239,68,68,0.38); }
+  0%,100% { box-shadow: 0 0 4px rgba(239,68,68,0.12); }
+  50%     { box-shadow: 0 0 8px rgba(239,68,68,0.22); }
 }
 
 @keyframes tab-glow {
@@ -231,9 +231,9 @@ img {
 .animate-fade-in   { animation: fade-in 0.5s ease both; }
 .animate-scale-in  { animation: scale-in 0.4s ease both; }
 .animate-spin-slow   { animation: spin-slow 20s linear infinite; }
-.animate-badge-launch { animation: badge-launch 2.5s ease-in-out infinite; }
-.animate-badge-hold   { animation: badge-hold   3s   ease-in-out infinite; }
-.animate-badge-reject { animation: badge-reject 3.5s ease-in-out infinite; }
+.animate-badge-launch { animation: badge-launch 4s   ease-in-out infinite; }
+.animate-badge-hold   { animation: badge-hold   4.5s ease-in-out infinite; }
+.animate-badge-reject { animation: badge-reject 5s   ease-in-out infinite; }
 .animate-tab-glow     { animation: tab-glow     2s   ease-in-out infinite; }
 .animate-bar-fill     { animation: bar-fill 0.6s cubic-bezier(0.22,1,0.36,1) both; }
 .animate-gradient  {
