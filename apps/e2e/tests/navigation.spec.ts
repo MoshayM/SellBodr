@@ -13,19 +13,19 @@ test.describe('Dashboard Navigation', () => {
   });
 
   test('search dropdown opens and filters pages by query', async ({ page }) => {
-    // Click the desktop search bar via its aria-label
-    await page.locator('button[aria-label="Search (⌘K)"]').click();
-    const input = page.locator('input[placeholder*="Search"]');
-    await expect(input).toBeVisible({ timeout: 5_000 });
+    // The desktop search is an <input> (not a button) — click to focus and open the dropdown
+    const searchInput = page.locator('input[aria-label="Search (⌘K)"]');
+    await searchInput.click();
+    await expect(searchInput).toBeVisible({ timeout: 5_000 });
 
-    // Type a query to filter — brings matching page to top (avoids overflow-clip visibility issues)
-    await input.fill('Recommendations');
+    // Type a query to filter — brings matching page to top
+    await searchInput.fill('Recommendations');
     await expect(
       page.locator('button').filter({ hasText: 'Recommendations' }).first()
     ).toBeVisible({ timeout: 5_000 });
 
     // Verify a different page can be found via filter
-    await input.fill('Reports');
+    await searchInput.fill('Reports');
     await expect(
       page.locator('button').filter({ hasText: 'Reports' }).first()
     ).toBeVisible({ timeout: 5_000 });
@@ -90,17 +90,13 @@ test.describe('Dashboard Navigation', () => {
     await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
   });
 
-  test('sign out → returns to /opportunities as guest and clears localStorage tokens', async ({ page }) => {
+  test('sign out → redirects to /login and clears localStorage tokens', async ({ page }) => {
     await page.getByRole('button', { name: 'User menu' }).click();
     await page.getByText('Sign out').click();
-    // Sign-out now returns to /opportunities (guest mode), not /login
-    await page.waitForURL('**/opportunities', { timeout: 30_000 });
-    await expect(page.getByRole('heading', { name: 'Scout' })).toBeVisible();
+    // logout() calls clearAuth() + router.replace('/login')
+    await page.waitForURL('**/login', { timeout: 15_000 });
     const token = await page.evaluate(() => localStorage.getItem('bs_access_token'));
     expect(token).toBeNull();
-    // Guest indicator — Sign in link in header OR guest banner (10 s for React re-render after sign-out)
-    await expect(
-      page.locator('header a[href="/login"]').or(page.locator('text=/browsing as a guest/i')).first()
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible({ timeout: 10_000 });
   });
 });

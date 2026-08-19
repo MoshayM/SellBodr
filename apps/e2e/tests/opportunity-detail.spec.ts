@@ -29,8 +29,9 @@ async function goToFirstOpportunity(page: Page) {
   const firstRow = page.locator('tbody tr').first();
   await firstRow.click();
 
-  // "Full Report →" link appears inside the expanded BreakdownPanel
-  const fullReportLink = page.locator('a').filter({ hasText: /Full Report/i }).first();
+  // "Full Report" link is in the table's row actions (always visible in desktop table view).
+  // Scope to "table a" to avoid the hidden mobile-card duplicate that md:hidden hides.
+  const fullReportLink = page.locator('table a').filter({ hasText: /Full Report/i }).first();
   await expect(fullReportLink).toBeVisible({ timeout: 10_000 });
   await fullReportLink.click();
 
@@ -213,17 +214,17 @@ test.describe('Opportunity Detail Page', () => {
     await page.getByRole('button', { name: 'Growth', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: 'Growth Playbook' })).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByRole('button', { name: /Build Playbook/i })).toBeVisible({ timeout: 5_000 });
-    // Section placeholders visible before generation
-    await expect(page.getByText('Quick Wins').first()).toBeVisible();
-    await expect(page.getByText('Launch Sequence').first()).toBeVisible();
+    // Button is "Build Playbook" when no data exists, "↻ Refresh Playbook" when data already saved
+    await expect(page.getByRole('button', { name: /Build Playbook|Refresh Playbook/i })).toBeVisible({ timeout: 5_000 });
+    // Either placeholders (no data) or generated content (data exists) should be visible
+    await expect(page.locator('text=/Quick Wins|Launch Sequence|Generating/i').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('Growth tab generate button triggers generation state', async ({ page }) => {
     await goToFirstOpportunity(page);
     await page.getByRole('button', { name: 'Growth', exact: true }).click();
 
-    const genBtn = page.getByRole('button', { name: /Build Playbook/i });
+    const genBtn = page.getByRole('button', { name: /Build Playbook|Refresh Playbook/i });
     await expect(genBtn).toBeVisible({ timeout: 5_000 });
     await genBtn.click();
 

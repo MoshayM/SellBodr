@@ -108,9 +108,9 @@ test.describe('Opportunity Dashboard', () => {
     await expect(firstRow.locator('td').first().locator('.font-medium')).toBeVisible();
     // Research button is icon-only — match by title attribute
     await expect(firstRow.locator('button[title*="research" i], button[title*="Quick research" i]')).toBeVisible();
-    // Clicking the row expands the BreakdownPanel which contains "Full Report →" link
-    await firstRow.click();
-    await expect(page.locator('a').filter({ hasText: /Full Report/i }).first()).toBeVisible({ timeout: 5_000 });
+    // Full Report link is in the table's actions column (always visible — scoped to table to avoid
+    // picking the hidden mobile-card "Full Report →" link which shares the same text but is inside md:hidden)
+    await expect(page.locator('table a').filter({ hasText: /Full Report/i }).first()).toBeVisible();
   });
 
   test('clicking marketplace dropdown opens searchable panel', async ({ page }) => {
