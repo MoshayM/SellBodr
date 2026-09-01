@@ -1,6 +1,5 @@
 'use client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { useTheme } from '@/components/ui/ThemeProvider';
 
 function usd(val: number, currency = 'USD') {
   const sym = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
@@ -10,16 +9,14 @@ function usd(val: number, currency = 'USD') {
 interface Props { profit: any; currency?: string; showStats?: boolean; }
 
 export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: Props) {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const tickColor   = isDark ? 'rgba(255,255,255,0.45)' : '#374151';
-  const labelColor  = isDark ? 'rgba(255,255,255,0.55)' : '#1F2937';
-  const cursorFill  = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(124,58,237,0.05)';
-  const ttBg        = isDark ? '#0d1225'                 : '#ffffff';
-  const ttBorder    = isDark ? 'rgba(255,255,255,0.15)'  : 'rgba(184,193,212,0.7)';
-  const ttLabel     = isDark ? 'rgba(255,255,255,0.55)'  : '#6B7280';
+  const tickColor  = '#475569';
+  const labelColor = '#1E293B';
+  const cursorFill = 'rgba(124,58,237,0.05)';
+  const ttBg       = '#FFFFFF';
+  const ttBorder   = '#E2E8F0';
+  const ttLabel    = '#64748B';
 
-  if (!profit) return <div className="dark:text-white/40 text-slate-400 text-sm">No profit data available</div>;
+  if (!profit) return <div className="text-slate-400 text-sm">No profit data available</div>;
 
   const p = profit;
   const sale     = Number(p.salePriceMinor     ?? 0);
@@ -85,7 +82,7 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
     <div>
       {/* Waterfall chart */}
       <div className="mb-5">
-        <div className="text-[10px] font-semibold dark:text-white/55 text-slate-500 uppercase tracking-widest mb-3">Cost Waterfall</div>
+        <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Cost Waterfall</div>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={items} margin={{ top: 4, right: 4, bottom: 36, left: 24 }}>
             <XAxis
@@ -106,15 +103,15 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
       {/* Stats grid — hidden when parent already renders a summary card */}
       {showStats && (
         <>
-          <div className="text-[10px] font-semibold dark:text-white/55 text-slate-500 uppercase tracking-widest mb-3">Key Metrics</div>
+          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Key Metrics</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {stats.map(({ label, value, positive, highlight }) => (
               <div key={label} className={`rounded-xl p-3 border metric-stat ${
                 highlight
                   ? 'bg-violet-500/10 border-violet-500/20'
-                  : 'dark:bg-white/5 dark:border-white/8 bg-slate-100 border-slate-200'
+                  : 'bg-slate-100 border-slate-200'
               }`}>
-                <div className="text-[10px] dark:text-white/50 text-slate-500 mb-1 leading-snug">{label}</div>
+                <div className="text-[10px] text-slate-500 mb-1 leading-snug">{label}</div>
                 <div className={`font-bold text-sm leading-snug ${positive ? 'text-green-500' : 'text-red-500'}`}>
                   {value}
                 </div>
@@ -133,7 +130,7 @@ export function ProfitWaterfall({ profit, currency = 'USD', showStats = true }: 
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
-            <span className="text-[10px] dark:text-white/55 text-slate-500">{label}</span>
+            <span className="text-[10px] text-slate-500">{label}</span>
           </div>
         ))}
       </div>
