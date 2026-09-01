@@ -99,8 +99,8 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   const glow  = v >= 70 ? 'rgba(16,185,129,0.45)' : v >= 45 ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)';
   return (
     <div className="flex items-center gap-2 text-[11px]">
-      <span className="w-[90px] text-white/45 text-right shrink-0 leading-tight">{label}</span>
-      <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+      <span className="w-[90px] text-slate-500 text-right shrink-0 leading-tight">{label}</span>
+      <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
         <div className="h-full rounded-full animate-bar-fill"
           style={{ width: `${v}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, boxShadow: `0 0 6px ${glow}` }} />
       </div>
@@ -140,7 +140,7 @@ function ResearchTab({ opp }: { opp: any }) {
 
       {/* Left — score breakdown */}
       <div>
-        <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-3">Score Breakdown</p>
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Score Breakdown</p>
         <div className="space-y-2.5">
           <ScoreBar label="Demand"      value={score.demand       ?? 0} />
           <ScoreBar label="Competition" value={score.competition  ?? 0} />
@@ -150,16 +150,16 @@ function ResearchTab({ opp }: { opp: any }) {
           <ScoreBar label="Shipping"    value={score.shipping     ?? 0} />
           <ScoreBar label="Saturation"  value={score.saturation   ?? 0} />
         </div>
-        <div className="mt-4 pt-3 border-t border-white/8 space-y-1.5">
+        <div className="mt-4 pt-3 border-t border-slate-200 space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-white/40 w-[90px] text-right shrink-0">AI Confidence</span>
-            <div className="flex-1 h-1.5 bg-white/8 rounded-full overflow-hidden">
+            <span className="text-[10px] text-slate-400 w-[90px] text-right shrink-0">AI Confidence</span>
+            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <div className="h-full rounded-full" style={{ width: `${conf}%`, backgroundColor: confColor }} />
             </div>
             <span className="w-6 text-xs font-bold tabular-nums" style={{ color: confColor }}>{conf}%</span>
           </div>
           {consensus && (
-            <p className="text-[10px] text-emerald-400/60 pl-2">✓ Consensus: {consensus}</p>
+            <p className="text-[10px] text-emerald-600 pl-2">✓ Consensus: {consensus}</p>
           )}
         </div>
       </div>
@@ -167,12 +167,12 @@ function ResearchTab({ opp }: { opp: any }) {
       {/* Right — market signals + AI evidence */}
       <div className="space-y-4">
         <div>
-          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest mb-2">Market Signals</p>
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Market Signals</p>
           <div className="space-y-2">
             {signals.map(s => (
               <div key={s.label} className="flex items-center gap-2 text-xs">
                 <span className="w-5 shrink-0">{s.icon}</span>
-                <span className="text-white/45 flex-1">{s.label}</span>
+                <span className="text-slate-500 flex-1">{s.label}</span>
                 <span className="font-semibold" style={{ color: s.color }}>{s.val}</span>
               </div>
             ))}
@@ -180,15 +180,15 @@ function ResearchTab({ opp }: { opp: any }) {
         </div>
 
         {(body || evidence) && (
-          <div className="pt-3 border-t border-white/8 space-y-2">
-            <p className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">AI Evidence</p>
-            {body && <p className="text-[11px] text-white/55 leading-relaxed">{body}</p>}
+          <div className="pt-3 border-t border-slate-200 space-y-2">
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">AI Evidence</p>
+            {body && <p className="text-[11px] text-slate-600 leading-relaxed">{body}</p>}
             {evidence && (
-              <div className="text-[10px] text-white/55 bg-white/3 rounded-lg p-2.5 leading-relaxed border border-white/8">
+              <div className="text-[10px] text-slate-600 bg-violet-50 rounded-lg p-2.5 leading-relaxed border border-violet-100">
                 📌 {evidence}
               </div>
             )}
-            {note && <p className="text-[10px] text-amber-400/60 mt-1">⚠ {note}</p>}
+            {note && <p className="text-[10px] text-amber-700 mt-1">⚠ {note}</p>}
           </div>
         )}
       </div>
@@ -230,9 +230,9 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
   ];
 
   return (
-    <div className="bg-white/[0.015] border-t border-white/5">
+    <div className="bg-slate-50 border-t border-slate-200">
       {/* Tab bar — pill style */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-200">
         <div className="tab-pill-bar flex-1">
           {PANEL_TABS.map(t => (
             <button key={t.key}
@@ -678,7 +678,7 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
 
 // ── Filter select style ───────────────────────────────────────────────────────
 
-const SEL = 'bg-white/5 border border-white/10 hover:border-white/20 text-xs text-white/60 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 [&>option]:bg-[#0d1225] cursor-pointer transition-colors min-h-[34px]';
+const SEL = 'bg-slate-50 border border-slate-200 hover:border-violet-300 text-xs text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 cursor-pointer transition-colors min-h-[34px]';
 
 // ── Scan progress panel ───────────────────────────────────────────────────────
 
@@ -922,17 +922,17 @@ export default function OpportunitiesPage() {
             {/* Live pill */}
             {!isLoading && allOpps.length > 0 && (
               <div className="flex items-center gap-2 mb-2.5">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-2.5 py-1 rounded-full tracking-wide uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full tracking-wide uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   {allOpps.length} live
                 </span>
               </div>
             )}
             {/* Headline */}
-            <h1 className="text-[28px] sm:text-[36px] font-black text-white tracking-tight leading-none mb-2">
+            <h1 className="text-[28px] sm:text-[36px] font-black text-slate-900 tracking-tight leading-none mb-2">
               Scout
             </h1>
-            <p className="text-sm text-white/65 leading-snug max-w-lg">
+            <p className="text-sm text-slate-600 leading-snug max-w-lg">
               AI-ranked products sourced from India — ready to sell on Amazon, Etsy &amp; 70+ global marketplaces
             </p>
           </div>
@@ -1005,7 +1005,7 @@ export default function OpportunitiesPage() {
                 style={{ color: s.color, background: s.bg, border: `1px solid ${s.border}` }}>
                 <span>{s.icon}</span>
                 <span className="font-black tabular-nums">{s.count}</span>
-                <span className="text-white/50">{s.label}</span>
+                <span className="opacity-80">{s.label}</span>
               </button>
             ))}
           </div>
@@ -1014,7 +1014,7 @@ export default function OpportunitiesPage() {
 
       {/* ── Thin scan progress bar (first scan only) ── */}
       {allOpps.length === 0 && searching && (
-        <div className="h-[3px] rounded-full bg-white/5 mb-5 overflow-hidden">
+        <div className="h-[3px] rounded-full bg-slate-200 mb-5 overflow-hidden">
           <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-[900ms] ease-out"
             style={{ width: `${Math.min(88, Math.round((scanStep / (SCAN_STAGES.length - 1)) * 100))}%` }} />
         </div>
@@ -1022,48 +1022,48 @@ export default function OpportunitiesPage() {
 
       {/* Onboarding checklist — shown only on first use */}
       {allOpps.length === 0 && !searching && !dismissedOnboarding && (
-        <div className="card-dark p-5 sm:p-6 border border-violet-500/15 mb-4 relative">
+        <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl p-5 sm:p-6 border border-violet-200 mb-4 relative shadow-sm">
           <button
             onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
-            className="absolute top-3 right-3 text-white/50 hover:text-white/70 transition-colors text-sm">
+            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors text-sm">
             ✕
           </button>
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">🚀</span>
-            <h2 className="font-bold text-white text-sm">Get started — 3 steps to your first opportunity</h2>
+            <h2 className="font-bold text-slate-900 text-sm">Get started — 3 steps to your first opportunity</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
-                step: '1', done: false, icon: '🛒',
+                step: '1', icon: '🛒',
                 title: 'Pick a marketplace',
                 body: 'Select Amazon US (best for beginners) or any of the 13 supported marketplaces from the dropdown above.',
               },
               {
-                step: '2', done: false, icon: '🔭',
+                step: '2', icon: '🔭',
                 title: 'Run your first scan',
                 body: 'Click "＋ New Scan". The AI runs a 7-stage pipeline: Discover → Demand → Competition → Suppliers → Profit → Score → Verdict.',
               },
               {
-                step: '3', done: false, icon: '🎯',
+                step: '3', icon: '🎯',
                 title: 'Open an opportunity',
                 body: 'Click any result to see the full 12-tab breakdown: scores, suppliers, profit model, listing, ads, and your Launch / Hold / Reject recommendation.',
               },
             ].map(s => (
-              <div key={s.step} className="flex items-start gap-3 p-3 rounded-xl bg-white/3 border border-white/5">
-                <div className="w-7 h-7 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-300 text-xs font-bold shrink-0">{s.step}</div>
+              <div key={s.step} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-violet-100 shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-violet-100 border border-violet-200 flex items-center justify-center text-violet-700 text-xs font-bold shrink-0">{s.step}</div>
                 <div>
-                  <div className="text-xs font-semibold text-white mb-1">{s.icon} {s.title}</div>
-                  <p className="text-[11px] text-white/40 leading-relaxed">{s.body}</p>
+                  <div className="text-xs font-semibold text-slate-800 mb-1">{s.icon} {s.title}</div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">{s.body}</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-4 flex items-center gap-3 flex-wrap">
-            <a href="/guide" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Read the full User Guide →</a>
-            <span className="text-white/15 text-xs">·</span>
+            <a href="/guide" className="text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors">Read the full User Guide →</a>
+            <span className="text-slate-300 text-xs">·</span>
             <button onClick={() => { setDismissedOnboarding(true); localStorage.setItem('bs_onboarding_dismissed', '1'); }}
-              className="text-xs text-white/50 hover:text-white/65 transition-colors">
+              className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
               Dismiss
             </button>
           </div>
@@ -1071,7 +1071,7 @@ export default function OpportunitiesPage() {
       )}
 
       {searchError && (
-        <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
           <span className="shrink-0 mt-0.5">✕</span>
           <span>{searchError}</span>
           <button onClick={() => setSearchError('')} className="ml-auto shrink-0 opacity-60 hover:opacity-100">✕</button>
@@ -1080,11 +1080,11 @@ export default function OpportunitiesPage() {
 
       {/* Free account Pro upsell strip */}
       {isFree && (
-        <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-500/20 bg-violet-500/8">
-          <span className="text-violet-400 text-base shrink-0">✦</span>
-          <p className="flex-1 text-xs text-violet-200/65 leading-snug">
-            <strong className="text-violet-200/90">Free account:</strong> browse AI-scored opportunities.{' '}
-            <strong className="text-violet-200/90">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-200 bg-violet-50">
+          <span className="text-violet-600 text-base shrink-0">✦</span>
+          <p className="flex-1 text-xs text-violet-800 leading-snug">
+            <strong className="text-violet-900">Free account:</strong> browse AI-scored opportunities.{' '}
+            <strong className="text-violet-900">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
           </p>
           <Link href="/register?plan=pro"
             className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
@@ -1104,16 +1104,16 @@ export default function OpportunitiesPage() {
 
             {/* Product name / keyword search */}
             <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 text-xs pointer-events-none">🔍</span>
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">🔍</span>
               <input
                 type="text"
                 value={nameFilter}
                 onChange={e => setNameFilter(e.target.value)}
                 placeholder="Search products…"
-                className="pl-7 pr-2.5 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-white/80 placeholder-white/25 focus:outline-none focus:border-violet-500/50 focus:bg-white/8 w-40 transition-colors"
+                className="pl-7 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30 w-40 transition-colors"
               />
               {nameFilter && (
-                <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 text-xs">✕</button>
+                <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
               )}
             </div>
 
@@ -1170,12 +1170,12 @@ export default function OpportunitiesPage() {
             <div className="ml-auto flex items-center gap-2.5 pl-2">
               {hasClientFilters && (
                 <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
-                  className="text-xs text-white/55 hover:text-white/80 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/20 whitespace-nowrap">
+                  className="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 whitespace-nowrap">
                   Clear ✕
                 </button>
               )}
-              <span className="text-xs text-white/50 whitespace-nowrap tabular-nums">
-                {displayed.length}<span className="text-white/40"> / {allOpps.length}</span>
+              <span className="text-xs text-slate-500 whitespace-nowrap tabular-nums">
+                {displayed.length}<span className="text-slate-400"> / {allOpps.length}</span>
               </span>
             </div>
 
@@ -1201,11 +1201,11 @@ export default function OpportunitiesPage() {
         ) : displayed.length === 0 ? (
           <div className="card-dark rounded-xl py-14 text-center">
             <div className="text-4xl mb-3">🎯</div>
-            <p className="font-medium text-white/70 mb-1">
+            <p className="font-medium text-slate-700 mb-1">
               {allOpps.length === 0 ? 'No opportunities yet' : 'No results match your filters'}
             </p>
-            <p className="text-sm text-white/40">
-              {allOpps.length === 0 ? 'Click + New Search to discover products' : 'Try adjusting the filters above'}
+            <p className="text-sm text-slate-500">
+              {allOpps.length === 0 ? 'Click + New Scan to discover products' : 'Try adjusting the filters above'}
             </p>
           </div>
         ) : (
@@ -1285,7 +1285,7 @@ export default function OpportunitiesPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {netMinor != null && (
-                        <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                           {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
                         </span>
                       )}
@@ -1331,7 +1331,7 @@ export default function OpportunitiesPage() {
                       {netMinor != null && (
                         <div className="text-right">
                           <div className="text-[10px] dark:text-white/35 text-slate-400 leading-none mb-0.5">Net Profit</div>
-                          <span className={`text-sm font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <span className={`text-sm font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}/unit
                           </span>
                         </div>
@@ -1405,12 +1405,12 @@ export default function OpportunitiesPage() {
                   <tr><td colSpan={7}>
                     <div className="py-14 text-center">
                       <div className="text-4xl mb-3">🎯</div>
-                      <p className="font-medium text-white/70 mb-1">
+                      <p className="font-medium text-slate-700 mb-1">
                         {allOpps.length === 0 ? 'No opportunities yet' : 'No results match your filters'}
                       </p>
-                      <p className="text-sm text-white/40">
+                      <p className="text-sm text-slate-500">
                         {allOpps.length === 0
-                          ? 'Click + New Search to discover products'
+                          ? 'Click + New Scan to discover products'
                           : 'Try adjusting the filters above'}
                       </p>
                     </div>
@@ -1459,7 +1459,7 @@ export default function OpportunitiesPage() {
                             <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {opp.product?.category && (
-                                <span className="text-[10px] text-white/55 capitalize leading-snug truncate max-w-[120px]">
+                                <span className="text-[10px] text-slate-500 capitalize leading-snug truncate max-w-[120px]">
                                   {opp.product.category.replace(/_/g, ' ')}
                                 </span>
                               )}
@@ -1480,7 +1480,7 @@ export default function OpportunitiesPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-white/40">{tStr.label}</span>
+                          <span className="text-[10px] text-slate-500">{tStr.label}</span>
                           <div className="flex-1 h-1 dark:bg-white/10 bg-slate-200 rounded-full overflow-hidden min-w-[40px] max-w-[60px]">
                             <div className="h-full rounded-full" style={{ width: `${opp.score?.trend ?? 0}%`, backgroundColor: tStr.color }} />
                           </div>
@@ -1490,10 +1490,10 @@ export default function OpportunitiesPage() {
 
                       {/* Region */}
                       <td className="px-3 py-3">
-                        <div className="text-sm font-medium text-white/80 leading-snug">
+                        <div className="text-sm font-medium text-slate-800 leading-snug">
                           {cc ? flag(cc) : '🛒'} {platformOf(mpCode)}
                         </div>
-                        <div className="text-[10px] text-white/55 leading-snug mt-0.5">{region}</div>
+                        <div className="text-[10px] text-slate-500 leading-snug mt-0.5">{region}</div>
                       </td>
 
                       {/* Score */}
@@ -1509,10 +1509,10 @@ export default function OpportunitiesPage() {
                       {/* Net Profit */}
                       <td className="px-3 py-3 text-right font-semibold">
                         {netMinor != null
-                          ? <span className={netMinor > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                          ? <span className={netMinor > 0 ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'}>
                               {netMinor > 0 ? '+' : ''}{currency} {(netMinor / 100).toFixed(0)}
                             </span>
-                          : <span className="text-white/50">&mdash;</span>}
+                          : <span className="text-slate-400">&mdash;</span>}
                       </td>
 
                       {/* Actions: Full Report (primary) + Research inline + wishlist */}
@@ -1541,7 +1541,7 @@ export default function OpportunitiesPage() {
                             className={`text-xs px-2 py-1.5 rounded-lg font-semibold whitespace-nowrap border select-none transition-all duration-200 ${
                               isOpen
                                 ? 'border-violet-500/45'
-                                : 'bg-white/5 text-white/40 border-white/10 hover:bg-violet-500/12 hover:text-violet-300 hover:border-violet-500/25 hover:shadow-[0_2px_8px_rgba(124,58,237,0.18)]'
+                                : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-300'
                             }`}>
                             {isOpen ? '✕' : '📊'}
                           </button>
@@ -1552,7 +1552,7 @@ export default function OpportunitiesPage() {
                             className={`p-1.5 rounded-lg border transition-all duration-200 ${
                               wishlist.has(opp.id)
                                 ? 'bg-amber-500/15 border-amber-500/35 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
-                                : 'bg-white/5 border-white/10 text-white/50 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/25'
+                                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-amber-500 hover:bg-amber-50 hover:border-amber-300'
                             }`}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
                               <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
@@ -1577,13 +1577,13 @@ export default function OpportunitiesPage() {
                 ...(isFree && displayed.length > 10 ? [
                   <tr key="free-gate">
                     <td colSpan={7} className="p-0">
-                      <div className="py-12 text-center border-t border-white/5"
-                        style={{ background: 'linear-gradient(to top,rgba(2,8,23,0.98) 0%,rgba(2,8,23,0.55) 100%)' }}>
+                      <div className="py-12 text-center border-t border-slate-200"
+                        style={{ background: 'linear-gradient(to top, rgba(245,243,255,0.8) 0%, rgba(255,255,255,0.5) 100%)' }}>
                         <div className="text-4xl mb-3">🔒</div>
-                        <p className="text-sm font-semibold text-white mb-1">
+                        <p className="text-sm font-semibold text-slate-900 mb-1">
                           {displayed.length - 10} more opportunit{displayed.length - 10 === 1 ? 'y' : 'ies'} on this marketplace
                         </p>
-                        <p className="text-xs text-white/40 mb-5 leading-snug max-w-xs mx-auto">
+                        <p className="text-xs text-slate-500 mb-5 leading-snug max-w-xs mx-auto">
                           Free account shows 10 results per marketplace · Upgrade to Pro for unlimited AI scans &amp; full results
                         </p>
                         <Link href="/register?plan=pro"
@@ -1603,22 +1603,21 @@ export default function OpportunitiesPage() {
 
       {/* ── Bottom bar: result count + Scan for More ── */}
       {!isLoading && allOpps.length > 0 && (
-        <div className="mt-4 rounded-xl border border-white/8 px-4 py-3 space-y-3"
-          style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="mt-4 rounded-xl border border-slate-200 px-4 py-3 space-y-3 bg-slate-50">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Count + mini stats */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/40">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
             <span>
               Showing{' '}
-              <span className="font-semibold text-white/70 tabular-nums">
+              <span className="font-semibold text-slate-800 tabular-nums">
                 {isFree ? Math.min(10, displayed.length) : displayed.length}
               </span>
               {isFree && allOpps.length > 10 && (
-                <span className="text-white/50"> of <span className="font-semibold text-white/70 tabular-nums">{allOpps.length}</span></span>
+                <span> of <span className="font-semibold text-slate-800 tabular-nums">{allOpps.length}</span></span>
               )}{' '}
               opportunit{(isFree ? Math.min(10, displayed.length) : displayed.length) === 1 ? 'y' : 'ies'}
               {isFree && allOpps.length > 10 && (
-                <span className="text-violet-400/70"> · {allOpps.length - 10} locked</span>
+                <span className="text-violet-600"> · {allOpps.length - 10} locked</span>
               )}
             </span>
             <div className="flex items-center gap-2.5">
@@ -1643,7 +1642,7 @@ export default function OpportunitiesPage() {
                   min-w-[200px] min-h-[44px] select-none transition-all duration-300
                   ${searching
                     ? 'cursor-not-allowed animate-pulse-glow border border-violet-500/50'
-                    : 'border border-white/15 text-white/60 hover:border-violet-500/50 hover:text-violet-300 hover:bg-violet-500/8 disabled:opacity-40'}`}
+                    : 'border border-slate-200 text-slate-600 hover:border-violet-400 hover:text-violet-700 hover:bg-violet-50 disabled:opacity-40'}`}
                 style={searching ? {
                   background: 'linear-gradient(135deg, rgba(109,40,217,0.85) 0%, rgba(79,70,229,0.85) 100%)',
                   boxShadow: '0 0 20px rgba(124,58,237,0.5), 0 4px 12px rgba(124,58,237,0.25)',
@@ -1675,7 +1674,7 @@ export default function OpportunitiesPage() {
                     <>
                       <span className="text-lg animate-pulse leading-none">{SCAN_STAGES[scanStep]?.icon}</span>
                       <span className="truncate">{SCAN_STAGES[scanStep]?.label}…</span>
-                      <span className="text-[11px] text-violet-200/70 font-mono tabular-nums ml-1">{scanPct}%</span>
+                      <span className="text-[11px] text-violet-300 font-mono tabular-nums ml-1">{scanPct}%</span>
                     </>
                   ) : (
                     <>Scan for More <span className="text-base leading-none">↓</span></>
