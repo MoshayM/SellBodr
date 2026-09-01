@@ -1,63 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
-    <!-- Main vivid gradient: deep violet → hot pink → amber -->
-    <linearGradient id="g" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+    <!-- Rich dark background: deep navy → dark violet -->
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#0d0820"/>
+      <stop offset="100%" stop-color="#160b2e"/>
+    </linearGradient>
+    <!-- Subtle radial glow on background -->
+    <radialGradient id="bgr" cx="50%" cy="44%" r="52%">
+      <stop offset="0%"   stop-color="#5b21b6" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#5b21b6" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Symbol gradient: violet → pink → amber (recalculated for 70% scale) -->
+    <linearGradient id="g" x1="29" y1="69.6" x2="66.8" y2="30.4" gradientUnits="userSpaceOnUse">
       <stop offset="0%"   stop-color="#7c3aed"/>
-      <stop offset="48%"  stop-color="#db2777"/>
+      <stop offset="50%"  stop-color="#db2777"/>
       <stop offset="100%" stop-color="#f59e0b"/>
     </linearGradient>
-    <!-- 3D depth shadow gradient (dark extrusion layer) -->
-    <linearGradient id="gd" x1="20" y1="78" x2="74" y2="22" gradientUnits="userSpaceOnUse">
+    <!-- 3D depth layer gradient -->
+    <linearGradient id="gd" x1="29" y1="69.6" x2="66.8" y2="30.4" gradientUnits="userSpaceOnUse">
       <stop offset="0%"   stop-color="#1e0a3c"/>
       <stop offset="100%" stop-color="#431407"/>
     </linearGradient>
-    <!-- Ambient glow behind the arrows -->
-    <radialGradient id="bg-glow" cx="50%" cy="45%" r="48%">
-      <stop offset="0%"   stop-color="#7c3aed" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-    </radialGradient>
-    <!-- Soft glow filter for the bloom layer -->
-    <filter id="gf" x="-55%" y="-55%" width="210%" height="210%" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="5"/>
+    <!-- Soft bloom filter -->
+    <filter id="gf" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4"/>
     </filter>
   </defs>
 
-  <!-- ── Black circle background (like Grok icon) ── -->
-  <circle cx="50" cy="50" r="50" fill="#000000"/>
-  <!-- Subtle ambient violet glow in background -->
-  <circle cx="50" cy="50" r="50" fill="url(#bg-glow)"/>
+  <!-- Background fills full square (OS applies rounded corners) -->
+  <rect width="100" height="100" fill="url(#bg)"/>
+  <rect width="100" height="100" fill="url(#bgr)"/>
 
-  <!-- Soft glow bloom behind arrows -->
+  <!--
+    Symbol scaled to 70% of original, centered at (50,50).
+    Gives ~24% padding on each side — professional app icon proportions.
+    All coordinates pre-calculated (no SVG transform) for maximum renderer compat.
+  -->
+
+  <!-- Ambient glow bloom behind arrows -->
   <g filter="url(#gf)" opacity="0.55">
-    <path d="M 20 65 C 15 35,53 17,62 19"
-          stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
-    <polygon points="74,22 61,24 63,14" fill="#db2777"/>
-    <path d="M 80 35 C 85 65,47 83,38 81"
-          stroke="url(#g)" stroke-width="11" stroke-linecap="round" fill="none"/>
-    <polygon points="26,78 39,76 37,86" fill="#7c3aed"/>
+    <path d="M 29 60.5 C 25.5 39.5,52.1 26.9,58.4 28.3"
+          stroke="url(#g)" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <polygon points="66.8,30.4 57.7,31.8 59.1,24.8" fill="#db2777"/>
+    <path d="M 71 39.5 C 74.5 60.5,47.9 73.1,41.6 71.7"
+          stroke="url(#g)" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <polygon points="33.2,69.6 42.3,68.2 40.9,75.2" fill="#7c3aed"/>
   </g>
 
-  <!-- 3D depth extrusion layer (offset +2.5, +3 for depth illusion) -->
-  <g opacity="0.55">
-    <path d="M 22.5 68 C 17.5 38,55.5 20,64.5 22"
-          stroke="url(#gd)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
-    <polygon points="76.5,25 63.5,27 65.5,17" fill="url(#gd)"/>
-    <path d="M 82.5 38 C 87.5 68,49.5 86,40.5 84"
-          stroke="url(#gd)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
-    <polygon points="28.5,81 41.5,79 39.5,89" fill="url(#gd)"/>
+  <!-- 3D depth extrusion (offset +1.75x, +2.1y after scaling) -->
+  <g opacity="0.50">
+    <path d="M 30.8 62.6 C 27.3 41.6,53.9 29.0,60.2 30.4"
+          stroke="url(#gd)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <polygon points="68.5,32.5 59.5,33.9 60.9,26.9" fill="url(#gd)"/>
+    <path d="M 72.8 41.6 C 76.3 62.6,49.7 75.2,43.4 73.8"
+          stroke="url(#gd)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <polygon points="35.0,71.7 44.1,70.3 42.7,77.3" fill="url(#gd)"/>
   </g>
 
-  <!-- ── Main vivid arrows ── -->
-  <path d="M 20 65 C 15 35,53 17,62 19"
-        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
-  <polygon points="74,22 61,24 63,14" fill="url(#g)"/>
-  <path d="M 80 35 C 85 65,47 83,38 81"
-        stroke="url(#g)" stroke-width="8.5" stroke-linecap="round" fill="none"/>
-  <polygon points="26,78 39,76 37,86" fill="url(#g)"/>
+  <!-- Main vivid arrows -->
+  <path d="M 29 60.5 C 25.5 39.5,52.1 26.9,58.4 28.3"
+        stroke="url(#g)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <polygon points="66.8,30.4 57.7,31.8 59.1,24.8" fill="url(#g)"/>
+  <path d="M 71 39.5 C 74.5 60.5,47.9 73.1,41.6 71.7"
+        stroke="url(#g)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <polygon points="33.2,69.6 42.3,68.2 40.9,75.2" fill="url(#g)"/>
 
-  <!-- Top-face rim highlight (white, 3D top-plane effect) -->
-  <path d="M 20 65 C 15 35,53 17,62 19"
-        stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.25"/>
-  <path d="M 80 35 C 85 65,47 83,38 81"
-        stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.25"/>
+  <!-- Top-face rim highlight (3D depth) -->
+  <path d="M 29 60.5 C 25.5 39.5,52.1 26.9,58.4 28.3"
+        stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.22"/>
+  <path d="M 71 39.5 C 74.5 60.5,47.9 73.1,41.6 71.7"
+        stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.22"/>
 </svg>
