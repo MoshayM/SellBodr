@@ -299,7 +299,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
           <div className="p-4 space-y-3">
 
             {/* ── DIVERGING COST BREAKDOWN ── */}
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="rounded-xl p-3" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
               {/* Header */}
               <div className="flex items-center mb-2">
                 <div className="flex-1 text-right pr-2">
@@ -337,18 +337,18 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                   return (
                     <div key={r.label}>
                       {r.isSubtotal && (
-                        <div className="h-px my-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)' }} />
+                        <div className="h-px my-1" style={{ background: 'linear-gradient(90deg,transparent,rgba(203,213,225,0.9),transparent)' }} />
                       )}
                       {r.isNet && (
-                        <div className="h-px my-1.5" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)' }} />
+                        <div className="h-px my-1.5" style={{ background: 'linear-gradient(90deg,transparent,rgba(148,163,184,0.8),transparent)' }} />
                       )}
                       <div className="flex items-center" style={{ height: rowH }}>
                         {/* Left half — costs, bar grows rightward from axis */}
                         <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0"
-                          style={{ borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                          style={{ borderRight: '1px solid #CBD5E1' }}>
                           {!r.positive && (
                             <>
-                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-400' : r.isSubtotal ? 'font-semibold text-indigo-300' : 'text-white/55'}`}>
+                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-red-600' : r.isSubtotal ? 'font-semibold text-indigo-600' : 'text-slate-500'}`}>
                                 -{f(r.value)}
                               </span>
                               <div className={`${barH} rounded-l-full flex-shrink-0`}
@@ -359,19 +359,19 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
 
                         {/* Center — label at zero axis */}
                         <div className="w-[76px] shrink-0 flex items-center justify-center px-1">
-                          <span className={`text-center leading-tight ${r.isNet ? 'text-[10px] font-bold text-white/90' : r.isSubtotal ? 'text-[9px] font-semibold text-indigo-400' : 'text-[9px] text-white/45'}`}>
+                          <span className={`text-center leading-tight ${r.isNet ? 'text-[10px] font-bold text-slate-900' : r.isSubtotal ? 'text-[9px] font-semibold text-indigo-600' : 'text-[9px] text-slate-500'}`}>
                             {r.label}
                           </span>
                         </div>
 
                         {/* Right half — revenue/profit, bar grows leftward from axis */}
                         <div className="flex-1 flex items-center justify-start gap-1.5 min-w-0"
-                          style={{ borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                          style={{ borderLeft: '1px solid #CBD5E1' }}>
                           {r.positive && (
                             <>
                               <div className={`${barH} rounded-r-full flex-shrink-0`}
                                 style={{ width: `${pct}%`, background: r.grad, boxShadow: `0 0 5px ${r.glow}` }} />
-                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-400' : 'text-white/55'}`}>
+                              <span className={`text-[9px] font-mono shrink-0 ${r.isNet ? 'font-bold text-emerald-600' : 'text-slate-500'}`}>
                                 +{f(r.value)}
                               </span>
                             </>
@@ -395,16 +395,15 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                     : 'linear-gradient(135deg,rgba(239,68,68,0.1) 0%,rgba(239,68,68,0.03) 100%)',
                   border: `1px solid ${trueNet >= 0 ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
                 }}>
-                <div className="text-[9px] font-semibold text-white/55 uppercase tracking-widest">Net Profit / Unit</div>
-                <div className={`text-3xl font-black tabular-nums leading-none my-1.5 ${trueNet >= 0 ? 'text-emerald-400' : 'text-red-400'}`}
-                  style={{ textShadow: trueNet >= 0 ? '0 0 20px rgba(16,185,129,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
+                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest">Net Profit / Unit</div>
+                <div className={`text-3xl font-black tabular-nums leading-none my-1.5 ${trueNet >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {trueNet < 0 ? '-' : '+'}{f(Math.abs(trueNet))}
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${trueNet >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${trueNet >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                     Margin {netMargin.toFixed(1)}%
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${roi >= 20 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${roi >= 20 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                     ROI {roi.toFixed(0)}%
                   </span>
                 </div>
@@ -412,43 +411,42 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
 
               {/* Total Cost / Unit */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Total Cost / Unit</div>
-                <div className="text-xl font-bold text-red-400 tabular-nums my-1">
+                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="text-[9px] text-slate-500 uppercase tracking-widest font-medium">Total Cost / Unit</div>
+                <div className="text-xl font-bold text-red-600 tabular-nums my-1">
                   {f(src + ship + pkg + dutyAmt + refFee + fbaFee + adSpend)}
                 </div>
-                <div className="text-[9px] text-white/50">all-in landed</div>
+                <div className="text-[9px] text-slate-400">all-in landed</div>
               </div>
 
               {/* Break-even */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Break-even</div>
-                <div className={`text-xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-400' : breakeven < 500 ? 'text-amber-400' : 'text-red-400'}`}>
+                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="text-[9px] text-slate-500 uppercase tracking-widest font-medium">Break-even</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${breakeven < 200 ? 'text-emerald-600' : breakeven < 500 ? 'text-amber-600' : 'text-red-600'}`}>
                   {Math.min(breakeven, 999)}
                 </div>
-                <div className="text-[9px] text-white/50">units to profit</div>
+                <div className="text-[9px] text-slate-400">units to profit</div>
               </div>
 
               {/* Monthly · 50u */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Monthly</div>
-                <div className={`text-xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-white' : 'text-red-400'}`}>
+                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="text-[9px] text-slate-500 uppercase tracking-widest font-medium">Monthly</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${monthly50 >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {monthly50 < 0 ? '-' : ''}{sym}{(Math.abs(monthly50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[9px] text-white/50">est. · 50 units</div>
+                <div className="text-[9px] text-slate-400">est. · 50 units</div>
               </div>
 
               {/* Annual · 50u */}
               <div className="rounded-xl p-3 text-center flex flex-col justify-between"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="text-[9px] text-white/50 uppercase tracking-widest font-medium">Annual</div>
-                <div className={`text-xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-300' : 'text-red-400'}`}
-                  style={{ textShadow: annual50 >= 0 ? '0 0 14px rgba(167,139,250,0.3)' : undefined }}>
+                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="text-[9px] text-slate-500 uppercase tracking-widest font-medium">Annual</div>
+                <div className={`text-xl font-bold tabular-nums my-1 ${annual50 >= 0 ? 'text-violet-600' : 'text-red-600'}`}>
                   {annual50 < 0 ? '-' : ''}{sym}{(Math.abs(annual50) / 100).toFixed(0)}
                 </div>
-                <div className="text-[9px] text-white/50">est. · 50 units</div>
+                <div className="text-[9px] text-slate-400">est. · 50 units</div>
               </div>
 
             </div>

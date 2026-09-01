@@ -379,7 +379,7 @@ function WhiteLabelPanel({ user }: { user: any }) {
           <div className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-2">Live Preview</div>
           <div className="rounded-2xl overflow-hidden border border-white/8" style={{ background: '#020817' }}>
             {/* Nav bar preview */}
-            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <div className="flex items-center gap-2.5 px-4 py-3 border-b border-white/8" style={{ background: '#F8FAFC' }}>
               {settings.logoUrl
                 ? <img src={settings.logoUrl} alt="" className="w-7 h-7 object-contain rounded"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />

@@ -22,7 +22,7 @@ function RoleBadge({ role }: { role: string }) {
   };
   return (
     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize"
-      style={{ background: colors[role] || 'rgba(255,255,255,0.08)', color: text[role] || '#fff' }}>
+      style={{ background: colors[role] || '#F1F5F9', color: text[role] || '#64748B' }}>
       {role}
     </span>
   );

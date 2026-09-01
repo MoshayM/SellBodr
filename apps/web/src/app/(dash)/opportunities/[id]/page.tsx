@@ -339,22 +339,22 @@ if(pins.length>1){
 
           {/* Header bar */}
           <div className="flex items-center justify-between px-5 py-3 border-b shrink-0"
-            style={{ background: 'rgba(8,12,32,0.95)', borderColor: 'rgba(255,255,255,0.08)' }}>
+            style={{ background: '#ffffff', borderColor: '#E2E8F0' }}>
             <div className="flex items-center gap-3">
               <span className="text-xl">🗺</span>
               <div>
-                <div className="text-sm font-bold text-white leading-none">Global Supplier Map</div>
-                <div className="text-xs text-white/40 mt-0.5 leading-none">
+                <div className="text-sm font-bold text-slate-900 leading-none">Global Supplier Map</div>
+                <div className="text-xs text-slate-400 mt-0.5 leading-none">
                   {pins.length} supplier{pins.length !== 1 ? 's' : ''} plotted
-                  {indiaCount > 0 && <span className="ml-2 text-emerald-400">· {indiaCount} India 🇮🇳</span>}
+                  {indiaCount > 0 && <span className="ml-2 text-emerald-600">· {indiaCount} India 🇮🇳</span>}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/50 hidden sm:block">Press ESC to close</span>
+              <span className="text-[10px] text-slate-400 hidden sm:block">Press ESC to close</span>
               <button
                 onClick={close}
-                className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg text-white/70 hover:text-white border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all">
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
                   <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z"/>
                 </svg>
@@ -376,16 +376,16 @@ if(pins.length>1){
 
           {/* Legend bar */}
           <div className="flex items-center gap-5 px-5 py-2.5 border-t shrink-0"
-            style={{ background: 'rgba(8,12,32,0.95)', borderColor: 'rgba(255,255,255,0.06)' }}>
-            <div className="flex items-center gap-2 text-xs text-white/50">
+            style={{ background: '#ffffff', borderColor: '#E2E8F0' }}>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <div className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/30" />
               India priority supplier
             </div>
-            <div className="flex items-center gap-2 text-xs text-white/50">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <div className="w-3 h-3 rounded-full bg-indigo-500 ring-2 ring-indigo-500/30" />
               Global supplier
             </div>
-            <div className="ml-auto text-[10px] text-white/50">Click a pin for precise location + Google Maps links</div>
+            <div className="ml-auto text-[10px] text-slate-400">Click a pin for precise location + Google Maps links</div>
           </div>
         </div>
       )}
@@ -561,7 +561,7 @@ export default function OpportunityDetailPage() {
       <div className="card-dark p-4 sm:p-6 mb-5">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-white/8 shrink-0 relative"
-            style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.3)' }}>
+            style={{ boxShadow: '0 0 0 1px #E2E8F0, 0 4px 16px rgba(15,23,42,0.08)' }}>
             {opp.product?.imageUrl ? (
               <img
                 src={opp.product.imageUrl}
@@ -1425,7 +1425,7 @@ export default function OpportunityDetailPage() {
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-20 text-xs text-white/40 truncate shrink-0">{c.brand}</div>
                       <div className="flex-1 h-2 bg-white/8 rounded-full overflow-hidden">
-                        <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: i === 0 ? '#7c3aed' : 'rgba(255,255,255,0.15)' }} />
+                        <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: i === 0 ? '#7c3aed' : '#CBD5E1' }} />
                       </div>
                       <div className="text-xs text-white/45 w-20 shrink-0">~{vel}/mo reviews</div>
                     </div>
