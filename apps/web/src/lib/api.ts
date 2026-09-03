@@ -25,6 +25,35 @@ function getToken(): string | null {
   return localStorage.getItem('bs_access_token');
 }
 
+let _refreshing: Promise<string | null> | null = null;
+
+async function silentRefresh(): Promise<string | null> {
+  if (_refreshing) return _refreshing;
+  _refreshing = (async () => {
+    try {
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('bs_refresh_token') : null;
+      if (!refreshToken) return null;
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.accessToken) {
+        localStorage.setItem('bs_access_token', data.accessToken);
+        return data.accessToken as string;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      _refreshing = null;
+    }
+  })();
+  return _refreshing;
+}
+
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
   // Attach guest LLM keys as headers so server-side gateway can use them
@@ -46,13 +75,30 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   });
 
   if (res.status === 401) {
-    // Expired session — clear token and reload as guest (no automatic redirect to login)
-    // Login page only opens when the user explicitly clicks "Sign in"
-    if (typeof window !== 'undefined' && localStorage.getItem('bs_access_token')) {
+    // Try silent token refresh before giving up
+    if (typeof window !== 'undefined' && localStorage.getItem('bs_refresh_token')) {
+      const newToken = await silentRefresh();
+      if (newToken) {
+        const retry = await fetch(`${API_URL}${path}`, {
+          ...opts,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${newToken}`,
+            ...opts.headers,
+          },
+        });
+        if (retry.ok) return retry.json() as Promise<T>;
+        if (retry.status !== 401) {
+          const err = await retry.json().catch(() => ({ message: 'Request failed' }));
+          throw new Error(err.message || err.error || 'Request failed');
+        }
+      }
+    }
+    // Refresh failed or no refresh token — clear session without page reload
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('bs_access_token');
       localStorage.removeItem('bs_refresh_token');
       localStorage.removeItem('bs_user');
-      window.location.reload();
     }
     throw new Error('Unauthorized');
   }
@@ -73,6 +119,7 @@ export const api = {
       request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     googleLogin: (credential: string) =>
       request<any>('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
+    refresh: (refreshToken: string) => request<{ accessToken: string; expiresIn: number }>('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
     logout: (refreshToken: string) => request('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
   },
   searches: {
