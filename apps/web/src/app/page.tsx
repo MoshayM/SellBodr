@@ -35,7 +35,7 @@ const PLANS = [
   {
     name: 'Pro', price: '$9', period: '/mo',
     desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
-    features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
+    features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
     cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
   },
 ];

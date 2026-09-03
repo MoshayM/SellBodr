@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { api, isPro } from '@/lib/api';
 import { ScoreGauge, RecommendationBadge } from '@/components/ui/ScoreGauge';
 import { getWishlist, addToWishlist, removeFromWishlist } from '@/lib/wishlist';
+import { ExportMenu } from '@/components/ui/ExportMenu';
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -1019,6 +1020,7 @@ export default function OpportunitiesPage() {
           </p>
 
           {/* Action — below description */}
+          <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => runSearch.mutate()}
             disabled={searching}
@@ -1068,6 +1070,16 @@ export default function OpportunitiesPage() {
               )}
             </span>
           </button>
+
+          {/* Export — Pro only, visible when there's data */}
+          {!isFree && displayed.length > 0 && (
+            <ExportMenu
+              getData={() => displayed}
+              label={`opportunities-${mpFilter || 'all'}`}
+              align="left"
+            />
+          )}
+          </div>
         </div>
 
         {/* Quick-stat chips — clickable filters */}

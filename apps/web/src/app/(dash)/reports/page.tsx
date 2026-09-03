@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, isPro } from '@/lib/api';
 import { ProGate } from '@/components/ui/ProGate';
+import { ExportMenu } from '@/components/ui/ExportMenu';
 
 const REPORT_STAGES = [
   { icon: '🔬', label: 'Analysing market',  ms: 2500 },
@@ -118,9 +119,18 @@ export default function ReportsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Reports</h1>
-        <p className="text-sm text-white/40 mt-0.5 leading-snug">Generate full opportunity intelligence reports</p>
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Reports</h1>
+          <p className="text-sm text-white/40 mt-0.5 leading-snug">Generate full opportunity intelligence reports</p>
+        </div>
+        {(opps as any[]).length > 0 && (
+          <ExportMenu
+            getData={() => opps as any[]}
+            label="opportunities"
+            align="right"
+          />
+        )}
       </div>
 
       {(opps as any[]).length === 0 && reports.length === 0 && (
@@ -195,6 +205,14 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <ExportMenu
+                    getData={() => {
+                      const opp = (opps as any[]).find((o: any) => o.id === r.id) ?? { product: r.product, marketplace: r.marketplace };
+                      return [opp];
+                    }}
+                    label={`report-${(r.product?.title ?? 'opportunity').slice(0, 20).replace(/\s+/g, '-').toLowerCase()}`}
+                    align="right"
+                  />
                   <button onClick={() => copyReport(r)}
                     className="text-xs leading-none px-2.5 py-1.5 border border-white/10 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-colors">
                     Copy
