@@ -825,6 +825,11 @@ export default function OpportunitiesPage() {
   });
   useEffect(() => { setIsFree(!isPro()); }, []);
 
+  // ── Real product image enrichment ──────────────────────────────────────────
+  const enrichedRef                              = useRef<Set<string>>(new Set());
+  const [enrichedImages, setEnrichedImages]      = useState<Record<string, string>>({});
+  const [enrichingIds,   setEnrichingIds]        = useState<Set<string>>(new Set());
+
   const { data: marketplaces = [], isLoading: mktLoading } = useQuery({
     queryKey: ['marketplaces', 'active'],
     queryFn: () => api.marketplaces.list({ active: true }),
@@ -840,6 +845,32 @@ export default function OpportunitiesPage() {
   });
 
   const allOpps = opps as any[];
+
+  // Trigger image enrichment for cards with placeholder/broken images
+  useEffect(() => {
+    if (!allOpps.length) return;
+    const BAD = ['picsum.photos','loremflickr.com','placeholder.com','placehold.it','pollinations.ai','source.unsplash.com'];
+    const toEnrich = allOpps
+      .filter(o => !enrichedRef.current.has(o.id))
+      .filter(o => !o.product?.imageUrl || BAD.some(d => (o.product.imageUrl as string).includes(d)))
+      .slice(0, 8); // max 8/load to stay in Google CSE free tier
+    if (!toEnrich.length) return;
+    toEnrich.forEach(o => enrichedRef.current.add(o.id));
+    setEnrichingIds(prev => { const s = new Set(prev); toEnrich.forEach(o => s.add(o.id)); return s; });
+    toEnrich.forEach((opp, i) => {
+      setTimeout(async () => {
+        try {
+          const res  = await fetch(`/api/v1/opportunities/${opp.id}/enrich-image`, { method: 'POST' });
+          const data = await res.json();
+          if (data.enriched && data.imageUrl) {
+            setEnrichedImages(prev => ({ ...prev, [opp.id]: data.imageUrl }));
+          }
+        } catch { /* silently ignore */ } finally {
+          setEnrichingIds(prev => { const s = new Set(prev); s.delete(opp.id); return s; });
+        }
+      }, i * 400);
+    });
+  }, [allOpps.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const categories = useMemo(
     () => [...new Set(allOpps.map(o => o.product?.category).filter(Boolean))].sort() as string[],
@@ -915,33 +946,31 @@ export default function OpportunitiesPage() {
 
       {/* ── Scout hero ──────────────────────────────────────── */}
       <div className="mb-5">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            {/* Live pill */}
-            {!isLoading && allOpps.length > 0 && (
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full tracking-wide uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  {allOpps.length} live
-                </span>
-              </div>
-            )}
-            {/* Headline */}
-            <h1 className="text-[28px] sm:text-[36px] font-black text-slate-900 tracking-tight leading-none mb-2">
-              Scout
-            </h1>
-            <p className="text-sm text-slate-600 leading-snug max-w-lg">
-              AI-ranked products sourced from India — ready to sell on Amazon, Etsy &amp; 70+ global marketplaces
-            </p>
-          </div>
+        <div className="mb-4">
+          {/* Live pill */}
+          {!isLoading && allOpps.length > 0 && (
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full tracking-wide uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                {allOpps.length} live
+              </span>
+            </div>
+          )}
+          {/* Headline */}
+          <h1 className="text-[28px] sm:text-[36px] font-black text-slate-900 tracking-tight leading-none mb-2">
+            Scout
+          </h1>
+          <p className="text-sm text-slate-600 leading-snug max-w-lg mb-4">
+            AI-ranked products sourced from India — ready to sell on Amazon, Etsy &amp; 70+ global marketplaces
+          </p>
 
-          {/* Action */}
+          {/* Action — below description */}
           <button
             onClick={() => runSearch.mutate()}
             disabled={searching}
-            className={`relative overflow-hidden text-sm font-semibold shrink-0
+            className={`relative overflow-hidden text-sm font-semibold
               inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
-              min-w-[200px] min-h-[44px] select-none transition-all duration-300
+              w-full sm:w-auto min-h-[44px] select-none transition-all duration-300
               ${searching
                 ? 'cursor-not-allowed animate-pulse-glow'
                 : 'btn-primary'}`}
@@ -1229,18 +1258,20 @@ export default function OpportunitiesPage() {
                 <button className="w-full text-left p-3.5 flex items-center gap-3"
                   onClick={() => setExpandedId(isOpen ? null : opp.id)}>
                   {/* Thumbnail */}
-                  <div className="w-11 h-11 rounded-lg overflow-hidden dark:bg-white/8 bg-slate-200 shrink-0 relative">
-                    {opp.product?.imageUrl
-                      ? <img src={opp.product.imageUrl} alt={opp.product.title} loading="lazy"
-                          width="44" height="44" className="w-full h-full object-cover"
-                          onError={e => {
-                            const el = e.target as HTMLImageElement;
-                            if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>'; return; }
-                            el.dataset.fb = '1';
-                            const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join('-');
-                            el.src = `https://picsum.photos/seed/${kw || 'product'}/44/44`;
-                          }} />
-                      : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
+                  <div className="w-11 h-11 rounded-lg overflow-hidden bg-slate-100 shrink-0 relative">
+                    {enrichingIds.has(opp.id) && !enrichedImages[opp.id]
+                      ? <div className="w-full h-full animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200" />
+                      : (() => {
+                          const src = enrichedImages[opp.id] || opp.product?.imageUrl;
+                          return src
+                            ? <img src={src} alt={opp.product?.title} loading="lazy"
+                                width="44" height="44" className="w-full h-full object-cover"
+                                onError={e => {
+                                  const el = e.target as HTMLImageElement;
+                                  el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>';
+                                }} />
+                            : <div className="w-full h-full flex items-center justify-center text-base">📦</div>;
+                        })()}
                   </div>
 
                   {/* Title + meta */}
@@ -1346,8 +1377,8 @@ export default function OpportunitiesPage() {
                         onClick={e => toggleWishlist(e, opp.id)}
                         className={`p-2 rounded-lg border transition-all ${
                           wishlist.has(opp.id)
-                            ? 'bg-amber-500/15 border-amber-500/35 text-amber-400'
-                            : 'dark:bg-white/5 bg-slate-100 dark:border-white/10 border-slate-200 dark:text-white/50 text-slate-500'
+                            ? 'bg-amber-100 border-amber-300 text-amber-600'
+                            : 'bg-slate-100 border-slate-300 text-slate-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-600'
                         }`}>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
                           <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />
@@ -1436,22 +1467,23 @@ export default function OpportunitiesPage() {
                       {/* Product */}
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden dark:bg-white/10 bg-slate-200 shrink-0 relative">
-                            {opp.product?.imageUrl
-                              ? <img src={opp.product.imageUrl} alt={opp.product.title}
-                                  loading="lazy" decoding="async" width="40" height="40"
-                                  className="w-full h-full object-cover"
-                                  onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1'; }}
-                                  style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
-                                  onError={e => {
-                                    const el = e.target as HTMLImageElement;
-                                    if (el.dataset.fb) { el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px">📦</div>'; return; }
-                                    el.dataset.fb = '1';
-                                    el.style.opacity = '0';
-                                    const kw = (el.alt || '').split(' ').slice(0, 2).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean).join('-');
-                                    el.src = `https://picsum.photos/seed/${kw || 'product'}/40/40`;
-                                  }} />
-                              : <div className="w-full h-full flex items-center justify-center text-base">📦</div>}
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 shrink-0 relative">
+                            {enrichingIds.has(opp.id) && !enrichedImages[opp.id]
+                              ? <div className="w-full h-full animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200" />
+                              : (() => {
+                                  const src = enrichedImages[opp.id] || opp.product?.imageUrl;
+                                  return src
+                                    ? <img src={src} alt={opp.product?.title}
+                                        loading="lazy" decoding="async" width="40" height="40"
+                                        className="w-full h-full object-cover"
+                                        style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+                                        onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                                        onError={e => {
+                                          const el = e.target as HTMLImageElement;
+                                          el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px">📦</div>';
+                                        }} />
+                                    : <div className="w-full h-full flex items-center justify-center text-base">📦</div>;
+                                })()}
                           </div>
                           <div className="min-w-0">
                             <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
@@ -1530,16 +1562,10 @@ export default function OpportunitiesPage() {
                           <button
                             onClick={e => { e.stopPropagation(); setExpandedId(isOpen ? null : opp.id); }}
                             title={isOpen ? 'Close inline panel' : 'Quick research preview'}
-                            style={isOpen ? {
-                              background: 'linear-gradient(135deg,rgba(124,58,237,0.3) 0%,rgba(99,102,241,0.2) 100%)',
-                              borderColor: 'rgba(124,58,237,0.45)',
-                              color: '#c4b5fd',
-                              boxShadow: '0 2px 10px rgba(124,58,237,0.22)',
-                            } : undefined}
                             className={`text-xs px-2 py-1.5 rounded-lg font-semibold whitespace-nowrap border select-none transition-all duration-200 ${
                               isOpen
-                                ? 'border-violet-500/45'
-                                : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-300'
+                                ? 'bg-violet-100 text-violet-700 border-violet-300 hover:bg-violet-200'
+                                : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300'
                             }`}>
                             {isOpen ? '✕' : '📊'}
                           </button>
@@ -1549,8 +1575,8 @@ export default function OpportunitiesPage() {
                             title={wishlist.has(opp.id) ? 'Remove from wishlist' : 'Save to wishlist'}
                             className={`p-1.5 rounded-lg border transition-all duration-200 ${
                               wishlist.has(opp.id)
-                                ? 'bg-amber-500/15 border-amber-500/35 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
-                                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-amber-500 hover:bg-amber-50 hover:border-amber-300'
+                                ? 'bg-amber-100 border-amber-300 text-amber-600 hover:bg-amber-200'
+                                : 'bg-slate-100 border-slate-300 text-slate-600 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-300'
                             }`}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
                               <path d="M2 2.75A2.75 2.75 0 0 1 4.75 0h6.5A2.75 2.75 0 0 1 14 2.75v12.5a.75.75 0 0 1-1.175.619L8 13.075l-4.825 2.694A.75.75 0 0 1 2 15.25V2.75Z" />

@@ -17,7 +17,10 @@
         "GOOGLE_CSE_ID",
         "UNSPLASH_ACCESS_KEY",
         "ADMIN_SECRET",
-        "PEXELS_API_KEY"
+        "ADMIN_EMAIL",
+        "ADMIN_PASSWORD",
+        "PEXELS_API_KEY",
+        "SCRAPERAPI_KEY"
       ]
     },
     "dev": {

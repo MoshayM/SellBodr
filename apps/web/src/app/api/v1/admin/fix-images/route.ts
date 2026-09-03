@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { fetchProductImage } from '@/lib/imageEnrichment';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-// Admin endpoint: patches all products with broken image URLs.
 // GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>
-// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&debug=1  — returns all stored imageUrls, no writes
+// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&debug=1   — list all products
+// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&pending=1 — list products still needing enrichment
+// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&force=1   — re-enrich ALL products
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret');
   const validSecret = process.env.ADMIN_SECRET || process.env.JWT_ACCESS_SECRET;
@@ -15,82 +17,91 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const db = await getDb();
+  const db = getDb();
   await ensureSchema(db);
 
   if (req.nextUrl.searchParams.get('debug') === '1') {
     const all = await db.execute(
-      `SELECT id, title, imageUrl FROM "Product" ORDER BY createdAt DESC LIMIT 50`
+      `SELECT p.id, p.title, p.imageUrl, p.imageSource, p.imageSourceUrl
+       FROM "Product" p ORDER BY p.createdAt DESC LIMIT 100`
     );
-    return NextResponse.json({
-      count: all.rows.length,
-      products: all.rows.map(r => ({ id: r.id, title: r.title, imageUrl: r.imageUrl })),
-    });
+    return NextResponse.json({ count: all.rows.length, products: all.rows });
+  }
+
+  const force  = req.nextUrl.searchParams.get('force')  === '1';
+  const limit  = Math.min(parseInt(req.nextUrl.searchParams.get('limit')  ?? '5', 10), 20);
+  const offset = parseInt(req.nextUrl.searchParams.get('offset') ?? '0', 10);
+
+  const whereClause = force
+    ? `WHERE 1=1`
+    : `WHERE (p.imageSource IS NULL OR p.imageSource = '' OR p.imageSource NOT IN ('amazon','etsy','ebay'))`;
+
+  // &pending=1 — list the products still needing enrichment (no writes)
+  if (req.nextUrl.searchParams.get('pending') === '1') {
+    const rows = await db.execute(
+      `SELECT p.id, p.title, p.category, p.imageSource, m.code as marketplace
+       FROM "Product" p
+       JOIN "Opportunity" o ON o.productId = p.id
+       JOIN "Marketplace" m ON o.marketplaceId = m.id
+       ${whereClause}
+       GROUP BY p.id
+       ORDER BY p.createdAt DESC
+       LIMIT 50`
+    );
+    return NextResponse.json({ count: rows.rows.length, pending: rows.rows });
   }
 
   const result = await db.execute(
-    `SELECT id, title, category, imageUrl FROM "Product"
-     WHERE imageUrl IS NULL OR imageUrl = ''
-        OR imageUrl LIKE '%source.unsplash.com%'
-        OR imageUrl LIKE '%picsum.photos%'
-        OR imageUrl LIKE '%pollinations.ai%'
-        OR imageUrl LIKE '%placeholder%'
-        OR imageUrl LIKE '%loremflickr.com%'`
+    `SELECT p.id, p.title, p.category, p.imageSource, m.code as marketplace
+     FROM "Product" p
+     JOIN "Opportunity" o ON o.productId = p.id
+     JOIN "Marketplace" m ON o.marketplaceId = m.id
+     ${whereClause}
+     GROUP BY p.id
+     ORDER BY p.createdAt DESC
+     LIMIT ${limit} OFFSET ${offset}`
   );
 
   let fixed = 0;
+  let failed = 0;
+  const details: any[] = [];
   const now = Date.now();
 
   for (const row of result.rows) {
-    const title    = String(row.title    || '');
-    const category = String(row.category || '');
+    const title      = String(row.title      || '');
+    const category   = String(row.category   || '');
+    const marketplace = String(row.marketplace || 'amazon_us');
 
-    const words = [...title.split(' ').slice(0, 3), category.replace(/_/g, ' ').split(' ')[0]]
-      .filter(Boolean).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-    const seed     = words.slice(0, 3).join('-') || 'product';
-    const kwQuery  = title.trim() || words.join(' ');
-
-    let imageUrl = `https://picsum.photos/seed/${seed}/400/300`;
-
-    // 1️⃣ Pexels
-    const pexelsKey = process.env.PEXELS_API_KEY;
-    if (pexelsKey) {
-      try {
-        const res = await fetch(
-          `https://api.pexels.com/v1/search?query=${encodeURIComponent(kwQuery)}&per_page=1&orientation=landscape`,
-          { headers: { Authorization: pexelsKey }, signal: AbortSignal.timeout(4000) }
-        );
-        if (res.ok) {
-          const data = await res.json() as any;
-          const url = data?.photos?.[0]?.src?.medium || data?.photos?.[0]?.src?.small;
-          if (url) { imageUrl = url; }
-        }
-      } catch { /* fall through */ }
-    }
-
-    // 2️⃣ Google CSE (when billing activates)
-    if (imageUrl.includes('picsum')) {
-      const gKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_SEARCH_API_KEY;
-      const gCx  = process.env.GOOGLE_CSE_ID  || process.env.GOOGLE_SEARCH_ENGINE_ID;
-      if (gKey && gCx) {
-        try {
-          const url = `https://www.googleapis.com/customsearch/v1?key=${gKey}&cx=${gCx}&q=${encodeURIComponent(kwQuery + ' product')}&searchType=image&num=1&imgType=photo&imgSize=medium&safe=active&fields=items(link)`;
-          const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
-          if (res.ok) {
-            const data = await res.json() as any;
-            const link = data?.items?.[0]?.link;
-            if (link?.startsWith('http')) imageUrl = link;
-          }
-        } catch { /* use picsum */ }
+    try {
+      const enriched = await fetchProductImage(title, category, marketplace);
+      if (!enriched) {
+        failed++;
+        details.push({ title: title.slice(0, 50), marketplace, result: 'null — all sources failed' });
+        continue;
       }
-    }
 
-    await db.execute({
-      sql: `UPDATE "Product" SET imageUrl = ?, updatedAt = ? WHERE id = ?`,
-      args: [imageUrl, now, row.id as string],
-    });
-    fixed++;
+      await db.execute({
+        sql: `UPDATE "Product"
+              SET imageUrl = ?, imageSource = ?, imageConfidence = ?, imageSourceUrl = ?, updatedAt = ?
+              WHERE id = ?`,
+        args: [enriched.url, enriched.source, enriched.confidence, enriched.sourceUrl ?? '', now, row.id as string],
+      });
+      fixed++;
+      details.push({ title: title.slice(0, 50), marketplace, result: enriched.source, url: enriched.url.slice(0, 60) });
+    } catch (e: any) {
+      failed++;
+      details.push({ title: title.slice(0, 50), marketplace, result: `error: ${String(e?.message ?? e)}` });
+    }
   }
 
-  return NextResponse.json({ fixed, total: result.rows.length });
+  const countRow = await db.execute(
+    `SELECT COUNT(DISTINCT p.id) as cnt
+     FROM "Product" p
+     JOIN "Opportunity" o ON o.productId = p.id
+     JOIN "Marketplace" m ON o.marketplaceId = m.id
+     ${whereClause}`
+  );
+  const totalRemaining = Number((countRow.rows[0] as any)?.cnt ?? 0);
+
+  return NextResponse.json({ fixed, failed, processed: result.rows.length, offset, limit, totalRemaining, details });
 }

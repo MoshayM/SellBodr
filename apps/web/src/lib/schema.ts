@@ -206,6 +206,11 @@ const MIGRATIONS = [
   `ALTER TABLE "User" ADD COLUMN pinHash TEXT`,
   `ALTER TABLE "User" ADD COLUMN pinAttempts INTEGER DEFAULT 0`,
   `ALTER TABLE "User" ADD COLUMN pinLockedUntil INTEGER`,
+  // Product image enrichment via Google CSE
+  `ALTER TABLE "Product" ADD COLUMN imageSource TEXT DEFAULT ''`,
+  `ALTER TABLE "Product" ADD COLUMN imageConfidence INTEGER DEFAULT 0`,
+  // Source URL: actual marketplace listing page the image was found on
+  `ALTER TABLE "Product" ADD COLUMN imageSourceUrl TEXT DEFAULT ''`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
