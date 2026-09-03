@@ -38,37 +38,24 @@ function CopyBtn({ text }: { text: string }) {
 }
 
 function MapEmbed({ lat, lon, city, address }: { lat: number | null; lon: number | null; city: string; address?: string }) {
-  const [view, setView] = useState<'map' | 'street'>('map');
+  const gmUrl  = `https://www.google.com/maps/search/?api=1&query=${lat && lon ? `${lat},${lon}` : encodeURIComponent(`${address || city}, India`)}`;
+  const svUrl  = `https://maps.google.com/?q=${lat ?? 0},${lon ?? 0}&layer=c`;
+  const satUrl = `https://maps.google.com/?q=${lat ?? 0},${lon ?? 0}&t=k`;
 
-  const query = lat && lon ? `${lat},${lon}` : encodeURIComponent(`${address || city}, India`);
-  const mapSrc   = `https://maps.google.com/maps?q=${query}&z=17&output=embed`;
-  const svSrc    = `https://maps.google.com/maps?q=${query}&layer=c&cbll=${lat ?? 0},${lon ?? 0}&output=embed`;
-  const gmUrl    = `https://www.google.com/maps/search/?api=1&query=${query}`;
-  const svUrl    = `https://maps.google.com/maps?q=${query}&layer=c`;
-  const satUrl   = `https://maps.google.com/maps?q=${query}&t=k`;
+  const osmSrc = lat && lon
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.05},${lat - 0.05},${lon + 0.05},${lat + 0.05}&layer=mapnik&marker=${lat},${lon}`
+    : `https://www.openstreetmap.org/export/embed.html?query=${encodeURIComponent(`${address || city}, India`)}&layer=mapnik`;
 
   return (
     <div className="space-y-1.5">
-      {/* View toggle */}
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-        {(['map', 'street'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)}
-            className={`flex-1 text-[11px] font-semibold py-1 rounded-md transition-all capitalize ${view === v ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>
-            {v === 'map' ? '🗺 Map' : '🚶 Street View'}
-          </button>
-        ))}
-      </div>
-
-      {/* Embedded map — switches between map and street view */}
+      {/* Embedded OSM map — free, no API key required */}
       <iframe
-        key={view}
-        src={view === 'map' ? mapSrc : svSrc}
+        src={osmSrc}
         className="w-full rounded-xl border border-gray-100"
         style={{ height: 200 }}
-        title={view === 'map' ? `Map of ${city}` : `Street View of ${city}`}
+        title={`Map of ${city}`}
         loading="lazy"
         allowFullScreen
-        referrerPolicy="no-referrer-when-downgrade"
       />
 
       {/* Action buttons */}

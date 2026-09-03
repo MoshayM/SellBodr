@@ -84,24 +84,21 @@ function initMap(data){
       ?'<span class="pop-label" style="color:#059669;background:#d1fae5;padding:2px 7px;border-radius:20px;display:inline-block;margin-bottom:4px">● INDIA PRIORITY</span>'
       :'<span class="pop-label" style="color:#4f46e5;background:#ede9fe;padding:2px 7px;border-radius:20px;display:inline-block;margin-bottom:4px">● GLOBAL SUPPLIER</span>';
     var q=encodeURIComponent(p.lat+','+p.lon);
-    var mapEmbed='https://maps.google.com/maps?q='+q+'&z=17&output=embed';
-    var svEmbed='https://maps.google.com/maps?q='+q+'&layer=c&cbll='+p.lat+','+p.lon+'&output=embed';
+    var osmEmbed='https://www.openstreetmap.org/export/embed.html?bbox='+(p.lon-0.05)+','+(p.lat-0.05)+','+(p.lon+0.05)+','+(p.lat+0.05)+'&layer=mapnik&marker='+p.lat+','+p.lon;
     var gmUrl='https://www.google.com/maps/search/?api=1&query='+q;
     var svUrl='https://maps.google.com/?q='+p.lat+','+p.lon+'&layer=c';
     var satUrl='https://maps.google.com/?q='+p.lat+','+p.lon+'&t=k';
-    var fid='gf'+i;
     var popup='<div class="pop" style="min-width:240px">'+
       '<div class="pop-title">'+p.name+'</div>'+
       lbl+
       '<div class="pop-loc">'+(p.city?p.city+', ':'')+p.country+'</div>'+
       '<div class="pop-src">via '+p.source+'</div>'+
       '<div class="pop-coords">'+p.lat.toFixed(5)+'°&nbsp;'+p.lon.toFixed(5)+'°</div>'+
-      '<iframe id="'+fid+'" src="'+mapEmbed+'" class="gmaps-frame" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'+
+      '<iframe src="'+osmEmbed+'" class="gmaps-frame" loading="lazy"></iframe>'+
       '<div class="sv-bar">'+
         '<a href="'+gmUrl+'" target="_blank" class="sv-btn" style="background:#4f46e5;color:#fff">📍 Maps</a>'+
         '<a href="'+svUrl+'" target="_blank" class="sv-btn" style="background:#d97706;color:#fff">🚶 Street</a>'+
         '<a href="'+satUrl+'" target="_blank" class="sv-btn" style="background:#0284c7;color:#fff">🛰 Sat</a>'+
-        '<button class="sv-btn" style="background:#374151;color:#fff" onclick="document.getElementById(\''+fid+'\').src=\''+svEmbed+'\'">👁 360°</button>'+
       '</div>'+
     '</div>';
     L.marker([p.lat,p.lon],{icon:ic}).addTo(map).bindPopup(popup,{minWidth:255,maxWidth:280,closeButton:true});
