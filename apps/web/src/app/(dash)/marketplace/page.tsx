@@ -224,9 +224,9 @@ export default function MarketplacePage() {
               {list.map((opp: any) => (
                 <Link key={opp.id} href={`/opportunities/${opp.id}`}
                   className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 active:bg-white/10">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
                     {opp.product?.imageUrl
-                      ? <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-cover" unoptimized />
+                      ? <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-contain" unoptimized />
                       : <div className="w-full h-full flex items-center justify-center text-lg">📦</div>}
                   </div>
                   <ScoreGauge score={opp.score?.opportunity || 0} size="sm" />
@@ -263,9 +263,9 @@ export default function MarketplacePage() {
                     <tr key={opp.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-white shrink-0">
                             {opp.product?.imageUrl
-                              ? <Image src={opp.product.imageUrl} alt={opp.product.title || ''} width={36} height={36} className="w-full h-full object-cover" unoptimized />
+                              ? <Image src={opp.product.imageUrl} alt={opp.product.title || ''} width={36} height={36} className="w-full h-full object-contain" unoptimized />
                               : <div className="w-full h-full flex items-center justify-center text-sm">📦</div>}
                           </div>
                           <div>

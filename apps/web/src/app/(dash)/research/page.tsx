@@ -69,11 +69,11 @@ function ProductCard({ opp }: { opp: any }) {
 
   return (
     <div className="card-dark rounded-xl overflow-hidden flex flex-col hover:border-violet-500/30 transition-all duration-200 hover:shadow-lg hover:shadow-violet-500/10">
-      <div className="relative w-full h-44 bg-white/5 flex-shrink-0 overflow-hidden">
+      <div className="relative w-full h-44 bg-white flex-shrink-0 overflow-hidden">
         {showImage ? (
           // plain img tag — bypasses Next.js image domain restrictions
           <img src={product.imageUrl} alt={product.title ?? 'Product'}
-            className="w-full h-full object-cover" onError={() => setImgError(true)} />
+            className="w-full h-full object-contain" onError={() => setImgError(true)} />
         ) : (
           <ImagePlaceholder title={product.title} category={product.category} />
         )}

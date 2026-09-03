@@ -1265,7 +1265,7 @@ export default function OpportunitiesPage() {
                           const src = enrichedImages[opp.id] || opp.product?.imageUrl;
                           return src
                             ? <img src={src} alt={opp.product?.title} loading="lazy"
-                                width="44" height="44" className="w-full h-full object-cover"
+                                width="44" height="44" className="w-full h-full object-contain bg-white"
                                 onError={e => {
                                   const el = e.target as HTMLImageElement;
                                   el.parentElement!.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>';
@@ -1475,7 +1475,7 @@ export default function OpportunitiesPage() {
                                   return src
                                     ? <img src={src} alt={opp.product?.title}
                                         loading="lazy" decoding="async" width="40" height="40"
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain bg-white"
                                         style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
                                         onLoad={e => { (e.target as HTMLImageElement).style.opacity = '1'; }}
                                         onError={e => {

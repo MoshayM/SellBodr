@@ -632,7 +632,7 @@ export default function OpportunityDetailPage() {
                     <div className="w-full h-full animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100" />
                   ) : currentImg ? (
                     <img src={currentImg.url} alt={currentImg.angle}
-                      className="w-full h-full object-cover transition-opacity duration-200"
+                      className="w-full h-full object-contain transition-opacity duration-200"
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">📦</div>
@@ -671,7 +671,7 @@ export default function OpportunityDetailPage() {
                     {allImgs.map((img, i) => (
                       <button key={i} onClick={() => setSelectedImage(i)}
                         className={`shrink-0 w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${i === currentIdx ? 'border-indigo-500 shadow-sm' : 'border-slate-200 opacity-55 hover:opacity-100'}`}>
-                        <img src={img.url} alt={img.angle} className="w-full h-full object-cover"
+                        <img src={img.url} alt={img.angle} className="w-full h-full object-contain bg-white"
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       </button>
                     ))}
@@ -779,7 +779,7 @@ export default function OpportunityDetailPage() {
           <div className="card-dark p-4 sm:p-5 mb-5 space-y-4">
             <div className="flex items-start gap-3">
               <img src={currentImg.url} alt={currentImg.angle}
-                className="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0"
+                className="w-14 h-14 rounded-xl object-contain bg-white border border-slate-100 shrink-0"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Ad copy for</p>
