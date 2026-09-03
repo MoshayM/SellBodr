@@ -20,3 +20,12 @@ apps/api/nul
 
 .vercel
 .env*
+
+# Local reference/pitch files — internal only, never expose
+*.pptx
+*.ppt
+SELLBODR-DEV-REFERENCE.html
+DIM TXT/
+Capture.PNG
+re.PNG
+*.PNG
