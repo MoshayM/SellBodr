@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { api } from '@/lib/api';
+import { api, isAdmin } from '@/lib/api';
 
 type Tab = 'ai-keys' | 'password';
 
@@ -18,8 +18,15 @@ type ProviderStatus = { id: string; label: string; hint: string; isSet: boolean;
 interface Props { open: boolean; onClose: () => void }
 
 export default function SettingsDrawer({ open, onClose }: Props) {
-  const [tab, setTab] = useState<Tab>('ai-keys');
+  const [tab, setTab] = useState<Tab>('password');
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const admin = isAdmin();
+    setUserIsAdmin(admin);
+    if (admin) setTab('ai-keys');
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
@@ -50,7 +57,7 @@ export default function SettingsDrawer({ open, onClose }: Props) {
 
         <div className="flex border-b border-gray-100 px-6">
           {([
-            { key: 'ai-keys' as Tab,  label: 'AI Provider Keys' },
+            ...(userIsAdmin ? [{ key: 'ai-keys' as Tab, label: 'AI Provider Keys' }] : []),
             { key: 'password' as Tab, label: 'Password' },
           ]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -63,7 +70,7 @@ export default function SettingsDrawer({ open, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {tab === 'ai-keys'  && <AiKeysPanel />}
+          {tab === 'ai-keys'  && userIsAdmin && <AiKeysPanel />}
           {tab === 'password' && <PasswordPanel />}
         </div>
       </div>
