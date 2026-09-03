@@ -786,6 +786,7 @@ export default function OpportunitiesPage() {
   const [catFilter,      setCatFilter]      = useState('');
   const [srcFilter,      setSrcFilter]      = useState('');
   const [strengthFilter, setStrengthFilter] = useState('');
+  const [scoreFilter,    setScoreFilter]    = useState('');
   const [periodFilter,   setPeriodFilter]   = useState('');
   const [sortBy,         setSortBy]         = useState('score');
 
@@ -877,6 +878,15 @@ export default function OpportunitiesPage() {
     [allOpps]
   );
 
+  const availableSources = useMemo(() => {
+    const seen = new Map<string, { icon: string; label: string; key: string }>();
+    allOpps.forEach(o => {
+      const src = trendSource(o.marketplace?.code ?? '');
+      if (!seen.has(src.key)) seen.set(src.key, src);
+    });
+    return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }, [allOpps]);
+
   const displayed = useMemo(() => {
     const now = Date.now();
     const q = nameFilter.trim().toLowerCase();
@@ -889,8 +899,14 @@ export default function OpportunitiesPage() {
         if (!title.includes(q) && !desc.includes(q) && !cat.includes(q) && !keys.includes(q)) return false;
       }
       if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
-      if (srcFilter)      { if (trendSource(opp.marketplace?.code).key !== srcFilter) return false; }
+      if (srcFilter)      { if (trendSource(opp.marketplace?.code ?? '').key !== srcFilter) return false; }
       if (strengthFilter) { if (trendStrengthLabel(opp.score?.trend ?? 0).key !== strengthFilter) return false; }
+      if (scoreFilter) {
+        const s = opp.score?.opportunity ?? 0;
+        if (scoreFilter === 'high'   && s < 70) return false;
+        if (scoreFilter === 'medium' && (s < 40 || s >= 70)) return false;
+        if (scoreFilter === 'low'    && s >= 40) return false;
+      }
       if (periodFilter) {
         const age = now - Number(opp.createdAt || 0);
         if (periodFilter === '2d'  && age > 2  * DAY) return false;
@@ -909,9 +925,9 @@ export default function OpportunitiesPage() {
       return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
-  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, periodFilter, sortBy]);
+  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, scoreFilter, periodFilter, sortBy]);
 
-  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || periodFilter);
+  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || scoreFilter || periodFilter);
 
   // Quick stats for hero
   const hotCount        = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'hot').length;
@@ -1158,21 +1174,29 @@ export default function OpportunitiesPage() {
               <option value="reject">✕ Reject</option>
             </select>
 
-            {/* Trend source */}
+            {/* Trend source — dynamic from actual data */}
             <select value={srcFilter} onChange={e => setSrcFilter(e.target.value)} className={SEL}>
-              <option value="">All Trends</option>
-              <option value="search">🔍 Search</option>
-              <option value="social">📱 Social</option>
-              <option value="curated">🎨 Curated</option>
-              <option value="value">💲 Value</option>
+              <option value="">All Sources</option>
+              {availableSources.map(s => (
+                <option key={s.key} value={s.key}>{s.icon} {s.label}</option>
+              ))}
             </select>
 
             {/* Trend strength */}
             <select value={strengthFilter} onChange={e => setStrengthFilter(e.target.value)} className={SEL}>
-              <option value="">All Channels</option>
+              <option value="">All Strength</option>
               <option value="hot">🔥 Hot</option>
               <option value="rising">📈 Rising</option>
               <option value="stable">➡️ Stable</option>
+              <option value="declining">📉 Declining</option>
+            </select>
+
+            {/* Score */}
+            <select value={scoreFilter} onChange={e => setScoreFilter(e.target.value)} className={SEL}>
+              <option value="">All Scores</option>
+              <option value="high">⭐ High (70+)</option>
+              <option value="medium">🟡 Medium (40–69)</option>
+              <option value="low">🔴 Low (&lt;40)</option>
             </select>
 
             {/* Period */}
@@ -1196,7 +1220,7 @@ export default function OpportunitiesPage() {
             {/* Clear + count */}
             <div className="ml-auto flex items-center gap-2.5 pl-2">
               {hasClientFilters && (
-                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
+                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setScoreFilter(''); setPeriodFilter(''); setRecFilter(''); }}
                   className="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 whitespace-nowrap">
                   Clear ✕
                 </button>
@@ -1305,24 +1329,34 @@ export default function OpportunitiesPage() {
 
                 {/* Collapsed summary row */}
                 {!isOpen && (
-                  <div className="px-3.5 pb-3 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs dark:text-white/50 text-slate-500">
-                        {cc ? flag(cc) : '🛒'} {platformOf(mpCode)}
+                  <div className="px-3.5 pb-3 space-y-1.5">
+                    {/* Trend chips */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none"
+                        style={{ color: ts.color, backgroundColor: ts.color + '18', border: `1px solid ${ts.color}35` }}>
+                        {ts.icon} {ts.label}
                       </span>
-                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none"
+                        style={{ color: tStr.color, backgroundColor: tStr.color + '18', border: `1px solid ${tStr.color}35` }}>
+                        {tStr.label} {Math.round(opp.score?.trend ?? 0)}
+                      </span>
+                      <span className="text-[10px] text-slate-400">{cc ? flag(cc) : '🛒'} {platformOf(mpCode)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {netMinor != null && (
-                        <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
-                        </span>
-                      )}
-                      <Link href={`/opportunities/${opp.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
-                        View →
-                      </Link>
+                    {/* Signal + profit + action */}
+                    <div className="flex items-center justify-between gap-2">
+                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                      <div className="flex items-center gap-2">
+                        {netMinor != null && (
+                          <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
+                          </span>
+                        )}
+                        <Link href={`/opportunities/${opp.id}`}
+                          onClick={e => e.stopPropagation()}
+                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
+                          View →
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
