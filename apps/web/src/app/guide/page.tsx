@@ -38,16 +38,17 @@ const SECTIONS = [
   },
   {
     id: 'more',
-    icon: '➕',
-    title: 'Scan for More & Result Limits',
+    icon: '🎯',
+    title: 'New Scan vs. Scan for More',
     color: 'from-cyan-500/20 to-blue-500/10',
     accent: 'text-cyan-400',
     border: 'border-cyan-500/20',
     steps: [
-      { title: 'Scroll to the bottom bar', body: 'After results load, a bar below the table shows your count: "Showing X opportunities" with hot/launch/profitable mini-stats.' },
-      { title: 'Scan for More (Pro)', body: 'Pro users can click "Scan for More ↓" to trigger another AI scan. New results merge into the list and all filters apply.' },
-      { title: 'Free plan limit', body: 'Free accounts see up to 10 results per marketplace. A 🔒 row shows how many are locked. Click "Upgrade to Pro" to unlock all.' },
-      { title: 'Filter results', body: 'Use the filter bar (Score, Recommendation, Marketplace) to narrow down results. Filters apply across all loaded pages.' },
+      { title: 'New Scan (top purple button)', body: 'Runs a broad AI discovery across all categories and trend profiles for the selected marketplace. Best for exploring new product ideas without constraints.' },
+      { title: 'Scan for More (bottom button) — smart mode', body: 'When you have active filters (category, trend strength 🔥 Hot/📈 Rising, or channel), the bottom button turns purple and changes label — e.g. "Scan More 🔥 Hot · Wall Art 🎯". The AI narrows its search to exactly what you are filtering for.' },
+      { title: 'No filters active?', body: 'If no filters are set, "Scan for More ↓" runs a broad scan just like New Scan — adding more diverse results to the existing list.' },
+      { title: 'Filter results', body: 'Use the filter bar (Opportunity score/signal, Category, Source channel, Trend strength, Date range) to narrow the visible list. Active filters also guide the Scan for More AI.' },
+      { title: 'Result limits', body: 'Free accounts see up to 10 results per marketplace. A 🔒 tag shows how many are locked. Pro users see all results and can run unlimited Scan for More passes.' },
     ],
   },
   {
@@ -97,14 +98,15 @@ const SECTIONS = [
   {
     id: 'account',
     icon: '⚙️',
-    title: 'Account & Upgrade',
+    title: 'Plans, Credits & Account',
     color: 'from-slate-500/20 to-gray-500/10',
     accent: 'text-slate-400',
     border: 'border-slate-500/20',
     steps: [
-      { title: 'Free plan', body: 'Free accounts get AI-scored opportunity feeds, 10 results per marketplace, 10 suppliers per product, and score previews. No credit card required.' },
-      { title: 'Pro plan ($49/mo)', body: 'Pro unlocks unlimited searches, full supplier database, supplier map, profitability models, AI listing generator, ads, growth signals, and export reports.' },
-      { title: 'Upgrade', body: 'Click any 🔒 locked feature or "Upgrade to Pro" from the avatar menu or any ProGate screen.' },
+      { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans, see the top 10 results per scan, view all 7 sub-scores, access the supplier list, and use the profit calculator. No credit card required.' },
+      { title: 'Pro plan ($9/mo)', body: 'Pro unlocks unlimited AI scans, all results per scan, the full supplier map, profitability waterfall, and advanced research tools. Upgrade from the avatar menu.' },
+      { title: 'AI Generation Credits ($5 = 10 credits)', body: 'Generating AI content — Full Reports, Ad Campaigns, Brand Identity, Listing Copy, Growth Playbooks, or Bundle Strategy — costs 1 credit per generation. Buy 10 credits for $5 from the credits chip in the sidebar or any "Buy Credits" prompt. Admin accounts always generate for free.' },
+      { title: 'Upgrade', body: 'Click any 🔒 locked feature or open the avatar menu and tap "Upgrade to Pro". Credits can be purchased separately at any time — they never expire.' },
       { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Admins can manage AI provider keys under Settings → AI Keys.' },
     ],
   },
@@ -113,12 +115,14 @@ const SECTIONS = [
 const QUICK_QUESTIONS = [
   'How do I run my first product search?',
   'What does the Opportunity Score mean?',
+  'How does Scan for More with filters work?',
+  'How do AI generation credits work?',
   'How do I contact a supplier?',
   'What is included in the Pro plan?',
   'How does the profit model work?',
   'What is the Launch / Hold / Reject verdict?',
   'How do I generate an AI listing?',
-  'What is Bulk Scan used for?',
+  'How do I buy credits for AI generation?',
 ];
 
 // ── Types ─────────────────────────────────────────────────────────────────────

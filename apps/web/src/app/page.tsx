@@ -28,17 +28,19 @@ const STEPS = [
 const PLANS = [
   {
     name: 'Starter', price: '$0', period: '',
-    desc: 'Explore the platform with no commitment',
-    features: ['3 AI product scans per month', 'Opportunity Score preview', 'Top 5 results per scan', 'Basic profit indicator', 'Wishlist — save up to 10 products'],
-    cta: 'Start scouting', ctaHref: '/register', highlight: false,
+    desc: 'Start scouting — no credit card, no commitment',
+    features: ['Up to 5 AI product scans', 'Top 10 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list + profit calculator', 'Wishlist — save unlimited products'],
+    cta: 'Start scouting free', ctaHref: '/register', highlight: false,
   },
   {
     name: 'Pro', price: '$9', period: '/mo',
-    desc: 'Full AI intelligence. Unlimited scans. Real profits.',
-    features: ['Unlimited AI product scans', 'Full 7-dimension Opportunity Score', 'Complete India supplier database', 'AI listing generator (title, bullets, keywords)', 'Landed-cost profit model with full P&L', 'Unlimited wishlist & CSV export', 'Priority support'],
-    cta: 'Upgrade to Pro', ctaHref: '/register?plan=pro', highlight: true,
+    desc: 'Unlimited intelligence. Unlimited scans. Real profits.',
+    features: ['Unlimited AI product scans', 'All results — no caps', 'Complete India supplier map & database', 'Full profitability waterfall model', 'Advanced market research & keyword tools', 'Unlimited wishlist & CSV export', 'Priority support'],
+    cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
   },
 ];
+
+const AI_CREDIT_NOTE = 'AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy 10 credits for $5. Works on any plan.';
 
 const STATS = [
   { value: '76+', label: 'Marketplace platforms' },
@@ -218,7 +220,7 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
             className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            AI discovers high-margin cross-border opportunities. Score demand, model profits, source suppliers, and launch optimised listings — all in one platform.
+            AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified suppliers, and a Launch / Hold / Reject verdict in under 60 seconds.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex justify-center mb-4">
@@ -329,10 +331,10 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <div className="text-sm text-emerald-600 font-semibold mb-3 uppercase tracking-widest">Simple pricing</div>
             <h2 className="text-4xl sm:text-5xl font-black mb-4 text-slate-900">
-              Full AI power for <span className="text-gradient">less than a coffee</span>
+              Start free. Scale at <span className="text-gradient">your own pace.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              Start free — no credit card. Upgrade to Pro for $9/mo and unlock unlimited AI scans, full scoring, and live supplier data.
+              5 free AI scans to explore. Go Pro for $9/mo when you&apos;re ready for unlimited. Pay only for the AI content you generate — $5 for 10 credits.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -378,9 +380,14 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            className="mt-8 max-w-2xl mx-auto rounded-2xl border border-violet-100 bg-violet-50/60 px-6 py-4 text-center">
+            <p className="text-sm font-semibold text-violet-700 mb-1">⚡ AI Generation Credits</p>
+            <p className="text-xs text-slate-500">{AI_CREDIT_NOTE}</p>
+          </motion.div>
           <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="text-center text-slate-400 text-xs mt-6">
-            No credit card required for Starter · Prices in USD
+            className="text-center text-slate-400 text-xs mt-4">
+            No credit card required for Starter · Prices in USD · Credits never expire
           </motion.p>
         </div>
       </section>

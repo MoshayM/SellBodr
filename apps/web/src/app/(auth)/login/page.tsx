@@ -493,7 +493,7 @@ export default function LoginPage() {
 
             <div className="text-center mb-7">
               <h2 className="text-2xl font-black text-slate-900 mb-1">Welcome back</h2>
-              <p className="text-slate-400 text-sm">Sign in to your SellBodr account</p>
+              <p className="text-slate-400 text-sm">Your next winning product is one scan away</p>
             </div>
 
             {/* Google Sign-In */}

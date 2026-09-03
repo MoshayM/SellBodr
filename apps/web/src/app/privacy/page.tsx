@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-3xl font-black text-white mb-2">Privacy Policy</h1>
-        <p className="text-sm text-white/40 mb-2">Effective date: 1 August 2026 · Last updated: 16 August 2026</p>
+        <p className="text-sm text-white/40 mb-2">Effective date: 1 August 2026 · Last updated: 3 September 2026</p>
         <p className="text-sm text-white/50 mb-10 p-4 rounded-xl border border-white/8 bg-white/[0.02]">
           <strong className="text-white/70">Plain-English summary:</strong> Guest users browse anonymously — we collect no personal data from you. Registered users provide an email and name. We never sell your data. You can delete your account and all associated data at any time.
         </p>
@@ -38,11 +38,11 @@ export default function PrivacyPage() {
             </ul>
             <p className="mb-3 font-semibold text-white/80">Registered users (Pro / Organisation):</p>
             <ul className="space-y-2 list-none pl-0 text-white/60">
-              <li><Pill>Account data</Pill> — name, email address, argon2-hashed password, plan tier, account creation timestamp, and passkey credentials (stored as public keys only — your biometric data never leaves your device).</li>
+              <li><Pill>Account data</Pill> — name, email address, bcrypt-hashed password (salted, one-way — never reversible), plan tier, account creation timestamp, and passkey credentials (stored as public keys only — your biometric data never leaves your device).</li>
               <li><Pill>Usage data</Pill> — opportunity searches, filters applied, marketplace and category selections, and features used — collected to personalise your dashboard and improve our AI models.</li>
               <li><Pill>AI search inputs</Pill> — the product keywords and marketplace preferences you submit. We log query context (not free-form text) for model quality assurance. Query logs are anonymised after 30 days.</li>
               <li><Pill>Optional API keys</Pill> — if you supply third-party API keys (Groq, Anthropic, OpenAI, etc.) they are stored AES-256 encrypted. They are never transmitted in plain text and are never accessible to our staff.</li>
-              <li><Pill>Payment data</Pill> — billing is handled by our payment processor. We store only the last 4 digits of a card and billing country. We never handle raw card numbers.</li>
+              <li><Pill>Payment data</Pill> — billing is processed by Stripe. We store only your credit balance, transaction history, and billing country. We never handle or store raw card numbers — Stripe holds all payment instrument data under their own PCI-DSS compliance.</li>
               <li><Pill>Communication data</Pill> — emails you send to our support address.</li>
             </ul>
           </Section>
