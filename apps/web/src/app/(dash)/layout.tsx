@@ -10,22 +10,42 @@ import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 
 type NavPage = { href: string; label: string; icon: string; desc: string; badge?: string; adminOnly?: boolean };
 
+/* ── Grouped sidebar nav ───────────────────────────────────────────────── */
+const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
+  {
+    label: 'Scout',
+    pages: [
+      { href: '/opportunities',        label: 'Opportunities',  icon: '🎯', desc: 'AI-scored cross-border products' },
+      { href: '/research',             label: 'Research',        icon: '🔬', desc: 'Deep market intelligence & trends' },
+      { href: '/suppliers',            label: 'Suppliers',       icon: '🏭', desc: 'India supplier sourcing database' },
+      { href: '/marketplace',          label: 'Marketplace',     icon: '🛒', desc: 'Compare 76+ global marketplaces' },
+      { href: '/profitability',        label: 'Profitability',   icon: '💰', desc: 'Full landed-cost profit model' },
+    ],
+  },
+  {
+    label: 'AI Tools',
+    pages: [
+      { href: '/listing',              label: 'AI Listing',      icon: '📝', desc: 'Generate SEO-optimised listings', badge: 'NEW' },
+      { href: '/gap-finder',           label: 'Gap Finder',      icon: '🔍', desc: 'High-demand niches with weak competition', badge: 'NEW' },
+      { href: '/keyword-intelligence', label: 'Keywords',        icon: '🔤', desc: 'Deep keyword & search intelligence' },
+      { href: '/bulk-scan',            label: 'Bulk Scan',       icon: '⚡', desc: 'Scan multiple products at once (Pro)' },
+    ],
+  },
+  {
+    label: 'Workspace',
+    pages: [
+      { href: '/recommendation',       label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
+      { href: '/reports',              label: 'Reports',          icon: '📊', desc: 'Export and analyse your data' },
+      { href: '/wishlist',             label: 'Wishlist',         icon: '🌟', desc: 'Saved & bookmarked opportunities' },
+      { href: '/team',                 label: 'Team',             icon: '👥', desc: 'Manage team members' },
+    ],
+  },
+];
+
 const ALL_PAGES: NavPage[] = [
-  { href: '/opportunities',        label: 'Opportunities',    icon: '🎯', desc: 'AI-scored cross-border products' },
-  { href: '/research',             label: 'Research',          icon: '🔬', desc: 'Deep market intelligence & trends' },
-  { href: '/suppliers',            label: 'Suppliers',         icon: '🏭', desc: 'India supplier sourcing database' },
-  { href: '/marketplace',          label: 'Marketplace',       icon: '🛒', desc: 'Compare 76+ global marketplaces' },
-  { href: '/profitability',        label: 'Profitability',     icon: '💰', desc: 'Full landed-cost profit model' },
-  { href: '/listing',              label: 'AI Listing',        icon: '📝', desc: 'Generate SEO-optimised listings', badge: 'NEW' },
-  { href: '/gap-finder',           label: 'Gap Finder',        icon: '🔍', desc: 'Find high-demand niches with weak competition', badge: 'NEW' },
-  { href: '/keyword-intelligence', label: 'Keywords',          icon: '🔤', desc: 'Deep keyword research & search intelligence' },
-  { href: '/bulk-scan',            label: 'Bulk Scan',         icon: '⚡', desc: 'Scan multiple products at once (Pro)' },
-  { href: '/team',                 label: 'Team',              icon: '👥', desc: 'Manage team members and invitations' },
-  { href: '/recommendation',       label: 'Recommendations',   icon: '🤖', desc: 'AI-curated opportunity picks' },
-  { href: '/reports',              label: 'Reports',           icon: '📊', desc: 'Export and analyse your data' },
-  { href: '/wishlist',             label: 'Wishlist',          icon: '🌟', desc: 'Saved & bookmarked opportunities' },
-  { href: '/settings',             label: 'Settings',          icon: '⚙️', desc: 'Account & preferences' },
-  { href: '/ai-keys',              label: 'AI Provider Keys',  icon: '🔑', desc: 'Manage AI model API keys', adminOnly: true },
+  ...NAV_GROUPS.flatMap(g => g.pages),
+  { href: '/settings', label: 'Settings',         icon: '⚙️', desc: 'Account & preferences' },
+  { href: '/ai-keys',  label: 'AI Provider Keys', icon: '🔑', desc: 'Manage AI model API keys', adminOnly: true },
 ];
 
 function SearchIcon() {
@@ -59,15 +79,16 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [authChecked, setAuthChecked] = useState(false);
 
   const userMenuRef     = useRef<HTMLDivElement>(null);
+  const sidebarUserRef  = useRef<HTMLDivElement>(null);
   const desktopWrapRef  = useRef<HTMLDivElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileBtnRef    = useRef<HTMLButtonElement>(null);
   const searchInputRef  = useRef<HTMLInputElement>(null);
   const [fromDesktop, setFromDesktop] = useState(false);
+  const [sidebarUserOpen, setSidebarUserOpen] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
-  /* Auth guard */
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
     if (!token) { router.replace('/login'); return; }
@@ -77,7 +98,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => { setMenuOpen(false); }, [path]);
 
-  /* Wishlist sync */
   useEffect(() => {
     setWishlistCount(getWishlistCount());
     const sync = () => setWishlistCount(getWishlistCount());
@@ -86,14 +106,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     return () => { window.removeEventListener('bs:wishlist', sync); window.removeEventListener('storage', sync); };
   }, []);
 
-  /* Close user menu on outside click */
+  /* Close menus on outside click */
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
+      if (sidebarUserRef.current && !sidebarUserRef.current.contains(e.target as Node)) setSidebarUserOpen(false);
     }
-    if (userMenuOpen) document.addEventListener('mousedown', onDown);
+    if (userMenuOpen || sidebarUserOpen) document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
-  }, [userMenuOpen]);
+  }, [userMenuOpen, sidebarUserOpen]);
 
   /* ⌘K global shortcut */
   useEffect(() => {
@@ -142,14 +163,14 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     return (
       <div className="dash-area min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-violet-200 border-t-violet-500 animate-spin" />
+          <div className="w-9 h-9 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
           <span className="text-sm text-slate-400">Loading…</span>
         </div>
       </div>
     );
   }
 
-  /* ── Search dropdown (portal) ───────────────────────────── */
+  /* ── Search dropdown portal ─────────────────────────────── */
   const searchDropdown = searchOpen && mounted && anchor ? createPortal(
     <>
       <div className="fixed inset-0 z-40" onClick={closeSearch} />
@@ -161,8 +182,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           width:    anchor.width < 80 ? Math.min(380, window.innerWidth - 16) : Math.max(anchor.width, 400),
           maxWidth: window.innerWidth - 16,
           background: '#FFFFFF',
-          border: '1px solid #E2E8F0',
-          boxShadow: '0 8px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06)',
+          border: '1px solid #E8EDFB',
+          boxShadow: '0 8px 32px rgba(79,70,229,0.14), 0 2px 8px rgba(15,23,42,0.06)',
         }}>
 
         {!fromDesktop && (
@@ -181,9 +202,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
         <div className="py-1 max-h-72 overflow-y-auto scrollbar-dark">
           {searchResults.length === 0 ? (
-            <div className="px-4 py-5 text-center text-sm text-slate-400">
-              No results for &ldquo;{searchQuery}&rdquo;
-            </div>
+            <div className="px-4 py-5 text-center text-sm text-slate-400">No results for &ldquo;{searchQuery}&rdquo;</div>
           ) : (
             <>
               <div className="px-3.5 pt-2.5 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
@@ -195,26 +214,24 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   <button key={p.href}
                     onClick={() => { router.push(p.href); closeSearch(); }}
                     className={`w-full flex items-center gap-3 px-3.5 py-2.5 transition-colors text-left group ${
-                      active ? 'bg-violet-50' : 'hover:bg-slate-50'
+                      active ? 'bg-indigo-50' : 'hover:bg-slate-50'
                     }`}>
                     <span className="text-lg w-7 text-center shrink-0">{p.icon}</span>
                     <div className="flex-1 min-w-0">
                       <div className={`text-sm font-medium leading-snug ${
-                        active ? 'text-violet-700' : 'text-slate-700 group-hover:text-slate-900'
+                        active ? 'text-indigo-700' : 'text-slate-700 group-hover:text-slate-900'
                       }`}>
                         {p.label}
                         {p.badge && (
                           <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
-                            style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
+                            style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', color: '#fff' }}>
                             {p.badge}
                           </span>
                         )}
                       </div>
                       <div className="text-[11px] text-slate-400 truncate mt-0.5">{p.desc}</div>
                     </div>
-                    <span className={`text-xs shrink-0 ${
-                      active ? 'text-violet-400' : 'text-slate-200 group-hover:text-slate-400'
-                    }`}>
+                    <span className={`text-xs shrink-0 ${active ? 'text-indigo-400' : 'text-slate-200 group-hover:text-slate-400'}`}>
                       {active ? '●' : '→'}
                     </span>
                   </button>
@@ -234,45 +251,184 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     document.body
   ) : null;
 
-  return (
-    <div className="dash-area min-h-screen flex flex-col">
+  /* ── Sidebar nav link helper ────────────────────────────── */
+  function SidebarLink({ page, onClick }: { page: NavPage; onClick?: () => void }) {
+    const active = path === page.href || path.startsWith(page.href + '/');
+    return (
+      <Link href={page.href} onClick={onClick}
+        className="sidebar-link flex items-center gap-2.5 px-3 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 mb-0.5 relative"
+        style={active ? {
+          background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+          color: '#fff',
+          boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+        } : undefined}
+        data-active={active ? 'true' : undefined}>
+        <span className="text-[15px] w-5 text-center leading-none shrink-0">{page.icon}</span>
+        <span className="flex-1 truncate">{page.label}</span>
+        {page.badge && (
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
+            active ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-600'
+          }`}>{page.badge}</span>
+        )}
+      </Link>
+    );
+  }
 
-      {/* ── Top navigation bar ── */}
-      <header
-        className="fixed top-0 inset-x-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 border-b bg-white"
-        style={{
-          height: 'calc(56px + env(safe-area-inset-top, 0px))',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          borderColor: '#E2E8F0',
-          boxShadow: '0 1px 0 #E2E8F0, 0 4px 24px rgba(15,23,42,0.05)',
-        }}>
+  /* ── User plan badge ────────────────────────────────────── */
+  function PlanBadge() {
+    if (user?.role === 'admin')
+      return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">Admin</span>;
+    if (user?.plan === 'pro')
+      return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">Pro</span>;
+    return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Free</span>;
+  }
+
+  return (
+    <div className="dash-area min-h-screen">
+
+      {/* ═══════════════════════════════════════════════════
+          DESKTOP SIDEBAR  (hidden on mobile)
+          ═══════════════════════════════════════════════════ */}
+      <aside
+        className="hidden md:flex fixed left-0 top-0 h-screen w-60 flex-col bg-white z-40"
+        style={{ borderRight: '1px solid #E8EDFB', boxShadow: '2px 0 24px rgba(79,70,229,0.06)' }}>
 
         {/* Logo */}
-        <Link href="/opportunities" className="flex items-center gap-2.5 shrink-0 group" aria-label="SellBodr home">
-          <img src="/icons/icon.svg" alt="SellBodr"
-            className="w-9 h-9 transition-transform duration-200 group-hover:scale-110 shrink-0"
-            style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.5))' }} />
-          <div className="hidden sm:block">
-            <div className="text-[14px] font-black tracking-tight leading-none"
-              style={{ background: 'linear-gradient(135deg,#7c3aed 0%,#6366f1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        <Link href="/opportunities"
+          className="flex items-center gap-2.5 px-5 shrink-0 hover:opacity-90 transition-opacity"
+          style={{ height: '56px' }}>
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 shrink-0"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
+          <div>
+            <div className="text-[15px] font-black tracking-tight leading-none"
+              style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               SellBodr
             </div>
-            <div className="text-[8px] font-semibold text-slate-400 uppercase tracking-[0.18em] leading-none mt-0.5">
-              eCommerce Intelligence
+            <div className="text-[8px] font-semibold uppercase tracking-[0.18em] leading-none mt-0.5" style={{ color: '#94A3B8' }}>
+              eCommerce AI
             </div>
           </div>
         </Link>
 
-        {/* Page title — mobile only */}
-        <span className="sm:hidden text-sm font-semibold text-slate-500 truncate flex-1 min-w-0 pl-1">{pageName}</span>
+        {/* Nav groups */}
+        <nav className="flex-1 px-2.5 pt-1 pb-2 overflow-y-auto scrollbar-dark" aria-label="Sidebar navigation">
+          {NAV_GROUPS.map(group => (
+            <div key={group.label} className="mb-4">
+              <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>
+                {group.label}
+              </div>
+              {group.pages.filter(p => !p.adminOnly || isAdmin()).map(p => (
+                <SidebarLink key={p.href} page={p} />
+              ))}
+            </div>
+          ))}
 
-        {/* Desktop search bar */}
-        <div className="hidden md:flex flex-1 justify-center max-w-xl">
-          <div ref={desktopWrapRef} className="w-full max-w-md">
-            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-2 transition-all duration-200 border ${
+          {/* Account group */}
+          <div className="mb-4">
+            <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>Account</div>
+            <SidebarLink page={{ href: '/settings', label: 'Settings', icon: '⚙️', desc: 'Account & preferences' }} />
+            {isAdmin() && (
+              <SidebarLink page={{ href: '/ai-keys', label: 'AI Keys', icon: '🔑', desc: 'Manage AI model API keys' }} />
+            )}
+          </div>
+        </nav>
+
+        {/* User card — sidebar bottom */}
+        {user && (
+          <div className="px-2.5 pb-4 shrink-0 border-t border-slate-100" ref={sidebarUserRef}>
+            <AnimatePresence>
+              {sidebarUserOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                  transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+                  className="absolute bottom-full left-2.5 right-2.5 mb-1 bg-white border border-slate-200 rounded-2xl p-1.5 z-50"
+                  style={{ boxShadow: '0 -8px 32px rgba(79,70,229,0.12), 0 2px 8px rgba(15,23,42,0.06)' }}>
+                  {isAdmin() && (
+                    <>
+                      <Link href="/admin" onClick={() => setSidebarUserOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                        <span>🔐</span><span>Admin Panel</span>
+                      </Link>
+                      <Link href="/ai-keys" onClick={() => setSidebarUserOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 rounded-xl transition-colors">
+                        <span>🔑</span><span>AI Provider Keys</span>
+                      </Link>
+                    </>
+                  )}
+                  <Link href="/guide" onClick={() => setSidebarUserOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
+                    <span>📖</span><span>User Guide</span>
+                  </Link>
+                  <Link href="/settings" onClick={() => setSidebarUserOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
+                    <span>⚙️</span><span>Settings</span>
+                  </Link>
+                  <button onClick={() => { logout(); setSidebarUserOpen(false); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-all min-h-[40px]">
+                    <span>↩</span><span>Sign out</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <button
+              onClick={() => setSidebarUserOpen(v => !v)}
+              className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-indigo-50 transition-colors text-left mt-2.5"
+              aria-label="User menu" aria-expanded={sidebarUserOpen}>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{user.name ?? 'User'}</div>
+                <div className="mt-0.5"><PlanBadge /></div>
+              </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" className="shrink-0">
+                <path d="m18 15-6-6-6 6"/>
+              </svg>
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* ═══════════════════════════════════════════════════
+          TOP HEADER  (full width on mobile, right of sidebar on desktop)
+          ═══════════════════════════════════════════════════ */}
+      <header
+        className="fixed top-0 left-0 md:left-60 right-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-5 bg-white"
+        style={{
+          height: 'calc(56px + env(safe-area-inset-top, 0px))',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          borderBottom: '1px solid #E8EDFB',
+          boxShadow: '0 1px 0 #E8EDFB, 0 2px 16px rgba(79,70,229,0.05)',
+        }}>
+
+        {/* Logo — mobile only */}
+        <Link href="/opportunities" className="flex items-center gap-2 md:hidden shrink-0 group" aria-label="SellBodr home">
+          <img src="/icons/icon.svg" alt="SellBodr"
+            className="w-8 h-8 transition-transform duration-200 group-hover:scale-110 shrink-0"
+            style={{ filter: 'drop-shadow(0 0 6px rgba(99,102,241,0.5))' }} />
+          <span className="hidden sm:block text-[14px] font-black tracking-tight"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            SellBodr
+          </span>
+        </Link>
+
+        {/* Page title — mobile */}
+        <span className="md:hidden text-sm font-semibold text-slate-500 truncate flex-1 min-w-0 pl-1">{pageName}</span>
+
+        {/* Page title + breadcrumb — desktop */}
+        <div className="hidden md:flex items-center gap-2 shrink-0">
+          <span className="text-[15px] font-bold text-slate-800">{pageName}</span>
+        </div>
+
+        {/* Desktop search */}
+        <div className="hidden md:flex flex-1 justify-center max-w-sm mx-auto">
+          <div ref={desktopWrapRef} className="w-full">
+            <div className={`flex items-center gap-2.5 rounded-xl px-3.5 py-2 transition-all duration-200 border ${
               searchOpen && fromDesktop
-                ? 'bg-white border-violet-400/60 shadow-sm ring-2 ring-violet-500/10'
-                : 'bg-slate-50 hover:bg-white border-slate-200 hover:border-slate-300'
+                ? 'bg-white border-indigo-400/60 shadow-sm ring-2 ring-indigo-500/10'
+                : 'bg-[#F0F4FF] hover:bg-white border-transparent hover:border-indigo-200'
             }`}>
               <span className="text-slate-400 shrink-0"><SearchIcon /></span>
               <input
@@ -293,29 +449,29 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none min-w-0"
                 aria-label="Search (⌘K)"
               />
-              <kbd className="text-[10px] bg-slate-100 rounded px-1.5 py-1 border border-slate-200 font-mono text-slate-500 shrink-0">⌘K</kbd>
+              <kbd className="text-[10px] bg-white rounded px-1.5 py-1 border border-slate-200 font-mono text-slate-400 shrink-0">⌘K</kbd>
             </div>
           </div>
         </div>
 
         {/* Right actions */}
-        <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+        <div className="ml-auto md:ml-0 flex items-center gap-1 sm:gap-1.5">
 
           {/* Mobile search */}
           <button
             ref={mobileBtnRef}
             onClick={e => openSearch((e.currentTarget as HTMLButtonElement).getBoundingClientRect())}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation"
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-indigo-50 active:bg-indigo-100 transition-colors touch-manipulation"
             aria-label="Search">
             <SearchIcon />
           </button>
 
-          {/* Wishlist */}
+          {/* Wishlist — desktop */}
           <Link href="/wishlist"
             className={`hidden md:flex relative w-9 h-9 items-center justify-center rounded-xl transition-colors touch-manipulation ${
               path === '/wishlist'
                 ? 'bg-amber-100 text-amber-600'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-amber-500'
+                : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'
             }`}
             aria-label="Wishlist">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
@@ -328,20 +484,20 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             )}
           </Link>
 
-          {/* User Guide */}
+          {/* Guide — desktop */}
           <Link href="/guide"
             className={`hidden md:flex w-9 h-9 items-center justify-center rounded-xl transition-colors touch-manipulation ${
               path === '/guide' || path.startsWith('/guide/')
-                ? 'bg-violet-100 text-violet-700'
-                : 'text-slate-400 hover:bg-slate-100 hover:text-violet-600'
+                ? 'bg-indigo-100 text-indigo-700'
+                : 'text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'
             }`}
             aria-label="User Guide">
             <GuideIcon />
           </Link>
 
-          {/* User avatar menu */}
+          {/* User avatar — mobile only (desktop is in sidebar) */}
           {user && (
-            <div className="relative" ref={userMenuRef}>
+            <div className="md:hidden relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs transition-transform duration-150 hover:scale-105 active:scale-95 touch-manipulation shadow-sm"
@@ -356,17 +512,12 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     exit={{ opacity: 0, scale: 0.94, y: -6 }}
                     transition={{ type: 'spring', damping: 30, stiffness: 400 }}
                     className="absolute right-0 top-11 bg-white border border-slate-200 rounded-2xl p-1.5 min-w-[200px] z-50"
-                    style={{ boxShadow: '0 8px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06)' }}>
+                    style={{ boxShadow: '0 8px 32px rgba(79,70,229,0.12), 0 2px 8px rgba(15,23,42,0.06)' }}>
                     <div className="px-3 py-2.5 border-b border-slate-100 mb-1">
                       <div className="text-xs font-semibold text-slate-800 truncate">{user?.name ?? 'User'}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[10px] text-slate-400 capitalize">{user?.role ?? 'member'}</span>
-                        {user?.role === 'admin'
-                          ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">Admin</span>
-                          : user?.plan === 'pro'
-                            ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">Pro</span>
-                            : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">Free</span>
-                        }
+                        <PlanBadge />
                       </div>
                     </div>
                     {isAdmin() && (
@@ -404,7 +555,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
       {searchDropdown}
 
-      {/* ── Mobile slide-in drawer ── */}
+      {/* ═══════════════════════════════════════════════════
+          MOBILE SLIDE-IN DRAWER  (right side)
+          ═══════════════════════════════════════════════════ */}
       <AnimatePresence>
         {menuOpen && (
           <>
@@ -433,31 +586,31 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-900 truncate">{user.name ?? 'User'}</div>
-                    <div className="text-xs text-slate-400 capitalize">
+                    <div className="text-xs text-slate-400 capitalize mt-0.5">
                       {user.plan === 'pro' ? 'Pro' : user.role === 'admin' ? 'Admin' : 'Free'} account
                     </div>
                   </div>
                 </div>
               )}
 
-              <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark space-y-0.5" aria-label="Navigation">
+              <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-dark" aria-label="Navigation">
                 {navPages.map(p => {
                   const active = path === p.href || path.startsWith(p.href + '/');
                   return (
                     <Link key={p.href} href={p.href} onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        active
-                          ? 'text-violet-700 bg-violet-50'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-0.5 ${
+                        active ? 'text-white' : 'text-slate-600 hover:text-indigo-700 hover:bg-indigo-50'
                       }`}
-                      style={active ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.45)' } : undefined}>
+                      style={active ? {
+                        background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                        boxShadow: '0 3px 10px rgba(99,102,241,0.3)',
+                      } : undefined}>
                       <span className="text-base w-6 text-center shrink-0">{p.icon}</span>
                       <span className="flex-1 truncate">{p.label}</span>
-                      {'badge' in p && p.badge && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
-                          style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff' }}>
-                          {p.badge}
-                        </span>
+                      {p.badge && (
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
+                          active ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-600'
+                        }`}>{p.badge}</span>
                       )}
                     </Link>
                   );
@@ -476,37 +629,43 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         )}
       </AnimatePresence>
 
-      {/* ── Main content ── */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-dark">
-        <div className="min-h-full"
-          style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}>
-          <div className="md:pb-6 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6 xl:p-8">
-            {children}
-          </div>
+      {/* ═══════════════════════════════════════════════════
+          MAIN CONTENT
+          ═══════════════════════════════════════════════════ */}
+      <main className="md:ml-60 overflow-y-auto overflow-x-hidden scrollbar-dark min-h-screen"
+        style={{
+          paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+        }}>
+        <div className="md:pb-2 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6">
+          {children}
         </div>
       </main>
 
       <CurrencyWidget />
 
-      {/* ── Mobile bottom tab bar ── */}
+      {/* ═══════════════════════════════════════════════════
+          MOBILE BOTTOM TAB BAR
+          ═══════════════════════════════════════════════════ */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200"
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t"
         style={{
+          borderColor: '#E8EDFB',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          boxShadow: '0 -1px 0 #E2E8F0, 0 -4px 16px rgba(15,23,42,0.06)',
+          boxShadow: '0 -1px 0 #E8EDFB, 0 -4px 20px rgba(79,70,229,0.07)',
         }}
         aria-label="Bottom navigation">
         <div className="flex items-stretch h-16">
 
           <Link href="/opportunities"
             className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
-              isHome ? 'text-violet-600' : 'text-slate-400 active:text-slate-600'
+              isHome ? 'text-indigo-600' : 'text-slate-400 active:text-slate-600'
             }`}>
             {isHome && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
             )}
             <span className={`text-[22px] leading-none transition-transform duration-200 ${isHome ? 'scale-110' : ''}`}>🎯</span>
-            <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-violet-600' : ''}`}>Scout</span>
+            <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-indigo-600' : ''}`}>Scout</span>
           </Link>
 
           <Link href="/wishlist"
@@ -522,7 +681,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 active:text-slate-600 transition-colors touch-manipulation"
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 active:text-indigo-600 transition-colors touch-manipulation"
             aria-label="More pages">
             <svg width="20" height="16" viewBox="0 0 20 16" fill="none" aria-hidden="true">
               <rect width="20" height="2" rx="1" fill="currentColor"/>
