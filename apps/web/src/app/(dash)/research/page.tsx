@@ -174,20 +174,7 @@ export default function ResearchPage() {
     enabled: !isFree,
   });
 
-  if (isFree) return (
-    <ProGate
-      icon="🔬"
-      feature="Deep Market Research"
-      tagline="Full 7-dimension AI analysis per opportunity — demand signals, competition mapping, saturation heatmaps, trend breakdowns, and AI evidence with source citations."
-      benefits={[
-        'Full 7-dimension score breakdown with evidence',
-        'Competition density & saturation heatmap',
-        'Trend source: search, social, curated signals',
-        'Multi-model AI consensus confidence scores',
-      ]}
-    />
-  );
-
+  // All hooks must be declared before any conditional return
   const [catFilter,    setCatFilter]    = useState('');
   const [mpFilter,     setMpFilter]     = useState('');
   const [recFilter,    setRecFilter]    = useState('');
@@ -221,6 +208,20 @@ export default function ResearchPage() {
       return true;
     });
   }, [allOpps, catFilter, mpFilter, recFilter, trendFilter, chanFilter, periodFilter]);
+
+  if (isFree) return (
+    <ProGate
+      icon="🔬"
+      feature="Deep Market Research"
+      tagline="Full 7-dimension AI analysis per opportunity — demand signals, competition mapping, saturation heatmaps, trend breakdowns, and AI evidence with source citations."
+      benefits={[
+        'Full 7-dimension score breakdown with evidence',
+        'Competition density & saturation heatmap',
+        'Trend source: search, social, curated signals',
+        'Multi-model AI consensus confidence scores',
+      ]}
+    />
+  );
 
   const hasFilters = !!(catFilter || mpFilter || recFilter || trendFilter || chanFilter || periodFilter);
 
