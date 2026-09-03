@@ -28,8 +28,6 @@ const CURRENCIES = [
   { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦', symbol: 'R'   },
 ];
 
-const CODES = CURRENCIES.map(c => c.code);
-
 // ── Formatters ────────────────────────────────────────────────────────────────
 
 function fmtVal(sym: string, val: number): string {
@@ -49,6 +47,17 @@ function timeAgo(d: Date): string {
   return `${Math.floor(s / 60)}m ago`;
 }
 
+// ── FX Icon SVG ───────────────────────────────────────────────────────────────
+
+function FxIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 7h11M11 4l3 3-3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M17 13H6M9 10l-3 3 3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 // ── Main widget ───────────────────────────────────────────────────────────────
 
 export function CurrencyWidget() {
@@ -65,13 +74,11 @@ export function CurrencyWidget() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Re-render timestamp display every 5 s
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 5_000);
     return () => clearInterval(id);
   }, []);
 
-  // Load cached rates from localStorage on mount so the grid is never blank
   useEffect(() => {
     try {
       const cached = localStorage.getItem('sb_fx_rates');
@@ -120,8 +127,6 @@ export function CurrencyWidget() {
     return () => document.removeEventListener('keydown', fn);
   }, []);
 
-  // ── Conversion helpers ──────────────────────────────────────────────────────
-
   function convert(code: string): string {
     const br = rates[base] ?? 0;
     const tr = rates[code] ?? 0;
@@ -143,59 +148,64 @@ export function CurrencyWidget() {
   const hasRates = Object.keys(rates).length > 0;
   const baseInfo = CURRENCIES.find(c => c.code === base)!;
 
+  const statusColor = fetching ? '#D97706' : error ? '#DC2626' : '#10B981';
+  const statusLabel = fetching ? 'Updating…' : error ? 'Cached' : updatedAt ? timeAgo(updatedAt) : '…';
+
   // ── Panel ───────────────────────────────────────────────────────────────────
 
   const panel = (
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-end sm:justify-end">
+          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
 
-          {/* Backdrop — invisible, click-to-close only */}
-          <div className="absolute inset-0" onClick={() => setOpen(false)} />
-
-          {/* Panel */}
           <motion.div
-            initial={{ y: 40, opacity: 0, scale: 0.97 }}
+            initial={{ y: 32, opacity: 0, scale: 0.97 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 24, opacity: 0, scale: 0.97 }}
+            exit={{ y: 20, opacity: 0, scale: 0.97 }}
             transition={{ type: 'spring', damping: 32, stiffness: 380 }}
-            className="relative w-full sm:w-[440px] sm:mr-6 sm:mb-6 max-h-[82dvh] sm:max-h-[86vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-black/70"
-            style={{ background: '#0a0f1e', border: '1px solid rgba(255,255,255,0.09)' }}>
+            className="relative w-full sm:w-[420px] sm:mr-5 sm:mb-20 max-h-[82dvh] sm:max-h-[80vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden"
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid #E8EDFB',
+              boxShadow: '0 24px 64px rgba(79,70,229,0.18), 0 4px 16px rgba(15,23,42,0.1)',
+            }}>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/8 shrink-0"
-              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.08),rgba(99,102,241,0.04))' }}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg shrink-0"
-                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.35),rgba(99,102,241,0.2))', border: '1px solid rgba(124,58,237,0.35)' }}>
-                  💱
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 shrink-0"
+              style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.05),rgba(124,58,237,0.03))' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#6366F1,#4F46E5)', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}>
+                  <FxIcon className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white leading-none">Live Currency Rates</div>
+                  <div className="text-sm font-bold text-slate-900 leading-none">Live Currency Rates</div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'bg-amber-400 animate-pulse' : error ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    <span className="text-[10px] text-white/55">
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'animate-pulse' : ''}`}
+                      style={{ backgroundColor: statusColor }} />
+                    <span className="text-[10px] text-slate-400">
                       {fetching ? 'Fetching ECB rates…' : error ? 'Could not fetch — showing cached' : updatedAt ? `Updated ${timeAgo(updatedAt)}` : 'Loading…'}
                     </span>
                   </div>
                 </div>
               </div>
               <button onClick={() => setOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-white/55 hover:bg-white/8 hover:text-white transition-colors text-lg shrink-0">
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors text-base shrink-0">
                 ✕
               </button>
             </div>
 
-            {/* Amount + base currency input */}
-            <div className="px-4 pt-4 pb-3 border-b border-white/8 shrink-0">
-              <div className="text-[10px] font-semibold text-white/55 uppercase tracking-widest mb-2">Convert from</div>
+            {/* Amount + base currency */}
+            <div className="px-4 pt-4 pb-3.5 border-b border-slate-100 shrink-0 bg-slate-50/50">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Convert from</div>
               <div className="flex items-center gap-2">
 
-                {/* Base currency pill */}
+                {/* Base currency select */}
                 <div className="relative shrink-0">
                   <select value={base} onChange={e => setBase(e.target.value)}
-                    className="appearance-none pl-8 pr-7 py-2.5 rounded-xl text-sm font-bold text-white cursor-pointer focus:outline-none focus:ring-1 focus:ring-violet-500/60 [&>option]:bg-[#0d1225]"
-                    style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)' }}>
+                    className="appearance-none pl-8 pr-7 py-2.5 rounded-xl text-sm font-bold text-indigo-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/30 [&>option]:bg-white [&>option]:text-slate-900"
+                    style={{ background: 'rgba(99,102,241,0.08)', border: '1.5px solid rgba(99,102,241,0.2)' }}>
                     {CURRENCIES.map(c => (
                       <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                     ))}
@@ -203,7 +213,7 @@ export function CurrencyWidget() {
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base leading-none pointer-events-none">
                     {baseInfo.flag}
                   </span>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-violet-400/60 pointer-events-none" viewBox="0 0 12 8" fill="none">
+                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-indigo-400 pointer-events-none" viewBox="0 0 12 8" fill="none">
                     <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
@@ -214,65 +224,57 @@ export function CurrencyWidget() {
                     type="number" min="0" step="any"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    className="w-full rounded-xl px-3 py-2.5 text-2xl font-black text-white tabular-nums focus:outline-none focus:ring-1 focus:ring-violet-500/60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    className="w-full rounded-xl px-3.5 py-2.5 text-2xl font-black text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white border border-slate-200"
                     placeholder="0"
                   />
                 </div>
 
-                {/* Refresh button */}
+                {/* Refresh */}
                 <button onClick={fetchRates} disabled={fetching} title="Refresh rates"
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-white/40 hover:text-violet-300 disabled:opacity-40 transition-colors shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 transition-colors shrink-0 border border-slate-200 bg-white">
                   <svg className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} viewBox="0 0 16 16" fill="none">
                     <path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                     <path d="M14 2v4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
               </div>
-
-              <div className="mt-2 text-[10px] text-white/50 pl-0.5">
-                {baseInfo.name} · Tap any result card to set it as the base
+              <div className="mt-2 text-[10px] text-slate-400 pl-0.5">
+                {baseInfo.name} · Tap any card to set it as the base currency
               </div>
             </div>
 
             {/* Currency grid */}
-            <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+            <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#E2E8F0 transparent' }}>
               {!hasRates ? (
                 <div className="flex flex-col items-center justify-center h-40 gap-3">
-                  <svg className="w-6 h-6 text-violet-500/50 animate-spin" viewBox="0 0 16 16" fill="none">
+                  <svg className="w-6 h-6 text-indigo-400 animate-spin" viewBox="0 0 16 16" fill="none">
                     <path d="M14 8A6 6 0 1 1 8 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  <span className="text-xs text-white/50">Fetching live rates…</span>
+                  <span className="text-xs text-slate-400">Fetching live rates…</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {CURRENCIES.filter(c => c.code !== base).map(cur => (
                     <button key={cur.code} type="button"
                       onClick={() => setBase(cur.code)}
-                      className="text-left rounded-xl p-3 transition-all duration-150 group hover:scale-[1.02] active:scale-[0.98]"
-                      style={{ background: 'rgba(255,255,255,0.028)', border: '1px solid rgba(255,255,255,0.07)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.07)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.028)'; }}>
+                      className="text-left rounded-xl p-3 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/60 transition-all duration-150 group active:scale-[0.98]"
+                      style={{ boxShadow: '0 1px 3px rgba(15,23,42,0.04)' }}>
 
-                      {/* Top row: flag + code + swap hint */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
                           <span className="text-base leading-none">{cur.flag}</span>
-                          <span className="text-[11px] font-bold text-white/55">{cur.code}</span>
+                          <span className="text-[11px] font-bold text-slate-500">{cur.code}</span>
                         </div>
-                        <svg className="w-3 h-3 text-white/15 group-hover:text-violet-400/50 transition-colors" viewBox="0 0 12 12" fill="none">
+                        <svg className="w-3 h-3 text-slate-200 group-hover:text-indigo-400 transition-colors" viewBox="0 0 12 12" fill="none">
                           <path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
 
-                      {/* Converted amount */}
-                      <div className="text-[17px] font-black tabular-nums text-white leading-none">
+                      <div className="text-[17px] font-black tabular-nums text-slate-900 leading-none">
                         {convert(cur.code)}
                       </div>
 
-                      {/* Rate label */}
-                      <div className="text-[9px] text-white/20 mt-1.5 truncate">{rateLabel(cur.code)}</div>
+                      <div className="text-[9px] text-slate-400 mt-1.5 truncate">{rateLabel(cur.code)}</div>
                     </button>
                   ))}
                 </div>
@@ -280,10 +282,9 @@ export function CurrencyWidget() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-white/6 shrink-0 flex items-center justify-between"
-              style={{ background: 'rgba(0,0,0,0.25)' }}>
-              <span className="text-[9px] text-white/20">Powered by Frankfurter · European Central Bank</span>
-              <span className="text-[9px] text-white/20">Auto-refresh every 60s</span>
+            <div className="px-4 py-2.5 border-t border-slate-100 shrink-0 flex items-center justify-between bg-slate-50/70">
+              <span className="text-[9px] text-slate-400">Powered by Frankfurter · European Central Bank</span>
+              <span className="text-[9px] text-slate-400">Auto-refresh every 60s</span>
             </div>
           </motion.div>
         </div>
@@ -295,26 +296,38 @@ export function CurrencyWidget() {
 
   return (
     <>
-      {/* Floating trigger */}
+      {/* Floating trigger — indigo pill matching app brand */}
       <motion.button
         onClick={() => setOpen(o => !o)}
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.95 }}
-        className="fixed bottom-20 right-3 lg:bottom-6 lg:right-5 z-[100] flex items-center gap-2 rounded-2xl px-3 py-2 transition-all duration-200"
+        whileHover={{ scale: 1.05, y: -1 }}
+        whileTap={{ scale: 0.96 }}
+        className="fixed bottom-20 right-3 lg:bottom-6 lg:right-5 z-[100] flex items-center gap-2 rounded-2xl px-3 py-2 transition-shadow duration-200"
         style={{
-          background: open ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : '#ffffff',
-          border: open ? '1px solid #4F46E5' : '1px solid #E8EDFB',
-          boxShadow: open ? '0 4px 20px rgba(99,102,241,0.4)' : '0 4px 16px rgba(99,102,241,0.15)',
+          background: open
+            ? 'linear-gradient(135deg,#4F46E5,#7C3AED)'
+            : 'linear-gradient(135deg,#6366F1,#4F46E5)',
+          boxShadow: open
+            ? '0 8px 28px rgba(99,102,241,0.50), 0 2px 8px rgba(79,70,229,0.3)'
+            : '0 4px 16px rgba(99,102,241,0.30), 0 1px 4px rgba(79,70,229,0.15)',
+          border: '1px solid rgba(255,255,255,0.18)',
         }}>
-        <span className="text-base leading-none">💱</span>
+
+        {/* Icon */}
+        <div className="w-6 h-6 flex items-center justify-center shrink-0">
+          <FxIcon className="w-[17px] h-[17px] text-white" />
+        </div>
+
+        {/* Label */}
         <div className="hidden sm:block text-left">
-          <div className="text-[11px] font-bold leading-none" style={{ color: open ? '#ffffff' : '#4338CA' }}>Live FX</div>
-          <div className="text-[9px] leading-none mt-0.5 tabular-nums"
-            style={{ color: fetching ? '#D97706' : error ? '#DC2626' : open ? '#A5F3FC' : '#059669' }}>
-            {fetching ? 'updating…' : error ? 'cached' : updatedAt ? `${timeAgo(updatedAt)}` : '…'}
+          <div className="text-[11px] font-bold text-white leading-none tracking-wide">Live FX</div>
+          <div className="text-[9px] leading-none mt-0.5 font-medium" style={{ color: statusColor === '#10B981' ? '#6EE7B7' : statusColor === '#D97706' ? '#FCD34D' : '#FCA5A5' }}>
+            {statusLabel}
           </div>
         </div>
-        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'bg-amber-400 animate-pulse' : error ? 'bg-red-500' : 'bg-emerald-500'}`} />
+
+        {/* Status dot */}
+        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'animate-pulse' : ''}`}
+          style={{ backgroundColor: statusColor === '#10B981' ? '#6EE7B7' : statusColor === '#D97706' ? '#FCD34D' : '#FCA5A5' }} />
       </motion.button>
 
       {createPortal(panel, document.body)}
