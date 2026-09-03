@@ -71,6 +71,8 @@ export const api = {
       request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password, orgName }) }),
     login: (email: string, password: string) =>
       request<any>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    googleLogin: (credential: string) =>
+      request<any>('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) }),
     logout: (refreshToken: string) => request('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
   },
   searches: {

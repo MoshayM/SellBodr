@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,56 +26,6 @@ const PLANS = [
   },
 ];
 
-function PinInput({ label, onComplete, disabled, resetKey }: {
-  label: string;
-  onComplete: (pin: string) => void;
-  disabled?: boolean;
-  resetKey?: number;
-}) {
-  const [digits, setDigits] = useState(['', '', '', '']);
-  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
-
-  useEffect(() => {
-    setDigits(['', '', '', '']);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
-
-  function handle(i: number, val: string) {
-    const d = val.replace(/\D/g, '').slice(-1);
-    const next = [...digits];
-    next[i] = d;
-    setDigits(next);
-    if (d && i < 3) refs[i + 1].current?.focus();
-    if (next.every(v => v !== '')) onComplete(next.join(''));
-  }
-
-  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !digits[i] && i > 0) refs[i - 1].current?.focus();
-  }
-
-  return (
-    <div>
-      <label className="block text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider text-center">{label}</label>
-      <div className="flex gap-3 justify-center">
-        {digits.map((d, i) => (
-          <input
-            key={i} ref={refs[i]}
-            type="password" inputMode="numeric" pattern="\d" maxLength={1}
-            value={d} disabled={disabled}
-            onChange={e => handle(i, e.target.value)}
-            onKeyDown={e => handleKey(i, e)}
-            className="w-14 h-14 text-center text-2xl font-black rounded-xl border-2 transition-all outline-none
-              bg-white text-slate-900 border-slate-200
-              focus:border-violet-500 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.15)]
-              disabled:opacity-40 disabled:cursor-not-allowed"
-            autoComplete="off"
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -83,18 +33,12 @@ export default function RegisterPage() {
     if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
   }, [router]);
 
-  const [step, setStep]       = useState<'plan' | 'form' | 'pin'>('plan');
+  const [step, setStep]       = useState<'plan' | 'form'>('plan');
   const [plan, setPlan]       = useState('free');
   const [form, setForm]       = useState({ name: '', email: '', password: '', confirm: '' });
   const [showPw, setShowPw]   = useState(false);
-  const [usePassword, setUsePassword] = useState(false);
-  const [pin, setPin]         = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [pinResetKey, setPinResetKey] = useState(0);
-  const [confirmResetKey, setConfirmResetKey] = useState(0);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
-  const [tempToken, setTempToken] = useState('');
 
   function setField(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => { setForm(f => ({ ...f, [field]: e.target.value })); setError(''); };
@@ -107,42 +51,11 @@ export default function RegisterPage() {
     setError(''); setLoading(true);
     try {
       const res = await api.auth.register(form.name, form.email, form.password) as any;
-      setTempToken(res.accessToken);
-      if (usePassword) { saveAuth(res); router.push('/opportunities'); return; }
-      setStep('pin');
+      saveAuth(res);
+      router.push('/opportunities');
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
     } finally { setLoading(false); }
-  }
-
-  async function handlePinSubmit() {
-    if (!pin || pin.length !== 4) { setError('Please enter a 4-digit PIN'); return; }
-    if (pin !== confirmPin) {
-      setError('PINs do not match — please try again');
-      setPin(''); setConfirmPin('');
-      setPinResetKey(k => k + 1); setConfirmResetKey(k => k + 1);
-      return;
-    }
-    setError(''); setLoading(true);
-    try {
-      const prevToken = localStorage.getItem('bs_access_token');
-      localStorage.setItem('bs_access_token', tempToken);
-      await api.pin.set(pin);
-      if (prevToken === null) localStorage.removeItem('bs_access_token');
-      else localStorage.setItem('bs_access_token', prevToken);
-      const res = await api.pin.login(form.email, pin) as any;
-      saveAuth(res); router.push('/opportunities');
-    } catch (err: any) {
-      setError(err?.message || 'Failed to set PIN. You can set it later in Settings → Security.');
-      const res = await api.auth.login(form.email, form.password).catch(() => null) as any;
-      if (res) { saveAuth(res); router.push('/opportunities'); }
-    } finally { setLoading(false); }
-  }
-
-  function skipPin() {
-    api.auth.login(form.email, form.password).then((res: any) => {
-      saveAuth(res); router.push('/opportunities');
-    }).catch(() => router.push('/login'));
   }
 
   return (
@@ -159,8 +72,8 @@ export default function RegisterPage() {
 
         {/* Step indicator */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          {['Choose plan', 'Create account', 'Set PIN'].map((label, i) => {
-            const stepIdx = ['plan', 'form', 'pin'].indexOf(step);
+          {['Choose plan', 'Create account'].map((label, i) => {
+            const stepIdx = ['plan', 'form'].indexOf(step);
             const isActive = stepIdx === i;
             const isDone   = stepIdx > i;
             return (
@@ -177,7 +90,7 @@ export default function RegisterPage() {
                   </div>
                   <span className="hidden sm:block">{label}</span>
                 </div>
-                {i < 2 && <div className="w-10 h-px bg-slate-300" />}
+                {i < 1 && <div className="w-10 h-px bg-slate-300" />}
               </div>
             );
           })}
@@ -287,14 +200,6 @@ export default function RegisterPage() {
                     </motion.div>
                   )}
 
-                  <div className="flex items-center gap-2 pt-1">
-                    <input type="checkbox" id="skipPin" checked={usePassword} onChange={e => setUsePassword(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 accent-violet-500" />
-                    <label htmlFor="skipPin" className="text-xs text-slate-500 cursor-pointer select-none">
-                      Password only — I&apos;ll set a PIN later in Settings
-                    </label>
-                  </div>
-
                   <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="btn-primary w-full text-base py-4 min-h-0 disabled:opacity-60 disabled:cursor-not-allowed">
                     {loading ? (
@@ -303,7 +208,7 @@ export default function RegisterPage() {
                           className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
                         Creating account…
                       </span>
-                    ) : (usePassword ? 'Create account →' : 'Continue → Set fast login PIN')}
+                    ) : 'Create account →'}
                   </motion.button>
                 </form>
               </div>
@@ -318,49 +223,6 @@ export default function RegisterPage() {
                 {' '}and{' '}
                 <Link href="/privacy" className="text-slate-500 hover:text-slate-700 transition-colors">Privacy Policy</Link>
               </p>
-            </motion.div>
-          )}
-
-          {/* Step 3 — Set PIN */}
-          {step === 'pin' && (
-            <motion.div key="pin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-sm mx-auto text-center">
-              <div className="text-4xl mb-4">🔑</div>
-              <h2 className="text-3xl font-black text-slate-900 mb-2">Set your login PIN</h2>
-              <p className="text-slate-500 text-sm mb-8">
-                Choose a 4-digit PIN for fast login on any device.{' '}
-                You can also use your fingerprint on mobile &amp; Mac.
-              </p>
-
-              <div className="bg-white rounded-2xl p-6 space-y-6 shadow-xl shadow-slate-200/80 border border-slate-200">
-                <PinInput label="Choose a 4-digit PIN" onComplete={setPin} disabled={loading} resetKey={pinResetKey} />
-                <PinInput label="Confirm PIN" onComplete={setConfirmPin} disabled={loading} resetKey={confirmResetKey} />
-
-                {error && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm">
-                    {error}
-                  </motion.div>
-                )}
-
-                <motion.button
-                  onClick={handlePinSubmit}
-                  disabled={loading || pin.length < 4 || confirmPin.length < 4}
-                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                  className="btn-primary w-full text-base py-4 min-h-0 disabled:opacity-40 disabled:cursor-not-allowed">
-                  {loading ? (
-                    <span className="flex items-center gap-2 justify-center">
-                      <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full block" />
-                      Saving PIN…
-                    </span>
-                  ) : 'Save PIN & Enter SellBodr →'}
-                </motion.button>
-              </div>
-
-              <button type="button" onClick={skipPin}
-                className="mt-5 text-sm text-slate-400 hover:text-slate-600 transition-colors font-medium">
-                Skip for now — use password to sign in
-              </button>
             </motion.div>
           )}
 
