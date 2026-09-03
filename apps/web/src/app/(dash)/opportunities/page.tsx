@@ -819,7 +819,7 @@ export default function OpportunitiesPage() {
     return () => timers.forEach(clearTimeout);
   }, [searching]);
   const scanPct = Math.min(88, Math.round((scanStep / (SCAN_STAGES.length - 1)) * 100));
-  const [isFree, setIsFree] = useState(false);
+  const [isFree, setIsFree] = useState(true);
   const [dismissedOnboarding, setDismissedOnboarding] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('bs_onboarding_dismissed') === '1';
