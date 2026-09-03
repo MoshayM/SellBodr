@@ -52,6 +52,56 @@ function GenProgressButton({
   );
 }
 
+function OpportunityLoadingSkeleton() {
+  const STAGES = [
+    { icon: '📦', label: 'Fetching product intelligence' },
+    { icon: '🏭', label: 'Loading supplier candidates' },
+    { icon: '📊', label: 'Analysing marketplace data' },
+    { icon: '🤖', label: 'Running AI scoring engine' },
+    { icon: '💡', label: 'Building recommendation' },
+  ];
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setActive(a => Math.min(a + 1, STAGES.length - 1)), 900);
+    return () => clearInterval(t);
+  }, []);
+  const pct = Math.round(((active + 1) / STAGES.length) * 100);
+  return (
+    <div className="max-w-xl mx-auto py-16 px-4">
+      <div className="card p-8">
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-4">🔍</div>
+          <h2 className="font-bold text-slate-900 text-xl mb-1">Loading Opportunity Intelligence</h2>
+          <p className="text-sm text-slate-500">AI agents are analysing this product across 7 dimensions</p>
+        </div>
+        <div className="space-y-2.5 mb-8">
+          {STAGES.map((stage, i) => (
+            <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-500 ${
+              i < active ? 'bg-emerald-50 border-emerald-200' :
+              i === active ? 'bg-indigo-50 border-indigo-200' :
+              'bg-slate-50 border-slate-100 opacity-40'
+            }`}>
+              <span className="text-lg">{stage.icon}</span>
+              <span className={`text-sm font-medium flex-1 ${
+                i < active ? 'text-emerald-700' :
+                i === active ? 'text-indigo-700' :
+                'text-slate-400'
+              }`}>{stage.label}</span>
+              {i < active && <span className="text-emerald-600 text-xs font-semibold">✓ Done</span>}
+              {i === active && <span className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin shrink-0" />}
+            </div>
+          ))}
+        </div>
+        <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
+          <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-xs text-slate-400 text-center">{pct}% complete</p>
+      </div>
+    </div>
+  );
+}
+
 function minor(v: number) { return (v / 100).toFixed(2); }
 
 // ── Trade Intelligence Data ────────────────────────────────────────────────────
@@ -188,6 +238,7 @@ function getExtraDocs(category: string): string[] {
 function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   const [expanded, setExpanded] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const collapsedRef = useRef<HTMLIFrameElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const pins = candidates
@@ -204,7 +255,6 @@ function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   function open() {
     setExpanded(true);
     setTimeout(() => setAnimating(true), 10);
-    setTimeout(() => iframeRef.current?.contentWindow?.postMessage({ type: 'resize' }, '*'), 120);
   }
   function close() {
     setAnimating(false);
@@ -224,83 +274,7 @@ function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   const initZoom   = pins.length === 1 ? 12 : 2;
   const indiaCount = pins.filter(p => p.isIndia).length;
 
-  const html = `<!DOCTYPE html><html><head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-<style>
-*{box-sizing:border-box}body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
-#map{height:100vh;width:100vw}
-.ctrl{position:absolute;top:10px;left:50px;z-index:1000}
-.cbtn{background:rgba(8,12,32,0.9);color:#e2e8f0;border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:5px;letter-spacing:.3px;transition:all .15s}
-.cbtn:hover{background:rgba(124,58,237,0.45);border-color:rgba(124,58,237,0.7);color:#ddd6fe}
-.cbtn.sat{background:rgba(14,165,233,0.25);border-color:rgba(14,165,233,0.6);color:#7dd3fc}
-.leaflet-popup-content-wrapper{background:#0d1526!important;border:1px solid rgba(255,255,255,0.13)!important;border-radius:12px!important;box-shadow:0 12px 40px rgba(0,0,0,.65)!important;color:#e2e8f0!important;padding:0!important}
-.leaflet-popup-tip-container{display:none}
-.leaflet-popup-content{margin:0!important;padding:0!important}
-.pop{padding:12px 14px;min-width:195px}
-.pop-title{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:5px}
-.pop-label{font-size:10px;font-weight:700;letter-spacing:.4px}
-.pop-loc{color:#94a3b8;font-size:11px;margin-top:3px}
-.pop-src{color:#64748b;font-size:10px;margin-top:1px}
-.pop-coords{color:#475569;font-size:9.5px;margin-top:3px;font-family:monospace;letter-spacing:.2px}
-.pop-links{display:flex;gap:5px;margin-top:8px}
-.pop-link{font-size:10px;font-weight:700;padding:4px 9px;border-radius:5px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:opacity .15s;white-space:nowrap}
-.pop-link:hover{opacity:.8}
-<\/style>
-</head><body>
-<div class="ctrl">
-  <button class="cbtn" id="lb" onclick="tl()">🛰 Satellite</button>
-</div>
-<div id="map"></div>
-<script>
-var st=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19});
-var sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
-var lb=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19});
-var cur='street';
-var map=L.map('map',{zoomControl:true,attributionControl:false}).setView(${JSON.stringify(initCenter)},${initZoom});
-st.addTo(map);
-function tl(){
-  if(cur==='street'){
-    map.removeLayer(st);sa.addTo(map);lb.addTo(map);
-    cur='sat';document.getElementById('lb').textContent='🗺 Street';document.getElementById('lb').classList.add('sat');
-  }else{
-    map.removeLayer(sa);map.removeLayer(lb);st.addTo(map);
-    cur='street';document.getElementById('lb').textContent='🛰 Satellite';document.getElementById('lb').classList.remove('sat');
-  }
-}
-window.addEventListener('message',function(e){
-  if(e.data&&e.data.type==='resize'){setTimeout(function(){map.invalidateSize();},60);}
-});
-var pins=${JSON.stringify(pins)};
-pins.forEach(function(p,i){
-  var c=p.isIndia?'#10b981':'#6366f1';
-  var ic=L.divIcon({
-    html:'<div style="background:'+c+';color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border:2.5px solid rgba(255,255,255,0.9);box-shadow:0 3px 14px rgba(0,0,0,.4),0 0 0 5px '+c+'28">'+(i+1)+'<\/div>',
-    iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-19],className:''
-  });
-  var lbl=p.isIndia
-    ?'<span class="pop-label" style="color:#10b981">● INDIA PRIORITY<\/span>'
-    :'<span class="pop-label" style="color:#6366f1">● GLOBAL SUPPLIER<\/span>';
-  var gm='https://maps.google.com/?q='+p.lat+','+p.lon;
-  var gs='https://maps.google.com/?q='+p.lat+','+p.lon+'&layer=c';
-  var popup='<div class="pop">'+
-    '<div class="pop-title">'+p.name+'<\/div>'+
-    lbl+
-    '<div class="pop-loc">'+(p.city?p.city+', ':'')+p.country+'<\/div>'+
-    '<div class="pop-src">via '+p.source+'<\/div>'+
-    '<div class="pop-coords">'+p.lat.toFixed(5)+'°&nbsp;'+p.lon.toFixed(5)+'°<\/div>'+
-    '<div class="pop-links">'+
-      '<a href="'+gm+'" target="_blank" class="pop-link" style="background:#4f46e5;color:#fff">📍 Street<\/a>'+
-      '<a href="'+gs+'" target="_blank" class="pop-link" style="background:#0284c7;color:#fff">🛰 Satellite<\/a>'+
-    '<\/div>'+
-  '<\/div>';
-  L.marker([p.lat,p.lon],{icon:ic}).addTo(map).bindPopup(popup,{minWidth:210,closeButton:true});
-});
-if(pins.length>1){
-  try{map.fitBounds(L.latLngBounds(pins.map(function(p){return[p.lat,p.lon]})),{padding:[45,45],maxZoom:8});}catch(e){}
-}
-<\/script></body></html>`;
+  const mapPayload = { type: 'init', pins, center: initCenter, zoom: initZoom };
 
   return (
     <>
@@ -309,19 +283,20 @@ if(pins.length>1){
         <button
           onClick={open}
           title="Expand map"
-          className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white border border-white/20 hover:border-violet-400/60 hover:bg-violet-500/10 transition-all"
-          style={{ background: 'rgba(8,12,32,0.88)', backdropFilter: 'blur(10px)' }}>
+          className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-white/20 hover:border-violet-400/60 transition-all"
+          style={{ background: 'rgba(8,12,32,0.88)', backdropFilter: 'blur(10px)', color: '#fff' }}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 opacity-70">
             <path d="M1.75 1h4.5a.75.75 0 0 1 0 1.5H2.56l3.97 3.97a.75.75 0 0 1-1.06 1.06L1.5 3.56v3.69a.75.75 0 0 1-1.5 0v-4.5C0 2.075.674 1 1.75 1ZM13.44 14.5h-3.69a.75.75 0 0 1 0-1.5h3.69l-3.97-3.97a.75.75 0 1 1 1.06-1.06l3.97 3.97V8.25a.75.75 0 0 1 1.5 0v4.5c0 .966-.784 1.75-1.75 1.75Z"/>
           </svg>
           Expand Map
         </button>
         <iframe
-          srcDoc={html}
+          ref={collapsedRef}
+          src="/map.html"
           className="w-full border-0 block"
           style={{ height: 280 }}
           title="Global Supplier Map"
-          sandbox="allow-scripts allow-popups"
+          onLoad={() => collapsedRef.current?.contentWindow?.postMessage(mapPayload, '*')}
         />
       </div>
 
@@ -367,10 +342,10 @@ if(pins.length>1){
           <div className="flex-1 relative overflow-hidden">
             <iframe
               ref={iframeRef}
-              srcDoc={html}
+              src="/map.html"
               className="w-full h-full border-0 block"
               title="Global Supplier Map (expanded)"
-              sandbox="allow-scripts allow-popups"
+              onLoad={() => iframeRef.current?.contentWindow?.postMessage(mapPayload, '*')}
             />
           </div>
 
@@ -401,6 +376,37 @@ function CopyButton({ text }: { text: string }) {
       {copied ? '✓ Copied' : 'Copy'}
     </button>
   );
+}
+
+function generateAdCopy(title: string, category: string, marketplace: string, netMinor: number | null, angle: string) {
+  const catWords = category.replace(/_/g, ' ').toLowerCase().split(' ').slice(0, 3).join(' ');
+  const short = title.length > 45 ? title.slice(0, 42) + '...' : title;
+  const price = netMinor && netMinor > 0 ? `Net profit $${(netMinor / 100).toFixed(0)}/unit.` : '';
+  const mp = marketplace.replace('amazon_', 'Amazon ').replace('etsy', 'Etsy').replace('_', ' ');
+  const angleNote = angle === 'Lifestyle' ? 'See it in action.' : angle === 'Detail View' ? 'Premium craftsmanship, up close.' : angle === 'Studio Shot' ? 'Clean, professional look.' : 'Authentic Indian craftsmanship.';
+
+  return {
+    facebook: {
+      headline: `✨ ${short}`,
+      body: `Handcrafted ${catWords} sourced from India. ${angleNote} ${price} Available now on ${mp}.`,
+      cta: 'Shop Now',
+    },
+    instagram: {
+      headline: `${catWords.charAt(0).toUpperCase() + catWords.slice(1)} crafted in India 🇮🇳`,
+      body: `${short} — made with passion, delivered worldwide. ${angleNote}\n\n#handmade #india #${catWords.replace(/\s/g, '')} #artisan #shopnow`,
+      cta: 'Link in bio →',
+    },
+    tiktok: {
+      headline: `POV: You found the perfect ${catWords} 🤌`,
+      body: `This ${catWords} from India is selling out fast 👀 ${angleNote} Tap to get yours! #IndianHandcraft #${catWords.replace(/\s/g, '')} #viral`,
+      cta: 'Shop link in bio',
+    },
+    google: {
+      headline: `${short.slice(0, 30)} | Free Shipping`,
+      body: `Premium handcrafted ${catWords} from India. ${angleNote} Quality guaranteed. Order on ${mp} today.`,
+      cta: 'Buy Now',
+    },
+  };
 }
 
 export default function OpportunityDetailPage() {
@@ -527,12 +533,49 @@ export default function OpportunityDetailPage() {
     mutationFn: (data: { rating: 'up' | 'down'; note?: string }) => api.opportunities.submitFeedback(id, data),
   });
 
-  if (isLoading) return (
-    <div className="flex items-center justify-center h-48">
-      <div className="animate-spin text-3xl text-green-400">&#x27F3;</div>
-    </div>
-  );
+  const [selectedImage, setSelectedImage] = useState<number>(0);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showAdCopy, setShowAdCopy] = useState(false);
+
+  const { data: gallery, isLoading: galleryLoading } = useQuery<{
+    title: string; category: string; marketplace: string;
+    images: Array<{ url: string; source: string; confidence: number; angle: string }>;
+  }>({
+    queryKey: ['product-gallery', id],
+    queryFn: () => fetch(`/api/v1/opportunities/${id}/product-gallery`).then(r => r.json()),
+    enabled: !!id,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const [enrichedHeroImage, setEnrichedHeroImage] = useState<string | null>(null);
+  const [enrichedSourceUrl, setEnrichedSourceUrl] = useState<string | null>(null);
+  const [enrichingHero, setEnrichingHero] = useState(false);
+  useEffect(() => {
+    if (!opp?.id) return;
+    let cancelled = false;
+    setEnrichingHero(true);
+    fetch(`/api/v1/opportunities/${opp.id}/enrich-image`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data.imageUrl) {
+          setEnrichedHeroImage(data.imageUrl);
+          if (data.sourceUrl) setEnrichedSourceUrl(data.sourceUrl);
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setEnrichingHero(false); });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opp?.id]);
+
+  if (isLoading) return <OpportunityLoadingSkeleton />;
   if (!opp) return <div className="card-dark p-8 text-center text-white/40">Opportunity not found</div>;
+
+  // ── Inline image enrichment for detail hero ────────────────────────────────
+  // (runs once after opp loads; result persisted to DB so next load is instant)
+  const BAD_IMG = ['picsum.photos','loremflickr.com','placeholder.com','placehold.it','pollinations.ai','source.unsplash.com'];
+  const heroImageUrl  = opp.product?.imageUrl || '';
+  const heroNeedsEnrich = !heroImageUrl || BAD_IMG.some(d => heroImageUrl.includes(d));
 
   const score = opp.score || {};
   const profit = opp.profitModel;
@@ -560,24 +603,102 @@ export default function OpportunityDetailPage() {
       {/* Header card */}
       <div className="card-dark p-4 sm:p-6 mb-5">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-          <div className="w-full sm:w-32 h-40 sm:h-32 rounded-xl overflow-hidden bg-white/8 shrink-0 relative"
-            style={{ boxShadow: '0 0 0 1px #E2E8F0, 0 4px 16px rgba(15,23,42,0.08)' }}>
-            {opp.product?.imageUrl ? (
-              <img
-                src={opp.product.imageUrl}
-                alt={opp.product.title}
-                className="w-full h-full object-cover"
-                onError={e => {
-                  const el = e.target as HTMLImageElement;
-                  el.onerror = null;
-                  const words = (opp.product?.title || 'product').split(' ').slice(0, 2).map((w: string) => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-                  el.src = `https://picsum.photos/seed/${words.join('-') || 'product'}/128/128`;
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/30 text-4xl">📦</div>
-            )}
-          </div>
+          {/* ── Product Image Carousel ── */}
+          {(() => {
+            const galleryImgs = gallery?.images ?? [];
+            const fallback = enrichedHeroImage || opp.product?.imageUrl;
+            const allImgs: Array<{ url: string; angle: string; source: string; sourceUrl?: string }> =
+              galleryImgs.length > 0
+                ? galleryImgs
+                : fallback
+                  ? [{ url: fallback, angle: 'Main Shot', source: 'db', sourceUrl: enrichedSourceUrl ?? undefined }]
+                  : [];
+            const currentIdx = Math.min(selectedImage, Math.max(0, allImgs.length - 1));
+            const currentImg = allImgs[currentIdx];
+            const productSlug = (opp.product?.title || 'product').slice(0, 30).replace(/\s+/g, '-');
+            return (
+              <div className="shrink-0 w-full sm:w-52">
+                {/* Main image */}
+                <div className="relative w-full h-48 sm:h-52 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/60"
+                  style={{ boxShadow: '0 2px 12px rgba(15,23,42,0.08)' }}>
+                  {/* Counter */}
+                  {allImgs.length > 0 && (
+                    <div className="absolute top-2 left-2 z-10 text-[10px] bg-black/45 text-white px-1.5 py-0.5 rounded font-mono leading-none">
+                      {currentIdx + 1}/{allImgs.length}
+                    </div>
+                  )}
+                  {/* Image / shimmer */}
+                  {(galleryLoading || (enrichingHero && !enrichedHeroImage)) && !currentImg ? (
+                    <div className="w-full h-full animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100" />
+                  ) : currentImg ? (
+                    <img src={currentImg.url} alt={currentImg.angle}
+                      className="w-full h-full object-cover transition-opacity duration-200"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">📦</div>
+                  )}
+                  {/* Angle label */}
+                  {currentImg && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent px-2.5 pb-2 pt-5">
+                      <span className="text-white text-[10px] font-semibold">{currentImg.angle}</span>
+                    </div>
+                  )}
+                  {/* Prev arrow */}
+                  {allImgs.length > 1 && (
+                    <button onClick={() => setSelectedImage((currentIdx - 1 + allImgs.length) % allImgs.length)}
+                      className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-slate-700 shadow font-bold text-base transition-all">
+                      ‹
+                    </button>
+                  )}
+                  {/* Next arrow */}
+                  {allImgs.length > 1 && (
+                    <button onClick={() => setSelectedImage((currentIdx + 1) % allImgs.length)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-slate-700 shadow font-bold text-base transition-all">
+                      ›
+                    </button>
+                  )}
+                  {/* Download */}
+                  {currentImg && (
+                    <a href={`/api/v1/proxy-image?url=${encodeURIComponent(currentImg.url)}&filename=${productSlug}-${(currentImg.angle).replace(/\s/g, '-')}.jpg`}
+                      download onClick={e => e.stopPropagation()}
+                      className="absolute top-2 right-2 z-10 w-7 h-7 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-slate-700 shadow text-sm font-bold transition-all"
+                      title="Download image">↓</a>
+                  )}
+                </div>
+                {/* Thumbnail strip */}
+                {allImgs.length > 1 && (
+                  <div className="flex gap-1.5 mt-2 overflow-x-auto pb-0.5">
+                    {allImgs.map((img, i) => (
+                      <button key={i} onClick={() => setSelectedImage(i)}
+                        className={`shrink-0 w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${i === currentIdx ? 'border-indigo-500 shadow-sm' : 'border-slate-200 opacity-55 hover:opacity-100'}`}>
+                        <img src={img.url} alt={img.angle} className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {/* Source link */}
+                {currentImg?.sourceUrl && (
+                  <a href={currentImg.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-medium text-emerald-700 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 rounded-lg px-2 py-1.5 transition-colors truncate"
+                    title={currentImg.sourceUrl}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3 shrink-0">
+                      <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
+                      <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
+                    </svg>
+                    <span className="truncate">View on {currentImg.source === 'amazon' ? 'Amazon' : currentImg.source === 'etsy' ? 'Etsy' : currentImg.source === 'ebay' ? 'eBay' : 'Marketplace'}</span>
+                  </a>
+                )}
+                {/* Ad Copy toggle */}
+                {allImgs.length > 0 && (
+                  <button onClick={() => setShowAdCopy(v => !v)}
+                    className="mt-2 w-full text-[11px] font-medium text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 rounded-lg px-2 py-1.5 transition-colors text-center">
+                    {showAdCopy ? '✕ Hide Ad Copy' : '📢 Ad Copy for this image'}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
           <div className="shrink-0">
             <ScoreGauge score={score.opportunity || 0} size="lg" label="Opportunity Score" />
           </div>
@@ -630,6 +751,86 @@ export default function OpportunityDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Inline Ad Copy Panel ── */}
+      {showAdCopy && (() => {
+        const galleryImgs = gallery?.images ?? [];
+        const fallback = enrichedHeroImage || opp.product?.imageUrl;
+        const allImgs = galleryImgs.length > 0 ? galleryImgs : (fallback ? [{ url: fallback, angle: 'Main Shot', source: 'db', sourceUrl: enrichedSourceUrl ?? undefined }] : []);
+        const currentIdx = Math.min(selectedImage, Math.max(0, allImgs.length - 1));
+        const currentImg = allImgs[currentIdx];
+        if (!currentImg) return null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const netMinor = (opp.profitModel as any)?.trueNetMinor ?? (opp.profitModel as any)?.netProfitMinor ?? null;
+        const copy = generateAdCopy(opp.product?.title ?? '', opp.product?.category ?? '', opp.marketplace?.code ?? '', netMinor as number | null, currentImg.angle);
+        const platforms = [
+          { key: 'facebook',  label: 'Facebook',  icon: '📘' },
+          { key: 'instagram', label: 'Instagram',  icon: '📸' },
+          { key: 'tiktok',    label: 'TikTok',    icon: '🎵' },
+          { key: 'google',    label: 'Google',    icon: '🔍' },
+        ] as const;
+        const copyToClipboard = (text: string, field: string) => {
+          navigator.clipboard.writeText(text);
+          setCopiedField(field);
+          setTimeout(() => setCopiedField(null), 2000);
+        };
+        const productSlug = (opp.product?.title || 'product').slice(0, 30).replace(/\s+/g, '-');
+        return (
+          <div className="card-dark p-4 sm:p-5 mb-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <img src={currentImg.url} alt={currentImg.angle}
+                className="w-14 h-14 rounded-xl object-cover border border-slate-100 shrink-0"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Ad copy for</p>
+                <h3 className="font-semibold text-slate-900 text-sm leading-snug">{currentImg.angle} — {opp.product?.title?.slice(0, 40)}</h3>
+              </div>
+              <a href={`/api/v1/proxy-image?url=${encodeURIComponent(currentImg.url)}&filename=${productSlug}-${currentImg.angle.replace(/\s/g, '-')}.jpg`}
+                download
+                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 text-white text-[11px] font-semibold hover:bg-indigo-500 transition-colors">
+                ↓ Download
+              </a>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {platforms.map(({ key, label, icon }) => {
+                const p = copy[key];
+                return (
+                  <div key={key} className="rounded-xl border border-slate-100 p-3 space-y-2 bg-slate-50/60">
+                    <div className="flex items-center gap-1.5">
+                      <span>{icon}</span>
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">{label}</span>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Headline</div>
+                      <div className="flex items-start gap-1.5">
+                        <p className="text-xs text-slate-700 flex-1 leading-snug">{p.headline}</p>
+                        <button onClick={() => copyToClipboard(p.headline, `${key}-h`)} className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 hover:bg-slate-300">
+                          {copiedField === `${key}-h` ? '✓' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Body</div>
+                      <div className="flex items-start gap-1.5">
+                        <p className="text-xs text-slate-500 flex-1 leading-snug">{p.body}</p>
+                        <button onClick={() => copyToClipboard(p.body, `${key}-b`)} className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 hover:bg-slate-300">
+                          {copiedField === `${key}-b` ? '✓' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-[10px] font-bold text-indigo-600 border border-indigo-200 bg-indigo-50 px-2 py-0.5 rounded-md">{p.cta}</span>
+                      <button onClick={() => copyToClipboard(`${p.headline}\n\n${p.body}\n\nCTA: ${p.cta}`, `${key}-all`)} className="text-[9px] text-slate-400 hover:text-slate-600 underline">
+                        {copiedField === `${key}-all` ? '✓ Copied' : 'Copy all'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Scrollable tab bar — pill style */}
       <div className="scroll-tabs mb-5 -mx-3 sm:mx-0 px-3 sm:px-0">
@@ -715,18 +916,18 @@ export default function OpportunityDetailPage() {
                   <div className="text-[10px] text-white/40 mt-0.5">Exports: 0% (zero-rated)</div>
                 </div>
               </div>
-              <div className="rounded-xl bg-white/5 px-4 py-3 mb-3">
-                <span className="text-[10px] text-white/55">Customs Chapter · </span>
-                <span className="text-sm font-medium text-white/80">{trade.chapter}</span>
+              <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 mb-3">
+                <span className="text-[10px] text-slate-400">Customs Chapter · </span>
+                <span className="text-sm font-medium text-slate-700">{trade.chapter}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.dgft === 'Free' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-300'}`}>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.dgft === 'Free' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                   DGFT: {trade.dgft} to Export
                 </span>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.rodtep ? 'bg-blue-500/15 text-blue-300' : 'bg-white/8 text-white/40'}`}>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${trade.rodtep ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                   RoDTEP: {trade.rodtep ? 'Eligible ✓' : 'Not Eligible'}
                 </span>
-                <span className="text-xs px-3 py-1 rounded-full font-medium bg-violet-100 text-violet-300">IEC Mandatory</span>
+                <span className="text-xs px-3 py-1 rounded-full font-medium bg-violet-50 text-violet-700 border border-violet-200">IEC Mandatory</span>
               </div>
             </div>
 
@@ -753,12 +954,12 @@ export default function OpportunityDetailPage() {
                   <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Compliance Required</div>
                   <div className="flex flex-wrap gap-2">
                     {duty.compliance.map((c: string) => (
-                      <span key={c} className="text-xs bg-amber-500/10 border border-amber-500/25 text-amber-300 px-2.5 py-1 rounded-lg">{c}</span>
+                      <span key={c} className="text-xs bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-lg">{c}</span>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-sm text-blue-200">
+              <div className="rounded-xl bg-blue-50 border border-blue-200 p-3.5 text-sm text-blue-800">
                 💡 {duty.notes}
               </div>
             </div>
@@ -782,7 +983,7 @@ export default function OpportunityDetailPage() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-4 space-y-2 text-sm text-violet-200">
+              <div className="rounded-xl bg-violet-50 border border-violet-200 p-4 space-y-2 text-sm text-violet-900">
                 <div><strong>IEC (Import Export Code)</strong> — Mandatory for all exports. Apply at dgft.gov.in — one-time fee ₹500.</div>
                 <div><strong>AD Code</strong> — Register your bank's Authorized Dealer code with customs to receive foreign remittance.</div>
                 <div><strong>LUT / Bond</strong> — File Letter of Undertaking annually to export under zero-rated GST without upfront payment.</div>
@@ -1015,10 +1216,10 @@ export default function OpportunityDetailPage() {
             );
           })()}
 
-          <div className="card-dark p-4 flex items-start gap-3 text-sm text-white/55 bg-blue-500/10 border-blue-500/20">
+          <div className="card-dark p-4 flex items-start gap-3 text-sm text-slate-600 bg-blue-50 border border-blue-200">
             <span className="text-xl shrink-0">💡</span>
             <div>
-              <span className="font-semibold text-white">Negotiation tip: </span>
+              <span className="font-semibold text-slate-900">Negotiation tip: </span>
               Contact 2–3 suppliers simultaneously. India suppliers offer craftsmanship advantage — use global prices as leverage to negotiate 15–25% below listed rate.
             </div>
           </div>
@@ -1295,11 +1496,11 @@ export default function OpportunityDetailPage() {
 
             {/* Opportunity alert */}
             {gapOpportunity && (
-              <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-500/25 bg-emerald-500/8">
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50">
                 <span className="text-2xl shrink-0">🎯</span>
                 <div>
-                  <div className="text-sm font-semibold text-emerald-300 mb-0.5">Market Gap Detected</div>
-                  <p className="text-xs text-emerald-200/60">{weakListings} competitors have fewer than 200 reviews and sub-4.2★ ratings — a real opening exists. Differentiate on packaging and quality narrative.</p>
+                  <div className="text-sm font-semibold text-emerald-800 mb-0.5">Market Gap Detected</div>
+                  <p className="text-xs text-emerald-700">{weakListings} competitors have fewer than 200 reviews and sub-4.2★ ratings — a real opening exists. Differentiate on packaging and quality narrative.</p>
                 </div>
               </div>
             )}
@@ -1502,16 +1703,16 @@ export default function OpportunityDetailPage() {
         return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-semibold text-white">Ad Campaign Generator</h2>
-                <p className="text-xs text-white/40 mt-0.5">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
+            <div className="mb-4">
+              <p className="text-sm text-slate-500 mb-2">AI-crafted ad copy for Facebook, Instagram, YouTube &amp; Google</p>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900">Ad Campaign Generator</h2>
+                <GenProgressButton
+                  isPending={genAds.isPending}
+                  icon="✨" label={ads ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
+                  onClick={() => genAds.mutate()}
+                />
               </div>
-              <GenProgressButton
-                isPending={genAds.isPending}
-                icon="✨" label={ads ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
-                onClick={() => genAds.mutate()}
-              />
             </div>
 
             {!ads && !genAds.isPending && (
@@ -1692,16 +1893,16 @@ export default function OpportunityDetailPage() {
         return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-semibold text-white">Growth Playbook</h2>
-                <p className="text-xs text-white/40 mt-0.5">Personalized strategy for this product &amp; marketplace</p>
+            <div className="mb-4">
+              <p className="text-sm text-slate-500 mb-2">Personalized strategy for this product &amp; marketplace</p>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900">Growth Playbook</h2>
+                <GenProgressButton
+                  isPending={genGrowth.isPending}
+                  icon="🚀" label={g ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
+                  onClick={() => genGrowth.mutate()}
+                />
               </div>
-              <GenProgressButton
-                isPending={genGrowth.isPending}
-                icon="🚀" label={g ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
-                onClick={() => genGrowth.mutate()}
-              />
             </div>
 
             {!g && !genGrowth.isPending && (
@@ -1885,16 +2086,16 @@ export default function OpportunityDetailPage() {
         return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-semibold text-white">AI Brand Builder</h2>
-                <p className="text-xs text-white/40 mt-0.5">Generate brand names, positioning, and visual direction</p>
+            <div className="mb-4">
+              <p className="text-sm text-slate-500 mb-2">Generate brand names, positioning, and visual direction</p>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900">AI Brand Builder</h2>
+                <GenProgressButton
+                  isPending={genBrand.isPending}
+                  icon="🎨" label={b ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
+                  onClick={() => genBrand.mutate()}
+                />
               </div>
-              <GenProgressButton
-                isPending={genBrand.isPending}
-                icon="🎨" label={b ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
-                onClick={() => genBrand.mutate()}
-              />
             </div>
 
             {!b && !genBrand.isPending && (
@@ -2034,16 +2235,16 @@ export default function OpportunityDetailPage() {
         return (
         <div className="space-y-4">
           <div className="card-dark p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="font-semibold text-white">Bundle Generator</h2>
-                <p className="text-xs text-white/40 mt-0.5">AI-designed product bundles that increase AOV and reduce competition</p>
+            <div className="mb-4">
+              <p className="text-sm text-slate-500 mb-2">AI-designed product bundles that increase AOV and reduce competition</p>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900">Bundle Generator</h2>
+                <GenProgressButton
+                  isPending={genBundle.isPending}
+                  icon="📦" label={bundleData ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
+                  onClick={() => genBundle.mutate()}
+                />
               </div>
-              <GenProgressButton
-                isPending={genBundle.isPending}
-                icon="📦" label={bundleData ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
-                onClick={() => genBundle.mutate()}
-              />
             </div>
 
             {!bundleData && !genBundle.isPending && (
