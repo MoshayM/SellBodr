@@ -66,10 +66,13 @@ function initMap(data){
   if(map){map.remove();map=null;}
   cur='street';
 
-  var aq=data.cartoKey?'?api_key='+data.cartoKey:'';
-  st=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'+aq,{maxZoom:19,subdomains:'abcd',attribution:''});
+  // Street tiles: CARTO Maps API (authenticated) → OSM fallback (no watermark)
+  var streetUrl = data.cartoKey
+    ? 'https://basemaps-api.cartocdn.com/styles/positron/{z}/{x}/{y}.png?api_key='+data.cartoKey
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  st=L.tileLayer(streetUrl,{maxZoom:19,subdomains:'abc',attribution:''});
   sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:''});
-  lblayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'+aq,{maxZoom:19,subdomains:'abcd',attribution:''});
+  lblayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:''});
 
   map=L.map('map',{zoomControl:true,attributionControl:false}).setView(data.center,data.zoom);
   st.addTo(map);
