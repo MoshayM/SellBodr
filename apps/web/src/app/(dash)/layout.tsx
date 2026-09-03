@@ -56,6 +56,19 @@ function SearchIcon() {
   );
 }
 
+function HamburgerIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <rect x="0" y="2"  width="18" height="2" rx="1" fill="currentColor"
+        style={{ transformOrigin: '9px 3px', transition: 'transform 0.25s ease', transform: open ? 'none' : 'rotate(45deg) translate(4px, 4px)' }} />
+      <rect x="0" y="8"  width="14" height="2" rx="1" fill="currentColor"
+        style={{ transition: 'opacity 0.2s ease', opacity: open ? 1 : 0 }} />
+      <rect x="0" y="14" width="18" height="2" rx="1" fill="currentColor"
+        style={{ transformOrigin: '9px 15px', transition: 'transform 0.25s ease', transform: open ? 'none' : 'rotate(-45deg) translate(4px, -4px)' }} />
+    </svg>
+  );
+}
+
 function GuideIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -68,9 +81,10 @@ function GuideIcon() {
 export default function DashLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
   const path     = usePathname();
-  const [menuOpen,     setMenuOpen]     = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [sidebarOpen,   setSidebarOpen]   = useState(true);
+  const [userMenuOpen,  setUserMenuOpen]  = useState(false);
+  const [searchOpen,    setSearchOpen]    = useState(false);
   const [searchQuery,  setSearchQuery]  = useState('');
   const [anchor,       setAnchor]       = useState<DOMRect | null>(null);
   const [mounted,      setMounted]      = useState(false);
@@ -87,7 +101,19 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [fromDesktop, setFromDesktop] = useState(false);
   const [sidebarUserOpen, setSidebarUserOpen] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem('bs_sidebar');
+    if (saved === 'closed') setSidebarOpen(false);
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarOpen(v => {
+      const next = !v;
+      localStorage.setItem('bs_sidebar', next ? 'open' : 'closed');
+      return next;
+    });
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -290,7 +316,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           DESKTOP SIDEBAR  (hidden on mobile)
           ═══════════════════════════════════════════════════ */}
       <aside
-        className="hidden md:flex fixed left-0 top-0 h-screen w-60 flex-col bg-white z-40"
+        className={`hidden md:flex fixed left-0 top-0 h-screen w-60 flex-col bg-white z-40 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ borderRight: '1px solid #E8EDFB', boxShadow: '2px 0 24px rgba(79,70,229,0.06)' }}>
 
         {/* Logo */}
@@ -395,13 +421,28 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           TOP HEADER  (full width on mobile, right of sidebar on desktop)
           ═══════════════════════════════════════════════════ */}
       <header
-        className="fixed top-0 left-0 md:left-60 right-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-5 bg-white"
+        className={`fixed top-0 left-0 right-0 z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-5 bg-white transition-all duration-300 ease-in-out ${sidebarOpen ? 'md:left-60' : 'md:left-0'}`}
         style={{
           height: 'calc(56px + env(safe-area-inset-top, 0px))',
           paddingTop: 'env(safe-area-inset-top, 0px)',
           borderBottom: '1px solid #E8EDFB',
           boxShadow: '0 1px 0 #E8EDFB, 0 2px 16px rgba(79,70,229,0.05)',
         }}>
+
+        {/* Hamburger — collapses sidebar on desktop, opens drawer on mobile */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:flex w-9 h-9 items-center justify-center rounded-xl text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100 transition-colors shrink-0 touch-manipulation"
+          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-expanded={sidebarOpen}>
+          <HamburgerIcon open={sidebarOpen} />
+        </button>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-indigo-50 active:bg-indigo-100 transition-colors shrink-0 touch-manipulation"
+          aria-label="Open navigation menu">
+          <HamburgerIcon open={false} />
+        </button>
 
         {/* Logo — mobile only */}
         <Link href="/opportunities" className="flex items-center gap-2 md:hidden shrink-0 group" aria-label="SellBodr home">
@@ -567,9 +608,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               className="md:hidden fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm"
               onClick={() => setMenuOpen(false)} />
             <motion.div
-              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="md:hidden fixed inset-y-0 right-0 z-50 w-[280px] sm:w-72 bg-white border-l border-slate-200 flex flex-col shadow-2xl"
+              className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] sm:w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl"
               style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
               <div className="flex items-center justify-between px-5 h-14 border-b border-slate-100 shrink-0">
@@ -632,7 +673,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
       {/* ═══════════════════════════════════════════════════
           MAIN CONTENT
           ═══════════════════════════════════════════════════ */}
-      <main className="md:ml-60 overflow-y-auto overflow-x-hidden scrollbar-dark min-h-screen"
+      <main className={`overflow-y-auto overflow-x-hidden scrollbar-dark min-h-screen transition-all duration-300 ease-in-out ${sidebarOpen ? 'md:ml-60' : 'md:ml-0'}`}
         style={{
           paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))',
           paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
@@ -681,14 +722,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-slate-400 active:text-indigo-600 transition-colors touch-manipulation"
-            aria-label="More pages">
-            <svg width="20" height="16" viewBox="0 0 20 16" fill="none" aria-hidden="true">
-              <rect width="20" height="2" rx="1" fill="currentColor"/>
-              <rect y="7" width="16" height="2" rx="1" fill="currentColor"/>
-              <rect y="14" width="20" height="2" rx="1" fill="currentColor"/>
-            </svg>
-            <span className="text-[10px] font-medium leading-none">More</span>
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all duration-200 relative touch-manipulation ${
+              menuOpen ? 'text-indigo-600' : 'text-slate-400 active:text-indigo-600'
+            }`}
+            aria-label="All pages">
+            {menuOpen && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
+            )}
+            <span className="text-[22px] leading-none">☰</span>
+            <span className="text-[10px] font-semibold leading-none">Menu</span>
           </button>
 
         </div>
