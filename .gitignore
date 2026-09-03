@@ -26,6 +26,8 @@ apps/api/nul
 *.ppt
 SELLBODR-DEV-REFERENCE.html
 DIM TXT/
-Capture.PNG
-re.PNG
-*.PNG
+
+# Root-level screenshots — ignore *.png / *.PNG at repo root only
+# (does NOT affect apps/web/public/icons/ or branding/ which are already tracked)
+/*.png
+/*.PNG
