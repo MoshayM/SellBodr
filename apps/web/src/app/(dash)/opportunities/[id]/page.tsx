@@ -10,12 +10,14 @@ import { ProfitWaterfall } from '@/components/profit/ProfitWaterfall';
 
 const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition', 'Listing', 'Ads', 'Growth', 'Brand Builder', 'Bundle', 'Recommendation', 'Report'];
 
-/* Animated progress button — shows icon + label + live % counter while pending */
+/* Animated progress button — credit-aware */
 function GenProgressButton({
   isPending, icon, label, pendingLabel, onClick, disabled = false, className = '',
+  credits, isAdmin, onBuyCredits,
 }: {
   isPending: boolean; icon: string; label: string; pendingLabel: string;
   onClick?: () => void; disabled?: boolean; className?: string;
+  credits?: number | null; isAdmin?: boolean; onBuyCredits?: () => void;
 }) {
   const [pct, setPct] = useState(0);
   useEffect(() => {
@@ -30,12 +32,13 @@ function GenProgressButton({
     return () => clearInterval(id);
   }, [isPending]);
 
+  const noCredits = !isAdmin && credits !== null && credits !== undefined && credits === 0;
+
   if (isPending) {
     return (
       <button disabled
         className={`relative overflow-hidden inline-flex items-center gap-2 px-4 py-2.5 min-h-[40px] rounded-xl text-white text-sm font-semibold whitespace-nowrap select-none ${className}`}
         style={{ background: 'rgba(88,28,220,0.45)', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}>
-        {/* fill bar grows left → right */}
         <span className="absolute inset-y-0 left-0 rounded-xl transition-[width] duration-300 ease-out"
           style={{ width: `${pct}%`, background: 'linear-gradient(to right,#7c3aed,#6366f1)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)' }} />
         <span className="relative z-10 shrink-0">{icon}</span>
@@ -44,11 +47,58 @@ function GenProgressButton({
       </button>
     );
   }
+
+  if (noCredits) {
+    return (
+      <button onClick={onBuyCredits}
+        className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap ${className}`}
+        style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
+        💳 Buy 10 Credits — $5
+      </button>
+    );
+  }
+
   return (
     <button onClick={onClick} disabled={disabled}
-      className={`btn-primary text-sm disabled:opacity-50 whitespace-nowrap ${className}`}>
+      className={`btn-primary text-sm disabled:opacity-50 whitespace-nowrap inline-flex items-center gap-1 ${className}`}>
       {icon} {label}
+      {!isAdmin && credits !== null && credits !== undefined && (
+        <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-white/20 text-white/80">
+          1 cr
+        </span>
+      )}
     </button>
+  );
+}
+
+function CreditCost({ credits, isAdmin }: { credits: number | null; isAdmin: boolean }) {
+  if (isAdmin) return null;
+  return (
+    <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none"
+      style={{
+        background: credits === 0 ? '#fef2f2' : '#eef2ff',
+        color: credits === 0 ? '#ef4444' : '#6366f1',
+        border: `1px solid ${credits === 0 ? '#fecaca' : '#c7d2fe'}`,
+      }}>
+      {credits === null ? '…' : credits === 0 ? '0 cr' : '1 cr'}
+    </span>
+  );
+}
+
+function NoCreditsBanner({ onBuy }: { onBuy: () => void }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 mb-4">
+      <span className="text-xl shrink-0">💳</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-amber-800 leading-tight">No credits remaining</p>
+        <p className="text-xs text-amber-600 mt-0.5">AI generation uses 1 credit each. Scout, scores & data are always free.</p>
+      </div>
+      <button onClick={onBuy}
+        className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white whitespace-nowrap"
+        style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)' }}>
+        Buy 10 — $5
+      </button>
+    </div>
   );
 }
 
@@ -420,9 +470,15 @@ export default function OpportunityDetailPage() {
   });
   const [isGuest, setIsGuest] = useState(false);
   const [isFree, setIsFree] = useState(true);
+  const [userCredits, setUserCredits] = useState<number | null>(null);
+  const [creditsAdmin, setCreditsAdmin] = useState(false);
   useEffect(() => {
     setIsGuest(!localStorage.getItem('bs_access_token'));
     setIsFree(!isPro());
+    api.billing.getCredits().then(d => {
+      setUserCredits(d.credits);
+      setCreditsAdmin(d.isAdmin);
+    }).catch(() => {});
   }, []);
   const queryClient = useQueryClient();
   const [drawerSupplier, setDrawerSupplier] = useState<string | null>(null);
@@ -479,19 +535,38 @@ export default function OpportunityDetailPage() {
     enabled: !!id && !isGuest,
   });
 
+  const handleCreditError = (e: any) => {
+    if (e?.status === 402 || e?.message?.includes('no_credits') || e?.message?.includes('No credits')) {
+      setUserCredits(0);
+    }
+  };
+
+  const buyCredits = async () => {
+    try {
+      const { url } = await api.billing.buyCredits();
+      window.location.href = url;
+    } catch {
+      alert('Stripe not configured yet — contact admin to add STRIPE_SECRET_KEY.');
+    }
+  };
+
   const genAssets = useMutation({
     mutationFn: () => api.opportunities.generateAssets(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['listing', id] });
       queryClient.invalidateQueries({ queryKey: ['keywords', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
     },
-    onError: (e: any) => alert(e?.message || 'Launch assets generation failed — check AI keys in Settings'),
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Launch assets failed — check AI keys in Settings'); },
   });
 
   const genReport = useMutation({
     mutationFn: () => api.opportunities.generateReport(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports', id] }),
-    onError: (e: any) => alert(e?.message || 'Report generation failed — check AI keys in Settings'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
+    },
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Report failed — check AI keys in Settings'); },
   });
 
   const deleteReport = useMutation({
@@ -501,26 +576,38 @@ export default function OpportunityDetailPage() {
 
   const genAds = useMutation({
     mutationFn: () => api.opportunities.generateAds(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ads', id] }),
-    onError: (e: any) => alert(e?.message || 'Ad generation failed — check your AI keys in Settings'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ads', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
+    },
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Ad generation failed — check AI keys in Settings'); },
   });
 
   const genGrowth = useMutation({
     mutationFn: () => api.opportunities.generateGrowth(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['growth', id] }),
-    onError: (e: any) => alert(e?.message || 'Playbook generation failed — check your AI keys in Settings'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['growth', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
+    },
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Growth playbook failed — check AI keys in Settings'); },
   });
 
   const genBrand = useMutation({
     mutationFn: () => api.opportunities.generateBrand(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['brand', id] }),
-    onError: (e: any) => alert(e?.message || 'Brand generation failed — check your AI keys in Settings'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brand', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
+    },
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Brand generation failed — check AI keys in Settings'); },
   });
 
   const genBundle = useMutation({
     mutationFn: () => api.opportunities.generateBundle(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bundle', id] }),
-    onError: (e: any) => alert(e?.message || 'Bundle generation failed — check your AI keys in Settings'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bundle', id] });
+      setUserCredits(c => c !== null ? Math.max(0, c - 1) : null);
+    },
+    onError: (e: any) => { handleCreditError(e); if (e?.status !== 402) alert(e?.message || 'Bundle generation failed — check AI keys in Settings'); },
   });
 
   const rescore = useMutation({
@@ -730,6 +817,7 @@ export default function OpportunityDetailPage() {
               isPending={genAssets.isPending}
               icon="✨" label={genAssets.isSuccess ? '↻ Regenerate Assets' : 'Generate Launch Assets'} pendingLabel="Launch assets…"
               onClick={() => genAssets.mutate()}
+              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
             />
             <button
               onClick={() => rescore.mutate()}
@@ -1711,6 +1799,7 @@ export default function OpportunityDetailPage() {
                   isPending={genAds.isPending}
                   icon="✨" label={ads ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
                   onClick={() => genAds.mutate()}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
                 />
               </div>
             </div>
@@ -1901,6 +1990,7 @@ export default function OpportunityDetailPage() {
                   isPending={genGrowth.isPending}
                   icon="🚀" label={g ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
                   onClick={() => genGrowth.mutate()}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
                 />
               </div>
             </div>
@@ -2094,6 +2184,7 @@ export default function OpportunityDetailPage() {
                   isPending={genBrand.isPending}
                   icon="🎨" label={b ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
                   onClick={() => genBrand.mutate()}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
                 />
               </div>
             </div>
@@ -2243,6 +2334,7 @@ export default function OpportunityDetailPage() {
                   isPending={genBundle.isPending}
                   icon="📦" label={bundleData ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
                   onClick={() => genBundle.mutate()}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
                 />
               </div>
             </div>
@@ -2406,6 +2498,7 @@ export default function OpportunityDetailPage() {
               isPending={genReport.isPending}
               icon="📄" label={reportHistory?.length ? '↻ Generate New Report' : 'Generate Report'} pendingLabel="Building report…"
               onClick={() => genReport.mutate()}
+              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
             />
           </div>
 

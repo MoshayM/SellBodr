@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { checkAndDeductCredit } from '@/lib/credits';
 import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
+
+const ACCESS_SECRET = new TextEncoder().encode(
+  process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me',
+);
 
 function staticAssets(title: string, category: string, mkt: string) {
   const cat = category.replace(/_/g, ' ') || 'product';
@@ -28,10 +34,37 @@ function staticAssets(title: string, category: string, mkt: string) {
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  let freeOnly = true;
+  let isAdminUser = false;
+  let userId = '';
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, ACCESS_SECRET);
+      isAdminUser = payload.role === 'admin';
+      freeOnly    = !isAdminUser && payload.plan !== 'pro';
+      if (!isAdminUser) userId = String(payload.sub ?? '');
+    } catch { }
+  }
+
+  if (!isAdminUser && !userId) {
+    return NextResponse.json({ error: 'Sign in to generate listing assets', code: 'auth_required' }, { status: 401 });
+  }
+
   try {
     const db = getDb();
     await ensureSchema(db);
+
+    if (!isAdminUser) {
+      const cr = await checkAndDeductCredit(userId, 'listing', db);
+      if (!cr.ok) {
+        return NextResponse.json(
+          { error: 'No credits remaining. Buy 10 credits for $5.', code: 'no_credits' },
+          { status: 402 },
+        );
+      }
+    }
 
     const oppRow = await db.execute({
       sql: `
