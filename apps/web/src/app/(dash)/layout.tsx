@@ -349,14 +349,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             </div>
           ))}
 
-          {/* Account group */}
-          <div className="mb-4">
-            <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>Account</div>
-            <SidebarLink page={{ href: '/settings', label: 'Settings', icon: '⚙️', desc: 'Account & preferences' }} />
-            {isAdmin() && (
-              <SidebarLink page={{ href: '/ai-keys', label: 'AI Keys', icon: '🔑', desc: 'Manage AI model API keys' }} />
-            )}
-          </div>
         </nav>
 
         {/* User card — sidebar bottom */}
@@ -413,6 +405,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 <path d="m18 15-6-6-6 6"/>
               </svg>
             </button>
+
+            {/* Account links — below user identity */}
+            <div className="mt-1.5">
+              <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>Account</div>
+              <SidebarLink page={{ href: '/settings', label: 'Settings', icon: '⚙️', desc: 'Account & preferences' }} />
+              {isAdmin() && (
+                <SidebarLink page={{ href: '/ai-keys', label: 'AI Keys', icon: '🔑', desc: 'Manage AI model API keys' }} />
+              )}
+            </div>
           </div>
         )}
       </aside>
