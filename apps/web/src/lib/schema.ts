@@ -18,6 +18,12 @@ const TABLES = [
     mfaEnabled INTEGER DEFAULT 0, lastLoginAt INTEGER, deletedAt INTEGER,
     createdAt INTEGER NOT NULL DEFAULT 0, updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS "CreditTransaction" (
+    id TEXT PRIMARY KEY, userId TEXT NOT NULL,
+    type TEXT NOT NULL, amount INTEGER NOT NULL,
+    reason TEXT DEFAULT '', stripeSessionId TEXT DEFAULT '',
+    createdAt INTEGER NOT NULL DEFAULT 0
+  )`,
   `CREATE TABLE IF NOT EXISTS "RefreshToken" (
     id TEXT PRIMARY KEY, userId TEXT NOT NULL, tokenHash TEXT NOT NULL,
     expiresAt INTEGER NOT NULL, revoked INTEGER DEFAULT 0, createdAt INTEGER NOT NULL DEFAULT 0
@@ -200,6 +206,7 @@ const MIGRATIONS = [
   `ALTER TABLE "SourcingCandidate" ADD COLUMN verifiedBadge INTEGER DEFAULT 0`,
   `ALTER TABLE "SourcingCandidate" ADD COLUMN description TEXT`,
   `ALTER TABLE "User" ADD COLUMN plan TEXT DEFAULT 'free'`,
+  `ALTER TABLE "User" ADD COLUMN credits INTEGER DEFAULT 0`,
   // Distinguish seeded/system marketplaces from user-added ones
   `ALTER TABLE "Marketplace" ADD COLUMN source TEXT DEFAULT 'system'`,
   // Custom PIN fast-login (4-digit, bcrypt-hashed)

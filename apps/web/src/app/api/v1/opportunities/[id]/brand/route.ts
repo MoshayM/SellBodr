@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { checkAndDeductCredit } from '@/lib/credits';
 import { PROVIDERS, FREE_PROVIDER_IDS, tryProvider } from '@/lib/ai/gateway';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -72,19 +73,36 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Auth is optional — expired/missing token falls back to free-tier, never 500s
-    let freeOnly = true;
-    const token = req.headers.get('authorization')?.split(' ')[1];
-    if (token) {
-      try {
-        const { payload } = await jwtVerify(token, ACCESS_SECRET);
-        freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
-      } catch { /* invalid/expired token — treat as free guest */ }
-    }
+  let freeOnly = true;
+  let isAdminUser = false;
+  let userId = '';
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, ACCESS_SECRET);
+      isAdminUser = payload.role === 'admin';
+      freeOnly    = !isAdminUser && payload.plan !== 'pro';
+      if (!isAdminUser) userId = String(payload.sub ?? '');
+    } catch { /* treat as free guest */ }
+  }
 
+  if (!isAdminUser && !userId) {
+    return NextResponse.json({ error: 'Sign in to generate brand assets', code: 'auth_required' }, { status: 401 });
+  }
+
+  try {
     const db = getDb();
     await ensureSchema(db);
+
+    if (!isAdminUser) {
+      const cr = await checkAndDeductCredit(userId, 'brand', db);
+      if (!cr.ok) {
+        return NextResponse.json(
+          { error: 'No credits remaining. Buy 10 reports for $5.', code: 'no_credits' },
+          { status: 402 },
+        );
+      }
+    }
 
     const r = await db.execute({
       sql: `SELECT p.title, p.category, m.code as mCode, m.country as mCountry

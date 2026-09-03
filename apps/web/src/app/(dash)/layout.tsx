@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { clearAuth, getUser, isAdmin } from '@/lib/api';
+import { clearAuth, getUser, isAdmin, api } from '@/lib/api';
 import { getWishlistCount } from '@/lib/wishlist';
 import { CurrencyWidget } from '@/components/ui/CurrencyWidget';
 
@@ -18,7 +18,6 @@ const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
       { href: '/opportunities',        label: 'Opportunities',  icon: '🎯', desc: 'AI-scored cross-border products' },
       { href: '/research',             label: 'Research',        icon: '🔬', desc: 'Deep market intelligence & trends' },
       { href: '/suppliers',            label: 'Suppliers',       icon: '🏭', desc: 'India supplier sourcing database' },
-      { href: '/marketplace',          label: 'Marketplace',     icon: '🛒', desc: 'Compare 76+ global marketplaces' },
       { href: '/profitability',        label: 'Profitability',   icon: '💰', desc: 'Full landed-cost profit model' },
     ],
   },
@@ -34,10 +33,8 @@ const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
   {
     label: 'Workspace',
     pages: [
-      { href: '/recommendation',       label: 'Recommendations', icon: '🤖', desc: 'AI-curated opportunity picks' },
-      { href: '/reports',              label: 'Reports',          icon: '📊', desc: 'Export and analyse your data' },
-      { href: '/wishlist',             label: 'Wishlist',         icon: '🌟', desc: 'Saved & bookmarked opportunities' },
-      { href: '/team',                 label: 'Team',             icon: '👥', desc: 'Manage team members' },
+      { href: '/reports',  label: 'Reports',  icon: '📊', desc: 'Export and analyse your data' },
+      { href: '/wishlist', label: 'Wishlist', icon: '🌟', desc: 'Saved & bookmarked opportunities' },
     ],
   },
 ];
@@ -91,6 +88,9 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [user, setUser] = useState<{ name?: string; role?: string; plan?: string } | null>(null);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [creditsIsAdmin, setCreditsIsAdmin] = useState(false);
+  const [buyingCredits, setBuyingCredits] = useState(false);
 
   const userMenuRef     = useRef<HTMLDivElement>(null);
   const sidebarUserRef  = useRef<HTMLDivElement>(null);
@@ -120,6 +120,10 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     if (!token) { router.replace('/login'); return; }
     setUser(getUser());
     setAuthChecked(true);
+    api.billing.getCredits().then(d => {
+      setCredits(d.credits);
+      setCreditsIsAdmin(d.isAdmin);
+    }).catch(() => {});
   }, [router]);
 
   useEffect(() => { setMenuOpen(false); }, [path]);
@@ -375,11 +379,54 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     </div>
                   </div>
 
+                  {/* Credits bar */}
+                  {!creditsIsAdmin && (
+                    <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Report Credits</span>
+                        <span className="text-[13px] font-black text-slate-900">
+                          {credits === null ? '…' : credits}
+                          <span className="text-[10px] font-normal text-slate-400 ml-0.5">remaining</span>
+                        </span>
+                      </div>
+                      <button
+                        disabled={buyingCredits}
+                        onClick={async () => {
+                          setBuyingCredits(true);
+                          try {
+                            const { url } = await api.billing.buyCredits();
+                            window.location.href = url;
+                          } catch {
+                            setBuyingCredits(false);
+                            alert('Stripe not configured yet — contact admin.');
+                          }
+                        }}
+                        className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all disabled:opacity-60"
+                        style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}>
+                        {buyingCredits ? 'Redirecting…' : '+ Buy 10 Credits — $5'}
+                      </button>
+                    </div>
+                  )}
+                  {creditsIsAdmin && (
+                    <div className="px-4 py-2 border-b border-slate-100 bg-amber-50/60 flex items-center gap-1.5">
+                      <span className="text-[10px]">🔑</span>
+                      <span className="text-[11px] font-semibold text-amber-700">Admin — unlimited credits</span>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="p-1.5">
                     <Link href="/settings" onClick={() => setSidebarUserOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors">
-                      <span className="text-base w-5 text-center">⚙️</span><span>Settings</span>
+                      <span className="text-base w-5 text-center">⚙️</span><span>Settings & Account</span>
+                    </Link>
+                    <Link href="/marketplace" onClick={() => setSidebarUserOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors">
+                      <span className="text-base w-5 text-center">🛒</span><span>Marketplace Intel</span>
+                    </Link>
+                    <Link href="/team" onClick={() => setSidebarUserOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors">
+                      <span className="text-base w-5 text-center">👥</span><span>Team</span>
                     </Link>
                     {isAdmin() && (
                       <>
@@ -398,7 +445,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                       <span className="text-base w-5 text-center">📖</span><span>User Guide</span>
                     </Link>
 
-                    {/* Divider */}
                     <div className="my-1 border-t border-slate-100" />
 
                     <button onClick={() => { logout(); setSidebarUserOpen(false); }}
@@ -422,7 +468,21 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{user.name ?? 'User'}</div>
-                <div className="mt-0.5"><PlanBadge /></div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <PlanBadge />
+                  {!creditsIsAdmin && credits !== null && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none"
+                      style={{
+                        color: credits === 0 ? '#ef4444' : credits <= 3 ? '#f59e0b' : '#6366f1',
+                        background: credits === 0 ? '#fef2f2' : credits <= 3 ? '#fffbeb' : '#eef2ff',
+                      }}>
+                      {credits} cr
+                    </span>
+                  )}
+                  {creditsIsAdmin && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-amber-50 text-amber-600">∞</span>
+                  )}
+                </div>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" className="shrink-0 transition-transform duration-200"
                 style={{ transform: sidebarUserOpen ? 'rotate(180deg)' : 'none' }}>

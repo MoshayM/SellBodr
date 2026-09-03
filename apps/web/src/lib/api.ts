@@ -161,6 +161,8 @@ export const api = {
   billing: {
     getSubscription: () => request<any>('/billing/subscription'),
     getPlans: () => request<any[]>('/billing/plans'),
+    getCredits: () => request<{ credits: number | null; isAdmin: boolean }>('/billing/credits'),
+    buyCredits: () => request<{ url: string }>('/billing/checkout', { method: 'POST', body: '{}' }),
   },
   marketplaces: {
     list: (params?: { active?: boolean }) => {
