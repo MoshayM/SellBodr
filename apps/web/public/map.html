@@ -12,10 +12,11 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 #loading-dot{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#6366f1;border-radius:50%;animation:spin .7s linear infinite}
 #loading-txt{font-size:12px;color:#94a3b8;font-weight:600;letter-spacing:.3px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ctrl{position:absolute;top:10px;left:50px;z-index:1000}
-.cbtn{background:rgba(8,12,32,0.9);color:#e2e8f0;border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:5px;letter-spacing:.3px;transition:all .15s}
-.cbtn:hover{background:rgba(124,58,237,0.45);border-color:rgba(124,58,237,0.7);color:#ddd6fe}
-.cbtn.sat{background:rgba(14,165,233,0.25);border-color:rgba(14,165,233,0.6);color:#7dd3fc}
+.ctrl{position:absolute;top:10px;left:50px;z-index:1000;display:flex;gap:6px}
+.cbtn{background:rgba(8,12,32,0.82);color:#94a3b8;border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:5px;letter-spacing:.3px;transition:all .15s}
+.cbtn:hover{background:rgba(124,58,237,0.38);border-color:rgba(124,58,237,0.6);color:#ddd6fe}
+.cbtn.active-street{background:rgba(99,102,241,0.28);border-color:rgba(99,102,241,0.7);color:#c7d2fe}
+.cbtn.active-sat{background:rgba(14,165,233,0.28);border-color:rgba(14,165,233,0.7);color:#7dd3fc}
 .leaflet-popup-content-wrapper{background:#fff!important;border:1px solid #e2e8f0!important;border-radius:14px!important;box-shadow:0 8px 32px rgba(0,0,0,.18)!important;color:#1e293b!important;padding:0!important}
 .leaflet-popup-tip{background:#fff!important}
 .leaflet-popup-tip-container{display:none}
@@ -40,21 +41,26 @@ body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
   <div id="loading-txt">Loading map…</div>
 </div>
 <div class="ctrl" id="ctrl" style="display:none">
-  <button class="cbtn" id="lb" onclick="tl()">🛰 Satellite</button>
+  <button class="cbtn active-street" id="btn-street" onclick="setLayer('street')">🗺 Street</button>
+  <button class="cbtn" id="btn-sat" onclick="setLayer('sat')">🛰 Satellite</button>
 </div>
 <div id="map"></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <script>
 var map=null,st=null,sa=null,lblayer=null,cur='street';
 
-function tl(){
-  if(!map)return;
-  if(cur==='street'){
+function setLayer(mode){
+  if(!map||cur===mode)return;
+  if(mode==='sat'){
     map.removeLayer(st);sa.addTo(map);lblayer.addTo(map);
-    cur='sat';document.getElementById('lb').textContent='🗺 Street';document.getElementById('lb').classList.add('sat');
+    cur='sat';
+    document.getElementById('btn-street').className='cbtn';
+    document.getElementById('btn-sat').className='cbtn active-sat';
   }else{
     map.removeLayer(sa);map.removeLayer(lblayer);st.addTo(map);
-    cur='street';document.getElementById('lb').textContent='🛰 Satellite';document.getElementById('lb').classList.remove('sat');
+    cur='street';
+    document.getElementById('btn-street').className='cbtn active-street';
+    document.getElementById('btn-sat').className='cbtn';
   }
 }
 
@@ -65,6 +71,8 @@ function initMap(data){
 
   if(map){map.remove();map=null;}
   cur='street';
+  document.getElementById('btn-street').className='cbtn active-street';
+  document.getElementById('btn-sat').className='cbtn';
 
   st=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:'abc',attribution:''});
   sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:''});
