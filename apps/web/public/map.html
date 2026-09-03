@@ -86,7 +86,8 @@ function initMap(data){
     var q=encodeURIComponent(p.lat+','+p.lon);
     var osmEmbed='https://www.openstreetmap.org/export/embed.html?bbox='+(p.lon-0.05)+','+(p.lat-0.05)+','+(p.lon+0.05)+','+(p.lat+0.05)+'&layer=mapnik&marker='+p.lat+','+p.lon;
     var gmUrl='https://www.google.com/maps/search/?api=1&query='+q;
-    var svUrl='https://maps.google.com/?q='+p.lat+','+p.lon+'&layer=c';
+    // Business search: finds supplier listing, reviews & photos — Street View is unavailable for most Indian manufacturing cities
+    var bizUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.name+(p.city?', '+p.city:''));
     var satUrl='https://maps.google.com/?q='+p.lat+','+p.lon+'&t=k';
     var popup='<div class="pop" style="min-width:240px">'+
       '<div class="pop-title">'+p.name+'</div>'+
@@ -97,7 +98,7 @@ function initMap(data){
       '<iframe src="'+osmEmbed+'" class="gmaps-frame" loading="lazy"></iframe>'+
       '<div class="sv-bar">'+
         '<a href="'+gmUrl+'" target="_blank" class="sv-btn" style="background:#4f46e5;color:#fff">📍 Maps</a>'+
-        '<a href="'+svUrl+'" target="_blank" class="sv-btn" style="background:#d97706;color:#fff">🚶 Street</a>'+
+        '<a href="'+bizUrl+'" target="_blank" class="sv-btn" style="background:#059669;color:#fff">🏭 Business</a>'+
         '<a href="'+satUrl+'" target="_blank" class="sv-btn" style="background:#0284c7;color:#fff">🛰 Sat</a>'+
       '</div>'+
     '</div>';
