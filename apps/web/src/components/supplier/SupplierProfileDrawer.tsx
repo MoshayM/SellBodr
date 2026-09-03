@@ -37,9 +37,10 @@ function CopyBtn({ text }: { text: string }) {
   );
 }
 
-function MapEmbed({ lat, lon, city, address }: { lat: number | null; lon: number | null; city: string; address?: string }) {
+function MapEmbed({ lat, lon, city, address, supplierName }: { lat: number | null; lon: number | null; city: string; address?: string; supplierName?: string }) {
   const gmUrl  = `https://www.google.com/maps/search/?api=1&query=${lat && lon ? `${lat},${lon}` : encodeURIComponent(`${address || city}, India`)}`;
-  const svUrl  = `https://maps.google.com/?q=${lat ?? 0},${lon ?? 0}&layer=c`;
+  // Business search: street view unavailable for most Indian manufacturing cities — this finds the supplier's Google listing instead
+  const bizUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${supplierName || address || city}${city ? ', ' + city : ''}`)}`;
   const satUrl = `https://maps.google.com/?q=${lat ?? 0},${lon ?? 0}&t=k`;
 
   const osmSrc = lat && lon
@@ -64,9 +65,9 @@ function MapEmbed({ lat, lon, city, address }: { lat: number | null; lon: number
           className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
           📍 Open Maps
         </a>
-        <a href={svUrl} target="_blank" rel="noopener noreferrer"
-          className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
-          🚶 Street View
+        <a href={bizUrl} target="_blank" rel="noopener noreferrer"
+          className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+          🏭 Business
         </a>
         <a href={satUrl} target="_blank" rel="noopener noreferrer"
           className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
@@ -231,6 +232,7 @@ export function SupplierProfileDrawer({ supplierId, open, onClose, context }: Dr
                 lon={supplier.longitude ?? null}
                 city={supplier.city || 'India'}
                 address={supplier.address || supplier.city || 'India'}
+                supplierName={supplier.supplierName}
               />
             </div>
 
