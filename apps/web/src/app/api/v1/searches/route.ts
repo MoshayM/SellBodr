@@ -492,7 +492,7 @@ export async function POST(req: NextRequest) {
 
     // ── Stage 4: Final selection ──────────────────────────────────────────────
     const verdictMap = new Map(verdicts.map(v => [v.title.toLowerCase().trim(), v]));
-    const finalList  = top24
+    let finalList  = top24
       .map(c => {
         const v = verdictMap.get(c.title.toLowerCase().trim()) ?? {
           validationScore: 55, adjustedConfidence: 60, flags: [], verdict: 'pass' as const,
@@ -502,6 +502,24 @@ export async function POST(req: NextRequest) {
       .filter(c => c.verdict.verdict !== 'reject' && c.verdict.validationScore >= 50)
       .sort((a, b) => b.finalConfidence - a.finalConfidence || b.providerCount - a.providerCount)
       .slice(0, 8);
+
+    // ── Category guard: drop off-topic results for targeted scans ─────────────
+    if (hasFocus && focus.category) {
+      const stopWords = new Set(['and', 'the', 'for', 'with', 'from', 'other']);
+      const focusTokens = focus.category.toLowerCase()
+        .split(/[\s>&,]+/)
+        .map(t => t.trim())
+        .filter(t => t.length > 3 && !stopWords.has(t));
+
+      if (focusTokens.length > 0) {
+        const catFiltered = finalList.filter(c => {
+          const aiTokens = (c.category ?? '').toLowerCase().split(/[\s>&,_]+/).map(t => t.trim());
+          return focusTokens.some(ft => aiTokens.some(at => at.includes(ft) || ft.includes(at)));
+        });
+        // Only apply guard if at least 2 results pass — avoids returning an empty list
+        if (catFiltered.length >= 2) finalList = catFiltered;
+      }
+    }
 
     // ── Persist to DB ─────────────────────────────────────────────────────────
     const mpRow = await db.execute({ sql: `SELECT id FROM "Marketplace" WHERE code=? LIMIT 1`, args: [marketplace] });
@@ -624,6 +642,7 @@ export async function POST(req: NextRequest) {
         discovery:  `${providerResults.length} providers → ${merged.length} unique candidates`,
         consensus:  `${merged.filter(m => m.providerCount > 1).length} multi-provider agreements`,
         validation: `Validated by ${validatorName}`,
+        categoryFilter: hasFocus && focus.category ? `${finalList.length} matched "${focus.category.split('>').pop()?.trim()}"` : 'broad scan',
         saved:      `${count}/${top24.length} passed`,
       },
       providers: {
