@@ -300,22 +300,21 @@ export function CurrencyWidget() {
         onClick={() => setOpen(o => !o)}
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-20 right-3 lg:bottom-6 lg:right-5 z-[100] flex items-center gap-2 rounded-2xl px-3 py-2 shadow-lg transition-shadow duration-200"
+        className="fixed bottom-20 right-3 lg:bottom-6 lg:right-5 z-[100] flex items-center gap-2 rounded-2xl px-3 py-2 transition-all duration-200"
         style={{
-          background: open ? 'linear-gradient(135deg,rgba(124,58,237,0.3),rgba(99,102,241,0.2))' : 'rgba(10,15,30,0.92)',
-          border: open ? '1px solid rgba(124,58,237,0.55)' : '1px solid rgba(124,58,237,0.28)',
-          boxShadow: open ? '0 4px 24px rgba(124,58,237,0.35)' : '0 4px 16px rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(12px)',
+          background: open ? 'linear-gradient(135deg,#6366F1,#4F46E5)' : '#ffffff',
+          border: open ? '1px solid #4F46E5' : '1px solid #E8EDFB',
+          boxShadow: open ? '0 4px 20px rgba(99,102,241,0.4)' : '0 4px 16px rgba(99,102,241,0.15)',
         }}>
         <span className="text-base leading-none">💱</span>
         <div className="hidden sm:block text-left">
-          <div className="text-[11px] font-bold text-violet-200 leading-none">Live FX</div>
+          <div className="text-[11px] font-bold leading-none" style={{ color: open ? '#ffffff' : '#4338CA' }}>Live FX</div>
           <div className="text-[9px] leading-none mt-0.5 tabular-nums"
-            style={{ color: fetching ? '#fbbf24' : error ? '#f87171' : '#34d399' }}>
+            style={{ color: fetching ? '#D97706' : error ? '#DC2626' : open ? '#A5F3FC' : '#059669' }}>
             {fetching ? 'updating…' : error ? 'cached' : updatedAt ? `${timeAgo(updatedAt)}` : '…'}
           </div>
         </div>
-        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'bg-amber-400 animate-pulse' : error ? 'bg-red-400' : 'bg-emerald-400'}`} />
+        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${fetching ? 'bg-amber-400 animate-pulse' : error ? 'bg-red-500' : 'bg-emerald-500'}`} />
       </motion.button>
 
       {createPortal(panel, document.body)}

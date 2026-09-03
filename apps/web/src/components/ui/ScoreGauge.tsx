@@ -34,45 +34,19 @@ export function ScoreGauge({ score, label, size = 'md' }: Props) {
   );
 }
 
-type BadgeCfg = { bg: string; border: string; text: string; glow: string; icon: string; anim: string };
-
 export function RecommendationBadge({ rec, confidence }: { rec: string; confidence?: number }) {
-  const cfg: Record<string, BadgeCfg> = {
-    launch: {
-      bg:   'linear-gradient(135deg,rgba(16,185,129,0.18) 0%,rgba(5,150,105,0.10) 100%)',
-      border: 'rgba(16,185,129,0.38)',
-      text: '#34d399',
-      glow: '0 2px 5px rgba(16,185,129,0.13), inset 0 1px 0 rgba(255,255,255,0.05)',
-      icon: '🚀',
-      anim: 'animate-badge-launch',
-    },
-    hold: {
-      bg:   'linear-gradient(135deg,rgba(245,158,11,0.16) 0%,rgba(217,119,6,0.10) 100%)',
-      border: 'rgba(245,158,11,0.32)',
-      text: '#fbbf24',
-      glow: '0 2px 7px rgba(245,158,11,0.2)',
-      icon: '⏸',
-      anim: 'animate-badge-hold',
-    },
-    reject: {
-      bg:   'linear-gradient(135deg,rgba(239,68,68,0.15) 0%,rgba(185,28,28,0.09) 100%)',
-      border: 'rgba(239,68,68,0.30)',
-      text: '#f87171',
-      glow: '0 2px 6px rgba(239,68,68,0.16)',
-      icon: '✕',
-      anim: 'animate-badge-reject',
-    },
+  const cfg: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+    launch: { icon: '🚀', color: '#059669', bg: '#ECFDF5', border: '#6EE7B7' },
+    hold:   { icon: '⏸', color: '#B45309', bg: '#FFFBEB', border: '#FCD34D' },
+    reject: { icon: '✕', color: '#DC2626', bg: '#FEF2F2', border: '#FCA5A5' },
   };
-  const c = cfg[rec] ?? cfg.hold;
+  const c = cfg[(rec ?? '').toLowerCase()] ?? cfg.hold;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border select-none ${c.anim}`}
-      style={{ background: c.bg, borderColor: c.border, color: c.text, boxShadow: c.glow, letterSpacing: '0.04em' }}>
-      <span className="text-[10px]">{c.icon}</span>
-      {rec?.toUpperCase()}
-      {confidence !== undefined && (
-        <span className="ml-0.5 text-[10px] font-medium" style={{ opacity: 0.72 }}>({confidence}%)</span>
-      )}
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold border select-none"
+      style={{ color: c.color, backgroundColor: c.bg, borderColor: c.border }}>
+      <span>{c.icon}</span>
+      {confidence !== undefined && <span className="tabular-nums">{confidence}%</span>}
     </span>
   );
 }

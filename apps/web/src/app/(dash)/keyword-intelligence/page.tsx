@@ -6,13 +6,16 @@ import { ProGate } from '@/components/ui/ProGate';
 
 type KwRow = { keyword: string; volume: 'High' | 'Medium' | 'Low'; competition: 'High' | 'Medium' | 'Low'; type: 'Primary' | 'Secondary' | 'Long-tail' | 'Backend'; cpc?: string };
 
-function volColor(v: string) { return v === 'High' ? '#10b981' : v === 'Medium' ? '#f59e0b' : '#ef4444'; }
-function compColor(v: string) { return v === 'Low' ? '#10b981' : v === 'Medium' ? '#f59e0b' : '#ef4444'; }
+function volColor(v: string) { return v === 'High' ? '#059669' : v === 'Medium' ? '#b45309' : '#dc2626'; }
+function compColor(v: string) { return v === 'Low' ? '#059669' : v === 'Medium' ? '#b45309' : '#dc2626'; }
 function typeColor(v: string) {
-  return v === 'Primary' ? 'rgba(124,58,237,0.15)' : v === 'Secondary' ? 'rgba(99,102,241,0.12)' : v === 'Long-tail' ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.05)';
+  return v === 'Primary' ? '#ede9fe' : v === 'Secondary' ? '#e0e7ff' : v === 'Long-tail' ? '#d1fae5' : '#f1f5f9';
 }
 function typeBorder(v: string) {
-  return v === 'Primary' ? 'rgba(124,58,237,0.35)' : v === 'Secondary' ? 'rgba(99,102,241,0.3)' : v === 'Long-tail' ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)';
+  return v === 'Primary' ? '#c4b5fd' : v === 'Secondary' ? '#a5b4fc' : v === 'Long-tail' ? '#6ee7b7' : '#e2e8f0';
+}
+function typeTextColor(v: string) {
+  return v === 'Primary' ? '#6d28d9' : v === 'Secondary' ? '#4338ca' : v === 'Long-tail' ? '#065f46' : '#475569';
 }
 
 const MARKETPLACES = ['Amazon US','Amazon UK','Amazon DE','Amazon CA','Amazon AU','Etsy','eBay','Walmart','TikTok Shop'];
@@ -173,7 +176,7 @@ export default function KeywordIntelligencePage() {
                   <div className="text-sm font-semibold text-white/85 leading-snug truncate">{kw.keyword}</div>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded"
-                      style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: '#fff' }}>
+                      style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: typeTextColor(kw.type) }}>
                       {kw.type}
                     </span>
                     <span className="text-[11px] text-white/40">Vol: <span className="font-semibold" style={{ color: volColor(kw.volume) }}>{kw.volume}</span></span>
@@ -208,7 +211,7 @@ export default function KeywordIntelligencePage() {
                     <td className="px-4 py-2.5 text-white/75 font-medium">{kw.keyword}</td>
                     <td className="px-4 py-2.5 text-center">
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold"
-                        style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: '#fff' }}>
+                        style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: typeTextColor(kw.type) }}>
                         {kw.type}
                       </span>
                     </td>
