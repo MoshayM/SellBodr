@@ -117,7 +117,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="10. Security">
-            We implement layered security controls: TLS 1.3 in transit, AES-256 for sensitive data at rest (API keys, secrets), argon2id for passwords, short-lived JWTs (24-hour expiry), passkey (FIDO2/WebAuthn) support, and rate limiting on all authentication endpoints. Access to production data is restricted to named engineers with MFA. We conduct periodic security reviews. No method of transmission or storage is 100% secure; we cannot guarantee absolute security and recommend you use a strong, unique password or passkey.
+            We implement layered security controls: TLS 1.3 in transit, AES-256 for sensitive data at rest (API keys, secrets), bcrypt (cost 12) for password hashing, short-lived JWTs (24-hour expiry), passkey (FIDO2/WebAuthn) support, and rate limiting on all authentication endpoints. Access to production data is restricted to named engineers with MFA. We conduct periodic security reviews. No method of transmission or storage is 100% secure; we cannot guarantee absolute security and recommend you use a strong, unique password or passkey.
           </Section>
 
           <Section title="11. Children&apos;s Privacy">
