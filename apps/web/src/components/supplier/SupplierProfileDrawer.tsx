@@ -37,25 +37,56 @@ function CopyBtn({ text }: { text: string }) {
   );
 }
 
-function MapEmbed({ lat, lon, city }: { lat: number | null; lon: number | null; city: string }) {
-  if (lat && lon) {
-    const bbox = `${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}`;
-    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
-    return (
-      <iframe
-        src={src}
-        className="w-full h-40 rounded-xl border border-gray-100"
-        title={`Map of ${city}`}
-        loading="lazy"
-      />
-    );
-  }
-  const q = encodeURIComponent(`${city}, India`);
+function MapEmbed({ lat, lon, city, address }: { lat: number | null; lon: number | null; city: string; address?: string }) {
+  const [view, setView] = useState<'map' | 'street'>('map');
+
+  const query = lat && lon ? `${lat},${lon}` : encodeURIComponent(`${address || city}, India`);
+  const mapSrc   = `https://maps.google.com/maps?q=${query}&z=17&output=embed`;
+  const svSrc    = `https://maps.google.com/maps?q=${query}&layer=c&cbll=${lat ?? 0},${lon ?? 0}&output=embed`;
+  const gmUrl    = `https://www.google.com/maps/search/?api=1&query=${query}`;
+  const svUrl    = `https://maps.google.com/maps?q=${query}&layer=c`;
+  const satUrl   = `https://maps.google.com/maps?q=${query}&t=k`;
+
   return (
-    <a href={`https://www.google.com/maps/search/${q}`} target="_blank" rel="noopener noreferrer"
-      className="flex items-center justify-center gap-2 h-20 rounded-xl border border-dashed border-gray-200 text-sm text-green-700 hover:bg-green-50 transition-colors">
-      <span>🗺</span> View {city} on Google Maps
-    </a>
+    <div className="space-y-1.5">
+      {/* View toggle */}
+      <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+        {(['map', 'street'] as const).map(v => (
+          <button key={v} onClick={() => setView(v)}
+            className={`flex-1 text-[11px] font-semibold py-1 rounded-md transition-all capitalize ${view === v ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>
+            {v === 'map' ? '🗺 Map' : '🚶 Street View'}
+          </button>
+        ))}
+      </div>
+
+      {/* Embedded map — switches between map and street view */}
+      <iframe
+        key={view}
+        src={view === 'map' ? mapSrc : svSrc}
+        className="w-full rounded-xl border border-gray-100"
+        style={{ height: 200 }}
+        title={view === 'map' ? `Map of ${city}` : `Street View of ${city}`}
+        loading="lazy"
+        allowFullScreen
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+
+      {/* Action buttons */}
+      <div className="flex gap-1.5">
+        <a href={gmUrl} target="_blank" rel="noopener noreferrer"
+          className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+          📍 Open Maps
+        </a>
+        <a href={svUrl} target="_blank" rel="noopener noreferrer"
+          className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+          🚶 Street View
+        </a>
+        <a href={satUrl} target="_blank" rel="noopener noreferrer"
+          className="flex-1 text-center text-[11px] font-semibold py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+          🛰 Satellite
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -212,6 +243,7 @@ export function SupplierProfileDrawer({ supplierId, open, onClose, context }: Dr
                 lat={supplier.latitude ?? null}
                 lon={supplier.longitude ?? null}
                 city={supplier.city || 'India'}
+                address={supplier.address || supplier.city || 'India'}
               />
             </div>
 
