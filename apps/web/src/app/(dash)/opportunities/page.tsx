@@ -786,7 +786,6 @@ export default function OpportunitiesPage() {
   const [catFilter,      setCatFilter]      = useState('');
   const [srcFilter,      setSrcFilter]      = useState('');
   const [strengthFilter, setStrengthFilter] = useState('');
-  const [scoreFilter,    setScoreFilter]    = useState('');
   const [periodFilter,   setPeriodFilter]   = useState('');
   const [sortBy,         setSortBy]         = useState('score');
 
@@ -900,12 +899,12 @@ export default function OpportunitiesPage() {
       if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
       if (srcFilter)      { if (trendSource(opp.marketplace?.code ?? '').key !== srcFilter) return false; }
       if (strengthFilter) { if (trendStrengthLabel(opp.score?.trend ?? 0).key !== strengthFilter) return false; }
-      if (recFilter)      { if ((opp.recommendation ?? '').toLowerCase() !== recFilter) return false; }
-      if (scoreFilter) {
-        const s = opp.score?.opportunity ?? 0;
-        if (scoreFilter === 'high'   && s < 70) return false;
-        if (scoreFilter === 'medium' && (s < 40 || s >= 70)) return false;
-        if (scoreFilter === 'low'    && s >= 40) return false;
+      if (recFilter) {
+        const rec = (opp.recommendation ?? '').toLowerCase();
+        const s   = opp.score?.opportunity ?? 0;
+        if (recFilter === 'launch' && !(rec === 'launch' || s >= 70)) return false;
+        if (recFilter === 'hold'   && !(rec === 'hold'   || (s >= 40 && s < 70))) return false;
+        if (recFilter === 'reject' && !(rec === 'reject' || s < 40)) return false;
       }
       if (periodFilter) {
         const age = now - Number(opp.createdAt || 0);
@@ -925,9 +924,9 @@ export default function OpportunitiesPage() {
       return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
-  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, recFilter, scoreFilter, periodFilter, sortBy]);
+  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, recFilter, periodFilter, sortBy]);
 
-  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || recFilter || scoreFilter || periodFilter);
+  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || recFilter || periodFilter);
 
   // Quick stats for hero
   const hotCount        = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'hot').length;
@@ -1183,20 +1182,12 @@ export default function OpportunitiesPage() {
               <option value="declining">📉 Declining</option>
             </select>
 
-            {/* Signal — AI recommendation (client-side) */}
+            {/* Opportunity — AI signal + score range combined */}
             <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
-              <option value="">All Signals</option>
-              <option value="launch">🚀 Launch</option>
-              <option value="hold">⏸ Hold</option>
-              <option value="reject">✕ Reject</option>
-            </select>
-
-            {/* Score — opportunity score range (client-side) */}
-            <select value={scoreFilter} onChange={e => setScoreFilter(e.target.value)} className={SEL}>
-              <option value="">All Scores</option>
-              <option value="high">⭐ High (70+)</option>
-              <option value="medium">🟡 Medium (40–69)</option>
-              <option value="low">🔴 Low (&lt;40)</option>
+              <option value="">All Opportunities</option>
+              <option value="launch">🚀 Launch  ·  70+</option>
+              <option value="hold">⏸ Hold  ·  40–69</option>
+              <option value="reject">✕ Reject  ·  &lt;40</option>
             </select>
 
             {/* Period */}
@@ -1220,7 +1211,7 @@ export default function OpportunitiesPage() {
             {/* Clear + count */}
             <div className="ml-auto flex items-center gap-2.5 pl-2">
               {hasClientFilters && (
-                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setScoreFilter(''); setPeriodFilter(''); setRecFilter(''); }}
+                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
                   className="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 whitespace-nowrap">
                   Clear ✕
                 </button>
