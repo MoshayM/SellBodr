@@ -406,9 +406,8 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               </svg>
             </button>
 
-            {/* Account links — below user identity */}
-            <div className="mt-1.5">
-              <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>Account</div>
+            {/* Account links — inside identity card, no heading */}
+            <div className="mt-0.5 border-t border-slate-100 pt-1">
               <SidebarLink page={{ href: '/settings', label: 'Settings', icon: '⚙️', desc: 'Account & preferences' }} />
               {isAdmin() && (
                 <SidebarLink page={{ href: '/ai-keys', label: 'AI Keys', icon: '🔑', desc: 'Manage AI model API keys' }} />
