@@ -36,8 +36,8 @@ export default function TermsPage() {
           <Section title="3. Access Tiers &amp; Accounts">
             <p className="mb-3">The Service operates three access tiers:</p>
             <ul className="space-y-2 list-disc pl-5 text-white/60 mb-4">
-              <li><strong className="text-white/80">Starter (Free, registered account):</strong> Up to 5 AI product scans, top 10 results per scan, full 7-dimension Opportunity Score, supplier list, and profit calculator. No credit card required.</li>
-              <li><strong className="text-white/80">Pro ($9/month):</strong> Requires a registered account. Unlocks unlimited AI product scans, all results with no caps, the complete India supplier map, profitability waterfall model, and advanced research tools.</li>
+              <li><strong className="text-white/80">Starter (Free, registered account):</strong> Up to 5 AI product scans, up to 8 results per scan, full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.</li>
+              <li><strong className="text-white/80">Pro ($9/month):</strong> Requires a registered account. Unlocks unlimited AI product scans, premium AI models (Claude + GPT-4 + Groq), full supplier list with no cap, real-time supplier search across IndiaMART, Alibaba, and more, plus all dashboard tools.</li>
               <li><strong className="text-white/80">Organisation (Enterprise):</strong> Multi-seat Pro with API access, white-label reports, dedicated support, and SLA guarantee. Custom pricing — contact us.</li>
             </ul>
             <p className="text-white/60">When creating a registered account you must provide accurate, current information; maintain the confidentiality of your credentials; and be at least 16 years of age. One person or legal entity may not maintain more than one free registered account.</p>

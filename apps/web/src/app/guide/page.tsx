@@ -48,7 +48,7 @@ const SECTIONS = [
       { title: 'Scan for More (bottom button) — smart mode', body: 'When you have active filters (category, trend strength 🔥 Hot/📈 Rising, or channel), the bottom button turns purple and changes label — e.g. "Scan More 🔥 Hot · Wall Art 🎯". The AI narrows its search to exactly what you are filtering for.' },
       { title: 'No filters active?', body: 'If no filters are set, "Scan for More ↓" runs a broad scan just like New Scan — adding more diverse results to the existing list.' },
       { title: 'Filter results', body: 'Use the filter bar (Opportunity score/signal, Category, Source channel, Trend strength, Date range) to narrow the visible list. Active filters also guide the Scan for More AI.' },
-      { title: 'Result limits', body: 'Free accounts see up to 10 results per marketplace. A 🔒 tag shows how many are locked. Pro users see all results and can run unlimited Scan for More passes.' },
+      { title: 'Result limits', body: 'Each scan returns up to 8 results — the highest-scoring products after AI validation. Free accounts are limited to 5 total scans. Pro users can run unlimited scans.' },
     ],
   },
   {
@@ -103,8 +103,8 @@ const SECTIONS = [
     accent: 'text-slate-400',
     border: 'border-slate-500/20',
     steps: [
-      { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans, see the top 10 results per scan, view all 7 sub-scores, access the supplier list, and use the profit calculator. No credit card required.' },
-      { title: 'Pro plan ($9/mo)', body: 'Pro unlocks unlimited AI scans, all results per scan, the full supplier map, profitability waterfall, and advanced research tools. Upgrade from the avatar menu.' },
+      { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans (up to 8 results each), full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.' },
+      { title: 'Pro plan ($9/mo)', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + GPT-4 + Groq) for higher quality results, full supplier list with no cap, real-time IndiaMART/Alibaba supplier search, and all dashboard tools. Upgrade from the avatar menu.' },
       { title: 'AI Generation Credits ($5 = 10 credits)', body: 'Generating AI content — Full Reports, Ad Campaigns, Brand Identity, Listing Copy, Growth Playbooks, or Bundle Strategy — costs 1 credit per generation. Buy 10 credits for $5 from the credits chip in the sidebar or any "Buy Credits" prompt. Admin accounts always generate for free.' },
       { title: 'Upgrade', body: 'Click any 🔒 locked feature or open the avatar menu and tap "Upgrade to Pro". Credits can be purchased separately at any time — they never expire.' },
       { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Admins can manage AI provider keys under Settings → AI Keys.' },

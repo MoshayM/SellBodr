@@ -29,13 +29,13 @@ const PLANS = [
   {
     name: 'Starter', price: '$0', period: '',
     desc: 'Start scouting — no credit card, no commitment',
-    features: ['Up to 5 AI product scans', 'Top 10 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list + profit calculator', 'Wishlist — save unlimited products'],
+    features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
     cta: 'Start scouting free', ctaHref: '/register', highlight: false,
   },
   {
     name: 'Pro', price: '$9', period: '/mo',
-    desc: 'Unlimited intelligence. Unlimited scans. Real profits.',
-    features: ['Unlimited AI product scans', 'All results — no caps', 'Complete India supplier map & database', 'Full profitability waterfall model', 'Advanced market research & keyword tools', 'Unlimited wishlist & CSV export', 'Priority support'],
+    desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
+    features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
     cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
   },
 ];
@@ -334,7 +334,7 @@ export default function LandingPage() {
               Start free. Scale at <span className="text-gradient">your own pace.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              5 free AI scans to explore. Go Pro for $9/mo when you&apos;re ready for unlimited. Pay only for the AI content you generate — $5 for 10 credits.
+              5 free scans to start — no card needed. Go Pro for $9/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $5 for 10 credits.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
