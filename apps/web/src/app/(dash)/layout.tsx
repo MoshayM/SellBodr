@@ -351,48 +351,71 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
         </nav>
 
-        {/* User card — sidebar bottom */}
+        {/* User card — sidebar bottom (click to open menu) */}
         {user && (
-          <div className="px-2.5 pb-4 shrink-0 border-t border-slate-100" ref={sidebarUserRef}>
+          <div className="px-2.5 pb-3 shrink-0 border-t border-slate-100 relative" ref={sidebarUserRef}>
             <AnimatePresence>
               {sidebarUserOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  initial={{ opacity: 0, y: 6, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                  transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-                  className="absolute bottom-full left-2.5 right-2.5 mb-1 bg-white border border-slate-200 rounded-2xl p-1.5 z-50"
-                  style={{ boxShadow: '0 -8px 32px rgba(79,70,229,0.12), 0 2px 8px rgba(15,23,42,0.06)' }}>
-                  {isAdmin() && (
-                    <>
-                      <Link href="/admin" onClick={() => setSidebarUserOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                        <span>🔐</span><span>Admin Panel</span>
-                      </Link>
-                      <Link href="/ai-keys" onClick={() => setSidebarUserOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 rounded-xl transition-colors">
-                        <span>🔑</span><span>AI Provider Keys</span>
-                      </Link>
-                    </>
-                  )}
-                  <Link href="/guide" onClick={() => setSidebarUserOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
-                    <span>📖</span><span>User Guide</span>
-                  </Link>
-                  <Link href="/settings" onClick={() => setSidebarUserOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
-                    <span>⚙️</span><span>Settings</span>
-                  </Link>
-                  <button onClick={() => { logout(); setSidebarUserOpen(false); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-all min-h-[40px]">
-                    <span>↩</span><span>Sign out</span>
-                  </button>
+                  exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                  transition={{ type: 'spring', damping: 32, stiffness: 420 }}
+                  className="absolute bottom-full left-2.5 right-2.5 mb-2 bg-white border border-slate-200 rounded-2xl overflow-hidden z-50"
+                  style={{ boxShadow: '0 -8px 32px rgba(79,70,229,0.13), 0 2px 12px rgba(15,23,42,0.08)' }}>
+
+                  {/* Identity header */}
+                  <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 border-b border-slate-100">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm">
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-bold text-slate-900 truncate leading-tight">{user.name ?? 'User'}</div>
+                      <div className="mt-0.5"><PlanBadge /></div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="p-1.5">
+                    <Link href="/settings" onClick={() => setSidebarUserOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors">
+                      <span className="text-base w-5 text-center">⚙️</span><span>Settings</span>
+                    </Link>
+                    {isAdmin() && (
+                      <>
+                        <Link href="/ai-keys" onClick={() => setSidebarUserOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-colors">
+                          <span className="text-base w-5 text-center">🔑</span><span>AI Provider Keys</span>
+                        </Link>
+                        <Link href="/admin" onClick={() => setSidebarUserOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors">
+                          <span className="text-base w-5 text-center">🔐</span><span>Admin Panel</span>
+                        </Link>
+                      </>
+                    )}
+                    <Link href="/guide" onClick={() => setSidebarUserOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors">
+                      <span className="text-base w-5 text-center">📖</span><span>User Guide</span>
+                    </Link>
+
+                    {/* Divider */}
+                    <div className="my-1 border-t border-slate-100" />
+
+                    <button onClick={() => { logout(); setSidebarUserOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors min-h-[36px]">
+                      <span className="text-base w-5 text-center">↩</span><span>Sign out</span>
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Trigger card */}
             <button
               onClick={() => setSidebarUserOpen(v => !v)}
-              className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-indigo-50 transition-colors text-left mt-2.5"
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl transition-all text-left ${
+                sidebarUserOpen ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-slate-50'
+              }`}
               aria-label="User menu" aria-expanded={sidebarUserOpen}>
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                 {initials}
@@ -401,18 +424,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 <div className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{user.name ?? 'User'}</div>
                 <div className="mt-0.5"><PlanBadge /></div>
               </div>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" className="shrink-0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" className="shrink-0 transition-transform duration-200"
+                style={{ transform: sidebarUserOpen ? 'rotate(180deg)' : 'none' }}>
                 <path d="m18 15-6-6-6 6"/>
               </svg>
             </button>
-
-            {/* Account links — inside identity card, no heading */}
-            <div className="mt-0.5 border-t border-slate-100 pt-1">
-              <SidebarLink page={{ href: '/settings', label: 'Settings', icon: '⚙️', desc: 'Account & preferences' }} />
-              {isAdmin() && (
-                <SidebarLink page={{ href: '/ai-keys', label: 'AI Keys', icon: '🔑', desc: 'Manage AI model API keys' }} />
-              )}
-            </div>
           </div>
         )}
       </aside>
