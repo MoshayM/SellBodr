@@ -160,7 +160,7 @@ function trendChannel(code: string): string {
 
 const DAY = 86_400_000;
 
-const SELECT_CLS = 'bg-[#0d1225] border border-white/10 hover:border-white/20 text-xs text-white/70 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50 [&>option]:bg-[#0d1225] cursor-pointer transition-colors';
+const SELECT_CLS = 'bg-white border border-slate-200 hover:border-slate-300 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50 [&>option]:bg-white [&>option]:text-slate-900 cursor-pointer transition-colors';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 

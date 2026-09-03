@@ -59,7 +59,7 @@ export default function ProfitabilityPage() {
           <select
             value={effectiveId}
             onChange={e => setSelectedId(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 [&>option]:bg-[#0a0f1e]">
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 [&>option]:bg-white [&>option]:text-slate-900">
             {allOpps.map((o: any) => (
               <option key={o.id} value={o.id}>{o.product?.title} · {o.marketplace?.code?.toUpperCase()}</option>
             ))}
