@@ -20,7 +20,7 @@ export default function TermsPage() {
         <h1 className="text-3xl font-black text-white mb-2">Terms of Service</h1>
         <p className="text-sm text-white/40 mb-2">Effective date: 1 August 2026 · Last updated: 3 September 2026</p>
         <p className="text-sm text-white/50 mb-10 p-4 rounded-xl border border-white/8 bg-white/[0.02]">
-          <strong className="text-white/70">Plain-English summary:</strong> SellBodr is free to start — create a free account and get up to 5 AI product scans and full opportunity scores. Upgrade to Pro ($9/mo) for unlimited scans. AI content generation (reports, ads, brand kits, listing copy) uses credits — buy 10 for $5, spend them as you need. By accessing the Service in any capacity you accept these Terms.
+          <strong className="text-white/70">Plain-English summary:</strong> SellBodr is free to start — create a free account and get up to 5 AI product scans and full opportunity scores. Upgrade to Pro ($18/mo) for unlimited scans. AI content generation (reports, ads, brand kits, listing copy) uses credits — buy 10 for $5, spend them as you need. By accessing the Service in any capacity you accept these Terms.
         </p>
 
         <div className="space-y-8 text-white/70 text-sm leading-relaxed">
@@ -37,7 +37,7 @@ export default function TermsPage() {
             <p className="mb-3">The Service operates three access tiers:</p>
             <ul className="space-y-2 list-disc pl-5 text-white/60 mb-4">
               <li><strong className="text-white/80">Starter (Free, registered account):</strong> Up to 5 AI product scans, up to 8 results per scan, full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.</li>
-              <li><strong className="text-white/80">Pro ($9/month):</strong> Requires a registered account. Unlocks unlimited AI product scans, premium AI models (Claude + GPT-4 + Groq), full supplier list with no cap, real-time supplier search across IndiaMART, Alibaba, and more, plus all dashboard tools.</li>
+              <li><strong className="text-white/80">Pro ($18/month):</strong> Requires a registered account. Unlocks unlimited AI product scans, premium AI models (Claude + GPT-4 + Groq), full supplier list with no cap, real-time supplier search across IndiaMART, Alibaba, and more, plus all dashboard tools.</li>
               <li><strong className="text-white/80">Organisation (Enterprise):</strong> Multi-seat Pro with API access, white-label reports, dedicated support, and SLA guarantee. Custom pricing — contact us.</li>
             </ul>
             <p className="text-white/60">When creating a registered account you must provide accurate, current information; maintain the confidentiality of your credentials; and be at least 16 years of age. One person or legal entity may not maintain more than one free registered account.</p>
@@ -45,7 +45,7 @@ export default function TermsPage() {
 
           <Section title="4. Subscriptions, Credits &amp; Billing">
             <ul className="space-y-2 list-disc pl-5 text-white/60">
-              <li><strong className="text-white/70">Subscription plans</strong> (Starter, Pro) are billed in advance on a monthly basis via Stripe. Starter is permanently free. Pro is $9/month and may be cancelled at any time.</li>
+              <li><strong className="text-white/70">Subscription plans</strong> (Starter, Pro) are billed in advance on a monthly basis via Stripe. Starter is permanently free. Pro is $18/month and may be cancelled at any time.</li>
               <li><strong className="text-white/70">AI Generation Credits</strong> are a separate pay-per-use system. Generating AI content — Full Reports, Ad Campaign Drafts, Brand Identity packs, Listing Copy, Growth Playbooks, or Bundle Strategies — consumes 1 credit per generation. Credits are purchased in bundles: 10 credits for USD $5. Credits are non-subscription and never expire. Administrator accounts are exempt from credit charges.</li>
               <li>All fees are non-refundable except where required by applicable consumer protection law (including the EU Consumer Rights Directive, UK Consumer Rights Act 2015, and applicable Indian consumer protection statutes). EU/UK residents have a 14-day statutory cancellation right for digital subscriptions not yet consumed.</li>
               <li>We reserve the right to change pricing with 30 days' notice. You may cancel before the change takes effect to avoid the new rate.</li>

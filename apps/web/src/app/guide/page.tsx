@@ -104,7 +104,7 @@ const SECTIONS = [
     border: 'border-slate-500/20',
     steps: [
       { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans (up to 8 results each), full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.' },
-      { title: 'Pro plan ($9/mo)', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + GPT-4 + Groq) for higher quality results, full supplier list with no cap, real-time IndiaMART/Alibaba supplier search, and all dashboard tools. Upgrade from the avatar menu.' },
+      { title: 'Pro plan ($18/mo)', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + GPT-4 + Groq) for higher quality results, full supplier list with no cap, real-time IndiaMART/Alibaba supplier search, and all dashboard tools. Upgrade from the avatar menu.' },
       { title: 'AI Generation Credits ($5 = 10 credits)', body: 'Generating AI content — Full Reports, Ad Campaigns, Brand Identity, Listing Copy, Growth Playbooks, or Bundle Strategy — costs 1 credit per generation. Buy 10 credits for $5 from the credits chip in the sidebar or any "Buy Credits" prompt. Admin accounts always generate for free.' },
       { title: 'Upgrade', body: 'Click any 🔒 locked feature or open the avatar menu and tap "Upgrade to Pro". Credits can be purchased separately at any time — they never expire.' },
       { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Admins can manage AI provider keys under Settings → AI Keys.' },

@@ -33,7 +33,7 @@ const PLANS = [
     cta: 'Start scouting free', ctaHref: '/register', highlight: false,
   },
   {
-    name: 'Pro', price: '$9', period: '/mo',
+    name: 'Pro', price: '$18', period: '/mo',
     desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
     features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
     cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
@@ -334,7 +334,7 @@ export default function LandingPage() {
               Start free. Scale at <span className="text-gradient">your own pace.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              5 free scans to start — no card needed. Go Pro for $9/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $5 for 10 credits.
+              5 free scans to start — no card needed. Go Pro for $18/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $5 for 10 credits.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">

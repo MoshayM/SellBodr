@@ -732,7 +732,7 @@ function GuestAiKeysTab() {
             </p>
             <Link href="/register"
               className="inline-flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:shadow-[0_0_18px_rgba(124,58,237,0.65)] transition-all border border-violet-400/30">
-              Upgrade to Pro — $49/mo →
+              Upgrade to Pro — $18/mo →
             </Link>
           </div>
         </div>
