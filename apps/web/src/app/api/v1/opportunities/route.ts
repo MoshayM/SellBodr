@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     const clauses: string[] = [];
     const args: string[] = [];
-    if (recFilter) { clauses.push('o.recommendation = ?'); args.push(recFilter); }
+    if (recFilter) { clauses.push('LOWER(o.recommendation) = LOWER(?)'); args.push(recFilter); }
     if (mpFilter)  { clauses.push('m.code = ?');           args.push(mpFilter); }
     const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
 

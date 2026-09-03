@@ -837,11 +837,10 @@ export default function OpportunitiesPage() {
   });
 
   const oppParams: Record<string, string> = {};
-  if (mpFilter)  oppParams.marketplace    = mpFilter;
-  if (recFilter) oppParams.recommendation = recFilter;
+  if (mpFilter) oppParams.marketplace = mpFilter;
 
   const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities', { marketplace: mpFilter, recommendation: recFilter }],
+    queryKey: ['opportunities', { marketplace: mpFilter }],
     queryFn: () => api.opportunities.list(oppParams),
   });
 
@@ -901,6 +900,7 @@ export default function OpportunitiesPage() {
       if (catFilter)      { if (opp.product?.category !== catFilter) return false; }
       if (srcFilter)      { if (trendSource(opp.marketplace?.code ?? '').key !== srcFilter) return false; }
       if (strengthFilter) { if (trendStrengthLabel(opp.score?.trend ?? 0).key !== strengthFilter) return false; }
+      if (recFilter)      { if ((opp.recommendation ?? '').toLowerCase() !== recFilter) return false; }
       if (scoreFilter) {
         const s = opp.score?.opportunity ?? 0;
         if (scoreFilter === 'high'   && s < 70) return false;
@@ -925,9 +925,9 @@ export default function OpportunitiesPage() {
       return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
-  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, scoreFilter, periodFilter, sortBy]);
+  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, recFilter, scoreFilter, periodFilter, sortBy]);
 
-  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || scoreFilter || periodFilter);
+  const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || recFilter || scoreFilter || periodFilter);
 
   // Quick stats for hero
   const hotCount        = allOpps.filter(o => trendStrengthLabel(o.score?.trend ?? 0).key === 'hot').length;
@@ -1166,14 +1166,6 @@ export default function OpportunitiesPage() {
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
 
-            {/* Signal */}
-            <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
-              <option value="">All Signals</option>
-              <option value="launch">🚀 Launch</option>
-              <option value="hold">⏸ Hold</option>
-              <option value="reject">✕ Reject</option>
-            </select>
-
             {/* Trend source — dynamic from actual data */}
             <select value={srcFilter} onChange={e => setSrcFilter(e.target.value)} className={SEL}>
               <option value="">All Sources</option>
@@ -1191,7 +1183,15 @@ export default function OpportunitiesPage() {
               <option value="declining">📉 Declining</option>
             </select>
 
-            {/* Score */}
+            {/* Signal — AI recommendation (client-side) */}
+            <select value={recFilter} onChange={e => setRecFilter(e.target.value)} className={SEL}>
+              <option value="">All Signals</option>
+              <option value="launch">🚀 Launch</option>
+              <option value="hold">⏸ Hold</option>
+              <option value="reject">✕ Reject</option>
+            </select>
+
+            {/* Score — opportunity score range (client-side) */}
             <select value={scoreFilter} onChange={e => setScoreFilter(e.target.value)} className={SEL}>
               <option value="">All Scores</option>
               <option value="high">⭐ High (70+)</option>
