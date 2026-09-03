@@ -66,9 +66,10 @@ function initMap(data){
   if(map){map.remove();map=null;}
   cur='street';
 
-  st=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:''});
+  var aq=data.cartoKey?'?api_key='+data.cartoKey:'';
+  st=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'+aq,{maxZoom:19,subdomains:'abcd',attribution:''});
   sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:''});
-  lblayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:''});
+  lblayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'+aq,{maxZoom:19,subdomains:'abcd',attribution:''});
 
   map=L.map('map',{zoomControl:true,attributionControl:false}).setView(data.center,data.zoom);
   st.addTo(map);

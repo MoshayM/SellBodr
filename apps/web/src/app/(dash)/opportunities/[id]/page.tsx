@@ -274,7 +274,7 @@ function GlobalSupplierMap({ candidates }: { candidates: any[] }) {
   const initZoom   = pins.length === 1 ? 12 : 2;
   const indiaCount = pins.filter(p => p.isIndia).length;
 
-  const mapPayload = { type: 'init', pins, center: initCenter, zoom: initZoom };
+  const mapPayload = { type: 'init', pins, center: initCenter, zoom: initZoom, cartoKey: process.env.NEXT_PUBLIC_CARTO_API_KEY || '' };
 
   return (
     <>

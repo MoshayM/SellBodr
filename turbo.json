@@ -20,7 +20,8 @@
         "ADMIN_EMAIL",
         "ADMIN_PASSWORD",
         "PEXELS_API_KEY",
-        "SCRAPERAPI_KEY"
+        "SCRAPERAPI_KEY",
+        "NEXT_PUBLIC_CARTO_API_KEY"
       ]
     },
     "dev": {
