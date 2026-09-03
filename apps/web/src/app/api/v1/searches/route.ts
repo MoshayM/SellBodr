@@ -242,6 +242,73 @@ function consensusConfidence(c: MergedCandidate, validationScore: number): numbe
 
 // ── Prompts ───────────────────────────────────────────────────────────────────
 
+type FocusHints = { category?: string; trendStrength?: string; trendSource?: string };
+
+function contextualDiscoveryPrompt(mpName: string, today: string, month: string, year: number, focus: FocusHints): string {
+  const strengthMap: Record<string, string> = {
+    hot:      'TRENDING HOT (trend score 80–100) — viral momentum, rapidly growing demand right now',
+    rising:   'RISING (trend score 60–79) — steady upward momentum, gaining traction week-over-week',
+    stable:   'STABLE (trend score 40–59) — consistent, reliable demand, not trending but dependable',
+    declining:'NICHE/DECLINING (trend score <40) — loyal niche buyers, low competition',
+  };
+  const sourceMap: Record<string, string> = {
+    search:  'Amazon/search-driven organic demand (keyword search traffic, high purchase intent)',
+    social:  'social-commerce demand (TikTok Shop virality, Instagram reels, social buzz)',
+    curated: 'curated/artisan marketplace demand (Etsy buyers, handmade, one-of-a-kind)',
+    value:   'value marketplace demand (Walmart, budget-conscious buyers, price sensitivity)',
+  };
+  const trendScoreRange: Record<string, string> = {
+    hot:      '80-100 (REQUIRED: this is a hot trending product)',
+    rising:   '60-79 (REQUIRED: this is a rising product)',
+    stable:   '40-59 (REQUIRED: this is a stable product)',
+    declining:'0-39 (REQUIRED: this is a niche/declining product)',
+  };
+
+  const catNote      = focus.category      ? `\nCATEGORY: Focus ONLY on products within or closely related to "${focus.category}". Every product must fit this category.` : '';
+  const strengthNote = focus.trendStrength ? `\nTREND LEVEL: All products must be ${strengthMap[focus.trendStrength] ?? focus.trendStrength}.` : '';
+  const sourceNote   = focus.trendSource   ? `\nDEMAND SIGNAL: Prioritise products with ${sourceMap[focus.trendSource] ?? focus.trendSource}.` : '';
+
+  return `You are a senior cross-border eCommerce analyst specialising in India-to-global exports. Today: ${today} (${month} ${year}).
+
+TARGETED SCAN — Find exactly 10 DISTINCT, HIGH-OPPORTUNITY products for ${mpName} that precisely match the criteria below.
+${catNote}${strengthNote}${sourceNote}
+
+HARD RULES:
+1. SPECIFICITY — Use precise, descriptive product names. BAD: "Brass Vase". GOOD: "Hand-hammered Brass Flower Vase with Geometric Cutwork Pattern".
+2. DIVERSITY — All 10 products MUST be from different sub-categories. No two products in the same niche.
+3. NOVELTY — Focus on products with clear India craft/manufacturing advantage not easily replicated elsewhere.
+4. ON-TARGET — Every product must match the specified category${focus.trendStrength ? ` and ${focus.trendStrength} trend profile` : ''}.
+
+Criteria:
+- Strong demand on ${mpName} in ${month} ${year} matching the focus above
+- India has a clear cost or craftsmanship advantage vs China/other sources
+- Price spread: India source cost at least 45% below ${mpName} sale price after all fees
+- Not oversaturated — room for a new seller in 60–90 days
+
+For EACH product return:
+{
+  "title": "specific descriptive product name",
+  "category": "precise sub-category",
+  "description": "2 sentences — what makes this special and why buyers want it NOW",
+  "sourcePriceUSD": <India factory cost USD>,
+  "salePriceUSD": <${mpName} sale price USD>,
+  "evidenceBasis": "concrete demand signals matching the trend/channel focus above",
+  "indiaManufacturing": "easy|moderate|hard",
+  "scores": {
+    "demand": <0-100>,
+    "competition": <0-100, higher=less competition>,
+    "margin": <0-100>,
+    "trend": <${focus.trendStrength ? (trendScoreRange[focus.trendStrength] ?? '0-100') : '0-100 current momentum'}>,
+    "marketplaceFit": <0-100>,
+    "shipping": <0-100>,
+    "saturation": <0-100, higher=less saturated>
+  }
+}
+
+SCORE CALIBRATION: 50-69=average, 70-84=strong, 85-100=exceptional.
+Return JSON array only. No markdown, no explanation.`;
+}
+
 function discoveryPrompt(mpName: string, today: string, month: string, year: number): string {
   return `You are a senior cross-border eCommerce analyst specialising in India-to-global exports. Today: ${today} (${month} ${year}).
 
@@ -322,6 +389,11 @@ export async function POST(req: NextRequest) {
   try {
     const body        = await req.json().catch(() => ({}));
     const marketplace = (body.marketplace || 'amazon_us') as string;
+    const focus: FocusHints = {};
+    if (body.category)      focus.category      = String(body.category).slice(0, 200).trim();
+    if (body.trendStrength) focus.trendStrength  = String(body.trendStrength).trim();
+    if (body.trendSource)   focus.trendSource    = String(body.trendSource).trim();
+    const hasFocus = !!(focus.category || focus.trendStrength || focus.trendSource);
     const userId      = getUserId(req);
 
     // Guest-supplied free LLM keys (Groq / Mistral only) — sent as headers by the browser
@@ -372,7 +444,7 @@ export async function POST(req: NextRequest) {
     // ── Stage 1: Parallel multi-provider discovery ────────────────────────────
     const discMsgs = [
       { role: 'system' as const, content: 'Return only valid JSON arrays. No markdown, no explanation.' },
-      { role: 'user'   as const, content: discoveryPrompt(mpName, today, month, year) },
+      { role: 'user'   as const, content: hasFocus ? contextualDiscoveryPrompt(mpName, today, month, year, focus) : discoveryPrompt(mpName, today, month, year) },
     ];
 
     let providerResults: Array<{ provider: Provider; result: AiCandidate[] }> = [];

@@ -956,6 +956,45 @@ export default function OpportunitiesPage() {
     },
   });
 
+  const runScanMore = useMutation({
+    mutationFn: () => {
+      setSearchError(''); setSearching(true); setSearchStatus('');
+      return api.searches.create({
+        marketplace: mpFilter,
+        ...(catFilter      && { category:      catFilter }),
+        ...(srcFilter      && { trendSource:   srcFilter }),
+        ...(strengthFilter && { trendStrength: strengthFilter }),
+      });
+    },
+    onSuccess: (data: any) => {
+      setSearching(false);
+      if (data?.status === 'failed' || data?.error) {
+        setSearchError(data.error || 'Search failed'); setSearchStatus('');
+      } else {
+        const parts: string[] = [];
+        if (catFilter) parts.push(catFilter.split('>').pop()?.trim() ?? '');
+        if (strengthFilter) parts.push({ hot: '🔥 Hot', rising: '📈 Rising', stable: '📊 Stable', declining: '📉 Niche' }[strengthFilter] || strengthFilter);
+        const filterCtx = parts.filter(Boolean).join(' · ');
+        setSearchStatus(`✓ Found ${data?.count ?? 0}${filterCtx ? ` ${filterCtx}` : ''} opportunities`);
+        qc.invalidateQueries({ queryKey: ['opportunities'] });
+        setTimeout(() => setSearchStatus(''), 4000);
+      }
+    },
+    onError: (err: any) => {
+      setSearching(false); setSearchStatus('');
+      setSearchError(err?.message || 'Search failed — check Groq API key in Settings');
+    },
+  });
+
+  const hasActiveFilters = !!(catFilter || srcFilter || strengthFilter);
+  const scanMoreLabel = (() => {
+    const parts: string[] = [];
+    if (catFilter) parts.push(catFilter.split('>').pop()?.trim() ?? '');
+    if (strengthFilter) parts.push({ hot: '🔥 Hot', rising: '📈 Rising', stable: '📊 Stable', declining: '📉 Niche' }[strengthFilter] || strengthFilter);
+    if (srcFilter && !strengthFilter) parts.push({ search: 'Search', social: 'Social', curated: 'Curated', value: 'Value' }[srcFilter] || srcFilter);
+    return parts.length ? `Scan More ${parts.slice(0, 2).join(' · ')}` : 'Scan for More';
+  })();
+
   return (
     <div>
 
@@ -1684,14 +1723,16 @@ export default function OpportunitiesPage() {
               </Link>
             ) : (
               <button
-                onClick={() => runSearch.mutate()}
+                onClick={() => runScanMore.mutate()}
                 disabled={searching}
                 className={`relative overflow-hidden text-sm font-semibold
                   inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
                   min-w-[200px] min-h-[44px] select-none transition-all duration-300
                   ${searching
                     ? 'cursor-not-allowed animate-pulse-glow border border-violet-500/50'
-                    : 'border border-slate-200 text-slate-600 hover:border-violet-400 hover:text-violet-700 hover:bg-violet-50 disabled:opacity-40'}`}
+                    : hasActiveFilters
+                      ? 'border border-violet-400 text-violet-700 bg-violet-50 hover:bg-violet-100 hover:border-violet-500 disabled:opacity-40'
+                      : 'border border-slate-200 text-slate-600 hover:border-violet-400 hover:text-violet-700 hover:bg-violet-50 disabled:opacity-40'}`}
                 style={searching ? {
                   background: 'linear-gradient(135deg, rgba(109,40,217,0.85) 0%, rgba(79,70,229,0.85) 100%)',
                   boxShadow: '0 0 20px rgba(124,58,237,0.5), 0 4px 12px rgba(124,58,237,0.25)',
@@ -1726,13 +1767,18 @@ export default function OpportunitiesPage() {
                       <span className="text-[11px] text-violet-300 font-mono tabular-nums ml-1">{scanPct}%</span>
                     </>
                   ) : (
-                    <>Scan for More <span className="text-base leading-none">↓</span></>
+                    <>{scanMoreLabel} <span className="text-base leading-none">{hasActiveFilters ? '🎯' : '↓'}</span></>
                   )}
                 </span>
               </button>
             )}
           </div>
         </div>
+        {hasActiveFilters && !searching && (
+          <p className="text-[11px] text-violet-600 text-center">
+            AI will scan specifically for <span className="font-semibold">{scanMoreLabel.replace('Scan More ', '')}</span> products · <button className="underline underline-offset-2 hover:text-slate-500" onClick={() => { setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setRecFilter(''); }}>clear filters to scan broadly</button>
+          </p>
+        )}
         </div>
       )}
 
