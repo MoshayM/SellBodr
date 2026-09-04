@@ -25,22 +25,6 @@ const STEPS = [
   { n: '03', title: 'Launch with confidence', desc: 'Generate SEO-optimised titles, bullet points, keywords, and pricing in one click — then contact suppliers directly from within the platform.' },
 ];
 
-const PLANS = [
-  {
-    name: 'Starter', price: '$0', period: '',
-    desc: 'Start scouting — no credit card, no commitment',
-    features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
-    cta: 'Start scouting free', ctaHref: '/register', highlight: false,
-  },
-  {
-    name: 'Pro', price: '$18', period: '/mo',
-    desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
-    features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
-    cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
-  },
-];
-
-const AI_CREDIT_NOTE = 'AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy 10 credits for $5. Works on any plan.';
 
 const STATS = [
   { value: '76+', label: 'Marketplace platforms' },
@@ -112,6 +96,40 @@ export default function LandingPage() {
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
+
+  const [proPrice, setProPrice] = useState('18');
+  const [creditBundle, setCreditBundle] = useState({ size: '10', price: '5' });
+  useEffect(() => {
+    fetch('/api/v1/platform/settings')
+      .then(r => r.json())
+      .then((s: any) => {
+        if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
+        if (s.credit_bundle_size || s.credit_bundle_price_usd) {
+          setCreditBundle({
+            size:  String(s.credit_bundle_size        ?? '10'),
+            price: String(s.credit_bundle_price_usd   ?? '5'),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const plans = [
+    {
+      name: 'Starter', price: '$0', period: '',
+      desc: 'Start scouting — no credit card, no commitment',
+      features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
+      cta: 'Start scouting free', ctaHref: '/register', highlight: false,
+    },
+    {
+      name: 'Pro', price: `$${proPrice}`, period: '/mo',
+      desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
+      features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
+      cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
+    },
+  ];
+
+  const aiCreditNote = `AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy ${creditBundle.size} credits for $${creditBundle.price}. Works on any plan.`;
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -334,11 +352,11 @@ export default function LandingPage() {
               Start free. Scale at <span className="text-gradient">your own pace.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              5 free scans to start — no card needed. Go Pro for $18/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $5 for 10 credits.
+              {`5 free scans to start — no card needed. Go Pro for $${proPrice}/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $${creditBundle.price} for ${creditBundle.size} credits.`}
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {PLANS.map((p, i) => (
+            {plans.map((p, i) => (
               <motion.div
                 key={p.name}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
@@ -383,7 +401,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="mt-8 max-w-2xl mx-auto rounded-2xl border border-violet-100 bg-violet-50/60 px-6 py-4 text-center">
             <p className="text-sm font-semibold text-violet-700 mb-1">⚡ AI Generation Credits</p>
-            <p className="text-xs text-slate-500">{AI_CREDIT_NOTE}</p>
+            <p className="text-xs text-slate-500">{aiCreditNote}</p>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="text-center text-slate-400 text-xs mt-4">

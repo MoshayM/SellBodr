@@ -408,8 +408,12 @@ export async function POST(req: NextRequest) {
     const db = getDb();
     await ensureSchema(db);
 
-    // Quota: free authenticated users are limited to 5 searches total
-    const FREE_LIMIT = 5;
+    // Quota: read limit from platform settings (admin-configurable)
+    let FREE_LIMIT = 5;
+    try {
+      const limRes = await db.execute({ sql: `SELECT value FROM "PlatformSettings" WHERE key = 'free_scan_limit'`, args: [] });
+      if (limRes.rows.length) FREE_LIMIT = Number(limRes.rows[0].value as string) || 5;
+    } catch {}
     if (userId && userRole !== 'admin' && userPlan !== 'pro') {
       const countRes = await db.execute({
         sql: 'SELECT COUNT(*) as cnt FROM "Search" WHERE userId = ?',

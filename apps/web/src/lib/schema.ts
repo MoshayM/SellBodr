@@ -218,6 +218,12 @@ const MIGRATIONS = [
   `ALTER TABLE "Product" ADD COLUMN imageConfidence INTEGER DEFAULT 0`,
   // Source URL: actual marketplace listing page the image was found on
   `ALTER TABLE "Product" ADD COLUMN imageSourceUrl TEXT DEFAULT ''`,
+  // PlatformSettings — admin-configurable pricing and limits
+  `CREATE TABLE IF NOT EXISTS "PlatformSettings" (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updatedAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
@@ -230,6 +236,22 @@ export async function ensureSchema(db: Client): Promise<void> {
   // Must run individually — a failed batch aborts all; duplicate column errors are expected on re-runs.
   for (const sql of MIGRATIONS) {
     try { await db.execute(sql); } catch { /* column already exists — normal on re-runs */ }
+  }
+
+  // Seed default platform settings if not present
+  const DEFAULTS: Record<string, string> = {
+    pro_price_usd:           '18',
+    credit_bundle_size:      '10',
+    credit_bundle_price_usd: '5',
+    free_scan_limit:         '5',
+    free_results_per_scan:   '8',
+    free_supplier_cap:       '10',
+  };
+  for (const [key, value] of Object.entries(DEFAULTS)) {
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO "PlatformSettings" (key, value, updatedAt) VALUES (?, ?, ?)`,
+      args: [key, value, Date.now()],
+    });
   }
 
   // Seed marketplaces — batch all INSERT OR IGNORE in 1 HTTP call

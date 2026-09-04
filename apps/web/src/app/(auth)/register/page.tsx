@@ -1,30 +1,9 @@
 'use client';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
-
-const PLANS = [
-  {
-    id: 'free',
-    name: 'Starter',
-    price: '$0',
-    desc: 'Start scouting — no credit card needed',
-    features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Save products to wishlist'],
-    highlight: false,
-    startLabel: 'Start for Free',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '$18/mo',
-    desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
-    features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
-    highlight: true,
-    startLabel: 'Start Pro',
-  },
-];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -39,6 +18,28 @@ export default function RegisterPage() {
   const [showPw, setShowPw]   = useState(false);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [proPrice, setProPrice] = useState('18');
+  useEffect(() => {
+    fetch('/api/v1/platform/settings')
+      .then(r => r.json())
+      .then((s: any) => { if (s.pro_price_usd) setProPrice(String(s.pro_price_usd)); })
+      .catch(() => {});
+  }, []);
+
+  const plans = useMemo(() => [
+    {
+      id: 'free', name: 'Starter', price: '$0',
+      desc: 'Start scouting — no credit card needed',
+      features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Save products to wishlist'],
+      highlight: false, startLabel: 'Start for Free',
+    },
+    {
+      id: 'pro', name: 'Pro', price: `$${proPrice}/mo`,
+      desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
+      features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
+      highlight: true, startLabel: 'Start Pro',
+    },
+  ], [proPrice]);
 
   function setField(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => { setForm(f => ({ ...f, [field]: e.target.value })); setError(''); };
@@ -106,7 +107,7 @@ export default function RegisterPage() {
                 <p className="text-slate-500 text-sm">Free forever · Upgrade to Pro anytime · No credit card required to start</p>
               </div>
               <div className="grid sm:grid-cols-2 gap-5 mb-6">
-                {PLANS.map(p => (
+                {plans.map(p => (
                   <motion.button
                     key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className={`relative bg-white rounded-2xl p-6 text-left transition-all duration-200 border-2 shadow-sm ${
@@ -148,7 +149,7 @@ export default function RegisterPage() {
               </div>
               <motion.button onClick={() => setStep('form')} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                 className="btn-primary w-full text-base py-4 min-h-0">
-                {PLANS.find(p2 => p2.id === plan)?.startLabel ?? 'Continue'} →
+                {plans.find(p2 => p2.id === plan)?.startLabel ?? 'Continue'} →
               </motion.button>
               <p className="text-center text-slate-400 text-xs mt-4">
                 {plan === 'free' ? 'Free forever — upgrade to Pro anytime.' : 'Cancel Pro anytime. No setup fee.'}
@@ -162,7 +163,7 @@ export default function RegisterPage() {
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-black text-slate-900 mb-2">Create your account</h2>
                 <p className="text-slate-500 text-sm">
-                  {PLANS.find(p2 => p2.id === plan)?.name} plan ·{' '}
+                  {plans.find(p2 => p2.id === plan)?.name} plan ·{' '}
                   <button onClick={() => setStep('plan')} className="text-violet-600 hover:text-violet-700 transition-colors font-medium">
                     Change plan
                   </button>

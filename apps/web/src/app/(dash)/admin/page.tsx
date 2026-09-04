@@ -28,7 +28,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [providerDraft, setProviderDraft] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health' | 'marketplaces' | 'models'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health' | 'marketplaces' | 'models' | 'platform' | 'analytics'>('users');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
@@ -44,12 +44,19 @@ export default function AdminPage() {
   const [modelLoading, setModelLoading] = useState(false);
   const [modelDraft, setModelDraft] = useState<Record<string, string>>({});
   const [modelSaving, setModelSaving] = useState(false);
+  const [platformSettings, setPlatformSettings] = useState<Record<string,string>>({});
+  const [settingsDraft,    setSettingsDraft]    = useState<Record<string,string>>({});
+  const [settingsSaving,   setSettingsSaving]   = useState(false);
+  const [analytics,        setAnalytics]        = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   useEffect(() => {
     if (!isAdmin()) { router.replace('/opportunities'); return; }
     setReady(true);
     loadUsers();
     loadProviders();
+    loadPlatformSettings();
+    loadAnalytics();
   }, [router]);
 
   async function loadUsers() {
@@ -125,6 +132,33 @@ export default function AdminPage() {
       setModelRoutes(Array.isArray(data) ? data : []);
     } catch { setModelRoutes([]); }
     setModelLoading(false);
+  }
+
+  async function loadPlatformSettings() {
+    try {
+      const data = await api.admin.getSettings() as Record<string,string>;
+      setPlatformSettings(data);
+      setSettingsDraft(data);
+    } catch {}
+  }
+
+  async function savePlatformSettings() {
+    setSettingsSaving(true);
+    try {
+      await api.admin.updateSettings(settingsDraft);
+      setPlatformSettings({ ...settingsDraft });
+      showToast('Settings saved — changes are live');
+    } catch { showToast('Save failed'); }
+    setSettingsSaving(false);
+  }
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const data = await api.admin.getAnalytics();
+      setAnalytics(data);
+    } catch {}
+    setAnalyticsLoading(false);
   }
 
   async function saveModelRoutes() {
@@ -210,6 +244,12 @@ export default function AdminPage() {
         </button>
         <button className={`tab-pill${activeTab === 'models' ? ' active' : ''}`} onClick={() => { setActiveTab('models'); if (!modelRoutes.length) loadModelRoutes(); }}>
           Model Routing
+        </button>
+        <button className={`tab-pill${activeTab === 'platform' ? ' active' : ''}`} onClick={() => setActiveTab('platform')}>
+          ⚙️ Platform
+        </button>
+        <button className={`tab-pill${activeTab === 'analytics' ? ' active' : ''}`} onClick={() => setActiveTab('analytics')}>
+          📊 Analytics
         </button>
       </div>
 
@@ -625,6 +665,279 @@ export default function AdminPage() {
               <div><span className="text-white/60 font-medium">Haiku 4.5 / Groq</span> — Fast &amp; cheap. Good for high-volume discovery and fee calculations.</div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Platform Settings Tab ── */}
+      {activeTab === 'platform' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white">Platform Settings</h2>
+              <p className="text-xs text-white/40 mt-0.5">Changes apply immediately across the entire application</p>
+            </div>
+            <button
+              onClick={savePlatformSettings}
+              disabled={settingsSaving || JSON.stringify(settingsDraft) === JSON.stringify(platformSettings)}
+              className="text-xs font-semibold px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-40 transition-all">
+              {settingsSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+
+          {/* Pricing */}
+          <div className="card-dark rounded-xl p-5 space-y-4">
+            <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Pricing</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { key: 'pro_price_usd',           label: 'Pro Plan Price (USD/mo)', prefix: '$', min: 1,  max: 999, step: 1  },
+                { key: 'credit_bundle_price_usd',  label: 'Credit Bundle Price (USD)', prefix: '$', min: 1, max: 999, step: 1 },
+                { key: 'credit_bundle_size',        label: 'Credits per Bundle',  prefix: '',  min: 1,  max: 1000, step: 1 },
+              ].map(({ key, label, prefix, min, max, step }) => (
+                <div key={key} className="space-y-1.5">
+                  <label className="text-xs text-white/50">{label}</label>
+                  <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus-within:border-violet-500/60">
+                    {prefix && <span className="text-white/40 text-sm">{prefix}</span>}
+                    <input
+                      type="number" min={min} max={max} step={step}
+                      value={settingsDraft[key] ?? ''}
+                      onChange={e => setSettingsDraft(d => ({ ...d, [key]: e.target.value }))}
+                      className="bg-transparent text-white text-sm font-mono w-full outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-white/30">
+                    Current live: {prefix}{platformSettings[key] ?? '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Plan Limits */}
+          <div className="card-dark rounded-xl p-5 space-y-4">
+            <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Free Plan Limits</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { key: 'free_scan_limit',       label: 'Max Scans (lifetime)',    min: 1,  max: 1000 },
+                { key: 'free_results_per_scan', label: 'Results per Scan',        min: 1,  max: 50   },
+                { key: 'free_supplier_cap',     label: 'Suppliers Shown (max)',   min: 1,  max: 200  },
+              ].map(({ key, label, min, max }) => (
+                <div key={key} className="space-y-1.5">
+                  <label className="text-xs text-white/50">{label}</label>
+                  <div className="space-y-1">
+                    <input
+                      type="range" min={min} max={max}
+                      value={settingsDraft[key] ?? min}
+                      onChange={e => setSettingsDraft(d => ({ ...d, [key]: e.target.value }))}
+                      className="w-full accent-violet-500"
+                    />
+                    <div className="flex justify-between text-[10px] text-white/40">
+                      <span>{min}</span>
+                      <span className="font-bold text-white/70">{settingsDraft[key] ?? '—'}</span>
+                      <span>{max}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-white/30">Live: {platformSettings[key] ?? '—'}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Preview */}
+          <div className="card-dark rounded-xl p-5">
+            <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-3">Live Preview (what users see)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              {[
+                { label: 'Pro price', value: `$${settingsDraft.pro_price_usd ?? '—'}/mo` },
+                { label: 'Credit bundle', value: `${settingsDraft.credit_bundle_size ?? '—'} credits` },
+                { label: 'Bundle cost', value: `$${settingsDraft.credit_bundle_price_usd ?? '—'}` },
+                { label: 'Free scans', value: `${settingsDraft.free_scan_limit ?? '—'} total` },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-white/5 rounded-lg p-3">
+                  <div className="text-lg font-black text-violet-400">{value}</div>
+                  <div className="text-[10px] text-white/40 mt-1">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Analytics Tab ── */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white">Analytics & Metrics</h2>
+              <p className="text-xs text-white/40 mt-0.5">Real-time business intelligence</p>
+            </div>
+            <button onClick={loadAnalytics} disabled={analyticsLoading}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:bg-white/5 transition-all disabled:opacity-40">
+              {analyticsLoading ? '↻ Loading…' : '↻ Refresh'}
+            </button>
+          </div>
+
+          {analyticsLoading && !analytics && (
+            <div className="text-center py-16 text-white/30 text-sm">Loading analytics…</div>
+          )}
+
+          {analytics && (
+            <>
+              {/* KPI Row 1 — Revenue */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'MRR',         value: `$${(analytics.mrr ?? 0).toLocaleString()}`,         sub: 'Monthly Recurring Revenue',    color: 'text-emerald-400' },
+                  { label: 'ARR',         value: `$${(analytics.arr ?? 0).toLocaleString()}`,         sub: 'Annual Run Rate',              color: 'text-emerald-300' },
+                  { label: 'Total Rev.',  value: `$${(analytics.totalRevenue ?? 0).toLocaleString()}`, sub: 'MRR + credit revenue',         color: 'text-violet-400'  },
+                  { label: 'Credit Rev.', value: `$${(analytics.creditRevenue ?? 0).toFixed(2)}`,     sub: 'From credit purchases',        color: 'text-cyan-400'    },
+                ].map(kpi => (
+                  <div key={kpi.label} className="card-dark rounded-xl p-4">
+                    <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* KPI Row 2 — Users */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Total Users',    value: analytics.totalUsers    ?? 0, sub: 'All registered',          color: 'text-white'        },
+                  { label: 'Pro Users',      value: analytics.proUsers      ?? 0, sub: 'Paying subscribers',      color: 'text-violet-400'   },
+                  { label: 'New (7d)',       value: analytics.newUsers7d    ?? 0, sub: 'Registrations this week', color: 'text-blue-400'     },
+                  { label: 'Active (30d)',   value: analytics.activeUsers30d ?? 0, sub: 'Logged in this month',   color: 'text-emerald-400'  },
+                ].map(kpi => (
+                  <div key={kpi.label} className="card-dark rounded-xl p-4">
+                    <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value.toLocaleString()}</div>
+                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* KPI Row 3 — Rates & Credits */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Conversion',    value: `${analytics.conversionRate ?? 0}%`,  sub: 'Free → Pro',                color: 'text-amber-400'  },
+                  { label: 'Churn Est.',    value: `${analytics.churnRate      ?? 0}%`,  sub: 'Inactive 30d+ free users',  color: 'text-red-400'    },
+                  { label: 'Credits Sold',  value: analytics.creditsPurchased ?? 0,         sub: 'Total credits purchased',   color: 'text-cyan-400'   },
+                  { label: 'Credits Used',  value: analytics.creditsConsumed  ?? 0,         sub: 'Total credits consumed',    color: 'text-cyan-300'   },
+                ].map(kpi => (
+                  <div key={kpi.label} className="card-dark rounded-xl p-4">
+                    <div className={`text-2xl font-black ${kpi.color}`}>{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</div>
+                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Charts row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Searches per day */}
+                <div className="card-dark rounded-xl p-5">
+                  <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Searches — Last 30 Days</h3>
+                  <div className="h-40 flex items-end gap-[2px]">
+                    {(analytics.searchesByDay ?? []).map((d: any) => {
+                      const max = Math.max(...(analytics.searchesByDay ?? []).map((x: any) => x.count), 1);
+                      const h = Math.round((d.count / max) * 100);
+                      return (
+                        <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+                          <div
+                            className="w-full rounded-sm bg-violet-500/60 hover:bg-violet-400/80 transition-all"
+                            style={{ height: `${Math.max(h, 2)}%` }}
+                          />
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-white/70 bg-black/80 px-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
+                            {d.date.slice(5)}: {d.count}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between text-[9px] text-white/25 mt-2">
+                    <span>{analytics.searchesByDay?.[0]?.date?.slice(5) ?? ''}</span>
+                    <span className="text-white/40 font-medium">Total: {analytics.totalSearches}</span>
+                    <span>{analytics.searchesByDay?.at(-1)?.date?.slice(5) ?? ''}</span>
+                  </div>
+                </div>
+
+                {/* User growth */}
+                <div className="card-dark rounded-xl p-5">
+                  <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">New Registrations — Last 30 Days</h3>
+                  <div className="h-40 flex items-end gap-[2px]">
+                    {(analytics.userGrowthByDay ?? []).map((d: any) => {
+                      const max = Math.max(...(analytics.userGrowthByDay ?? []).map((x: any) => x.count), 1);
+                      const h = Math.round((d.count / max) * 100);
+                      return (
+                        <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+                          <div
+                            className="w-full rounded-sm bg-emerald-500/60 hover:bg-emerald-400/80 transition-all"
+                            style={{ height: `${Math.max(h, 2)}%` }}
+                          />
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-white/70 bg-black/80 px-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
+                            {d.date.slice(5)}: {d.count}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between text-[9px] text-white/25 mt-2">
+                    <span>{analytics.userGrowthByDay?.[0]?.date?.slice(5) ?? ''}</span>
+                    <span className="text-white/40 font-medium">Total registered: {analytics.totalUsers}</span>
+                    <span>{analytics.userGrowthByDay?.at(-1)?.date?.slice(5) ?? ''}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Marketplaces */}
+              {(analytics.topMarketplaces ?? []).length > 0 && (
+                <div className="card-dark rounded-xl p-5">
+                  <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Top Marketplaces by Scans</h3>
+                  <div className="space-y-2">
+                    {(analytics.topMarketplaces as any[]).map((mp: any) => {
+                      const maxCount = analytics.topMarketplaces[0].count;
+                      return (
+                        <div key={mp.name} className="flex items-center gap-3">
+                          <div className="text-xs font-mono text-white/70 w-20 shrink-0">{mp.name}</div>
+                          <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                            <div className="h-full rounded-full bg-violet-500/70" style={{ width: `${Math.round((mp.count / maxCount) * 100)}%` }} />
+                          </div>
+                          <div className="text-xs text-white/50 tabular-nums w-8 text-right">{mp.count}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Summary metrics table */}
+              <div className="card-dark rounded-xl p-5">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Key Business Metrics Summary</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                  {[
+                    ['MRR', `$${(analytics.mrr ?? 0).toLocaleString()}`],
+                    ['ARR', `$${(analytics.arr ?? 0).toLocaleString()}`],
+                    ['Pro subscribers', analytics.proUsers],
+                    ['Conversion rate (free→pro)', `${analytics.conversionRate}%`],
+                    ['Estimated churn rate', `${analytics.churnRate}%`],
+                    ['Total AI scans run', analytics.totalSearches],
+                    ['Avg scans/user', analytics.avgSearchesPerUser],
+                    ['Credits purchased', analytics.creditsPurchased],
+                    ['Credits consumed', analytics.creditsConsumed],
+                    ['Avg credits/user', analytics.avgCreditsPerUser],
+                    ['Credit revenue', `$${(analytics.creditRevenue ?? 0).toFixed(2)}`],
+                    ['Total revenue (est.)', `$${(analytics.totalRevenue ?? 0).toFixed(2)}`],
+                    ['New users (last 7d)', analytics.newUsers7d],
+                    ['New users (last 30d)', analytics.newUsers30d],
+                    ['Active users (last 30d)', analytics.activeUsers30d],
+                  ].map(([k, v]) => (
+                    <div key={String(k)} className="flex items-center justify-between py-1.5 border-b border-white/5">
+                      <span className="text-white/50 text-xs">{k}</span>
+                      <span className="text-white font-mono text-xs font-semibold">{String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

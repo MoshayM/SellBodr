@@ -206,6 +206,12 @@ export const api = {
       request<{ success: boolean }>('/admin/users', { method: 'PATCH', body: JSON.stringify({ userId, ...changes }) }),
     getAuditLog: (limit = 50) => request<any[]>(`/admin/audit-log?limit=${limit}`),
     getSystemHealth: () => request<any>('/admin/health'),
+    getSettings: () =>
+      authFetch('/admin/settings'),
+    updateSettings: (settings: Record<string, string | number>) =>
+      authFetch('/admin/settings', { method: 'POST', body: JSON.stringify(settings) }),
+    getAnalytics: () =>
+      authFetch('/admin/analytics'),
   },
   team: {
     list:   ()                                    => request<any[]>('/team/members'),
@@ -214,6 +220,9 @@ export const api = {
     update: (userId: string, role: string)        => request<any>(`/team/members/${userId}`, { method: 'PATCH', body: JSON.stringify({ role }) }),
     getInvites: ()                                => request<any[]>('/team/invites'),
     cancelInvite: (inviteId: string)              => request<{ success: boolean }>(`/team/invites/${inviteId}`, { method: 'DELETE' }),
+  },
+  platform: {
+    getSettings: () => fetch('/api/v1/platform/settings').then(r => r.json()),
   },
   settings: {
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
