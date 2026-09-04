@@ -207,11 +207,11 @@ export const api = {
     getAuditLog: (limit = 50) => request<any[]>(`/admin/audit-log?limit=${limit}`),
     getSystemHealth: () => request<any>('/admin/health'),
     getSettings: () =>
-      authFetch('/admin/settings'),
+      request<Record<string, string>>('/admin/settings'),
     updateSettings: (settings: Record<string, string | number>) =>
-      authFetch('/admin/settings', { method: 'POST', body: JSON.stringify(settings) }),
+      request<{ ok: boolean }>('/admin/settings', { method: 'POST', body: JSON.stringify(settings) }),
     getAnalytics: () =>
-      authFetch('/admin/analytics'),
+      request<any>('/admin/analytics'),
   },
   team: {
     list:   ()                                    => request<any[]>('/team/members'),
