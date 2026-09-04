@@ -1,5 +1,8 @@
 ﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '174138705900-5i74hmcr6mrf2og5j054c4r6aqck0b3d.apps.googleusercontent.com',
+  },
   transpilePackages: ['@sellbodr/core'],
   experimental: {
     serverComponentsExternalPackages: [],
