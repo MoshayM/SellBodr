@@ -31,3 +31,6 @@ DIM TXT/
 # (does NOT affect apps/web/public/icons/ or branding/ which are already tracked)
 /*.png
 /*.PNG
+
+# Google OAuth credentials — never commit
+client_secret*.json
