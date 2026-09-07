@@ -412,8 +412,9 @@ export default function GuidePage() {
 
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs text-white/50 border border-white/10 mb-5">
-              <span className="w-1.5 h-1.5 bg-violet-400 rounded-full" />
+            <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold border mb-5"
+              style={{ background: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)', color: '#a78bfa' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#a78bfa' }} />
               SellBodr User Guide
             </div>
             <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">
@@ -466,7 +467,7 @@ export default function GuidePage() {
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.5, delay: 0.05 }}
               onViewportEnter={() => setActive(section.id)}
-              className={`rounded-2xl border bg-gradient-to-br ${section.color} ${section.border} p-6 sm:p-8`}
+              className={`animate-card-in stagger-${Math.min(si + 1, 7)} rounded-2xl border bg-gradient-to-br ${section.color} ${section.border} p-6 sm:p-8`}
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="text-3xl">{section.icon}</div>
@@ -516,9 +517,7 @@ export default function GuidePage() {
               Free account takes 30 seconds. No credit card. Start finding products to sell globally today.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/register"
-                className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg shadow-violet-500/25 transition-all hover:shadow-violet-500/40"
-                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+              <Link href="/register" className="btn-primary text-sm">
                 Create Free Account →
               </Link>
               <Link href="/opportunities"

@@ -357,15 +357,15 @@ export default function LoginPage() {
 
       {/* ── Left brand panel (desktop only) ─────────────────────── */}
       <div className="hidden lg:flex flex-col justify-between w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
-        style={{ background: 'linear-gradient(145deg, #4c1d95 0%, #6d28d9 30%, #7c3aed 55%, #4338ca 80%, #312e81 100%)' }}>
+        style={{ background: 'linear-gradient(145deg, #0D1B35 0%, #0F2040 35%, #162240 65%, #0D1B35 100%)' }}>
 
         {/* Decorative orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%)', transform: 'translate(35%, -35%)' }} />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(219,39,119,0.18), transparent 70%)', transform: 'translate(-30%, 30%)' }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.08), transparent 70%)', transform: 'translate(-50%, -50%)' }} />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.28), transparent 70%)', transform: 'translate(35%, -35%)' }} />
+        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.22), transparent 70%)', transform: 'translate(-30%, 30%)' }} />
+        <div className="absolute top-1/2 left-1/2 w-72 h-72 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%)', transform: 'translate(-50%, -50%)' }} />
         {/* Dot-grid texture */}
         <div className="absolute inset-0 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.07) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
@@ -373,13 +373,15 @@ export default function LoginPage() {
         {/* Logo wordmark */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="relative z-10 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)' }}>
-            <SellBodrMark size={26} gradId="nav-mark" />
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 shrink-0"
+            style={{ filter: 'drop-shadow(0 0 10px rgba(99,102,241,0.9)) brightness(1.2)' }} />
+          <div>
+            <div className="text-white font-black text-[15px] tracking-tight leading-none">SellBodr</div>
+            <div className="text-[8px] font-semibold uppercase tracking-[0.18em] leading-none mt-0.5"
+              style={{ color: 'rgba(255,255,255,0.3)' }}>eCommerce Intelligence</div>
           </div>
-          <span className="text-white font-black text-xl tracking-tight">SellBodr</span>
           <span className="ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(255,255,255,0.15)', color: '#e9d5ff', border: '1px solid rgba(255,255,255,0.2)', letterSpacing: '0.08em' }}>
+            style={{ background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.35)', letterSpacing: '0.08em' }}>
             AI
           </span>
         </motion.div>
@@ -473,13 +475,14 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right form panel ─────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10 bg-slate-50">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10" style={{ background: '#F4F6FB' }}>
 
         {/* Mobile header logo */}
         <div className="lg:hidden mb-7 flex flex-col items-center gap-2">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', boxShadow: '0 8px 24px rgba(124,58,237,0.35)' }}>
-            <SellBodrMark size={38} gradId="mobile-logo-mark" />
+            style={{ background: 'linear-gradient(135deg, #0D1B35, #162240)', boxShadow: '0 8px 24px rgba(99,102,241,0.35)', border: '1px solid rgba(99,102,241,0.3)' }}>
+            <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.8)) brightness(1.2)' }} />
           </div>
           <span className="text-slate-900 font-black text-xl tracking-tight">SellBodr</span>
           <span className="text-slate-500 text-xs">Cross-Border eCommerce Intelligence</span>
@@ -488,8 +491,8 @@ export default function LoginPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
           className="w-full max-w-[420px]">
 
-          <div className="bg-white rounded-3xl p-7 sm:p-9 border border-slate-200"
-            style={{ boxShadow: '0 4px 6px -1px rgba(15,23,42,0.04), 0 16px 40px -8px rgba(15,23,42,0.10)' }}>
+          <div className="bg-white rounded-3xl p-7 sm:p-9 border border-slate-200/80"
+            style={{ boxShadow: '0 4px 6px -1px rgba(15,23,42,0.05), 0 20px 48px -8px rgba(15,23,42,0.13)' }}>
 
             <div className="text-center mb-7">
               <h2 className="text-2xl font-black text-slate-900 mb-1">Welcome back</h2>

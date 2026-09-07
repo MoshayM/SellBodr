@@ -73,38 +73,44 @@ export default function AiKeysPage() {
     statuses.find(s => s.id === id) ?? { id, isSet: false, masked: null, source: 'none' };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-48">
-      <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+    <div className="flex flex-col items-center justify-center h-64 gap-4">
+      <div className="w-10 h-10 rounded-2xl bg-violet-100 flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+      <p className="text-sm text-white/40">Loading provider keys…</p>
     </div>
   );
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-7">
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-2xl font-bold text-white">AI Provider Keys</h1>
-          <span className="text-[9px] font-bold px-2 py-1 rounded-full bg-red-500/15 text-red-300 border border-red-500/20 uppercase tracking-widest">Admin only</span>
+      {/* Page header */}
+      <div className="mb-7 animate-card-in">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 border border-red-200/60 mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+          <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Admin Only</span>
         </div>
-        <p className="text-sm text-white/40 leading-relaxed">
+        <h1 className="text-slate-900 font-black text-2xl leading-tight">AI Provider Keys</h1>
+        <p className="text-slate-500 text-sm mt-1 leading-relaxed">
           Server-side API keys used by the AI agent pipeline. Keys are stored encrypted in the database and never exposed client-side. Env-var keys take precedence over DB keys.
         </p>
       </div>
 
       {error && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-300">
+        <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-300 animate-card-in flex items-center gap-2">
+          <span className="shrink-0 text-base">⚠️</span>
           {error}
         </div>
       )}
 
       <div className="space-y-3">
-        {PROVIDERS.map(prov => {
+        {PROVIDERS.map((prov, idx) => {
           const status = getStatus(prov.id);
           const isEditing = prov.id in editing;
           const isSaving = saving === prov.id;
           const isSaved = saved === prov.id;
 
           return (
-            <div key={prov.id} className="card-dark rounded-xl p-4 sm:p-5">
+            <div key={prov.id} className={`card-dark rounded-xl p-4 sm:p-5 animate-card-in stagger-${Math.min(idx + 1, 10)}`}>
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -156,7 +162,7 @@ export default function AiKeysPage() {
                   />
                   <button onClick={() => save(prov.id)}
                     disabled={isSaving || !editing[prov.id]?.trim()}
-                    className="text-xs px-4 py-2 rounded-lg font-semibold bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors whitespace-nowrap">
+                    className={`btn-primary text-xs px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${isSaved ? 'bg-emerald-600 hover:bg-emerald-500' : ''}`}>
                     {isSaving ? '…' : isSaved ? '✓ Saved' : 'Save'}
                   </button>
                   {isEditing && status.isSet && (
@@ -172,10 +178,13 @@ export default function AiKeysPage() {
         })}
       </div>
 
-      <p className="mt-6 text-xs text-white/50 leading-relaxed">
-        Changes apply immediately to new AI pipeline runs. Existing queued jobs use the keys that were active at queue time.
-        ENV VAR keys (set in Vercel / server environment) cannot be updated here.
-      </p>
+      <div className="mt-6 card-dark rounded-xl p-4 flex items-start gap-3 animate-card-in stagger-9">
+        <span className="text-slate-400 text-base shrink-0 mt-0.5">ℹ️</span>
+        <p className="text-xs text-white/50 leading-relaxed">
+          Changes apply immediately to new AI pipeline runs. Existing queued jobs use the keys that were active at queue time.
+          ENV VAR keys (set in Vercel / server environment) cannot be updated here — they take precedence over DB keys.
+        </p>
+      </div>
     </div>
   );
 }

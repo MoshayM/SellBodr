@@ -16,21 +16,21 @@ const REPORT_STAGES = [
 type Report = { id: string; product: any; marketplace: any; content: any; generatedAt: string };
 
 function ReportView({ content }: { content: any }) {
-  if (!content || typeof content !== 'object') return <p className="text-sm text-white/40">No content</p>;
+  if (!content || typeof content !== 'object') return <p className="text-sm text-slate-400">No content</p>;
   return (
     <div className="space-y-5">
       {Object.entries(content).filter(([, v]) => v !== null && v !== undefined).map(([key, val]) => (
         <div key={key}>
-          <div className="text-[10px] leading-none font-semibold text-white/55 uppercase tracking-widest mb-2">
+          <div className="text-[10px] leading-none font-semibold text-slate-400 uppercase tracking-widest mb-2">
             {key.replace(/_/g, ' ')}
           </div>
           {typeof val === 'string' ? (
-            <p className="text-sm text-white/70 leading-relaxed">{val}</p>
+            <p className="text-sm text-slate-600 leading-relaxed">{val}</p>
           ) : Array.isArray(val) ? (
             <ul className="space-y-1.5">
               {(val as any[]).map((item, i) => (
-                <li key={i} className="text-sm text-white/70 flex gap-2 leading-snug">
-                  <span className="text-violet-400 shrink-0">•</span>
+                <li key={i} className="text-sm text-slate-600 flex gap-2 leading-snug">
+                  <span className="text-violet-500 shrink-0">•</span>
                   <span>{typeof item === 'string' ? item : JSON.stringify(item)}</span>
                 </li>
               ))}
@@ -38,14 +38,14 @@ function ReportView({ content }: { content: any }) {
           ) : typeof val === 'object' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {Object.entries(val as object).map(([k, v]) => (
-                <div key={k} className="bg-white/5 rounded-lg px-3 py-2.5">
-                  <div className="text-xs text-white/50 capitalize leading-snug mb-0.5">{k.replace(/_/g, ' ')}</div>
-                  <div className="text-sm font-medium text-white leading-snug">{String(v)}</div>
+                <div key={k} className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5">
+                  <div className="text-xs text-slate-400 capitalize leading-snug mb-0.5">{k.replace(/_/g, ' ')}</div>
+                  <div className="text-sm font-medium text-slate-800 leading-snug">{String(v)}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm font-medium text-white leading-snug">{String(val)}</p>
+            <p className="text-sm font-medium text-slate-800 leading-snug">{String(val)}</p>
           )}
         </div>
       ))}
@@ -119,41 +119,51 @@ export default function ReportsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-6">
+      <div className="flex items-start justify-between gap-3 mb-7 animate-card-in">
         <div>
-          <h1 className="text-2xl font-bold text-white">Reports</h1>
-          <p className="text-sm text-white/40 mt-0.5 leading-snug">Generate full opportunity intelligence reports</p>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+            <span>📊</span> Reports
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 leading-tight">Opportunity Reports</h1>
+          <p className="text-sm text-slate-500 mt-1 leading-snug">Generate full intelligence reports for your scouted opportunities</p>
         </div>
         {(opps as any[]).length > 0 && (
-          <ExportMenu
-            getData={() => opps as any[]}
-            label="opportunities"
-            align="right"
-          />
+          <div className="shrink-0 mt-1">
+            <ExportMenu
+              getData={() => opps as any[]}
+              label="opportunities"
+              align="right"
+            />
+          </div>
         )}
       </div>
 
+      {/* Empty state */}
       {(opps as any[]).length === 0 && reports.length === 0 && (
-        <div className="card-dark rounded-xl p-12 sm:p-14 text-center">
-          <div className="text-5xl mb-4">📊</div>
-          <p className="font-semibold text-white mb-1">No data yet</p>
-          <p className="text-sm text-white/40 mb-5">Run a search on the Opportunities page first</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-12 sm:p-16 text-center animate-card-in stagger-1 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center text-3xl mx-auto mb-4">
+            📊
+          </div>
+          <p className="font-bold text-slate-900 text-base mb-1">No opportunities yet</p>
+          <p className="text-sm text-slate-500 mb-6">Run a Scout search on the Opportunities page first to generate reports</p>
           <a href="/opportunities" className="btn-primary text-sm">Go to Opportunities →</a>
         </div>
       )}
 
+      {/* Opportunity cards grid */}
       {(opps as any[]).length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          {(opps as any[]).map((opp: any) => {
+          {(opps as any[]).map((opp: any, idx: number) => {
             const done = reports.some(r => r.id === opp.id);
             const isThisGenerating = generating === opp.id;
+            const stagger = `stagger-${Math.min(idx + 1, 10)}` as string;
             return (
-              <div key={opp.id} className="card-dark rounded-xl p-4 flex items-center justify-between gap-3">
+              <div key={opp.id} className={`bg-white border border-slate-200 hover:border-indigo-200 rounded-xl p-4 flex items-center justify-between gap-3 transition-all duration-200 hover:shadow-md hover:shadow-indigo-500/5 animate-card-in ${stagger}`}>
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-white truncate leading-snug">{opp.product?.title}</div>
-                  <div className="text-xs text-white/40 mt-1 flex items-center gap-2 leading-snug">
-                    <span className="font-mono">{opp.marketplace?.code?.toUpperCase()}</span>
-                    {done && <span className="text-green-400">✓ Generated</span>}
+                  <div className="text-sm font-semibold text-slate-900 truncate leading-snug">{opp.product?.title}</div>
+                  <div className="text-xs text-slate-400 mt-1 flex items-center gap-2 leading-snug">
+                    <span className="font-mono bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px]">{opp.marketplace?.code?.toUpperCase()}</span>
+                    {done && <span className="text-green-600 font-medium flex items-center gap-0.5">✓ Generated</span>}
                   </div>
                 </div>
                 <button onClick={() => generate(opp)}
@@ -162,8 +172,8 @@ export default function ReportsPage() {
                     isThisGenerating
                       ? 'cursor-not-allowed'
                       : done
-                        ? 'border border-white/10 text-white/50 hover:bg-white/5 disabled:opacity-50'
-                        : 'bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50'
+                        ? 'border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50'
+                        : 'bg-violet-600 text-white hover:bg-violet-500 shadow-sm shadow-violet-500/20 disabled:opacity-50'
                   }`}
                   style={isThisGenerating ? { background: 'linear-gradient(135deg,rgba(109,40,217,0.95) 0%,rgba(79,70,229,0.95) 100%)', boxShadow: '0 0 14px rgba(124,58,237,0.55)' } : {}}>
                   {isThisGenerating && (
@@ -192,16 +202,21 @@ export default function ReportsPage() {
         </div>
       )}
 
+      {/* Generated reports list */}
       {reports.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-white/60 leading-snug">Generated Reports</h2>
-          {reports.map(r => (
-            <div key={r.id} className="card-dark rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-white/10 gap-3">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-snug">Generated Reports</h2>
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">{reports.length}</span>
+          </div>
+          {reports.map((r, idx) => (
+            <div key={r.id} className={`bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:border-indigo-200 transition-all duration-200 animate-card-in stagger-${Math.min(idx + 1, 10)}`}>
+              <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-slate-100 gap-3">
                 <div className="min-w-0">
-                  <div className="font-semibold text-white truncate leading-snug">{r.product?.title}</div>
-                  <div className="text-xs text-white/40 mt-1 leading-snug">
-                    {r.marketplace?.code?.toUpperCase()} · {r.generatedAt}
+                  <div className="font-semibold text-slate-900 truncate leading-snug">{r.product?.title}</div>
+                  <div className="text-xs text-slate-400 mt-1 leading-snug">
+                    <span className="font-mono bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px] mr-1.5">{r.marketplace?.code?.toUpperCase()}</span>
+                    {r.generatedAt}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -214,17 +229,17 @@ export default function ReportsPage() {
                     align="right"
                   />
                   <button onClick={() => copyReport(r)}
-                    className="text-xs leading-none px-2.5 py-1.5 border border-white/10 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-colors">
+                    className="text-xs leading-none px-2.5 py-1.5 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors">
                     Copy
                   </button>
                   <button onClick={() => setExpanded(e => e === r.id ? null : r.id)}
-                    className="text-xs leading-none px-2.5 py-1.5 bg-white/10 rounded-lg text-white/70 hover:bg-white/15 whitespace-nowrap transition-colors">
+                    className="text-xs leading-none px-2.5 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600 hover:bg-indigo-100 whitespace-nowrap transition-colors font-medium">
                     {expanded === r.id ? 'Close' : 'View'}
                   </button>
                 </div>
               </div>
               {expanded === r.id && (
-                <div className="px-4 sm:px-5 py-5">
+                <div className="px-4 sm:px-5 py-5 bg-slate-50/50">
                   <ReportView content={r.content} />
                 </div>
               )}

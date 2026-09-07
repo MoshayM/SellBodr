@@ -232,13 +232,17 @@ export default function ResearchPage() {
   if (isLoading) {
     return (
       <div>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-0.5">AI-validated product opportunities with marketplace intelligence</p>
+        {/* Header */}
+        <div className="mb-6 animate-card-in">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+            <span>🔬</span> Research
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
+          <p className="text-sm text-slate-500 mt-1">AI-validated product opportunities with marketplace intelligence</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="bg-white rounded-xl overflow-hidden border border-slate-200 animate-pulse">
+            <div key={i} className={`bg-white rounded-xl overflow-hidden border border-slate-200 animate-pulse animate-card-in stagger-${i}`}>
               <div className="h-44 bg-slate-100" />
               <div className="p-4 space-y-2.5">
                 <div className="h-4 bg-slate-200 rounded w-3/4" />
@@ -255,14 +259,20 @@ export default function ResearchPage() {
   if (allOpps.length === 0) {
     return (
       <div>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-0.5">AI-validated product opportunities with marketplace intelligence</p>
+        {/* Header */}
+        <div className="mb-6 animate-card-in">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+            <span>🔬</span> Research
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
+          <p className="text-sm text-slate-500 mt-1">AI-validated product opportunities with marketplace intelligence</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-12 sm:p-16 text-center">
-          <div className="text-5xl mb-4">🔬</div>
-          <p className="font-semibold text-slate-900 mb-1">No research data yet</p>
-          <p className="text-sm text-slate-500 mb-5">Run a Scout search first to generate AI-validated research data</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 sm:p-16 text-center shadow-sm animate-card-in stagger-1">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-3xl mx-auto mb-4">
+            🔬
+          </div>
+          <p className="font-bold text-slate-900 text-base mb-1">No research data yet</p>
+          <p className="text-sm text-slate-500 mb-6">Run a Scout search first to generate AI-validated research data</p>
           <Link href="/opportunities" className="btn-primary text-sm">Start Scouting →</Link>
         </div>
       </div>
@@ -271,15 +281,23 @@ export default function ResearchPage() {
 
   return (
     <div>
-      <div className="mb-5 flex items-start justify-between gap-4">
+      {/* Header */}
+      <div className="mb-5 flex items-start justify-between gap-4 animate-card-in">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-0.5">AI-validated opportunities · {filtered.length} of {allOpps.length} shown</p>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+            <span>🔬</span> Research
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            AI-validated opportunities
+            <span className="ml-1.5 text-indigo-600 font-semibold">{filtered.length}</span>
+            <span className="text-slate-400"> of {allOpps.length} shown</span>
+          </p>
         </div>
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 bg-white border border-slate-200 rounded-xl shadow-sm animate-card-in stagger-1">
         {/* Category */}
         <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SELECT_CLS}>
           <option value="">All Categories</option>
@@ -329,16 +347,19 @@ export default function ResearchPage() {
 
         {hasFilters && (
           <button onClick={clearFilters}
-            className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 hover:bg-white">
+            className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 hover:bg-slate-50 font-medium">
             Clear ✕
           </button>
         )}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <div className="text-4xl mb-3">🔍</div>
-          <p className="text-sm text-slate-500 mb-3">No products match your filters</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm animate-card-in">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl mx-auto mb-3">
+            🔍
+          </div>
+          <p className="text-sm font-semibold text-slate-700 mb-1">No products match your filters</p>
+          <p className="text-xs text-slate-400 mb-4">Try adjusting the filters above</p>
           <button onClick={clearFilters} className="btn-secondary text-xs">Clear Filters</button>
         </div>
       ) : (

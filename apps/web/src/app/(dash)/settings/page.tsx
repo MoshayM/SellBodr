@@ -589,35 +589,46 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
+      {/* Page header */}
+      <div className="mb-7 animate-card-in">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-100 border border-violet-200/60 mb-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+          <span className="text-[10px] font-bold text-violet-600 uppercase tracking-widest">Account</span>
+        </div>
+        <h1 className="text-slate-900 font-black text-2xl leading-tight">Settings</h1>
         {user?.email
-          ? <p className="text-sm text-white/40 mt-0.5">{user.email}</p>
-          : isGuest && <p className="text-sm text-white/40 mt-0.5">Browsing as guest</p>
+          ? <p className="text-slate-500 text-sm mt-1">{user.email}</p>
+          : isGuest && <p className="text-slate-500 text-sm mt-1">Browsing as guest — sign in to unlock all settings</p>
         }
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-white/10 mb-6 overflow-x-auto">
+      <div className="flex gap-0.5 border-b border-slate-200 mb-6 overflow-x-auto animate-card-in stagger-1">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+            className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-all rounded-t-lg ${
               tab === t.key
-                ? 'border-violet-500 text-violet-400'
-                : 'border-transparent text-white/50 hover:text-white'
+                ? 'text-violet-700 bg-violet-50/80 border border-b-0 border-violet-200/70 -mb-px pb-[11px]'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
             }`}>
-            <span>{t.icon}</span>{t.label}
+            <span className="text-base leading-none">{t.icon}</span>
+            <span>{t.label}</span>
+            {tab === t.key && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-500 rounded-full" />
+            )}
           </button>
         ))}
       </div>
 
-      {tab === 'ai-keys'      && isUserAdmin && <AiProviderKeysTab />}
-      {tab === 'api-keys'     && isUserAdmin && <ApiKeysPanel isGuest={isGuest} />}
-      {tab === 'white-label'  && isUserAdmin && <WhiteLabelPanel user={user} />}
-      {tab === 'marketplaces' && <MarketplacesTab />}
-      {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
-      {tab === 'guide'        && <UserGuideTab />}
-      {tab === 'data-export'  && <DataExportPanel user={user} isGuest={isGuest} />}
+      <div className="animate-card-in stagger-2">
+        {tab === 'ai-keys'      && isUserAdmin && <AiProviderKeysTab />}
+        {tab === 'api-keys'     && isUserAdmin && <ApiKeysPanel isGuest={isGuest} />}
+        {tab === 'white-label'  && isUserAdmin && <WhiteLabelPanel user={user} />}
+        {tab === 'marketplaces' && <MarketplacesTab />}
+        {tab === 'security'     && (isGuest ? <GuestSecurityTab /> : <SecurityTab />)}
+        {tab === 'guide'        && <UserGuideTab />}
+        {tab === 'data-export'  && <DataExportPanel user={user} isGuest={isGuest} />}
+      </div>
     </div>
   );
 }
@@ -799,10 +810,15 @@ function AiProviderKeysTab() {
 
   return (
     <form onSubmit={handleSave} className="space-y-3">
-      <p className="text-sm text-white/50 mb-4">
-        Keys are stored securely in our database and override server environment variables.
-        Leave blank to keep the current value; clear and save to remove a key.
-      </p>
+      <div className="card-dark rounded-xl p-4 mb-1 flex items-start gap-3">
+        <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
+          <span className="text-violet-600 text-sm">🔑</span>
+        </div>
+        <p className="text-sm text-white/50 leading-relaxed">
+          Keys are stored securely in our database and override server environment variables.
+          Leave blank to keep the current value; clear and save to remove a key.
+        </p>
+      </div>
       {ALL_PROVIDERS.map(p => {
         const status = statuses.find(s => s.id === p.id);
         const isSet  = status?.isSet ?? false;
@@ -930,13 +946,16 @@ function MarketplacesTab() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-white/50">
-          Toggle built-in marketplaces on/off, or add your own custom marketplace. Built-in ones cannot be deleted (🔒).
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 mb-0.5">Marketplace Configuration</h3>
+          <p className="text-sm text-white/50">
+            Toggle built-in marketplaces on/off, or add your own custom marketplace. Built-in ones cannot be deleted (🔒).
+          </p>
+        </div>
         <button onClick={() => { setShowForm(s => !s); setError(''); }}
-          className="btn-primary text-sm shrink-0 ml-4">
-          {showForm ? '✕ Cancel' : '+ Add'}
+          className="btn-primary text-sm shrink-0">
+          {showForm ? '✕ Cancel' : '+ Add Marketplace'}
         </button>
       </div>
 
@@ -1111,7 +1130,8 @@ const GUIDE_STEPS = [
 function UserGuideTab() {
   return (
     <div className="space-y-4">
-      <div className="mb-6">
+      <div className="mb-4">
+        <h3 className="text-sm font-bold text-slate-800 mb-0.5">Getting Started Guide</h3>
         <p className="text-sm text-white/50">
           A step-by-step walkthrough of every major feature in SellBodr.
         </p>
@@ -1158,12 +1178,14 @@ function UserGuideTab() {
 function SecurityTab() {
   return (
     <div className="space-y-8">
-      <PinSection />
-      <div className="border-t border-white/10 pt-8">
+      <div className="animate-card-in stagger-1">
+        <PinSection />
+      </div>
+      <div className="border-t border-slate-200 pt-8 animate-card-in stagger-2">
         <FingerprintSection />
       </div>
-      <div className="border-t border-white/10 pt-8">
-        <h3 className="text-sm font-semibold text-white mb-1">Password</h3>
+      <div className="border-t border-slate-200 pt-8 animate-card-in stagger-3">
+        <h3 className="text-sm font-bold text-slate-800 mb-1">Password</h3>
         <p className="text-xs text-white/40 mb-4">Change your account password.</p>
         <PasswordForm />
       </div>

@@ -101,16 +101,19 @@ export default function KeywordIntelligencePage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-white mb-1">Keyword Intelligence</h1>
-        <p className="text-sm text-white/40">Search volume, competition and type breakdown for any opportunity</p>
+      <div className="mb-6 animate-card-in">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100 text-violet-600 text-xs font-semibold mb-3">
+          🔤 Keyword Intelligence
+        </div>
+        <h1 className="text-2xl font-black text-slate-900">Keyword Intelligence</h1>
+        <p className="text-slate-500 text-sm mt-1">Search volume, competition and type breakdown for any opportunity</p>
       </div>
 
       {/* Opportunity selector */}
-      <div className="card-dark p-4 mb-4">
-        <label className="text-xs text-white/40 block mb-1.5">Select Opportunity</label>
+      <div className="card-dark p-4 mb-4 animate-card-in stagger-1">
+        <label className="text-xs text-slate-500 font-semibold block mb-1.5">Select Opportunity</label>
         <select value={selectedOpp} onChange={e => setSelectedOpp(e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none">
+          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 transition-colors">
           <option value="">&#8212; Pick an opportunity to load keywords &#8212;</option>
           {opps.map((o: any) => (
             <option key={o.id} value={o.id}>{o.product?.title} ({o.marketplace?.code?.toUpperCase()})</option>
@@ -120,12 +123,12 @@ export default function KeywordIntelligencePage() {
 
       {selectedOpp && kwLoading && (
         <div className="flex items-center justify-center py-16">
-          <div className="animate-spin text-3xl text-violet-400">&#x27F3;</div>
+          <div className="animate-spin text-3xl text-indigo-400">&#x27F3;</div>
         </div>
       )}
 
       {selectedOpp && kwData && (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-card-in stagger-2">
           {/* Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
@@ -134,10 +137,10 @@ export default function KeywordIntelligencePage() {
               { label: 'Long-tail',  value: summary.longTail,  color: '#10b981' },
               { label: 'Backend',    value: summary.backend,   color: '#64748b' },
               { label: 'Low Comp.',  value: summary.lowComp,   color: '#f59e0b' },
-            ].map(card => (
-              <div key={card.label} className="card-dark p-3 text-center">
+            ].map((card, ci) => (
+              <div key={card.label} className={`card-dark p-3 text-center animate-card-in stagger-${Math.min(ci + 1, 6)}`}>
                 <div className="text-xl font-bold" style={{ color: card.color }}>{card.value}</div>
-                <div className="text-[11px] text-white/40 mt-0.5">{card.label}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">{card.label}</div>
               </div>
             ))}
           </div>
@@ -147,7 +150,7 @@ export default function KeywordIntelligencePage() {
             <div className="flex flex-wrap gap-1.5">
               {(['all','Primary','Secondary','Long-tail','Backend'] as const).map(f => (
                 <button key={f} onClick={() => setFilter(f)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-all ${filter === f ? 'border-violet-500/50 bg-violet-500/15 text-violet-300' : 'border-white/10 text-white/40 hover:border-white/25'}`}>
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-all ${filter === f ? 'border-violet-400 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'}`}>
                   {f === 'all' ? 'All types' : f}
                 </button>
               ))}
@@ -155,12 +158,12 @@ export default function KeywordIntelligencePage() {
             <div className="flex flex-wrap gap-1.5 ml-auto">
               {(['all','Low','Medium','High'] as const).map(f => (
                 <button key={f} onClick={() => setCompFilter(f)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-all ${compFilter === f ? 'border-indigo-500/50 bg-indigo-500/15 text-indigo-300' : 'border-white/10 text-white/40 hover:border-white/25'}`}>
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-all ${compFilter === f ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'}`}>
                   {f === 'all' ? 'Any competition' : `${f} comp.`}
                 </button>
               ))}
               <button onClick={copyAll}
-                className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white transition-colors">
+                className="text-xs px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors shadow-sm">
                 {copied ? '&#x2713; Copied' : '&#x1F4CB; Copy all'}
               </button>
             </div>
@@ -169,23 +172,23 @@ export default function KeywordIntelligencePage() {
           {/* Keyword mobile cards */}
           <div className="md:hidden space-y-1.5">
             {filtered.length === 0 ? (
-              <div className="card-dark rounded-xl p-8 text-center text-white/50 text-sm">No keywords match filters</div>
+              <div className="card-dark rounded-xl p-8 text-center text-slate-400 text-sm">No keywords match filters</div>
             ) : filtered.map((kw, i) => (
               <div key={i} className="card-dark rounded-xl px-4 py-3 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-white/85 leading-snug truncate">{kw.keyword}</div>
+                  <div className="text-sm font-semibold text-slate-800 leading-snug truncate">{kw.keyword}</div>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded"
                       style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: typeTextColor(kw.type) }}>
                       {kw.type}
                     </span>
-                    <span className="text-[11px] text-white/40">Vol: <span className="font-semibold" style={{ color: volColor(kw.volume) }}>{kw.volume}</span></span>
-                    <span className="text-[11px] text-white/40">Comp: <span className="font-semibold" style={{ color: compColor(kw.competition) }}>{kw.competition}</span></span>
+                    <span className="text-[11px] text-slate-400">Vol: <span className="font-semibold" style={{ color: volColor(kw.volume) }}>{kw.volume}</span></span>
+                    <span className="text-[11px] text-slate-400">Comp: <span className="font-semibold" style={{ color: compColor(kw.competition) }}>{kw.competition}</span></span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-[10px] text-white/35 leading-none mb-0.5">CPC</div>
-                  <div className="text-xs font-semibold text-white/60">{kw.cpc}</div>
+                  <div className="text-[10px] text-slate-400 leading-none mb-0.5">CPC</div>
+                  <div className="text-xs font-semibold text-slate-600">{kw.cpc}</div>
                 </div>
               </div>
             ))}
@@ -195,20 +198,20 @@ export default function KeywordIntelligencePage() {
           <div className="hidden md:block card-dark overflow-hidden">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-white/8">
-                  <th className="px-4 py-2.5 text-left text-white/55 font-semibold">Keyword</th>
-                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Type</th>
-                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Volume</th>
-                  <th className="px-4 py-2.5 text-center text-white/55 font-semibold">Competition</th>
-                  <th className="px-4 py-2.5 text-right text-white/55 font-semibold">Est. CPC</th>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="px-4 py-2.5 text-left text-slate-500 font-semibold">Keyword</th>
+                  <th className="px-4 py-2.5 text-center text-slate-500 font-semibold">Type</th>
+                  <th className="px-4 py-2.5 text-center text-slate-500 font-semibold">Volume</th>
+                  <th className="px-4 py-2.5 text-center text-slate-500 font-semibold">Competition</th>
+                  <th className="px-4 py-2.5 text-right text-slate-500 font-semibold">Est. CPC</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-white/50">No keywords match filters</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No keywords match filters</td></tr>
                 ) : filtered.map((kw, i) => (
-                  <tr key={i} className="border-b border-white/4 hover:bg-white/2 transition-colors">
-                    <td className="px-4 py-2.5 text-white/75 font-medium">{kw.keyword}</td>
+                  <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-2.5 text-slate-700 font-medium">{kw.keyword}</td>
                     <td className="px-4 py-2.5 text-center">
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold"
                         style={{ background: typeColor(kw.type), border: `1px solid ${typeBorder(kw.type)}`, color: typeTextColor(kw.type) }}>
@@ -217,7 +220,7 @@ export default function KeywordIntelligencePage() {
                     </td>
                     <td className="px-4 py-2.5 text-center font-semibold" style={{ color: volColor(kw.volume) }}>{kw.volume}</td>
                     <td className="px-4 py-2.5 text-center font-semibold" style={{ color: compColor(kw.competition) }}>{kw.competition}</td>
-                    <td className="px-4 py-2.5 text-right text-white/50">{kw.cpc}</td>
+                    <td className="px-4 py-2.5 text-right text-slate-400">{kw.cpc}</td>
                   </tr>
                 ))}
               </tbody>
@@ -226,17 +229,17 @@ export default function KeywordIntelligencePage() {
 
           {/* Backend copy block */}
           {allKeywords.filter(k => k.type === 'Backend').length > 0 && (
-            <div className="card-dark p-4">
+            <div className="card-dark p-4 border border-slate-100">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-xs font-semibold text-white/40 uppercase tracking-widest">Backend Search Terms (ready to paste)</div>
+                <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Backend Search Terms (ready to paste)</div>
                 <button onClick={() => {
                   navigator.clipboard.writeText(allKeywords.filter(k => k.type === 'Backend').map(k => k.keyword).join(' '));
                   setCopied(true); setTimeout(() => setCopied(false), 2000);
-                }} className="text-xs px-2.5 py-1 rounded border border-white/10 text-white/40 hover:text-white transition-colors">
+                }} className="text-xs px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-800 transition-colors shadow-sm">
                   {copied ? '&#x2713;' : 'Copy'}
                 </button>
               </div>
-              <p className="text-xs text-white/55 font-mono leading-relaxed break-all">
+              <p className="text-xs text-slate-600 font-mono leading-relaxed break-all bg-slate-50 rounded-lg p-3">
                 {allKeywords.filter(k => k.type === 'Backend').map(k => k.keyword).join(' ')}
               </p>
             </div>
@@ -245,9 +248,9 @@ export default function KeywordIntelligencePage() {
       )}
 
       {selectedOpp && !kwLoading && !kwData && (
-        <div className="card-dark p-8 text-center">
+        <div className="card-dark p-8 text-center animate-card-in stagger-2">
           <div className="text-3xl mb-2">🔤</div>
-          <p className="text-white/40 text-sm">No keywords yet. Open this opportunity and generate Launch Assets first.</p>
+          <p className="text-slate-400 text-sm">No keywords yet. Open this opportunity and generate Launch Assets first.</p>
         </div>
       )}
     </div>

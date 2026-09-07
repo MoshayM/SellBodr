@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const [proPrice, setProPrice] = useState('18');
+
   useEffect(() => {
     fetch('/api/v1/platform/settings')
       .then(r => r.json())
@@ -60,14 +61,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: '#F4F6FB' }}>
 
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 mb-10">
-        <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9"
-          style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.5))' }} />
-        <span className="text-slate-900 font-bold text-xl">SellBodr</span>
-      </Link>
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <Link href="/" className="flex items-center gap-2.5 mb-10 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+            style={{ background: 'linear-gradient(135deg,#0D1B35,#162240)', boxShadow: '0 4px 16px rgba(99,102,241,0.35)', border: '1px solid rgba(99,102,241,0.25)' }}>
+            <img src="/icons/icon.svg" alt="SellBodr" className="w-6 h-6"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(99,102,241,0.8)) brightness(1.2)' }} />
+          </div>
+          <div>
+            <div className="text-slate-900 font-black text-[15px] tracking-tight leading-none">SellBodr</div>
+            <div className="text-[9px] font-semibold uppercase tracking-[0.15em] text-slate-400 leading-none mt-0.5">eCommerce Intelligence</div>
+          </div>
+        </Link>
+      </motion.div>
 
       <div className="w-full max-w-3xl">
 
@@ -82,11 +91,14 @@ export default function RegisterPage() {
                 <div className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                   isActive ? 'text-slate-900' : isDone ? 'text-emerald-600' : 'text-slate-400'
                 }`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
-                    isActive ? 'bg-violet-600 border-violet-600 text-white'
-                    : isDone  ? 'bg-emerald-500 border-emerald-500 text-white'
-                    : 'bg-white border-slate-300 text-slate-400'
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    isActive ? 'text-white' : isDone ? 'text-white' : 'bg-white border-2 border-slate-300 text-slate-400'
+                  }`}
+                    style={isActive
+                      ? { background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }
+                      : isDone
+                      ? { background: 'linear-gradient(135deg,#10B981,#059669)' }
+                      : {}}>
                     {isDone ? '✓' : i + 1}
                   </div>
                   <span className="hidden sm:block">{label}</span>
@@ -110,18 +122,25 @@ export default function RegisterPage() {
                 {plans.map(p => (
                   <motion.button
                     key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className={`relative bg-white rounded-2xl p-6 text-left transition-all duration-200 border-2 shadow-sm ${
+                    className={`relative bg-white rounded-2xl p-6 text-left transition-all duration-200 border-2 overflow-hidden ${
                       plan === p.id
-                        ? p.highlight ? 'border-violet-500 shadow-violet-100' : 'border-emerald-400 shadow-emerald-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? p.highlight ? 'border-violet-500 shadow-xl shadow-violet-100/80' : 'border-emerald-400 shadow-xl shadow-emerald-50'
+                        : 'border-slate-200 hover:border-slate-300 shadow-sm'
                     }`}>
+                    {/* Top accent line */}
+                    <div className="absolute top-0 left-0 right-0 h-[2px]"
+                      style={{ background: plan === p.id
+                        ? p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#10B981,transparent)'
+                        : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
                     {p.id === 'free' && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm"
+                        style={{ background: 'linear-gradient(135deg,#059669,#10B981)' }}>
                         START HERE
                       </div>
                     )}
                     {p.highlight && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-3 py-0.5 rounded-full shadow-sm"
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 10px rgba(99,102,241,0.4)' }}>
                         MOST POPULAR
                       </div>
                     )}
@@ -140,7 +159,7 @@ export default function RegisterPage() {
                     <ul className="space-y-1.5">
                       {p.features.map(f => (
                         <li key={f} className="flex items-center gap-1.5 text-xs text-slate-600">
-                          <span className="text-emerald-500 text-sm font-bold">✓</span>{f}
+                          <span className="text-emerald-500 text-sm font-bold flex-shrink-0">✓</span>{f}
                         </li>
                       ))}
                     </ul>
@@ -170,7 +189,10 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-3xl p-7 sm:p-8 shadow-xl shadow-slate-200/80 border border-slate-200">
+              <div className="bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 overflow-hidden relative"
+                style={{ boxShadow: '0 4px 6px -1px rgba(15,23,42,0.05), 0 20px 48px -8px rgba(15,23,42,0.13)' }}>
+                <div className="absolute top-0 left-0 right-0 h-[2px]"
+                  style={{ background: 'linear-gradient(90deg,transparent,rgba(99,102,241,0.5),transparent)' }} />
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Full name</label>

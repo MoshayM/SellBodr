@@ -509,8 +509,14 @@ img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; 
   .card:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.14), 0 2px 8px rgba(0,0,0,0.05); }
   .card-dark {
     @apply bg-white rounded-[20px];
-    border: 1px solid #E8EDFB;
-    box-shadow: 0 2px 20px rgba(99,102,241,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    border: 1px solid rgba(226,232,240,0.9);
+    box-shadow: 0 2px 16px rgba(99,102,241,0.07), 0 1px 4px rgba(0,0,0,0.03);
+    transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, border-color 0.2s ease;
+  }
+  .card-dark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(99,102,241,0.13), 0 2px 8px rgba(0,0,0,0.05);
+    border-color: rgba(99,102,241,0.18);
   }
 
   /* ── Tab pill navigation ─────────────────────────────────── */
@@ -768,4 +774,72 @@ img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; 
 /* ── Enhanced header shadow ─────────────────────────────────── */
 .dash-area header {
   box-shadow: 0 1px 0 #E8EDFB, 0 4px 20px rgba(79,70,229,0.04) !important;
+}
+
+/* ── Dashboard main content area background ─────────────────── */
+.dash-area main {
+  background: #F4F6FB;
+}
+
+/* ── Page title block — consistent across all dash pages ─────── */
+.page-hero {
+  margin-bottom: 1.5rem;
+}
+.page-hero h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.page-hero p {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin-top: 0.25rem;
+}
+
+/* ── Auth page wrapper — consistent light bg ────────────────── */
+.auth-page {
+  min-height: 100vh;
+  background: #F4F6FB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+/* ── Separator line ─────────────────────────────────────────── */
+.section-divider {
+  border: none;
+  border-top: 1px solid #E8EDFB;
+  margin: 1.5rem 0;
+}
+
+/* ── Stat tile — used in page summaries ─────────────────────── */
+.stat-tile {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(226,232,240,0.9);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 8px rgba(99,102,241,0.06), 0 1px 3px rgba(0,0,0,0.03);
+  transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.2s ease;
+}
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.12), 0 2px 6px rgba(0,0,0,0.04);
+}
+.stat-tile .stat-value {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1;
+}
+.stat-tile .stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
 }

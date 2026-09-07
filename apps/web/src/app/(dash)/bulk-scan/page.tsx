@@ -77,17 +77,20 @@ export default function BulkScanPage() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-white mb-1">Bulk Scan</h1>
-        <p className="text-sm text-white/40">Scan multiple products at once — up to 20 keywords per run</p>
+      <div className="mb-6 animate-card-in">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-3">
+          ⚡ Bulk Scan
+        </div>
+        <h1 className="text-2xl font-black text-slate-900">Bulk Scan</h1>
+        <p className="text-slate-500 text-sm mt-1">Scan multiple products at once — up to 20 keywords per run</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         {/* Input */}
-        <div className="md:col-span-2 card-dark p-4 space-y-3">
+        <div className="md:col-span-2 card-dark p-4 space-y-3 animate-card-in stagger-1">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-white/50 font-semibold uppercase tracking-widest">Keywords (one per line)</label>
-            <span className={`text-xs ${tooMany ? 'text-rose-400' : keywords.length > 15 ? 'text-amber-400' : 'text-white/50'}`}>
+            <label className="text-xs text-slate-500 font-semibold uppercase tracking-widest">Keywords (one per line)</label>
+            <span className={`text-xs font-semibold ${tooMany ? 'text-rose-500' : keywords.length > 15 ? 'text-amber-500' : 'text-slate-400'}`}>
               {keywords.length} / 20
             </span>
           </div>
@@ -96,17 +99,17 @@ export default function BulkScanPage() {
             onChange={e => setText(e.target.value)}
             placeholder={'brass diyas\nhandmade candles\nyoga mat cork\ncopper water bottle\njute tote bag'}
             rows={10}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-violet-500/50 resize-none font-mono"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-300 outline-none focus:border-indigo-400 transition-colors resize-none font-mono"
           />
-          {tooMany && <p className="text-xs text-rose-400">Maximum 20 keywords per scan. Remove {keywords.length - 20} keyword{keywords.length - 20 !== 1 ? 's' : ''}.</p>}
+          {tooMany && <p className="text-xs text-rose-500 font-medium">Maximum 20 keywords per scan. Remove {keywords.length - 20} keyword{keywords.length - 20 !== 1 ? 's' : ''}.</p>}
         </div>
 
         {/* Config + go */}
         <div className="space-y-3">
-          <div className="card-dark p-4">
-            <label className="text-xs text-white/40 mb-1.5 block">Target Marketplace</label>
+          <div className="card-dark p-4 animate-card-in stagger-2">
+            <label className="text-xs text-slate-500 font-semibold mb-1.5 block">Target Marketplace</label>
             <select value={marketplace} onChange={e => setMkt(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none">
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 transition-colors">
               {MARKETPLACES.map(m => <option key={m}>{m}</option>)}
             </select>
           </div>
@@ -139,48 +142,48 @@ export default function BulkScanPage() {
             </span>
           </button>
 
-          <div className="card-dark p-4 text-xs text-white/55 space-y-1.5">
-            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> AI scores all products in parallel</div>
-            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Results ranked by Opportunity Score</div>
-            <div className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Click any result to open full analysis</div>
+          <div className="card-dark p-4 text-xs text-slate-500 space-y-1.5 animate-card-in stagger-3">
+            <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> AI scores all products in parallel</div>
+            <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Results ranked by Opportunity Score</div>
+            <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Click any result to open full analysis</div>
           </div>
         </div>
       </div>
 
       {/* Results loading */}
       {scan.isPending && (
-        <div className="card-dark p-12 text-center">
+        <div className="card-dark p-12 text-center animate-card-in">
           <div className="text-5xl mb-4 animate-pulse leading-none">{BULK_STAGES[bulkStep]?.icon}</div>
-          <p className="text-white font-semibold mb-1">{BULK_STAGES[bulkStep]?.label}…</p>
-          <p className="text-white/50 text-sm mb-5">Running AI scan on {keywords.length} product{keywords.length !== 1 ? 's' : ''}</p>
-          <div className="max-w-xs mx-auto h-1.5 rounded-full bg-white/5 overflow-hidden">
+          <p className="text-slate-800 font-semibold mb-1">{BULK_STAGES[bulkStep]?.label}…</p>
+          <p className="text-slate-400 text-sm mb-5">Running AI scan on {keywords.length} product{keywords.length !== 1 ? 's' : ''}</p>
+          <div className="max-w-xs mx-auto h-1.5 rounded-full bg-slate-100 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 rounded-full transition-all duration-[900ms] ease-out" style={{ width: `${bulkPct}%` }} />
           </div>
-          <p className="text-[11px] text-violet-300/60 font-mono mt-2">{bulkPct}%</p>
+          <p className="text-[11px] text-indigo-400 font-mono mt-2">{bulkPct}%</p>
         </div>
       )}
 
       {!scan.isPending && results.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <div className="text-sm text-white/50">{results.length} result{results.length !== 1 ? 's' : ''} — ranked by Opportunity Score</div>
+            <div className="text-sm text-slate-500 font-medium">{results.length} result{results.length !== 1 ? 's' : ''} — ranked by Opportunity Score</div>
           </div>
           {results
             .sort((a: any, b: any) => (b.score?.opportunity || 0) - (a.score?.opportunity || 0))
             .map((opp: any, i: number) => {
               const score = Math.round(opp.score?.opportunity || 0);
-              const scoreColor = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+              const scoreColor = score >= 70 ? '#059669' : score >= 50 ? '#d97706' : '#dc2626';
               return (
                 <div key={opp.id || i}
                   onClick={() => opp.id && router.push(`/opportunities/${opp.id}`)}
-                  className={`card-dark rounded-xl p-4 ${opp.id ? 'cursor-pointer hover:bg-white/3 transition-colors' : ''}`}>
+                  className={`card-dark rounded-xl p-4 animate-card-in stagger-${Math.min(i + 1, 6)} ${opp.id ? 'cursor-pointer hover:shadow-md transition-all' : ''}`}>
                   {/* Top row: rank + title + score ring */}
                   <div className="flex items-start gap-3">
-                    <div className="text-lg font-black text-white/30 w-6 shrink-0 mt-0.5">{i + 1}</div>
+                    <div className="text-lg font-black text-slate-300 w-6 shrink-0 mt-0.5">{i + 1}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-white leading-snug line-clamp-2">{opp.product?.title || opp.keyword}</div>
+                      <div className="text-sm font-semibold text-slate-800 leading-snug line-clamp-2">{opp.product?.title || opp.keyword}</div>
                       {opp.marketplace?.name && (
-                        <div className="text-[11px] text-white/40 mt-0.5 leading-none">{opp.marketplace.name}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5 leading-none">{opp.marketplace.name}</div>
                       )}
                     </div>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 shrink-0"
@@ -189,10 +192,10 @@ export default function BulkScanPage() {
                     </div>
                   </div>
                   {/* Bottom row: recommendation + profit */}
-                  <div className="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-white/6 ml-9">
+                  <div className="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 ml-9">
                     <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence || 0)} />
                     {opp.profitModel?.netProfit > 0 && (
-                      <span className="text-xs font-bold text-emerald-400 tabular-nums">
+                      <span className="text-xs font-bold text-emerald-600 tabular-nums">
                         +${(opp.profitModel.netProfit / 100).toFixed(2)}/unit
                       </span>
                     )}
