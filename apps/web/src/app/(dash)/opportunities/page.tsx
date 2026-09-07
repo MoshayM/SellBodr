@@ -1382,25 +1382,20 @@ export default function OpportunitiesPage() {
                       </span>
                       <span className="text-[10px] text-slate-400">{cc ? flag(cc) : '🛒'} {platformOf(mpCode)}</span>
                     </div>
-                    {/* Signal + score + profit + action */}
+                    {/* Signal + profit + score-badge + action */}
                     <div className="flex items-center justify-between gap-2">
                       <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
-                      <div className="flex items-center gap-2">
-                        {/* Score — compact bar + number, positioned near View → */}
-                        <div className="flex flex-col items-end gap-0.5">
-                          <div className="flex items-center gap-1">
-                            <div className="w-10 h-1 rounded-full bg-slate-200 overflow-hidden">
-                              <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: scoreColor }} />
-                            </div>
-                            <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: scoreColor }}>{score}</span>
-                          </div>
-                          <span className="text-[8px] uppercase tracking-widest font-semibold text-slate-400 leading-none">score</span>
-                        </div>
+                      <div className="flex items-center gap-1.5">
                         {netMinor != null && (
                           <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
                           </span>
                         )}
+                        {/* Score badge — flush left of View button */}
+                        <span className="text-[11px] font-black tabular-nums px-1.5 py-1 rounded-md leading-none"
+                          style={{ color: scoreColor, backgroundColor: scoreColor + '18', border: `1px solid ${scoreColor}40` }}>
+                          {score}
+                        </span>
                         <Link href={`/opportunities/${opp.id}`}
                           onClick={e => e.stopPropagation()}
                           className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
