@@ -1318,7 +1318,9 @@ export default function OpportunitiesPage() {
             return (
               <div key={opp.id}
                 className="card-dark rounded-xl overflow-hidden transition-all duration-200"
-                style={isOpen ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.5)' } : undefined}>
+                style={isOpen
+                  ? { boxShadow: 'inset 3px 0 0 rgba(124,58,237,0.6)' }
+                  : { boxShadow: `inset 3px 0 0 ${scoreColor}55` }}>
 
                 {/* Card header — always visible, tap to expand */}
                 <button className="w-full text-left p-3.5 flex items-center gap-3"
@@ -1356,12 +1358,8 @@ export default function OpportunitiesPage() {
                     </div>
                   </div>
 
-                  {/* Score ring + chevron */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2"
-                      style={{ color: scoreColor, borderColor: scoreColor+'60', backgroundColor: scoreColor+'12' }}>
-                      {score}
-                    </div>
+                  {/* Chevron — score is shown in the action row */}
+                  <div className="shrink-0 pl-1">
                     <svg className={`w-4 h-4 dark:text-white/30 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1384,10 +1382,20 @@ export default function OpportunitiesPage() {
                       </span>
                       <span className="text-[10px] text-slate-400">{cc ? flag(cc) : '🛒'} {platformOf(mpCode)}</span>
                     </div>
-                    {/* Signal + profit + action */}
+                    {/* Signal + score + profit + action */}
                     <div className="flex items-center justify-between gap-2">
                       <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
                       <div className="flex items-center gap-2">
+                        {/* Score — compact bar + number, positioned near View → */}
+                        <div className="flex flex-col items-end gap-0.5">
+                          <div className="flex items-center gap-1">
+                            <div className="w-10 h-1 rounded-full bg-slate-200 overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: scoreColor }} />
+                            </div>
+                            <span className="text-[11px] font-bold tabular-nums leading-none" style={{ color: scoreColor }}>{score}</span>
+                          </div>
+                          <span className="text-[8px] uppercase tracking-widest font-semibold text-slate-400 leading-none">score</span>
+                        </div>
                         {netMinor != null && (
                           <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
