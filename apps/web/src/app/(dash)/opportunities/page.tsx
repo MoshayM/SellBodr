@@ -1382,24 +1382,26 @@ export default function OpportunitiesPage() {
                       </span>
                       <span className="text-[10px] text-slate-400">{cc ? flag(cc) : '🛒'} {platformOf(mpCode)}</span>
                     </div>
-                    {/* Signal + profit + score-badge + action */}
+                    {/* Signal + score + profit + action */}
                     <div className="flex items-center justify-between gap-2">
-                      <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                      <div className="flex items-center gap-1.5">
+                        <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
+                        {/* Score pill — right next to the launch/recommendation badge */}
+                        <span className="text-[11px] font-black tabular-nums px-1.5 py-0.5 rounded-md leading-none"
+                          style={{ color: scoreColor, backgroundColor: scoreColor + '18', border: `1px solid ${scoreColor}40` }}>
+                          {score}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-1.5">
                         {netMinor != null && (
                           <span className={`text-xs font-bold tabular-nums ${netMinor > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
                           </span>
                         )}
-                        {/* Score embedded inside the View button */}
                         <Link href={`/opportunities/${opp.id}`}
                           onClick={e => e.stopPropagation()}
-                          className="inline-flex items-center gap-0 text-[11px] font-bold rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap overflow-hidden">
-                          <span className="px-2 py-1.5 font-black tabular-nums"
-                            style={{ backgroundColor: 'rgba(0,0,0,0.18)', color: scoreColor === '#10b981' ? '#6ee7b7' : scoreColor === '#f59e0b' ? '#fcd34d' : '#fca5a5' }}>
-                            {score}
-                          </span>
-                          <span className="px-2.5 py-1.5">View →</span>
+                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
+                          View →
                         </Link>
                       </div>
                     </div>
