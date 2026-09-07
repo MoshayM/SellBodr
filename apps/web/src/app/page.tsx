@@ -219,7 +219,7 @@ export default function LandingPage() {
         style={{
           opacity: heroOpacity,
           y: heroY,
-          background: 'linear-gradient(180deg,#0D1B35 0%,#162240 12%,#263a6e 24%,#F0EEFF 52%,#EEF2FF 66%,#FFFFFF 82%)',
+          background: 'linear-gradient(180deg,#0D1B35 0%,#111d38 18%,#162240 36%,#1c2d50 52%,#243460 65%,#ddd8ff 80%,#EEF2FF 90%,#FFFFFF 100%)',
         } as any}
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
 
@@ -250,12 +250,13 @@ export default function LandingPage() {
           <motion.h1
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8 }}
             className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6"
-            style={{ color: '#ffffff' }}>
+            style={{ color: '#ffffff', textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
             Find Products
             <br />
             <span style={{
-              background: 'linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 45%,#f9a8d4 85%)',
+              background: 'linear-gradient(135deg,#818cf8 0%,#a78bfa 45%,#f472b6 85%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              filter: 'drop-shadow(0 2px 12px rgba(129,140,248,0.5))',
             }}>
               in India.
             </span>
@@ -267,7 +268,7 @@ export default function LandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
             className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.72)' }}>
+            style={{ color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 12px rgba(0,0,0,0.5)' }}>
             AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified suppliers, and a Launch / Hold / Reject verdict in under 60 seconds.
           </motion.p>
 
@@ -279,7 +280,7 @@ export default function LandingPage() {
             </Link>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
-            className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.38)' }}>
+            className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}>
             Free to start · No credit card · Cancel anytime
           </motion.p>
 
