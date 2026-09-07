@@ -296,7 +296,12 @@ export default function LoginPage() {
     if (!gsiReady || !googleBtnRef.current || !GOOGLE_CLIENT_ID) return;
     const g = (window as any).google;
     if (!g) return;
-    // Clear any previously remembered account before rendering the button
+    // If the user just signed out, revoke the Google hint now that GSI is loaded
+    const pendingRevoke = localStorage.getItem('bs_pending_google_revoke');
+    if (pendingRevoke) {
+      localStorage.removeItem('bs_pending_google_revoke');
+      g.accounts.id.revoke(pendingRevoke, () => {});
+    }
     g.accounts.id.disableAutoSelect();
     g.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false });
     g.accounts.id.renderButton(googleBtnRef.current, {

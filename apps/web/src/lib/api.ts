@@ -253,18 +253,17 @@ export function getUser() {
 }
 
 export function clearAuth() {
-  // Grab email before wiping storage so we can revoke Google's session token
   const user = getUser();
+  // Save email so the login page can call revoke() once GSI script loads
+  if (user?.email) localStorage.setItem('bs_pending_google_revoke', user.email);
   localStorage.removeItem('bs_access_token');
   localStorage.removeItem('bs_refresh_token');
   localStorage.removeItem('bs_user');
+  // Best-effort if GSI happens to be loaded (it usually isn't on the dashboard)
   try {
     const gid = (window as any).google?.accounts?.id;
     if (gid) {
-      // disableAutoSelect prevents One Tap from auto-prompting on next load
       gid.disableAutoSelect();
-      // revoke() clears the Google-side hint so the button shows the picker,
-      // not "Sign in as <previous user>"
       if (user?.email) gid.revoke(user.email, () => {});
     }
   } catch {}
