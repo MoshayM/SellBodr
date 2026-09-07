@@ -96,34 +96,34 @@ export default function GapFinderPage() {
   return (
     <div>
       <div className="mb-6 animate-card-in">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-semibold mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-3">
           🔍 Gap Finder
         </div>
-        <h1 className="text-2xl font-black text-slate-900">Gap Finder</h1>
-        <p className="text-slate-500 text-sm mt-1">Products where demand outpaces competition — your easiest market entry points</p>
+        <h1 className="text-2xl font-black text-white">Gap Finder</h1>
+        <p className="text-white/50 text-sm mt-1">Products where demand outpaces competition — your easiest market entry points</p>
       </div>
 
       {/* Filters */}
       <div className="card-dark p-4 mb-5 space-y-4 animate-card-in stagger-1">
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-[160px]">
-            <label className="text-xs text-slate-500 font-semibold mb-1 block">Marketplace</label>
+            <label className="text-xs text-white/50 font-semibold mb-1 block">Marketplace</label>
             <select value={marketplace} onChange={e => setMkt(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 transition-colors">
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-indigo-400 transition-colors">
               <option>All</option>
               {MARKETPLACES.map(m => <option key={m}>{m}</option>)}
             </select>
           </div>
           <div className="flex-1 min-w-[140px]">
-            <label className="text-xs text-slate-500 font-semibold mb-1 block">Min Gap Score: <span className="text-indigo-600">{minGap}</span></label>
+            <label className="text-xs text-white/50 font-semibold mb-1 block">Min Gap Score: <span className="text-indigo-400">{minGap}</span></label>
             <input type="range" min={30} max={85} step={5} value={minGap}
               onChange={e => setMinGap(Number(e.target.value))}
               className="w-full accent-indigo-600" />
           </div>
           <div className="flex-1 min-w-[120px]">
-            <label className="text-xs text-slate-500 font-semibold mb-1 block">Sort by</label>
+            <label className="text-xs text-white/50 font-semibold mb-1 block">Sort by</label>
             <select value={sort} onChange={e => setSort(e.target.value as any)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 transition-colors">
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-indigo-400 transition-colors">
               <option value="gap">Gap Score</option>
               <option value="demand">Demand</option>
               <option value="newest">Newest</option>
@@ -133,7 +133,7 @@ export default function GapFinderPage() {
 
         {/* Criteria chips */}
         <div>
-          <div className="text-xs text-slate-500 font-semibold mb-2">Gap Criteria (any match)</div>
+          <div className="text-xs text-white/50 font-semibold mb-2">Gap Criteria (any match)</div>
           <div className="flex flex-wrap gap-2">
             {GAP_CRITERIA.map(c => {
               const active = criteria.includes(c.key);
@@ -141,7 +141,7 @@ export default function GapFinderPage() {
                 <button key={c.key}
                   onClick={() => setCriteria(prev => active ? prev.filter(x => x !== c.key) : [...prev, c.key])}
                   className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all ${
-                    active ? 'border-violet-400 bg-violet-50 text-violet-700 shadow-sm' : 'border-slate-200 text-slate-500 bg-white hover:border-slate-300'
+                    active ? 'border-violet-400 bg-violet-500/15 text-violet-400 shadow-sm' : 'border-white/10 text-white/50 bg-white/5 hover:border-white/15'
                   }`}>
                   <span>{c.icon}</span>
                   <span>{c.label}</span>
@@ -160,16 +160,16 @@ export default function GapFinderPage() {
       ) : gaps.length === 0 ? (
         <div className="card-dark p-12 text-center animate-card-in stagger-2">
           <div className="text-4xl mb-3">🔍</div>
-          <p className="text-slate-500 text-sm">No gaps match your criteria. Try lowering the minimum score or adjusting filters.</p>
-          <p className="text-slate-400 text-xs mt-2">Run more scans on Scout to populate the gap finder.</p>
+          <p className="text-white/50 text-sm">No gaps match your criteria. Try lowering the minimum score or adjusting filters.</p>
+          <p className="text-white/40 text-xs mt-2">Run more scans on Scout to populate the gap finder.</p>
         </div>
       ) : (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-1">
-            <div className="text-sm text-slate-500 font-medium">{gaps.length} gap{gaps.length !== 1 ? 's' : ''} found</div>
+            <div className="text-sm text-white/50 font-medium">{gaps.length} gap{gaps.length !== 1 ? 's' : ''} found</div>
             <div className="flex flex-wrap gap-1.5">
               {GAP_CRITERIA.filter(c => criteria.includes(c.key)).map(c => (
-                <span key={c.key} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                <span key={c.key} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">
                   {c.icon} {c.label}
                 </span>
               ))}
@@ -195,7 +195,7 @@ export default function GapFinderPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <h3 className="text-sm font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                      <h3 className="text-sm font-semibold text-white/80 group-hover:text-indigo-400 transition-colors line-clamp-1">
                         {opp.product?.title}
                       </h3>
                       <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
@@ -210,7 +210,7 @@ export default function GapFinderPage() {
                         { l: 'Margin',      v: s.margin,      color: '#d97706' },
                       ].map(({ l, v, color }) => (
                         <div key={l} className="flex items-center gap-1">
-                          <span className="text-slate-400">{l}:</span>
+                          <span className="text-white/40">{l}:</span>
                           <span className="font-semibold" style={{ color }}>{Math.round(v || 0)}</span>
                         </div>
                       ))}
@@ -221,12 +221,12 @@ export default function GapFinderPage() {
                       {opp.flags.map((f: string) => {
                         const c = GAP_CRITERIA.find(x => x.key === f);
                         return c ? (
-                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+                          <span key={f} className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
                             {c.icon} {c.label}
                           </span>
                         ) : null;
                       })}
-                      <span className="text-[10px] text-slate-400 font-medium ml-auto">{opp.marketplace?.code?.toUpperCase()}</span>
+                      <span className="text-[10px] text-white/40 font-medium ml-auto">{opp.marketplace?.code?.toUpperCase()}</span>
                     </div>
                   </div>
                 </div>

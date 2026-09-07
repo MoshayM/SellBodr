@@ -122,47 +122,47 @@ export default function WishlistPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Page heading */}
       <div className="mb-6">
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1 rounded-full mb-3">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full mb-3">
           Saved
         </span>
-        <h1 className="font-black text-2xl text-slate-900">Wishlist</h1>
-        <p className="text-slate-500 text-sm mt-1">
+        <h1 className="font-black text-2xl text-white">Wishlist</h1>
+        <p className="text-white/50 text-sm mt-1">
           Saved scout opportunities — {wishlistIds.length} saved{filtered.length !== wishlistIds.length ? `, ${filtered.length} shown` : ''}
         </p>
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 rounded-2xl border border-white/10 bg-white/5 shadow-sm">
         <select value={marketplace} onChange={e => setMarketplace(e.target.value)}
-          className="bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
+          className="bg-white/5 border border-white/10 text-white/60 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
           {mpOptions.map(m => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
 
         <select value={signal} onChange={e => setSignal(e.target.value)}
-          className="bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
+          className="bg-white/5 border border-white/10 text-white/60 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
           {SIGNAL_OPTIONS.map(s => (
             <option key={s} value={s} className="capitalize">{s === 'All Signals' ? 'All Signals' : s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
 
         <select value={trend} onChange={e => setTrend(e.target.value)}
-          className="bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
+          className="bg-white/5 border border-white/10 text-white/60 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
           {TREND_OPTIONS.map(t => (
             <option key={t} value={t} className="capitalize">{t === 'All Trends' ? 'All Trends' : t.charAt(0).toUpperCase() + t.slice(1)}</option>
           ))}
         </select>
 
         <select value={channel} onChange={e => setChannel(e.target.value)}
-          className="bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
+          className="bg-white/5 border border-white/10 text-white/60 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
           {CHANNEL_OPTIONS.map(c => (
             <option key={c} value={c} className="capitalize">{c === 'All Channels' ? 'All Channels' : PLATFORM_NAMES[c] || c.charAt(0).toUpperCase() + c.slice(1)}</option>
           ))}
         </select>
 
         <select value={timeRange} onChange={e => setTimeRange(e.target.value)}
-          className="bg-white border border-slate-200 text-slate-600 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
+          className="bg-white/5 border border-white/10 text-white/60 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer">
           {TIME_OPTIONS.map(t => (
             <option key={t} value={t}>{t}</option>
           ))}
@@ -170,7 +170,7 @@ export default function WishlistPage() {
 
         {(marketplace !== 'All Marketplaces' || signal !== 'All Signals' || trend !== 'All Trends' || channel !== 'All Channels' || timeRange !== 'All Time') && (
           <button onClick={() => { setMarketplace('All Marketplaces'); setSignal('All Signals'); setTrend('All Trends'); setChannel('All Channels'); setTimeRange('All Time'); }}
-            className="text-xs text-indigo-600 hover:text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors ml-auto font-semibold">
+            className="text-xs text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded-lg hover:bg-indigo-500/10 transition-colors ml-auto font-semibold">
             Clear filters
           </button>
         )}
@@ -183,10 +183,10 @@ export default function WishlistPage() {
         </div>
       ) : wishlistIds.length === 0 ? (
         /* Empty state — nothing saved */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center animate-card-in stagger-1">
-          <div className="w-20 h-20 rounded-2xl bg-violet-50 flex items-center justify-center text-4xl mx-auto mb-5">🌟</div>
-          <h2 className="font-black text-xl text-slate-900 mb-2">No saved opportunities yet</h2>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+        <div className="bg-white/5 rounded-2xl border border-white/10 shadow-sm p-16 text-center animate-card-in stagger-1">
+          <div className="w-20 h-20 rounded-2xl bg-violet-500/10 flex items-center justify-center text-4xl mx-auto mb-5">🌟</div>
+          <h2 className="font-black text-xl text-white mb-2">No saved opportunities yet</h2>
+          <p className="text-sm text-white/50 mb-6 max-w-sm mx-auto">
             Go to Scout, click the bookmark icon on any opportunity row, and it will appear here.
           </p>
           <Link href="/opportunities" className="btn-primary text-sm">
@@ -195,9 +195,9 @@ export default function WishlistPage() {
         </div>
       ) : filtered.length === 0 ? (
         /* Filtered — nothing matched */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center animate-card-in stagger-1">
-          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl mx-auto mb-4">🔍</div>
-          <p className="text-slate-500 mb-5 font-medium">No saved opportunities match the current filters.</p>
+        <div className="bg-white/5 rounded-2xl border border-white/10 shadow-sm p-12 text-center animate-card-in stagger-1">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-2xl mx-auto mb-4">🔍</div>
+          <p className="text-white/50 mb-5 font-medium">No saved opportunities match the current filters.</p>
           <button onClick={() => { setMarketplace('All Marketplaces'); setSignal('All Signals'); setTrend('All Trends'); setChannel('All Channels'); setTimeRange('All Time'); }}
             className="btn-secondary text-sm">
             Clear filters
@@ -215,14 +215,14 @@ export default function WishlistPage() {
             const score = Math.round(opp.score?.opportunity || 0);
             const scoreColor = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
             return (
-              <div key={opp.id} className={`bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-3 animate-card-in stagger-${Math.min(idx + 1, 5)}`}>
+              <div key={opp.id} className={`bg-white/5 rounded-xl border border-white/10 shadow-sm p-4 flex flex-col gap-3 animate-card-in stagger-${Math.min(idx + 1, 5)}`}>
                 {/* Top: title + score */}
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-slate-900 text-sm leading-snug line-clamp-2">
+                    <div className="font-semibold text-white text-sm leading-snug line-clamp-2">
                       {opp.product?.title || 'Unnamed product'}
                     </div>
-                    <div className="text-xs text-slate-400 mt-1 leading-snug">
+                    <div className="text-xs text-white/40 mt-1 leading-snug">
                       {cc ? flag(cc) : '🛒'} {platformOf(code)}{cc ? ` · ${cc}` : ''}
                     </div>
                   </div>
@@ -234,18 +234,18 @@ export default function WishlistPage() {
                 {/* Middle: signal + net profit */}
                 <div className="flex items-center justify-between gap-2">
                   <RecommendationBadge rec={sig} />
-                  <span className={`text-sm font-bold tabular-nums ${net >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  <span className={`text-sm font-bold tabular-nums ${net >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                     {net < 0 ? '-' : '+'}{usd(Math.abs(net))}/unit
                   </span>
                 </div>
                 {/* Bottom: actions */}
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-white/8">
                   <Link href={`/opportunities/${opp.id}`}
                     className="flex-1 text-center text-xs px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors whitespace-nowrap">
                     Full Report →
                   </Link>
                   <button onClick={() => handleRemove(opp.id)}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors text-xs font-medium">
+                    className="px-3 py-2 rounded-lg border border-white/10 text-white/40 hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/10 transition-colors text-xs font-medium">
                     Remove
                   </button>
                 </div>
@@ -255,10 +255,10 @@ export default function WishlistPage() {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-card-in stagger-1">
+        <div className="hidden sm:block bg-white/5 rounded-2xl border border-white/10 shadow-sm overflow-hidden animate-card-in stagger-1">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50 text-[11px] text-slate-400 uppercase tracking-widest">
+              <tr className="border-b border-white/8 bg-white/5 text-[11px] text-white/40 uppercase tracking-widest">
                 <th className="text-left px-5 py-3 font-semibold">Product</th>
                 <th className="text-left px-4 py-3 font-semibold hidden sm:table-cell">Marketplace</th>
                 <th className="text-center px-4 py-3 font-semibold">Score</th>
@@ -267,27 +267,27 @@ export default function WishlistPage() {
                 <th className="text-center px-4 py-3 font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/8">
               {filtered.map((opp: any) => {
                 const code = opp.marketplace?.code || '';
                 const cc   = countryCode(code);
                 const net  = opp.profitModel?.netProfitMinor ?? 0;
                 const sig  = (opp.score?.signal || opp.recommendation || '').toLowerCase();
                 return (
-                  <tr key={opp.id} className="hover:bg-slate-50 transition-colors group">
+                  <tr key={opp.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-5 py-4">
-                      <div className="font-semibold text-slate-900 text-sm leading-snug line-clamp-2 max-w-xs">
+                      <div className="font-semibold text-white text-sm leading-snug line-clamp-2 max-w-xs">
                         {opp.product?.title || 'Unnamed product'}
                       </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 sm:hidden">
+                      <div className="text-[11px] text-white/40 mt-0.5 sm:hidden">
                         {cc ? flag(cc) : '🛒'} {platformOf(code)}
                       </div>
                     </td>
                     <td className="px-4 py-4 hidden sm:table-cell">
-                      <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                      <div className="flex items-center gap-1.5 text-sm text-white/50">
                         <span>{cc ? flag(cc) : '🛒'}</span>
                         <span>{platformOf(code)}</span>
-                        {cc && <span className="text-[10px] text-slate-400">{cc}</span>}
+                        {cc && <span className="text-[10px] text-white/40">{cc}</span>}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center">
@@ -297,7 +297,7 @@ export default function WishlistPage() {
                       <RecommendationBadge rec={sig} />
                     </td>
                     <td className="px-4 py-4 text-right hidden lg:table-cell">
-                      <span className={`font-mono font-semibold text-sm ${net >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <span className={`font-mono font-semibold text-sm ${net >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {net < 0 ? '-' : '+'}{usd(Math.abs(net))}
                       </span>
                     </td>
@@ -309,7 +309,7 @@ export default function WishlistPage() {
                         </Link>
                         <button onClick={() => handleRemove(opp.id)}
                           title="Remove from wishlist"
-                          className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-colors">
+                          className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 text-white/40 hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/10 transition-colors">
                           ✕
                         </button>
                       </div>

@@ -74,7 +74,7 @@ export default function AiKeysPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-64 gap-4">
-      <div className="w-10 h-10 rounded-2xl bg-violet-100 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-2xl bg-violet-500/15 flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
       <p className="text-sm text-white/40">Loading provider keys…</p>
@@ -85,12 +85,12 @@ export default function AiKeysPage() {
     <div className="max-w-2xl mx-auto">
       {/* Page header */}
       <div className="mb-7 animate-card-in">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 border border-red-200/60 mb-2">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 mb-2">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-          <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Admin Only</span>
+          <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Admin Only</span>
         </div>
-        <h1 className="text-slate-900 font-black text-2xl leading-tight">AI Provider Keys</h1>
-        <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+        <h1 className="text-white font-black text-2xl leading-tight">AI Provider Keys</h1>
+        <p className="text-white/50 text-sm mt-1 leading-relaxed">
           Server-side API keys used by the AI agent pipeline. Keys are stored encrypted in the database and never exposed client-side. Env-var keys take precedence over DB keys.
         </p>
       </div>
@@ -179,7 +179,7 @@ export default function AiKeysPage() {
       </div>
 
       <div className="mt-6 card-dark rounded-xl p-4 flex items-start gap-3 animate-card-in stagger-9">
-        <span className="text-slate-400 text-base shrink-0 mt-0.5">ℹ️</span>
+        <span className="text-white/40 text-base shrink-0 mt-0.5">ℹ️</span>
         <p className="text-xs text-white/50 leading-relaxed">
           Changes apply immediately to new AI pipeline runs. Existing queued jobs use the keys that were active at queue time.
           ENV VAR keys (set in Vercel / server environment) cannot be updated here — they take precedence over DB keys.

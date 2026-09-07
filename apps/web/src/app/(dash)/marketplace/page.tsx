@@ -188,60 +188,60 @@ export default function MarketplacePage() {
       <div>
         <div className="flex items-center gap-3 mb-6 animate-card-in">
           <button onClick={() => setSelected(null)}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors">
+            className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80 transition-colors">
             <span className="text-lg leading-none">←</span>
             <span>All Marketplaces</span>
           </button>
-          <span className="text-slate-300">/</span>
-          <span className="text-sm font-semibold text-slate-800">{meta.flag} {meta.label}</span>
+          <span className="text-white/30">/</span>
+          <span className="text-sm font-semibold text-white/80">{meta.flag} {meta.label}</span>
         </div>
 
         {list.length === 0 ? (
           <div className="card-dark p-12 text-center">
             <div className="text-4xl mb-3">{meta.flag}</div>
-            <p className="font-medium text-slate-600 mb-1">No opportunities yet for {meta.label}</p>
-            <p className="text-sm text-slate-400">
-              <Link href="/opportunities" className="text-indigo-600 hover:underline font-medium">Run a search</Link> to discover opportunities here
+            <p className="font-medium text-white/60 mb-1">No opportunities yet for {meta.label}</p>
+            <p className="text-sm text-white/40">
+              <Link href="/opportunities" className="text-indigo-400 hover:underline font-medium">Run a search</Link> to discover opportunities here
             </p>
           </div>
         ) : (
           <div className="card-dark overflow-hidden animate-card-in stagger-1">
-            <div className="px-4 sm:px-6 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-3.5 border-b border-white/8 bg-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{meta.flag}</span>
-                <span className="font-semibold text-slate-800">{meta.label}</span>
-                <span className="text-xs leading-none text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-full">
+                <span className="font-semibold text-white/80">{meta.label}</span>
+                <span className="text-xs leading-none text-white/50 bg-white/5 border border-white/10 px-2 py-1 rounded-full">
                   {list.length} opp{list.length !== 1 ? 's' : ''}
                 </span>
               </div>
-              <div className="text-xs text-slate-400">
-                Avg score: <strong className="text-slate-700">{stat?.avgScore ?? '—'}</strong>
+              <div className="text-xs text-white/40">
+                Avg score: <strong className="text-white/70">{stat?.avgScore ?? '—'}</strong>
               </div>
             </div>
 
             {/* Mobile */}
-            <div className="sm:hidden divide-y divide-slate-100">
+            <div className="sm:hidden divide-y divide-white/8">
               {list.map((opp: any) => (
                 <Link key={opp.id} href={`/opportunities/${opp.id}`}
-                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white shrink-0">
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 active:bg-white/8 transition-colors">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
                     {opp.product?.imageUrl
                       ? <Image src={opp.product.imageUrl} alt={opp.product.title} width={40} height={40} className="w-full h-full object-contain" unoptimized />
                       : <div className="w-full h-full flex items-center justify-center text-lg">📦</div>}
                   </div>
                   <ScoreGauge score={opp.score?.opportunity || 0} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-800 truncate">{opp.product?.title}</div>
+                    <div className="text-sm font-medium text-white/80 truncate">{opp.product?.title}</div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
                       {opp.profitModel && (
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-white/40">
                           {minor(opp.profitModel.netProfitMinor, opp.marketplace?.currency)}/unit
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="text-slate-300 text-lg shrink-0">›</span>
+                  <span className="text-white/30 text-lg shrink-0">›</span>
                 </Link>
               ))}
             </div>
@@ -249,7 +249,7 @@ export default function MarketplacePage() {
             {/* Desktop table */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm min-w-[520px]">
-                <thead className="bg-slate-50 text-xs text-slate-400 border-b border-slate-100">
+                <thead className="bg-white/5 text-xs text-white/40 border-b border-white/8">
                   <tr>
                     <th className="text-left px-5 py-2.5 font-semibold uppercase tracking-wide">Product</th>
                     <th className="text-center px-4 py-2.5 font-semibold uppercase tracking-wide">Score</th>
@@ -258,19 +258,19 @@ export default function MarketplacePage() {
                     <th className="px-4 py-2.5" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-white/8">
                   {list.map((opp: any) => (
-                    <tr key={opp.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={opp.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/10 shrink-0">
                             {opp.product?.imageUrl
                               ? <Image src={opp.product.imageUrl} alt={opp.product.title || ''} width={36} height={36} className="w-full h-full object-contain" unoptimized />
                               : <div className="w-full h-full flex items-center justify-center text-sm">📦</div>}
                           </div>
                           <div>
-                            <div className="font-medium text-slate-800 line-clamp-1">{opp.product?.title}</div>
-                            <div className="text-xs text-slate-400 mt-0.5">{opp.product?.category?.replace(/_/g, ' ')}</div>
+                            <div className="font-medium text-white/80 line-clamp-1">{opp.product?.title}</div>
+                            <div className="text-xs text-white/40 mt-0.5">{opp.product?.category?.replace(/_/g, ' ')}</div>
                           </div>
                         </div>
                       </td>
@@ -280,14 +280,14 @@ export default function MarketplacePage() {
                       <td className="px-4 py-3">
                         <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence)} />
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-slate-800">
+                      <td className="px-4 py-3 text-right font-semibold text-white/80">
                         {opp.profitModel
                           ? minor(opp.profitModel.netProfitMinor, opp.marketplace?.currency)
-                          : <span className="text-slate-300">—</span>}
+                          : <span className="text-white/30">—</span>}
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/opportunities/${opp.id}`}
-                          className="text-xs text-indigo-600 hover:underline font-semibold whitespace-nowrap">
+                          className="text-xs text-indigo-400 hover:underline font-semibold whitespace-nowrap">
                           View →
                         </Link>
                       </td>
@@ -307,11 +307,11 @@ export default function MarketplacePage() {
     <div>
       {/* Header */}
       <div className="mb-6 animate-card-in">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-3">
           🛒 Marketplace Intelligence
         </div>
-        <h1 className="text-2xl font-black text-slate-900">Global Marketplace Map</h1>
-        <p className="text-slate-500 text-sm mt-1">
+        <h1 className="text-2xl font-black text-white">Global Marketplace Map</h1>
+        <p className="text-white/50 text-sm mt-1">
           {isLoading ? 'Loading…' : `${(marketplaces as any[]).length} global marketplaces · click any to explore opportunities`}
         </p>
       </div>
@@ -323,7 +323,7 @@ export default function MarketplacePage() {
             className={`shrink-0 px-3 py-2 rounded-full text-xs font-medium leading-none transition-colors whitespace-nowrap ${
               regionFilter === r
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white text-slate-500 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                : 'bg-white/5 text-white/50 border border-white/10 hover:border-white/15 hover:text-indigo-400'
             }`}>
             {r}
           </button>
@@ -334,9 +334,9 @@ export default function MarketplacePage() {
         <div className="space-y-6">
           {[1, 2, 3].map(i => (
             <div key={i} className="card-dark p-5 animate-pulse">
-              <div className="h-4 bg-slate-200 rounded w-24 mb-4" />
+              <div className="h-4 bg-white/10 rounded w-24 mb-4" />
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {[1,2,3,4,5].map(j => <div key={j} className="h-20 bg-slate-100 rounded-xl" />)}
+                {[1,2,3,4,5].map(j => <div key={j} className="h-20 bg-white/8 rounded-xl" />)}
               </div>
             </div>
           ))}
@@ -347,9 +347,9 @@ export default function MarketplacePage() {
             const mps = byRegion[region] || [];
             return (
               <div key={region} className={`card-dark rounded-xl overflow-hidden animate-card-in stagger-${Math.min(ri + 1, 6)}`}>
-                <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
-                  <span className="font-semibold text-slate-700 text-sm">{region}</span>
-                  <span className="text-xs text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-full">{mps.length} marketplace{mps.length !== 1 ? 's' : ''}</span>
+                <div className="px-4 sm:px-5 py-3.5 border-b border-white/8 flex items-center justify-between bg-white/5">
+                  <span className="font-semibold text-white/70 text-sm">{region}</span>
+                  <span className="text-xs text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{mps.length} marketplace{mps.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="p-3 sm:p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3">
                   {mps.map((mp: any) => {
@@ -361,40 +361,40 @@ export default function MarketplacePage() {
                       <button key={mp.id} onClick={() => setSelected(mp.code)}
                         className={`text-left p-3 rounded-xl border transition-all hover:shadow-md active:scale-[0.98] ${
                           mp.active
-                            ? 'border-slate-200 hover:border-indigo-300 bg-white hover:bg-indigo-50/50'
-                            : 'border-dashed border-slate-200 bg-slate-50 opacity-50'
+                            ? 'border-white/10 hover:border-white/15 bg-white/5 hover:bg-indigo-500/10'
+                            : 'border-dashed border-white/10 bg-white/5 opacity-50'
                         }`}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xl leading-normal">{meta.flag}</span>
                           {stat ? (
                             <span className={`text-[11px] leading-none font-bold px-1.5 py-1 rounded-full ${
-                              stat.avgScore >= 65 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                              stat.avgScore >= 40 ? 'bg-amber-50 text-amber-600 border border-amber-200' :
-                              'bg-slate-100 text-slate-500 border border-slate-200'
+                              stat.avgScore >= 65 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                              stat.avgScore >= 40 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                              'bg-white/8 text-white/50 border border-white/10'
                             }`}>
                               {stat.avgScore}
                             </span>
                           ) : (
-                            <span className="text-xs text-slate-300 font-medium leading-none">—</span>
+                            <span className="text-xs text-white/30 font-medium leading-none">—</span>
                           )}
                         </div>
 
-                        <div className="text-xs font-semibold text-slate-800 leading-snug line-clamp-1 mb-0.5">
+                        <div className="text-xs font-semibold text-white/80 leading-snug line-clamp-1 mb-0.5">
                           {meta.label}
                         </div>
-                        <div className="text-[11px] leading-snug text-slate-400 mb-1.5">{mp.currency}</div>
+                        <div className="text-[11px] leading-snug text-white/40 mb-1.5">{mp.currency}</div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] leading-snug text-slate-400">
+                          <span className="text-[11px] leading-snug text-white/40">
                             {stat ? `${stat.count} opp${stat.count !== 1 ? 's' : ''}` : 'No opps'}
                           </span>
                           {fees.referralPct != null && (
-                            <span className="text-[11px] leading-snug text-slate-400">{fees.referralPct}% ref</span>
+                            <span className="text-[11px] leading-snug text-white/40">{fees.referralPct}% ref</span>
                           )}
                         </div>
 
                         {!mp.active && (
-                          <div className="mt-1.5 text-[11px] leading-snug text-slate-400 font-medium">Inactive</div>
+                          <div className="mt-1.5 text-[11px] leading-snug text-white/40 font-medium">Inactive</div>
                         )}
                       </button>
                     );
@@ -408,18 +408,18 @@ export default function MarketplacePage() {
 
       {/* Summary bar */}
       {!isLoading && (
-        <div className="mt-6 p-4 bg-white rounded-xl border border-slate-200 flex flex-wrap gap-4 text-sm text-slate-500 shadow-sm">
+        <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10 flex flex-wrap gap-4 text-sm text-white/50 shadow-sm">
           <span>
-            <strong className="text-slate-800">{(marketplaces as any[]).filter((m: any) => m.active).length}</strong> active
+            <strong className="text-white/80">{(marketplaces as any[]).filter((m: any) => m.active).length}</strong> active
           </span>
           <span>
-            <strong className="text-slate-800">{(marketplaces as any[]).filter((m: any) => !m.active).length}</strong> inactive
+            <strong className="text-white/80">{(marketplaces as any[]).filter((m: any) => !m.active).length}</strong> inactive
           </span>
           <span>
-            <strong className="text-slate-800">{Object.values(oppStats).reduce((a, s) => a + s.count, 0)}</strong> total opportunities
+            <strong className="text-white/80">{Object.values(oppStats).reduce((a, s) => a + s.count, 0)}</strong> total opportunities
           </span>
           <span className="ml-auto">
-            <Link href="/settings" className="text-indigo-600 hover:underline text-xs font-semibold">
+            <Link href="/settings" className="text-indigo-400 hover:underline text-xs font-semibold">
               Manage marketplaces →
             </Link>
           </span>

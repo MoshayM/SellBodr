@@ -49,9 +49,9 @@ function ImagePlaceholder({ title, category }: { title?: string; category?: stri
   const cat = (category || '').toLowerCase();
   const icon = Object.entries(icons).find(([k]) => cat.includes(k))?.[1] ?? '📦';
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-4 bg-gradient-to-br from-slate-100 to-slate-50">
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-4 bg-gradient-to-br from-white/8 to-white/5">
       <span className="text-4xl opacity-40">{icon}</span>
-      {title && <span className="text-[9px] text-slate-400 text-center line-clamp-2 leading-snug">{title}</span>}
+      {title && <span className="text-[9px] text-white/40 text-center line-clamp-2 leading-snug">{title}</span>}
     </div>
   );
 }
@@ -68,8 +68,8 @@ function ProductCard({ opp }: { opp: any }) {
   const ts         = trendSource(marketplace.code);
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden flex flex-col border border-slate-200 hover:border-indigo-300 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/10">
-      <div className="relative w-full h-44 bg-slate-50 flex-shrink-0 overflow-hidden">
+    <div className="bg-white/5 rounded-xl overflow-hidden flex flex-col border border-white/10 hover:border-indigo-500/20 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/10">
+      <div className="relative w-full h-44 bg-white/5 flex-shrink-0 overflow-hidden">
         {showImage ? (
           <img src={product.imageUrl} alt={product.title ?? 'Product'}
             className="w-full h-full object-contain" onError={() => setImgError(true)} />
@@ -77,7 +77,7 @@ function ProductCard({ opp }: { opp: any }) {
           <ImagePlaceholder title={product.title} category={product.category} />
         )}
         {/* Trend source badge */}
-        <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] leading-none font-semibold px-2 py-1 rounded-full bg-white/90 border border-slate-200 shadow-sm backdrop-blur-sm"
+        <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] leading-none font-semibold px-2 py-1 rounded-full bg-white/90 border border-white/10 shadow-sm backdrop-blur-sm"
           style={{ color: ts.color }}>
           {ts.icon} {ts.label}
         </span>
@@ -90,12 +90,12 @@ function ProductCard({ opp }: { opp: any }) {
       </div>
 
       <div className="p-4 flex flex-col flex-1 gap-2.5">
-        <div className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">{product.title}</div>
+        <div className="text-sm font-semibold text-white line-clamp-2 leading-snug">{product.title}</div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
           <MarketplaceBadge code={marketplace.code} href={listingHref} />
           {product.category && (
-            <span className="text-[11px] leading-snug text-slate-400 capitalize">{product.category.replace(/_/g, ' ')}</span>
+            <span className="text-[11px] leading-snug text-white/40 capitalize">{product.category.replace(/_/g, ' ')}</span>
           )}
         </div>
 
@@ -108,8 +108,8 @@ function ProductCard({ opp }: { opp: any }) {
               { label: 'Trend',  value: s.trend  },
               { label: 'Comp.', value: s.competition },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-slate-50 rounded px-1.5 py-1.5 border border-slate-100">
-                <div className="text-[9px] leading-none text-slate-400 mb-0.5">{label}</div>
+              <div key={label} className="bg-white/5 rounded px-1.5 py-1.5 border border-white/8">
+                <div className="text-[9px] leading-none text-white/40 mb-0.5">{label}</div>
                 <div className={`text-xs font-bold leading-snug ${
                   (value ?? 0) >= 70 ? 'text-green-600' :
                   (value ?? 0) >= 40 ? 'text-amber-600' : 'text-red-500'
@@ -119,18 +119,18 @@ function ProductCard({ opp }: { opp: any }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-auto">
+        <div className="flex items-center justify-between pt-2.5 border-t border-white/8 mt-auto">
           <RecommendationBadge rec={opp.recommendation} confidence={Math.round(opp.confidence ?? 0)} />
           <div className="flex items-center gap-1.5">
             <a href={listingHref} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-              className="inline-flex items-center gap-0.5 text-[11px] leading-none font-medium bg-slate-50 border border-slate-200 rounded px-2 py-1 transition-colors hover:bg-slate-100"
+              className="inline-flex items-center gap-0.5 text-[11px] leading-none font-medium bg-white/5 border border-white/10 rounded px-2 py-1 transition-colors hover:bg-white/8"
               style={{ color: m.logoColor }}>
               <span className="w-3 h-3 rounded-full flex items-center justify-center text-white leading-none flex-shrink-0"
                 style={{ backgroundColor: m.logoColor, fontSize: '6px' }}>{m.logoChar}</span>
               View
             </a>
             <Link href={`/opportunities/${opp.id}?tab=Research`}
-              className="text-[11px] leading-none text-indigo-600 font-medium border border-indigo-200 bg-indigo-50 rounded px-2 py-1 transition-colors hover:bg-indigo-100">
+              className="text-[11px] leading-none text-indigo-400 font-medium border border-indigo-500/20 bg-indigo-500/10 rounded px-2 py-1 transition-colors hover:bg-indigo-500/15">
               Research →
             </Link>
           </div>
@@ -159,7 +159,7 @@ function trendChannel(code: string): string {
 
 const DAY = 86_400_000;
 
-const SELECT_CLS = 'bg-white border border-slate-200 hover:border-slate-300 text-xs text-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50 [&>option]:bg-white [&>option]:text-slate-900 cursor-pointer transition-colors';
+const SELECT_CLS = 'bg-white/5 border border-white/10 hover:border-white/15 text-xs text-white/70 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-violet-500/50 [&>option]:bg-white [&>option]:text-slate-900 cursor-pointer transition-colors';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -234,20 +234,20 @@ export default function ResearchPage() {
       <div>
         {/* Header */}
         <div className="mb-6 animate-card-in">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-[11px] font-semibold uppercase tracking-wide mb-2">
             <span>🔬</span> Research
           </div>
-          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-1">AI-validated product opportunities with marketplace intelligence</p>
+          <h1 className="text-2xl font-black text-white leading-tight">Product Research</h1>
+          <p className="text-sm text-white/50 mt-1">AI-validated product opportunities with marketplace intelligence</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className={`bg-white rounded-xl overflow-hidden border border-slate-200 animate-pulse animate-card-in stagger-${i}`}>
-              <div className="h-44 bg-slate-100" />
+            <div key={i} className={`bg-white/5 rounded-xl overflow-hidden border border-white/10 animate-pulse animate-card-in stagger-${i}`}>
+              <div className="h-44 bg-white/8" />
               <div className="p-4 space-y-2.5">
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 rounded w-1/2" />
-                <div className="h-8 bg-slate-100 rounded w-full" />
+                <div className="h-4 bg-white/10 rounded w-3/4" />
+                <div className="h-3 bg-white/8 rounded w-1/2" />
+                <div className="h-8 bg-white/8 rounded w-full" />
               </div>
             </div>
           ))}
@@ -261,18 +261,18 @@ export default function ResearchPage() {
       <div>
         {/* Header */}
         <div className="mb-6 animate-card-in">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-[11px] font-semibold uppercase tracking-wide mb-2">
             <span>🔬</span> Research
           </div>
-          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-1">AI-validated product opportunities with marketplace intelligence</p>
+          <h1 className="text-2xl font-black text-white leading-tight">Product Research</h1>
+          <p className="text-sm text-white/50 mt-1">AI-validated product opportunities with marketplace intelligence</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 sm:p-16 text-center shadow-sm animate-card-in stagger-1">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-3xl mx-auto mb-4">
+        <div className="bg-white/5 rounded-2xl border border-white/10 p-12 sm:p-16 text-center shadow-sm animate-card-in stagger-1">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-3xl mx-auto mb-4">
             🔬
           </div>
-          <p className="font-bold text-slate-900 text-base mb-1">No research data yet</p>
-          <p className="text-sm text-slate-500 mb-6">Run a Scout search first to generate AI-validated research data</p>
+          <p className="font-bold text-white text-base mb-1">No research data yet</p>
+          <p className="text-sm text-white/50 mb-6">Run a Scout search first to generate AI-validated research data</p>
           <Link href="/opportunities" className="btn-primary text-sm">Start Scouting →</Link>
         </div>
       </div>
@@ -284,20 +284,20 @@ export default function ResearchPage() {
       {/* Header */}
       <div className="mb-5 flex items-start justify-between gap-4 animate-card-in">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-wide mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-[11px] font-semibold uppercase tracking-wide mb-2">
             <span>🔬</span> Research
           </div>
-          <h1 className="text-2xl font-black text-slate-900 leading-tight">Product Research</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-black text-white leading-tight">Product Research</h1>
+          <p className="text-sm text-white/50 mt-1">
             AI-validated opportunities
-            <span className="ml-1.5 text-indigo-600 font-semibold">{filtered.length}</span>
-            <span className="text-slate-400"> of {allOpps.length} shown</span>
+            <span className="ml-1.5 text-indigo-400 font-semibold">{filtered.length}</span>
+            <span className="text-white/40"> of {allOpps.length} shown</span>
           </p>
         </div>
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 bg-white border border-slate-200 rounded-xl shadow-sm animate-card-in stagger-1">
+      <div className="flex flex-wrap items-center gap-2 mb-5 p-3 bg-white/5 border border-white/10 rounded-xl shadow-sm animate-card-in stagger-1">
         {/* Category */}
         <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className={SELECT_CLS}>
           <option value="">All Categories</option>
@@ -347,19 +347,19 @@ export default function ResearchPage() {
 
         {hasFilters && (
           <button onClick={clearFilters}
-            className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 hover:bg-slate-50 font-medium">
+            className="text-xs text-white/50 hover:text-white/70 border border-white/10 rounded-lg px-2.5 py-1.5 transition-colors hover:border-white/15 hover:bg-white/5 font-medium">
             Clear ✕
           </button>
         )}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm animate-card-in">
-          <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl mx-auto mb-3">
+        <div className="bg-white/5 rounded-2xl border border-white/10 p-12 text-center shadow-sm animate-card-in">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center text-2xl mx-auto mb-3">
             🔍
           </div>
-          <p className="text-sm font-semibold text-slate-700 mb-1">No products match your filters</p>
-          <p className="text-xs text-slate-400 mb-4">Try adjusting the filters above</p>
+          <p className="text-sm font-semibold text-white/70 mb-1">No products match your filters</p>
+          <p className="text-xs text-white/40 mb-4">Try adjusting the filters above</p>
           <button onClick={clearFilters} className="btn-secondary text-xs">Clear Filters</button>
         </div>
       ) : (
