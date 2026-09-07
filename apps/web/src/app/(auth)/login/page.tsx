@@ -296,7 +296,9 @@ export default function LoginPage() {
     if (!gsiReady || !googleBtnRef.current || !GOOGLE_CLIENT_ID) return;
     const g = (window as any).google;
     if (!g) return;
-    g.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+    // Clear any previously remembered account before rendering the button
+    g.accounts.id.disableAutoSelect();
+    g.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false });
     g.accounts.id.renderButton(googleBtnRef.current, {
       theme: 'outline', size: 'large',
       width: googleBtnRef.current.offsetWidth || 400,

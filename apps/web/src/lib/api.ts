@@ -253,13 +253,20 @@ export function getUser() {
 }
 
 export function clearAuth() {
+  // Grab email before wiping storage so we can revoke Google's session token
+  const user = getUser();
   localStorage.removeItem('bs_access_token');
   localStorage.removeItem('bs_refresh_token');
   localStorage.removeItem('bs_user');
-  // Tell Google Identity Services to forget the selected account so the
-  // login page shows the picker instead of "Sign in as <previous user>".
   try {
-    (window as any).google?.accounts?.id?.disableAutoSelect();
+    const gid = (window as any).google?.accounts?.id;
+    if (gid) {
+      // disableAutoSelect prevents One Tap from auto-prompting on next load
+      gid.disableAutoSelect();
+      // revoke() clears the Google-side hint so the button shows the picker,
+      // not "Sign in as <previous user>"
+      if (user?.email) gid.revoke(user.email, () => {});
+    }
   } catch {}
 }
 
