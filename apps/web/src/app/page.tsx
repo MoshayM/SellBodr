@@ -95,8 +95,10 @@ export default function LandingPage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
   const heroY      = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
 
-  const [proPrice, setProPrice] = useState('18');
+  const [proPrice, setProPrice] = useState('19');
   const [creditBundle, setCreditBundle] = useState({ size: '10', price: '5' });
+  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
     fetch('/api/v1/platform/settings')
@@ -112,20 +114,24 @@ export default function LandingPage() {
 
   const plans = [
     {
-      name: 'Starter', price: '$0', period: '',
-      desc: 'Start scouting — no credit card, no commitment',
-      features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
-      cta: 'Start scouting free', ctaHref: '/register', highlight: false,
+      key: 'free',
+      name: 'Starter',
+      priceINR: 0, priceUSD: 0,
+      desc: 'Start scouting — no credit card, no commitment.',
+      features: ['5 AI product scans (lifetime)', 'Up to 10 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
+      cta: 'Start free', ctaHref: '/register', highlight: false,
     },
     {
-      name: 'Pro', price: `$${proPrice}`, period: '/mo',
+      key: 'pro',
+      name: 'Pro',
+      priceINR: 1499, priceUSD: Number(proPrice),
       desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
-      features: ['Unlimited AI product scans', 'Premium AI models — Claude + GPT-4 + Groq', 'Full supplier list, no cap', 'Real-time supplier search (IndiaMART, Alibaba & more)', 'Export to CSV, Excel, PDF & Word', 'All dashboard tools — Research, Profitability, Keywords', 'Priority support'],
+      features: ['100 AI product scans per month', 'Up to 30 results per scan', 'Premium AI — Claude + Groq + Mistral', 'Full supplier list with contact details', 'All dashboards — Research, Profitability, Keywords', 'Export to CSV, Excel, PDF & Word', 'Priority email support'],
       cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
     },
   ];
 
-  const aiCreditNote = `AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy ${creditBundle.size} credits for $${creditBundle.price}. Works on any plan.`;
+  const aiCreditNote = `AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy ${creditBundle.size} credits for ${currency === 'INR' ? '₹499' : `$${creditBundle.price}`}. Works on any plan.`;
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -281,7 +287,7 @@ export default function LandingPage() {
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
             className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}>
-            Free to start · No credit card · Cancel anytime
+            Free to start · No credit card · Plans from ₹1,499/mo
           </motion.p>
 
           {/* Floating opportunity cards */}
@@ -383,58 +389,98 @@ export default function LandingPage() {
 
       {/* ── Pricing ────────────────────────────────────────────── */}
       <section id="pricing" className="py-24 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <div className="text-sm text-emerald-600 font-semibold mb-3 uppercase tracking-widest">Simple pricing</div>
+        <div className="max-w-6xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
+            <div className="text-sm text-emerald-600 font-semibold mb-3 uppercase tracking-widest">Simple, transparent pricing</div>
             <h2 className="text-4xl sm:text-5xl font-black mb-4 text-slate-900">
-              Start free. Scale at <span className="text-gradient">your own pace.</span>
+              Cheaper than <span className="text-gradient">the competition.</span>
             </h2>
-            <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              {`5 free scans to start — no card needed. Go Pro for $${proPrice}/mo for unlimited scans and premium AI models.`}
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+              Jungle Scout starts at $49/mo. Helium 10 at $39/mo. SellBodr gives you more — cross-border India sourcing intelligence — for less.
             </p>
           </motion.div>
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {plans.map((p, i) => (
-              <motion.div
-                key={p.name}
-                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className={`relative bg-white rounded-2xl p-7 flex flex-col border-2 ${
-                  p.highlight ? 'border-violet-400 shadow-xl shadow-violet-100 pt-9' : 'border-slate-200 shadow-sm'
-                }`}>
-                {/* top accent line — clipped separately so badge above isn't cut */}
-                <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl overflow-hidden"
-                  style={{ background: p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
-                {p.highlight && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg z-10 whitespace-nowrap"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 14px rgba(99,102,241,0.45)' }}>
-                    MOST POPULAR
-                  </div>
-                )}
-                <div className={`text-xs font-bold uppercase tracking-widest mb-2 ${p.highlight ? 'text-violet-600' : 'text-slate-500'}`}>
-                  {p.name}
-                </div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-4xl font-black text-slate-900">{p.price}</span>
-                  <span className="text-slate-400 text-sm">{p.period}</span>
-                </div>
-                {p.highlight && <div className="text-xs text-emerald-600 font-medium mb-2">Cancel anytime</div>}
-                <p className="text-slate-500 text-sm mb-6">{p.desc}</p>
-                <ul className="space-y-2.5 flex-1 mb-7">
-                  {p.features.map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-slate-700">
-                      <span className="text-emerald-500 text-base flex-shrink-0 font-bold">✓</span>{f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href={p.ctaHref}
-                  className={p.highlight
-                    ? 'btn-scout text-sm justify-center py-3 text-center w-full rounded-xl'
-                    : 'inline-flex items-center justify-center text-sm py-3 px-6 rounded-xl font-semibold text-slate-700 border-2 border-slate-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 transition-all duration-200 w-full'}>
-                  {p.cta}
-                </Link>
-              </motion.div>
-            ))}
+
+          {/* Toggles */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+              <button onClick={() => setCurrency('INR')}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${currency === 'INR' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                ₹ INR
+              </button>
+              <button onClick={() => setCurrency('USD')}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${currency === 'USD' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                $ USD
+              </button>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1">
+              <button onClick={() => setIsAnnual(false)}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${!isAnnual ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                Monthly
+              </button>
+              <button onClick={() => setIsAnnual(true)}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${isAnnual ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                Annual <span className="text-emerald-600 text-xs font-bold ml-1">−20%</span>
+              </button>
+            </div>
           </div>
+
+          {/* Plans grid */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {plans.map((p, i) => {
+              const basePrice = currency === 'INR' ? p.priceINR : p.priceUSD;
+              const effectivePrice = p.priceINR === 0 ? 0 : (isAnnual ? Math.round(basePrice * 0.8) : basePrice);
+              const displayedPrice = p.priceINR === 0
+                ? (currency === 'INR' ? '₹0' : '$0')
+                : (currency === 'INR' ? `₹${effectivePrice.toLocaleString('en-IN')}` : `$${effectivePrice}`);
+              const annualSaving = isAnnual && p.priceINR > 0
+                ? (currency === 'INR'
+                  ? `Save ₹${Math.round(p.priceINR * 0.2 * 12).toLocaleString('en-IN')}/yr`
+                  : `Save $${Math.round(p.priceUSD * 0.2 * 12)}/yr`)
+                : null;
+              return (
+                <motion.div
+                  key={p.key}
+                  initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`relative bg-white rounded-2xl p-7 flex flex-col border-2 ${
+                    p.highlight ? 'border-violet-400 shadow-xl shadow-violet-100 pt-9' : 'border-slate-200 shadow-sm'
+                  }`}>
+                  <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl overflow-hidden"
+                    style={{ background: p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
+                  {p.highlight && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg z-10 whitespace-nowrap"
+                      style={{ background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 14px rgba(99,102,241,0.45)' }}>
+                      MOST POPULAR
+                    </div>
+                  )}
+                  <div className={`text-xs font-bold uppercase tracking-widest mb-2 ${p.highlight ? 'text-violet-600' : 'text-slate-500'}`}>
+                    {p.name}
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-4xl font-black text-slate-900">{displayedPrice}</span>
+                    {p.priceINR > 0 && <span className="text-slate-400 text-sm">/mo</span>}
+                  </div>
+                  {annualSaving
+                    ? <div className="text-xs text-emerald-600 font-semibold mb-2">{annualSaving}</div>
+                    : p.highlight && <div className="text-xs text-emerald-600 font-medium mb-2">Cancel anytime</div>}
+                  <p className="text-slate-500 text-sm mb-6">{p.desc}</p>
+                  <ul className="space-y-2.5 flex-1 mb-7">
+                    {p.features.map(f => (
+                      <li key={f} className="flex items-center gap-2.5 text-sm text-slate-700">
+                        <span className="text-emerald-500 text-base flex-shrink-0 font-bold">✓</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={p.ctaHref}
+                    className={p.highlight
+                      ? 'btn-scout text-sm justify-center py-3 text-center w-full rounded-xl'
+                      : 'inline-flex items-center justify-center text-sm py-3 px-6 rounded-xl font-semibold text-slate-700 border-2 border-slate-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 transition-all duration-200 w-full'}>
+                    {p.cta}
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="mt-8 max-w-2xl mx-auto rounded-2xl px-6 py-4 text-center"
             style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
@@ -443,7 +489,7 @@ export default function LandingPage() {
           </motion.div>
           <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             className="text-center text-slate-400 text-xs mt-4">
-            No credit card required for Starter · Prices in USD · Credits never expire
+            No credit card required for Starter · {currency === 'INR' ? 'Prices in INR' : 'Prices in USD'} · Credits never expire
           </motion.p>
         </div>
       </section>

@@ -6,38 +6,59 @@ Pricing, plans, metering, and billing implementation.
 
 ## 1. Plans & Tiers
 
-| | **Free** | **Pro** | **Organisation** |
-|---|---|---|---|
-| Price | $0 — no credit card required | $49 / month | Custom (contact sales) |
-| AI searches (total lifetime) | 5 | Unlimited | Unlimited |
-| Opportunity results per marketplace per search | 10 | Unlimited | Unlimited |
-| Suppliers per product | 10 | Unlimited | Unlimited |
-| Opportunity Score display | Gauge visible (preview only) | Full 7-dimension breakdown | Full 7-dimension breakdown |
-| Recommendation badge | Basic badge visible | Full Launch / Hold / Reject + confidence | Full Launch / Hold / Reject + confidence |
-| Wishlist / saves | Supported | Supported | Supported |
-| Profitability model | ProGate (locked) | ✓ | ✓ |
-| AI Listing Generator | ProGate (locked) | ✓ | ✓ |
-| Ads campaign structure | ProGate (locked) | ✓ | ✓ |
-| Growth signals | ProGate (locked) | ✓ | ✓ |
-| Recommendations dashboard | ProGate (locked) | ✓ | ✓ |
-| Reports & export | ProGate (locked) | ✓ | ✓ |
-| Marketplace Intelligence | ProGate (locked) | ✓ | ✓ |
-| Supplier sourcing map | ProGate (locked) | ✓ | ✓ |
-| AI providers | Groq + Mistral (free tier) | All (Claude, GPT-4, Groq, Mistral, etc.) | All |
-| Multi-seat / team | — | — | ✓ |
-| API access | — | — | ✓ |
-| White-label reports | — | — | ✓ |
-| Support | Community | Standard | Dedicated account manager + SLA |
+### Competitive positioning
+| Competitor | Entry price | SellBodr advantage |
+|---|---|---|
+| Jungle Scout | $49/mo | India sourcing intelligence, multi-marketplace, 59% cheaper on Growth |
+| Helium 10 | $39/mo (Starter, limited) | No India sourcing, Amazon-only focus |
+| Viral Launch | $69/mo | No India sourcing, higher price |
+| Zik Analytics | $29.99/mo | eBay-only, no sourcing data |
+
+### Plan matrix
+
+| | **Starter** | **Pro** |
+|---|---|---|
+| Price (INR / monthly) | ₹0 | ₹1,499/mo |
+| Price (USD / monthly) | $0 | $19/mo |
+| Price (annual, −20%) | — | ₹1,199/mo · $15/mo |
+| AI searches / month | 5 (lifetime) | 100/mo |
+| Results per scan | 10 | 30 |
+| Suppliers per product | 10 | Unlimited |
+| Opportunity Score | Full 7-dimension | Full 7-dimension |
+| Recommendation badge | ✓ | ✓ |
+| Wishlist / saves | ✓ | ✓ |
+| Profitability model | ProGate | ✓ |
+| AI Listing Generator | ProGate | ✓ |
+| Ads campaign structure | ProGate | ✓ |
+| Growth signals | ProGate | ✓ |
+| Recommendations dashboard | ProGate | ✓ |
+| Reports & export (CSV/Excel/PDF/Word) | ProGate | ✓ |
+| Marketplace Intelligence | ProGate | ✓ |
+| Supplier sourcing map | ProGate | ✓ |
+| AI providers | Groq + Mistral | Claude + Groq + Mistral |
+| Support | Community | Priority email |
 
 **Plan enforcement:** plan stored in `user.plan` column (`free` \| `pro`); JWT carries a `plan` claim consumed by the `EntitlementGuard`. Role `admin` or email `sellbodr@gmail.com` bypasses all limits. Free search quota is enforced server-side and returns HTTP `429` with `limitReached: true` when the 5-search ceiling is reached.
+
+**DB mapping:** Pro → `pro` plan value in the `user.plan` column (unchanged).
+
+### AI Generation Credits (pay-as-you-go)
+Credits cover on-demand AI generation: Reports, Ads copy, Brand assets, Listing copy, Growth playbooks. **1 credit = 1 generation.** Credits work on any plan and never expire.
+
+| Currency | Price | Credits |
+|---|---|---|
+| INR (Razorpay) | ₹499 | 10 credits |
+| USD (Stripe) | $5 | 10 credits |
 
 ---
 
 ## 2. Pricing Model
 
-- **Subscription** (per seat for Pro; per org for Organisation) is the primary revenue line.
+- **Subscription** (monthly or annual) is the primary revenue line. Annual billing carries a 20% discount baked into monthly rate (shown as "Save ₹X,XXX/yr" or "Save $XX/yr").
 - Free tier is permanently free with hard lifetime caps (5 searches); no time-limited trial — value is demonstrated within the cap.
-- Organisation pricing is negotiated annually and covers multi-seat access, API volume, and optional white-label configuration.
+- Pro plan pricing is configurable via admin platform settings (`pro_price_usd`, `agency_price_usd`). INR prices are hardcoded to ₹1,499 (Growth) and ₹3,499 (Pro) until a Razorpay subscription flow is implemented.
+- **Payment gateways:** Stripe for USD subscriptions; Razorpay for INR credit purchases (one-time). Razorpay subscription billing to be added in a future sprint.
+- Pricing is presented with INR as the default currency on the landing page (toggle to USD). This reflects the primary India-based seller audience.
 
 ---
 
@@ -85,9 +106,10 @@ sequenceDiagram
 
 ## 5. Free → Paid Conversion
 
-- Free delivers real search results (up to 10 results per marketplace, 10 suppliers per product) and shows the Opportunity Score gauge and recommendation badge — enough to demonstrate value within 5 searches.
-- Upgrade nudges fire at natural friction points: hitting the 5-search ceiling (hard block with upgrade prompt), attempting to open any ProGate dashboard, or trying to view the full score breakdown or profitability model.
-- Wishlist is available on Free to encourage save behaviour before upgrading.
+- Starter delivers real search results (up to 10 results per marketplace, 10 suppliers per product) and shows the full Opportunity Score and recommendation badge — enough to demonstrate value within 5 scans.
+- Upgrade nudges fire at natural friction points: hitting the 5-scan ceiling (hard block with upgrade prompt at ₹1,499/mo), attempting to open any ProGate dashboard, or trying to export data.
+- Wishlist is available on Starter to encourage save behaviour before upgrading.
+- Pro plan (₹1,499/$19/mo) is positioned as the primary conversion target — undercuts all major competitors while unlocking the full platform.
 
 ---
 
