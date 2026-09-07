@@ -3,12 +3,11 @@ import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 import { randomBytes, createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
-
-const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
 
 export async function POST(req: NextRequest) {
   try {

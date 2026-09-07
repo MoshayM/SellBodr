@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { jwtVerify } from 'jose';
 
-const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 export async function GET(req: NextRequest) {
   try {

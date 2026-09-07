@@ -224,6 +224,12 @@ const MIGRATIONS = [
     value TEXT NOT NULL,
     updatedAt INTEGER NOT NULL DEFAULT 0
   )`,
+  // RateLimit — brute-force protection for auth endpoints
+  `CREATE TABLE IF NOT EXISTS "RateLimit" (
+    key TEXT PRIMARY KEY,
+    count INTEGER NOT NULL DEFAULT 0,
+    resetAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {

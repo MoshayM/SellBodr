@@ -7,7 +7,7 @@ import { PROVIDERS, tryProvider } from '@/lib/ai/gateway';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 function buildStaticRfq(supplier: any, product: any, marketplace: any) {
   const qty = (Number(supplier.moq) || 100) * 2;

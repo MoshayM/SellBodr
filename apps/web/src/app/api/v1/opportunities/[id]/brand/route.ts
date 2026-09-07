@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 45;
 
-const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 function staticBrand(title: string, category: string) {
   const cat = category.replace(/_/g, ' ') || 'product';

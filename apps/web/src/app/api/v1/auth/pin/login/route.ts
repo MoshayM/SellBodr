@@ -8,8 +8,7 @@ import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-const ACCESS_SECRET  = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET  || 'dev-access-secret-change-me');
-const REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me');
+import { ACCESS_SECRET, REFRESH_SECRET } from '@/lib/auth-secrets';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS   = 30 * 60 * 1000; // 30 min

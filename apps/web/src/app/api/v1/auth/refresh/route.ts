@@ -6,7 +6,7 @@ import { ensureSchema } from '@/lib/schema';
 
 export const dynamic = 'force-dynamic';
 
-const ACCESS_SECRET  = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET  || 'dev-access-secret-change-me');
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 export async function POST(req: NextRequest) {
   try {

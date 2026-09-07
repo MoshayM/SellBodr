@@ -3,9 +3,7 @@ import { getDb } from '@/lib/db';
 import { jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 
-const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me'
-);
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 export async function POST(req: NextRequest) {
   try {

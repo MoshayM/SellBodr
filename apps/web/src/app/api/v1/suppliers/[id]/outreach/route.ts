@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
-const ACCESS_SECRET = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me');
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 async function requireAuth(req: NextRequest): Promise<string> {
   const token = req.headers.get('authorization')?.split(' ')[1];

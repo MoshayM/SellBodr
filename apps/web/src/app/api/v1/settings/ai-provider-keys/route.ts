@@ -3,9 +3,7 @@ import { getDb } from '@/lib/db';
 import { jwtVerify } from 'jose';
 import { v4 as uuidv4 } from 'uuid';
 
-const ACCESS_SECRET = new TextEncoder().encode(
-  process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me'
-);
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 // env var name for each provider id
 const PROVIDER_ENV: Record<string, string> = {

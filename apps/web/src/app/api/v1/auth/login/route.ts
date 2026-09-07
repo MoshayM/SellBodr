@@ -3,13 +3,14 @@ import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { ACCESS_SECRET, REFRESH_SECRET } from '@/lib/auth-secrets';
 import { randomBytes, createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
-const ACCESS_SECRET  = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET  || 'dev-access-secret-change-me');
-const REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me');
+const RL_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RL_MAX       = 10;              // max attempts per window
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,27 @@ export async function POST(req: NextRequest) {
 
     const db = getDb();
     await ensureSchema(db);
+
+    // Brute-force protection: DB-backed rate limit by IP
+    const ip    = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rlKey = `login:${ip}`;
+    const now   = Date.now();
+    const resetAt = now + RL_WINDOW_MS;
+
+    // Atomic upsert: reset window if expired, otherwise increment
+    await db.execute({
+      sql: `INSERT INTO "RateLimit" (key, count, resetAt) VALUES (?, 1, ?)
+            ON CONFLICT (key) DO UPDATE SET
+              count   = CASE WHEN "RateLimit".resetAt < ? THEN 1 ELSE "RateLimit".count + 1 END,
+              resetAt = CASE WHEN "RateLimit".resetAt < ? THEN ? ELSE "RateLimit".resetAt END`,
+      args: [rlKey, resetAt, now, now, resetAt],
+    });
+
+    const rl = await db.execute({ sql: 'SELECT count, resetAt FROM "RateLimit" WHERE key = ?', args: [rlKey] });
+    if (Number(rl.rows[0]?.count ?? 0) > RL_MAX) {
+      return NextResponse.json({ message: 'Too many login attempts. Please try again in 15 minutes.' }, { status: 429 });
+    }
+
     const result = await db.execute({ sql: 'SELECT * FROM "User" WHERE email = ? AND deletedAt IS NULL', args: [email] });
     const user = result.rows[0];
 
@@ -28,6 +50,9 @@ export async function POST(req: NextRequest) {
 
     const valid = await bcrypt.compare(password, String(user.passwordHash));
     if (!valid) return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
+
+    // Reset rate limit on success
+    await db.execute({ sql: 'DELETE FROM "RateLimit" WHERE key = ?', args: [rlKey] });
 
     // Issue tokens
     const userPlan = String(user.plan || 'free');
@@ -39,10 +64,10 @@ export async function POST(req: NextRequest) {
     const rawRefresh = randomBytes(48).toString('hex');
     const tokenHash  = createHash('sha256').update(rawRefresh).digest('hex');
     const expiresAt  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    const now        = new Date().toISOString();
+    const loginNow   = new Date().toISOString();
 
-    await db.execute({ sql: 'INSERT INTO "RefreshToken" (id, userId, tokenHash, expiresAt, revoked, createdAt) VALUES (?,?,?,?,0,?)', args: [uuidv4(), String(user.id), tokenHash, expiresAt, now] });
-    await db.execute({ sql: 'UPDATE "User" SET lastLoginAt = ? WHERE id = ?', args: [now, String(user.id)] });
+    await db.execute({ sql: 'INSERT INTO "RefreshToken" (id, userId, tokenHash, expiresAt, revoked, createdAt) VALUES (?,?,?,?,0,?)', args: [uuidv4(), String(user.id), tokenHash, expiresAt, loginNow] });
+    await db.execute({ sql: 'UPDATE "User" SET lastLoginAt = ? WHERE id = ?', args: [loginNow, String(user.id)] });
 
     return NextResponse.json({
       accessToken,

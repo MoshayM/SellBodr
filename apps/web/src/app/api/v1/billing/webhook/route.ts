@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
 
     const db = getDb();
     await ensureSchema(db);
+
+    // Idempotency: skip if this Stripe session was already processed
+    const existing = await db.execute({
+      sql:  `SELECT id FROM "CreditTransaction" WHERE stripeSessionId = ? LIMIT 1`,
+      args: [session.id],
+    });
+    if (existing.rows.length > 0) return NextResponse.json({ ok: true });
+
     const ts = Date.now();
 
     await db.execute({
