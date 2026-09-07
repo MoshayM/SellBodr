@@ -268,7 +268,13 @@ export default function LoginPage() {
   useEffect(() => {
     detectFingerprint().then(ok => {
       setCanFingerprint(ok);
-      if (ok) fpModuleRef.current = import('@simplewebauthn/browser');
+      if (!ok) return;
+      // Pre-warm module immediately
+      fpModuleRef.current = import('@simplewebauthn/browser');
+      // Pre-fetch challenge immediately on page load — so fingerprint tap is instant
+      api.passkeys.loginBegin(undefined)
+        .then(data => { fpChallengeRef.current = { data, fetchedAt: Date.now() }; })
+        .catch(() => {});
     });
   }, []);
 
