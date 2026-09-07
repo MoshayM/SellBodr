@@ -9,6 +9,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
+const RL_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RL_MAX       = 5;               // max registrations per IP per hour
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -20,6 +23,23 @@ export async function POST(req: NextRequest) {
 
     const db  = getDb();
     await ensureSchema(db);
+
+    // Brute-force / enumeration protection on register
+    const ip      = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rlKey   = `register:${ip}`;
+    const rlNow   = Date.now();
+    const resetAt = rlNow + RL_WINDOW_MS;
+    await db.execute({
+      sql: `INSERT INTO "RateLimit" (key, count, resetAt) VALUES (?, 1, ?)
+            ON CONFLICT (key) DO UPDATE SET
+              count   = CASE WHEN "RateLimit".resetAt < ? THEN 1 ELSE "RateLimit".count + 1 END,
+              resetAt = CASE WHEN "RateLimit".resetAt < ? THEN ? ELSE "RateLimit".resetAt END`,
+      args: [rlKey, resetAt, rlNow, rlNow, resetAt],
+    });
+    const rl = await db.execute({ sql: 'SELECT count FROM "RateLimit" WHERE key = ?', args: [rlKey] });
+    if (Number(rl.rows[0]?.count ?? 0) > RL_MAX) {
+      return NextResponse.json({ message: 'Too many registration attempts. Please try again later.' }, { status: 429 });
+    }
     const existing = await db.execute({ sql: 'SELECT id FROM "User" WHERE email = ?', args: [email] });
     if (existing.rows.length > 0) return NextResponse.json({ message: 'Email already registered' }, { status: 409 });
 

@@ -252,13 +252,22 @@ export function getUser() {
   return raw ? JSON.parse(raw) : null;
 }
 
-export function clearAuth() {
+export async function clearAuth() {
   const user = getUser();
   // Save email so the login page can call revoke() once GSI script loads
   if (user?.email) localStorage.setItem('bs_pending_google_revoke', user.email);
+  const refreshToken = localStorage.getItem('bs_refresh_token');
   localStorage.removeItem('bs_access_token');
   localStorage.removeItem('bs_refresh_token');
   localStorage.removeItem('bs_user');
+  // Server-side token revocation — best-effort
+  if (refreshToken) {
+    fetch('/api/v1/auth/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => {});
+  }
   // Best-effort if GSI happens to be loaded (it usually isn't on the dashboard)
   try {
     const gid = (window as any).google?.accounts?.id;

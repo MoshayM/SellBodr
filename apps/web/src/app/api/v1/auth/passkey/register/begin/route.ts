@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic';
 
 import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
+const RL_WINDOW_MS = 15 * 60 * 1000;
+const RL_MAX       = 10;
+
 function getRpId(req: NextRequest): string {
   return process.env.WEBAUTHN_RP_ID ?? req.headers.get('host')?.split(':')[0] ?? 'localhost';
 }
@@ -18,6 +21,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const db = getDb();
     await ensureSchema(db);
+
+    const ip      = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rlKey   = `pkregister:${ip}`;
+    const rlNow   = Date.now();
+    const resetAt = rlNow + RL_WINDOW_MS;
+    await db.execute({
+      sql: `INSERT INTO "RateLimit" (key, count, resetAt) VALUES (?, 1, ?)
+            ON CONFLICT (key) DO UPDATE SET
+              count   = CASE WHEN "RateLimit".resetAt < ? THEN 1 ELSE "RateLimit".count + 1 END,
+              resetAt = CASE WHEN "RateLimit".resetAt < ? THEN ? ELSE "RateLimit".resetAt END`,
+      args: [rlKey, resetAt, rlNow, rlNow, resetAt],
+    });
+    const rl = await db.execute({ sql: 'SELECT count FROM "RateLimit" WHERE key = ?', args: [rlKey] });
+    if (Number(rl.rows[0]?.count ?? 0) > RL_MAX) {
+      return NextResponse.json({ message: 'Too many attempts. Please try again later.' }, { status: 429 });
+    }
 
     let userId: string | null = null;
     let userEmail: string | null = null;

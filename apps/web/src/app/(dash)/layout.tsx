@@ -175,7 +175,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     setAnchor(rect); setFromDesktop(isDesktop); setSearchOpen(true);
   }
   function closeSearch() { setSearchOpen(false); setSearchQuery(''); }
-  function logout() { clearAuth(); setUser(null); router.replace('/login'); }
+  function logout() { clearAuth().then(() => {}); setUser(null); router.replace('/login'); }
 
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()

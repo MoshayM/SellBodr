@@ -27,7 +27,16 @@ export async function POST(req: NextRequest) {
   if (!priceId)   return NextResponse.json({ error: 'Stripe price not configured — add STRIPE_CREDIT_PRICE_ID to env' }, { status: 503 });
 
   const stripe = new Stripe(stripeKey);
-  const origin = req.headers.get('origin') || 'https://sellbodr.vercel.app';
+
+  // Prevent open redirect — only allow trusted origins for success/cancel URLs
+  const requestOrigin = req.headers.get('origin') || '';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://sellbodr.vercel.app';
+  const isTrusted = (o: string) =>
+    o === appUrl ||
+    o === 'https://sellbodr.vercel.app' ||
+    /^https:\/\/sellbodr(-[a-z0-9]+)*-sellbodr-8741s-projects\.vercel\.app$/.test(o) ||
+    /^http:\/\/localhost:\d+$/.test(o);
+  const origin = isTrusted(requestOrigin) ? requestOrigin : appUrl;
 
   const session = await stripe.checkout.sessions.create({
     mode:                 'payment',

@@ -4,6 +4,7 @@ import { jwtVerify } from 'jose';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ACCESS_SECRET } from '@/lib/auth-secrets';
+import { encryptKey, decryptKey } from '@/lib/crypto';
 
 // env var name for each provider id
 const PROVIDER_ENV: Record<string, string> = {
@@ -43,7 +44,6 @@ async function ensureTable(db: ReturnType<typeof getDb>) {
       updatedAt    TEXT NOT NULL
     )
   `);
-  // Idempotent column additions for databases created with an older schema
   try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN keyValue TEXT DEFAULT ''`); } catch { /* already exists */ }
   try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN maskedKey TEXT DEFAULT ''`); } catch { /* already exists */ }
   try { await db.execute(`ALTER TABLE "ProviderKey" ADD COLUMN encryptedKey TEXT DEFAULT ''`); } catch { /* already exists */ }
@@ -68,10 +68,17 @@ export async function GET(req: NextRequest) {
   const db = getDb();
   await ensureTable(db);
 
-  const dbResult = await db.execute('SELECT provider, keyValue, maskedKey FROM "ProviderKey"');
-  const dbKeys: Record<string, { keyValue: string; maskedKey: string }> = {};
+  // Read encryptedKey — decrypt on the fly; fall back to legacy keyValue if not yet migrated
+  const dbResult = await db.execute('SELECT provider, encryptedKey, keyValue, maskedKey FROM "ProviderKey"');
+  const dbKeys: Record<string, { plaintext: string; maskedKey: string }> = {};
   for (const row of dbResult.rows) {
-    dbKeys[String(row.provider)] = { keyValue: String(row.keyValue), maskedKey: String(row.maskedKey) };
+    let plaintext = '';
+    try {
+      plaintext = decryptKey(String(row.encryptedKey || row.keyValue));
+    } catch {
+      plaintext = String(row.keyValue);
+    }
+    dbKeys[String(row.provider)] = { plaintext, maskedKey: String(row.maskedKey) };
   }
 
   const statuses = Object.keys(PROVIDER_META).map(id => {
@@ -108,20 +115,20 @@ export async function PUT(req: NextRequest) {
     const trimmed = keyValue.trim();
 
     if (trimmed === '') {
-      // Empty string = delete the DB override (fall back to env)
       await db.execute({ sql: 'DELETE FROM "ProviderKey" WHERE provider = ?', args: [provider] });
     } else {
+      const encrypted = encryptKey(trimmed);
       const maskedKey = mask(trimmed);
       const existing  = await db.execute({ sql: 'SELECT id FROM "ProviderKey" WHERE provider = ?', args: [provider] });
       if (existing.rows.length > 0) {
         await db.execute({
-          sql:  'UPDATE "ProviderKey" SET keyValue=?, maskedKey=?, updatedAt=? WHERE provider=?',
-          args: [trimmed, maskedKey, now, provider],
+          sql:  'UPDATE "ProviderKey" SET encryptedKey=?, keyValue=?, maskedKey=?, updatedAt=? WHERE provider=?',
+          args: [encrypted, '', maskedKey, now, provider],
         });
       } else {
         await db.execute({
           sql:  'INSERT INTO "ProviderKey" (id,provider,encryptedKey,keyValue,maskedKey,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?)',
-          args: [uuidv4(), provider, trimmed, trimmed, maskedKey, now, now],
+          args: [uuidv4(), provider, encrypted, '', maskedKey, now, now],
         });
       }
     }
