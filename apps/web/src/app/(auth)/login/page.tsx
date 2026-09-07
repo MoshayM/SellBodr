@@ -254,6 +254,7 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fpLoading, setFpLoading]         = useState(false);
   const [canFingerprint, setCanFingerprint] = useState(false);
+  const fpModuleRef = useRef<Promise<typeof import('@simplewebauthn/browser')> | null>(null);
   const [gsiReady, setGsiReady]           = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS]                 = useState(false);
@@ -263,7 +264,12 @@ export default function LoginPage() {
     if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
   }, [router]);
 
-  useEffect(() => { detectFingerprint().then(setCanFingerprint); }, []);
+  useEffect(() => {
+    detectFingerprint().then(ok => {
+      setCanFingerprint(ok);
+      if (ok) fpModuleRef.current = import('@simplewebauthn/browser');
+    });
+  }, []);
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches) { setIsInstalled(true); return; }
@@ -323,9 +329,11 @@ export default function LoginPage() {
   async function loginWithFingerprint() {
     setError(''); setFpLoading(true);
     try {
-      const beginData = await api.passkeys.loginBegin(email || undefined);
+      const [beginData, { startAuthentication }] = await Promise.all([
+        api.passkeys.loginBegin(email || undefined),
+        fpModuleRef.current ?? import('@simplewebauthn/browser'),
+      ]);
       const { challengeId, ...options } = beginData;
-      const { startAuthentication } = await import('@simplewebauthn/browser');
       const assnResp = await startAuthentication({ ...options, userVerification: 'required' });
       const auth = await api.passkeys.loginComplete(challengeId, assnResp) as any;
       saveAuth(auth); router.push('/opportunities');

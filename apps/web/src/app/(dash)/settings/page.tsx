@@ -1323,6 +1323,7 @@ function FingerprintSection() {
   const [adding, setAdding]       = useState(false);
   const [error, setError]         = useState('');
   const [deleteId, setDeleteId]   = useState('');
+  const fpModuleRef = useRef<Promise<typeof import('@simplewebauthn/browser')> | null>(null);
 
   useEffect(() => {
     // Only show this section on non-Windows devices with biometric support
@@ -1331,17 +1332,21 @@ function FingerprintSection() {
     (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.() ?? Promise.resolve(false))
       .then(ok => {
         setCanFp(ok);
-        if (ok) api.passkeys.list().then(setPasskeys).catch(() => {}).finally(() => setLoading(false));
-        else setLoading(false);
+        if (ok) {
+          fpModuleRef.current = import('@simplewebauthn/browser');
+          api.passkeys.list().then(setPasskeys).catch(() => {}).finally(() => setLoading(false));
+        } else setLoading(false);
       }).catch(() => { setCanFp(false); setLoading(false); });
   }, []);
 
   async function handleAdd() {
     setError(''); setAdding(true);
     try {
-      const beginData = await api.passkeys.registerBegin();
+      const [beginData, { startRegistration }] = await Promise.all([
+        api.passkeys.registerBegin(),
+        fpModuleRef.current ?? import('@simplewebauthn/browser'),
+      ]);
       const { challengeId, ...options } = beginData;
-      const { startRegistration } = await import('@simplewebauthn/browser');
       const attResp = await startRegistration({ ...options, authenticatorSelection: { ...options.authenticatorSelection, authenticatorAttachment: 'platform' as const } });
       const deviceName = `Fingerprint ${new Date().toLocaleDateString()}`;
       await api.passkeys.registerComplete(challengeId, deviceName, attResp);
