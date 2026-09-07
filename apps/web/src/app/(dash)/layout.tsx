@@ -191,10 +191,16 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
   if (!authChecked) {
     return (
-      <div className="dash-area min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
-          <span className="text-sm text-slate-400">Loading…</span>
+      <div className="dash-area min-h-screen flex items-center justify-center" style={{ background: '#F4F6FB' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-bounce-in"
+            style={{ background: 'linear-gradient(135deg,#6366F1,#7C3AED)', boxShadow: '0 8px 24px rgba(99,102,241,0.4)' }}>
+            <img src="/icons/icon.svg" alt="" className="w-7 h-7" style={{ filter: 'brightness(10)' }} />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-5 h-5 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
+            <span className="text-sm font-medium text-slate-400">Loading SellBodr…</span>
+          </div>
         </div>
       </div>
     );
@@ -286,19 +292,24 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     const active = path === page.href || path.startsWith(page.href + '/');
     return (
       <Link href={page.href} onClick={onClick}
-        className="sidebar-link flex items-center gap-2.5 px-3 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 mb-0.5 relative"
+        className="sidebar-link flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 mb-0.5 relative overflow-hidden"
         style={active ? {
-          background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
-          color: '#fff',
-          boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+          background: 'rgba(99,102,241,0.25)',
+          color: '#ffffff',
+          boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.4)',
         } : undefined}
         data-active={active ? 'true' : undefined}>
-        <span className="text-[15px] w-5 text-center leading-none shrink-0">{page.icon}</span>
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: '#818CF8' }} />
+        )}
+        <span className="text-[16px] w-5 text-center leading-none shrink-0">{page.icon}</span>
         <span className="flex-1 truncate">{page.label}</span>
         {page.badge && (
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
-            active ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-600'
-          }`}>{page.badge}</span>
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
+            style={active
+              ? { background: 'rgba(255,255,255,0.2)', color: '#e0e7ff' }
+              : { background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }
+            }>{page.badge}</span>
         )}
       </Link>
     );
@@ -320,21 +331,20 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           DESKTOP SIDEBAR  (hidden on mobile)
           ═══════════════════════════════════════════════════ */}
       <aside
-        className={`hidden md:flex fixed left-0 top-0 h-screen w-60 flex-col bg-white z-40 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ borderRight: '1px solid #E8EDFB', boxShadow: '2px 0 24px rgba(79,70,229,0.06)' }}>
+        className={`sidebar-dark hidden md:flex fixed left-0 top-0 h-screen w-60 flex-col z-40 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ background: 'linear-gradient(180deg,#0D1B35 0%,#0F2040 100%)', borderRight: '1px solid rgba(255,255,255,0.07)', boxShadow: '4px 0 32px rgba(0,0,0,0.25)' }}>
 
         {/* Logo */}
         <Link href="/opportunities"
           className="flex items-center gap-2.5 px-5 shrink-0 hover:opacity-90 transition-opacity"
           style={{ height: '56px' }}>
           <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 shrink-0"
-            style={{ filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
+            style={{ filter: 'drop-shadow(0 0 10px rgba(99,102,241,0.9)) brightness(1.2)' }} />
           <div>
-            <div className="text-[15px] font-black tracking-tight leading-none"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <div className="text-[15px] font-black tracking-tight leading-none" style={{ color: '#ffffff' }}>
               SellBodr
             </div>
-            <div className="text-[8px] font-semibold uppercase tracking-[0.18em] leading-none mt-0.5" style={{ color: '#94A3B8' }}>
+            <div className="text-[8px] font-semibold uppercase tracking-[0.18em] leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
               eCommerce AI
             </div>
           </div>
@@ -344,7 +354,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         <nav className="flex-1 px-2.5 pt-1 pb-2 overflow-y-auto scrollbar-dark" aria-label="Sidebar navigation">
           {NAV_GROUPS.map(group => (
             <div key={group.label} className="mb-4">
-              <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: '#94A3B8' }}>
+              <div className="px-3 mb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'rgba(255,255,255,0.28)' }}>
                 {group.label}
               </div>
               {group.pages.filter(p => !p.adminOnly || isAdmin()).map(p => (
@@ -357,7 +367,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
 
         {/* User card — sidebar bottom (click to open menu) */}
         {user && (
-          <div className="px-2.5 pb-3 shrink-0 border-t border-slate-100 relative" ref={sidebarUserRef}>
+          <div className="px-2.5 pb-3 shrink-0 relative" ref={sidebarUserRef} style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <AnimatePresence>
               {sidebarUserOpen && (
                 <motion.div
@@ -459,15 +469,13 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             {/* Trigger card */}
             <button
               onClick={() => setSidebarUserOpen(v => !v)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl transition-all text-left ${
-                sidebarUserOpen ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-slate-50'
-              }`}
+              className={`sidebar-dark-hover w-full flex items-center gap-2.5 px-2.5 py-2 mt-2 rounded-xl transition-all text-left ${sidebarUserOpen ? 'is-open' : ''}`}
               aria-label="User menu" aria-expanded={sidebarUserOpen}>
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-semibold text-slate-800 truncate leading-tight">{user.name ?? 'User'}</div>
+                <div className="text-[13px] font-semibold truncate leading-tight" style={{ color: 'rgba(255,255,255,0.85)' }}>{user.name ?? 'User'}</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <PlanBadge />
                   {!creditsIsAdmin && credits !== null && (
@@ -484,7 +492,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   )}
                 </div>
               </div>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" className="shrink-0 transition-transform duration-200"
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5" className="shrink-0 transition-transform duration-200"
                 style={{ transform: sidebarUserOpen ? 'rotate(180deg)' : 'none' }}>
                 <path d="m18 15-6-6-6 6"/>
               </svg>
@@ -686,24 +694,25 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             <motion.div
               initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-              className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] sm:w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl"
-              style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+              className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] sm:w-72 flex flex-col shadow-2xl"
+              style={{ paddingTop: 'env(safe-area-inset-top, 0px)', background: 'linear-gradient(180deg,#0D1B35 0%,#0F2040 100%)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
 
-              <div className="flex items-center justify-between px-5 h-14 border-b border-slate-100 shrink-0">
-                <span className="text-sm font-bold text-slate-500">All pages</span>
+              <div className="flex items-center justify-between px-5 h-14 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>All pages</span>
                 <button onClick={() => setMenuOpen(false)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 text-xl touch-manipulation"
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-xl touch-manipulation transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.55)' }}
                   aria-label="Close menu">&times;</button>
               </div>
 
               {user && (
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-sm">
+                <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center font-black text-sm shrink-0 shadow-sm" style={{ color: '#fff' }}>
                     {initials}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-slate-900 truncate">{user.name ?? 'User'}</div>
-                    <div className="text-xs text-slate-400 capitalize mt-0.5">
+                    <div className="text-sm font-semibold truncate" style={{ color: '#ffffff' }}>{user.name ?? 'User'}</div>
+                    <div className="text-xs capitalize mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
                       {user.plan === 'pro' ? 'Pro' : user.role === 'admin' ? 'Admin' : 'Free'} account
                     </div>
                   </div>
@@ -715,29 +724,32 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                   const active = path === p.href || path.startsWith(p.href + '/');
                   return (
                     <Link key={p.href} href={p.href} onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-0.5 ${
-                        active ? 'text-white' : 'text-slate-600 hover:text-indigo-700 hover:bg-indigo-50'
-                      }`}
+                      className="drawer-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-0.5 relative overflow-hidden"
                       style={active ? {
-                        background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
-                        boxShadow: '0 3px 10px rgba(99,102,241,0.3)',
-                      } : undefined}>
+                        background: 'rgba(99,102,241,0.25)',
+                        color: '#ffffff',
+                        boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.35)',
+                      } : { color: 'rgba(255,255,255,0.65)' }}
+                      data-active={active ? 'true' : undefined}>
+                      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: '#818CF8' }} />}
                       <span className="text-base w-6 text-center shrink-0">{p.icon}</span>
                       <span className="flex-1 truncate">{p.label}</span>
                       {p.badge && (
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ${
-                          active ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-600'
-                        }`}>{p.badge}</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
+                          style={active
+                            ? { background: 'rgba(255,255,255,0.2)', color: '#e0e7ff' }
+                            : { background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }
+                          }>{p.badge}</span>
                       )}
                     </Link>
                   );
                 })}
               </nav>
 
-              <div className="px-3 pt-3 border-t border-slate-100"
-                style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              <div className="px-3 pt-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <button onClick={() => { logout(); setMenuOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all min-h-[44px] touch-manipulation">
+                  className="drawer-signout w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all min-h-[44px] touch-manipulation"
+                  style={{ color: 'rgba(255,255,255,0.45)' }}>
                   <span>↩</span><span>Sign out</span>
                 </button>
               </div>
@@ -754,7 +766,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
           paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))',
           paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
         }}>
-        <div className="md:pb-2 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6">
+        <div key={path} className="md:pb-2 max-w-7xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6 animate-page-enter">
           {children}
         </div>
       </main>
@@ -769,7 +781,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
         style={{
           borderColor: '#E8EDFB',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          boxShadow: '0 -1px 0 #E8EDFB, 0 -4px 20px rgba(79,70,229,0.07)',
+          boxShadow: '0 -1px 0 #E8EDFB, 0 -8px 28px rgba(79,70,229,0.09)',
         }}
         aria-label="Bottom navigation">
         <div className="flex items-stretch h-16">
@@ -779,10 +791,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               isHome ? 'text-indigo-600' : 'text-slate-400 active:text-slate-600'
             }`}>
             {isHome && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full animate-scale-in"
+                style={{ background: 'linear-gradient(90deg,#6366F1,#7C3AED)' }} />
             )}
             <span className={`text-[22px] leading-none transition-transform duration-200 ${isHome ? 'scale-110' : ''}`}>🎯</span>
-            <span className={`text-[10px] font-semibold leading-none ${isHome ? 'text-indigo-600' : ''}`}>Scout</span>
+            <span className={`text-[10px] font-bold leading-none ${isHome ? 'text-indigo-600' : ''}`}>Scout</span>
           </Link>
 
           <Link href="/wishlist"
@@ -790,10 +803,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
               path === '/wishlist' ? 'text-amber-500' : 'text-slate-400 active:text-slate-600'
             }`}>
             {path === '/wishlist' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full animate-scale-in"
+                style={{ background: 'linear-gradient(90deg,#F59E0B,#FBBF24)' }} />
             )}
             <span className={`text-[22px] leading-none transition-transform duration-200 ${path === '/wishlist' ? 'scale-110' : ''}`}>🌟</span>
-            <span className={`text-[10px] font-semibold leading-none ${path === '/wishlist' ? 'text-amber-500' : ''}`}>Wishlist</span>
+            <span className={`text-[10px] font-bold leading-none ${path === '/wishlist' ? 'text-amber-500' : ''}`}>Wishlist</span>
           </Link>
 
           <button
@@ -803,10 +817,11 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
             }`}
             aria-label="All pages">
             {menuOpen && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full animate-scale-in"
+                style={{ background: 'linear-gradient(90deg,#6366F1,#7C3AED)' }} />
             )}
             <span className="text-[22px] leading-none">☰</span>
-            <span className="text-[10px] font-semibold leading-none">Menu</span>
+            <span className="text-[10px] font-bold leading-none">Menu</span>
           </button>
 
         </div>
