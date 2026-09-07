@@ -25,11 +25,10 @@ const STEPS = [
   { n: '03', title: 'Launch with confidence', desc: 'Generate SEO-optimised titles, bullet points, keywords, and pricing in one click — then contact suppliers directly from within the platform.' },
 ];
 
-
 const STATS = [
   { value: '76+', label: 'Marketplace platforms' },
-  { value: '19', label: 'Countries (Amazon)' },
-  { value: '7', label: 'AI scoring dimensions' },
+  { value: '19',  label: 'Countries (Amazon)' },
+  { value: '7',   label: 'AI scoring dimensions' },
   { value: '< 60s', label: 'First opportunity scored' },
 ];
 
@@ -49,13 +48,12 @@ function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; de
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0, rotateX: tilt.x, rotateY: tilt.y }}
         transition={{ delay, duration: 0.7, ease: 'easeOut', rotateX: { duration: 0.2 }, rotateY: { duration: 0.2 } }}
-        style={{ transformStyle: 'preserve-3d', boxShadow: `0 20px 60px rgba(0,0,0,0.1), 0 4px 16px ${card.color}20` }}
+        style={{ transformStyle: 'preserve-3d', boxShadow: `0 24px 64px rgba(0,0,0,0.15), 0 4px 16px ${card.color}25` }}
         className="bg-white rounded-2xl p-4 w-56 select-none cursor-default border border-slate-200"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-[10px] text-slate-400 font-semibold tracking-widest">EXAMPLE</span>
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-            style={{ background: card.color }}>{card.market}</span>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: card.color }}>{card.market}</span>
         </div>
         <div className="text-sm font-semibold text-slate-900 mb-3">{card.product}</div>
         <div className="flex items-center justify-between mb-2">
@@ -67,7 +65,7 @@ function OpportunityCard({ card, delay, className }: { card: typeof CARDS[0]; de
                 animate={{ width: `${card.score}%` }}
                 transition={{ delay: delay + 0.5, duration: 0.8, ease: 'easeOut' }}
                 className="h-full rounded-full"
-                style={{ background: `linear-gradient(90deg, ${card.color}, #6366F1)` }}
+                style={{ background: `linear-gradient(90deg,${card.color},#6366F1)` }}
               />
             </div>
             <span className="text-xs font-bold text-slate-900">{card.score}</span>
@@ -95,20 +93,18 @@ export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
+  const heroY      = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
 
   const [proPrice, setProPrice] = useState('18');
   const [creditBundle, setCreditBundle] = useState({ size: '10', price: '5' });
+
   useEffect(() => {
     fetch('/api/v1/platform/settings')
       .then(r => r.json())
       .then((s: any) => {
         if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
         if (s.credit_bundle_size || s.credit_bundle_price_usd) {
-          setCreditBundle({
-            size:  String(s.credit_bundle_size        ?? '10'),
-            price: String(s.credit_bundle_price_usd   ?? '5'),
-          });
+          setCreditBundle({ size: String(s.credit_bundle_size ?? '10'), price: String(s.credit_bundle_price_usd ?? '5') });
         }
       })
       .catch(() => {});
@@ -155,98 +151,135 @@ export default function LandingPage() {
 
   if (!checked) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-          className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0D1B35' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-bounce-in"
+            style={{ background: 'linear-gradient(135deg,#6366F1,#7C3AED)', boxShadow: '0 8px 24px rgba(99,102,241,0.4)' }}>
+            <img src="/icons/icon.svg" alt="" className="w-7 h-7" style={{ filter: 'brightness(10)' }} />
+          </div>
+          <div className="w-5 h-5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-white text-slate-900">
 
-      {/* ── Navbar ── */}
+      {/* ── Navbar — dark navy ─────────────────────────────────── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200"
-        style={{ boxShadow: '0 1px 0 #E2E8F0, 0 4px 16px rgba(15,23,42,0.05)' }}>
+        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16"
+        style={{
+          background: 'rgba(13,27,53,0.96)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+        }}>
 
         <Link href="/" className="flex items-center gap-2.5 group">
           <img src="/icons/icon.svg" alt="SellBodr"
             className="w-9 h-9 transition-transform duration-200 group-hover:scale-110"
-            style={{ filter: 'drop-shadow(0 0 6px rgba(124,58,237,0.5))' }} />
+            style={{ filter: 'drop-shadow(0 0 10px rgba(99,102,241,0.9)) brightness(1.2)' }} />
           <div>
-            <div className="text-[14px] font-black tracking-tight leading-none"
-              style={{ background: 'linear-gradient(135deg,#7c3aed 0%,#6366f1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <div className="text-[14px] font-black tracking-tight leading-none" style={{ color: '#ffffff' }}>
               SellBodr
             </div>
-            <div className="hidden sm:block text-[8px] font-semibold text-slate-400 uppercase tracking-[0.18em] leading-none mt-0.5">
+            <div className="hidden sm:block text-[8px] font-semibold uppercase tracking-[0.18em] leading-none mt-0.5"
+              style={{ color: 'rgba(255,255,255,0.3)' }}>
               eCommerce Intelligence
             </div>
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm text-slate-500">
-          <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
-          <a href="#how" className="hover:text-slate-900 transition-colors">How it works</a>
-          <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
-          <Link href="/guide" className="hover:text-slate-900 transition-colors">User Guide</Link>
+        <div className="hidden md:flex items-center gap-8 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <a href="#features" className="hover:text-white transition-colors duration-150">Features</a>
+          <a href="#how" className="hover:text-white transition-colors duration-150">How it works</a>
+          <a href="#pricing" className="hover:text-white transition-colors duration-150">Pricing</a>
+          <Link href="/guide" className="hover:text-white transition-colors duration-150">User Guide</Link>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-slate-500 hover:text-slate-800 transition-colors font-medium">
+          <Link href="/login" className="text-sm font-medium transition-colors duration-150 hover:text-white"
+            style={{ color: 'rgba(255,255,255,0.6)' }}>
             Sign in
           </Link>
-          <Link href="/register" className="btn-primary text-sm px-5 py-2.5 min-h-0 rounded-xl">
-            Get started
+          <Link href="/register" className="btn-scout text-sm px-5 py-2.5">
+            Get started →
           </Link>
         </div>
       </motion.nav>
 
-      {/* ── Hero ── */}
-      <motion.section ref={heroRef} style={{ opacity: heroOpacity, y: heroY, background: 'linear-gradient(180deg, #F5F3FF 0%, #EEF2FF 30%, #FFFFFF 70%)' }}
+      {/* ── Hero — dark-to-light gradient ────────────────────── */}
+      <motion.section
+        ref={heroRef as any}
+        style={{
+          opacity: heroOpacity,
+          y: heroY,
+          background: 'linear-gradient(180deg,#0D1B35 0%,#162240 12%,#263a6e 24%,#F0EEFF 52%,#EEF2FF 66%,#FFFFFF 82%)',
+        } as any}
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
 
-        {/* Background grid */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #7C3AED 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-        {/* Ambient glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-200/50 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-200/40 rounded-full blur-3xl" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white" />
+        {/* Dot-grid texture (dark zone) */}
+        <div className="absolute top-0 left-0 right-0 h-[50%] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+        {/* Ambient orbs */}
+        <div className="absolute top-[5%] left-1/4 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle,rgba(99,102,241,0.22),transparent 70%)' }} />
+        <div className="absolute top-[8%] right-[15%] w-72 h-72 rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%)' }} />
+        <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto">
+
+          {/* Live badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-xs text-slate-600 mb-8 border border-slate-200 shadow-sm">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-8"
+            style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)' }}>
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
             AI-powered · 76+ marketplaces · 19 Amazon countries · Live data
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8 }}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6 text-slate-900">
+            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6"
+            style={{ color: '#ffffff' }}>
             Find Products
             <br />
-            <span className="text-gradient">in India.</span>
+            <span style={{
+              background: 'linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 45%,#f9a8d4 85%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>
+              in India.
+            </span>
             <br />
             Sell Globally.
           </motion.h1>
 
+          {/* Subtext */}
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-            className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.72)' }}>
             AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified suppliers, and a Launch / Hold / Reject verdict in under 60 seconds.
           </motion.p>
 
+          {/* CTA */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex justify-center mb-4">
-            <Link href="/register" className="btn-primary text-base px-10 py-4 min-h-0 rounded-2xl">
+            <Link href="/register" className="btn-scout text-base px-10 py-4 rounded-2xl"
+              style={{ boxShadow: '0 8px 32px rgba(99,102,241,0.55), 0 4px 12px rgba(99,102,241,0.3)' }}>
               Scout your first product →
             </Link>
           </motion.div>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }} className="text-slate-500 text-sm mb-12">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
+            className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.38)' }}>
             Free to start · No credit card · Cancel anytime
           </motion.p>
 
@@ -259,30 +292,36 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Scroll indicator */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-400">
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          style={{ color: 'rgba(255,255,255,0.3)' }}>
           <span className="text-xs">Scroll to explore</span>
           <motion.div animate={{ y: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}
-            className="w-px h-8 bg-gradient-to-b from-slate-400 to-transparent" />
+            className="w-px h-8" style={{ background: 'linear-gradient(to bottom,rgba(255,255,255,0.35),transparent)' }} />
         </motion.div>
       </motion.section>
 
-      {/* ── Stats ── */}
-      <section className="py-16 px-6 border-y border-slate-100 bg-slate-50">
+      {/* ── Stats — dark navy strip ────────────────────────────── */}
+      <section className="py-16 px-6" style={{ background: '#0D1B35', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4">
           {STATS.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-2xl p-5 text-center border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform duration-200">
-              <div className="text-3xl sm:text-4xl font-black text-gradient mb-1">{s.value}</div>
-              <div className="text-xs text-slate-500 leading-snug">{s.label}</div>
+              className="rounded-2xl p-5 text-center cursor-default transition-transform duration-200 hover:-translate-y-1"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="text-3xl sm:text-4xl font-black mb-1"
+                style={{ background: 'linear-gradient(135deg,#a5b4fc,#c4b5fd)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                {s.value}
+              </div>
+              <div className="text-[11px] font-medium leading-snug" style={{ color: 'rgba(255,255,255,0.42)' }}>{s.label}</div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* ── Features ───────────────────────────────────────────── */}
       <section id="features" className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
@@ -299,11 +338,9 @@ export default function LandingPage() {
               <motion.div
                 key={f.title}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                className="bg-white rounded-2xl p-6 cursor-default transition-all duration-300 border border-slate-200 group"
-                style={{ boxShadow: '0 1px 4px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.05)' }}>
+                className="quick-tile p-6 cursor-default">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4"
-                  style={{ background: `${f.accent}14`, border: `1px solid ${f.accent}25` }}>
+                  style={{ background: `${f.accent}14`, border: `1px solid ${f.accent}28` }}>
                   {f.icon}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{f.title}</h3>
@@ -314,7 +351,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How it works ── */}
+      {/* ── How it works ───────────────────────────────────────── */}
       <section id="how" className="py-24 px-6 bg-slate-50">
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
@@ -324,15 +361,15 @@ export default function LandingPage() {
             </h2>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-5 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-px bg-gradient-to-r from-slate-200 via-violet-300 to-slate-200" />
+            <div className="hidden md:block absolute top-8 left-1/6 right-1/6 h-px"
+              style={{ background: 'linear-gradient(90deg,transparent,rgba(99,102,241,0.4),transparent)' }} />
             {STEPS.map((s, i) => (
               <motion.div
                 key={s.n}
                 initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                className="bg-white rounded-2xl p-6 relative border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform duration-200">
-                <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
-                  style={{ background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.4),transparent)' }} />
+                className="bg-white rounded-2xl p-6 relative border border-slate-200 shadow-sm hover:-translate-y-1 transition-transform duration-200 cursor-default">
+                <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
+                  style={{ background: 'linear-gradient(90deg,transparent,rgba(99,102,241,0.55),transparent)' }} />
                 <div className="text-4xl font-black mb-4 leading-none text-gradient">{s.n}</div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{s.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
@@ -343,7 +380,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
+      {/* ── Pricing ────────────────────────────────────────────── */}
       <section id="pricing" className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
@@ -352,7 +389,7 @@ export default function LandingPage() {
               Start free. Scale at <span className="text-gradient">your own pace.</span>
             </h2>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              {`5 free scans to start — no card needed. Go Pro for $${proPrice}/mo for unlimited scans and premium AI models. Pay only for AI content you generate — $${creditBundle.price} for ${creditBundle.size} credits.`}
+              {`5 free scans to start — no card needed. Go Pro for $${proPrice}/mo for unlimited scans and premium AI models.`}
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -363,16 +400,14 @@ export default function LandingPage() {
                 className={`relative bg-white rounded-2xl p-7 flex flex-col overflow-hidden border-2 ${
                   p.highlight ? 'border-violet-400 shadow-xl shadow-violet-100' : 'border-slate-200 shadow-sm'
                 }`}>
-
-                <div className="absolute top-0 left-0 right-0 h-px"
+                <div className="absolute top-0 left-0 right-0 h-[2px]"
                   style={{ background: p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
-
                 {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg shadow-violet-500/30 z-10">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg z-10"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 14px rgba(99,102,241,0.45)' }}>
                     MOST POPULAR
                   </div>
                 )}
-
                 <div className={`text-xs font-bold uppercase tracking-widest mb-2 ${p.highlight ? 'text-violet-600' : 'text-slate-500'}`}>
                   {p.name}
                 </div>
@@ -391,7 +426,7 @@ export default function LandingPage() {
                 </ul>
                 <Link href={p.ctaHref}
                   className={p.highlight
-                    ? 'btn-primary text-sm justify-center min-h-0 py-3 text-center'
+                    ? 'btn-scout text-sm justify-center py-3 text-center w-full rounded-xl'
                     : 'inline-flex items-center justify-center text-sm py-3 px-6 rounded-xl font-semibold text-slate-700 border-2 border-slate-200 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 transition-all duration-200 w-full'}>
                   {p.cta}
                 </Link>
@@ -399,7 +434,8 @@ export default function LandingPage() {
             ))}
           </div>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="mt-8 max-w-2xl mx-auto rounded-2xl border border-violet-100 bg-violet-50/60 px-6 py-4 text-center">
+            className="mt-8 max-w-2xl mx-auto rounded-2xl px-6 py-4 text-center"
+            style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
             <p className="text-sm font-semibold text-violet-700 mb-1">⚡ AI Generation Credits</p>
             <p className="text-xs text-slate-500">{aiCreditNote}</p>
           </motion.div>
@@ -410,7 +446,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Install / PWA ── */}
+      {/* ── Install / PWA ──────────────────────────────────────── */}
       <section className="py-16 px-6 bg-slate-50">
         <div className="max-w-4xl mx-auto bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200 shadow-sm">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -438,7 +474,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               )}
-
               <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-slate-600">
                 <span className="text-2xl"></span>
                 <div className="text-left">
@@ -446,7 +481,6 @@ export default function LandingPage() {
                   <div className="text-slate-400 text-xs">Safari → Share ↑ → Add to Home</div>
                 </div>
               </div>
-
               {installPrompt ? (
                 <button onClick={handleInstall}
                   className="bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-300 rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-slate-600 hover:text-violet-700 transition-all touch-manipulation">
@@ -466,7 +500,6 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-
             <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center">
               <a href="https://github.com/MoshayM/SellBodr/releases/latest/download/SellBodr-Setup.exe"
                 className="bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl px-5 py-3 flex items-center gap-3 text-sm text-slate-600 hover:text-blue-700 transition-all"
@@ -478,7 +511,6 @@ export default function LandingPage() {
                 </div>
               </a>
             </div>
-
             {isInstalled && (
               <p className="mt-4 text-sm text-emerald-600 font-medium">✓ SellBodr is installed on this device</p>
             )}
@@ -486,39 +518,80 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="py-24 px-6 text-center relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-indigo-50 to-violet-50" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-200/40 rounded-full blur-3xl" />
+      {/* ── Final CTA — dark navy ──────────────────────────────── */}
+      <section className="py-28 px-6 text-center relative overflow-hidden"
+        style={{ background: 'linear-gradient(180deg,#0D1B35 0%,#0F2040 100%)' }}>
+        {/* Dot grid */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.04) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+        {/* Center glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle,rgba(99,102,241,0.22),transparent 70%)' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse,rgba(124,58,237,0.15),transparent 70%)' }} />
+
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="relative z-10 max-w-2xl mx-auto">
-          <h2 className="text-5xl sm:text-6xl font-black mb-6 leading-tight text-slate-900">
-            Start scouting <span className="text-gradient">today</span>
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-8"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.7)' }}>
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            Join thousands of cross-border sellers
+          </div>
+
+          <h2 className="text-5xl sm:text-6xl font-black mb-6 leading-tight" style={{ color: '#ffffff' }}>
+            Start scouting{' '}
+            <span style={{
+              background: 'linear-gradient(135deg,#a5b4fc 0%,#c4b5fd 50%,#f9a8d4 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>
+              today
+            </span>
           </h2>
-          <p className="text-slate-600 text-lg mb-10">
+
+          <p className="text-lg mb-10 leading-relaxed" style={{ color: 'rgba(255,255,255,0.62)' }}>
             AI-powered intelligence to source in India and sell on the world&apos;s top marketplaces.
           </p>
-          <Link href="/register" className="btn-primary text-lg px-10 py-5 min-h-0 rounded-2xl inline-flex shadow-xl shadow-violet-500/25">
+
+          <Link href="/register" className="btn-scout text-lg px-10 py-5 rounded-2xl inline-flex"
+            style={{ boxShadow: '0 8px 32px rgba(99,102,241,0.55), 0 4px 12px rgba(99,102,241,0.3)' }}>
             Start scouting →
           </Link>
-          <p className="text-slate-500 text-sm mt-5">Free to start · No credit card · Cancel anytime</p>
+
+          <p className="text-sm mt-5" style={{ color: 'rgba(255,255,255,0.32)' }}>
+            Free to start · No credit card · Cancel anytime
+          </p>
+
+          {/* Stats row */}
+          <div className="mt-14 grid grid-cols-3 gap-4 max-w-sm mx-auto">
+            {[['76+','Marketplaces'],['< 60s','To first score'],['5 free','Scans to start']].map(([v,l]) => (
+              <div key={l} className="rounded-2xl p-3 text-center"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="text-base font-black text-white">{v}</div>
+                <div className="text-[10px] leading-snug mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{l}</div>
+              </div>
+            ))}
+          </div>
         </motion.div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-slate-200 py-10 px-6 bg-slate-50">
+      {/* ── Footer — dark navy ─────────────────────────────────── */}
+      <footer className="py-10 px-6" style={{ background: '#0A1525', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <img src="/icons/icon.svg" alt="SellBodr" className="w-7 h-7"
-              style={{ filter: 'drop-shadow(0 0 4px rgba(124,58,237,0.4))' }} />
-            <span className="font-bold text-slate-900">SellBodr</span>
+              style={{ filter: 'drop-shadow(0 0 5px rgba(99,102,241,0.6)) brightness(1.1)' }} />
+            <span className="font-bold" style={{ color: '#ffffff' }}>SellBodr</span>
           </div>
-          <p className="text-slate-400 text-sm">&copy; {new Date().getFullYear()} SellBodr. All rights reserved.</p>
-          <div className="flex items-center gap-6 text-sm text-slate-500">
-            <Link href="/guide" className="hover:text-slate-900 transition-colors">User Guide</Link>
-            <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms</Link>
-            <Link href="/login" className="hover:text-slate-900 transition-colors">Sign in</Link>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            &copy; {new Date().getFullYear()} SellBodr. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            <Link href="/guide"   className="hover:text-white transition-colors duration-150">User Guide</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors duration-150">Privacy</Link>
+            <Link href="/terms"   className="hover:text-white transition-colors duration-150">Terms</Link>
+            <Link href="/login"   className="hover:text-white transition-colors duration-150">Sign in</Link>
           </div>
         </div>
       </footer>
