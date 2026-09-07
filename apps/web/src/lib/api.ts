@@ -163,6 +163,9 @@ export const api = {
     getPlans: () => request<any[]>('/billing/plans'),
     getCredits: () => request<{ credits: number | null; isAdmin: boolean }>('/billing/credits'),
     buyCredits: () => request<{ url: string }>('/billing/checkout', { method: 'POST', body: '{}' }),
+    razorpayOrder: () => request<{ orderId: string; amount: number; currency: string; keyId: string }>('/billing/razorpay/order', { method: 'POST', body: '{}' }),
+    razorpayVerify: (data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
+      request<{ ok: boolean; credits: number }>('/billing/razorpay/verify', { method: 'POST', body: JSON.stringify(data) }),
   },
   marketplaces: {
     list: (params?: { active?: boolean }) => {

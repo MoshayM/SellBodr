@@ -404,16 +404,49 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                         onClick={async () => {
                           setBuyingCredits(true);
                           try {
-                            const { url } = await api.billing.buyCredits();
-                            window.location.href = url;
+                            // Try Razorpay first (INR), fall back to Stripe (USD)
+                            const order = await api.billing.razorpayOrder().catch(() => null);
+                            if (order) {
+                              const script = document.createElement('script');
+                              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                              script.async = true;
+                              document.body.appendChild(script);
+                              await new Promise(r => { script.onload = r; });
+                              const rzp = new (window as any).Razorpay({
+                                key:         order.keyId,
+                                amount:      order.amount,
+                                currency:    order.currency,
+                                order_id:    order.orderId,
+                                name:        'SellBodr',
+                                description: '10 Report Credits',
+                                theme:       { color: '#6366f1' },
+                                handler: async (response: any) => {
+                                  try {
+                                    await api.billing.razorpayVerify({
+                                      razorpay_order_id:   response.razorpay_order_id,
+                                      razorpay_payment_id: response.razorpay_payment_id,
+                                      razorpay_signature:  response.razorpay_signature,
+                                    });
+                                    window.location.href = '/billing/success';
+                                  } catch {
+                                    alert('Payment verification failed. Contact support.');
+                                  }
+                                },
+                                modal: { ondismiss: () => setBuyingCredits(false) },
+                              });
+                              rzp.open();
+                            } else {
+                              const { url } = await api.billing.buyCredits();
+                              window.location.href = url;
+                            }
                           } catch {
                             setBuyingCredits(false);
-                            alert('Stripe not configured yet — contact admin.');
+                            alert('Payment not configured yet — contact admin.');
                           }
                         }}
                         className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all disabled:opacity-60"
                         style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}>
-                        {buyingCredits ? 'Redirecting…' : '+ Buy 10 Credits — $5'}
+                        {buyingCredits ? 'Opening payment…' : '+ Buy 10 Credits — ₹499'}
                       </button>
                     </div>
                   )}
