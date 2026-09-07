@@ -57,11 +57,11 @@ function HamburgerIcon({ open }: { open: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
       <rect x="0" y="2"  width="18" height="2" rx="1" fill="currentColor"
-        style={{ transformOrigin: '9px 3px', transition: 'transform 0.25s ease', transform: open ? 'none' : 'rotate(45deg) translate(4px, 4px)' }} />
+        style={{ transformOrigin: '9px 3px', transition: 'transform 0.25s ease', transform: open ? 'rotate(45deg) translate(4px, 4px)' : 'none' }} />
       <rect x="0" y="8"  width="14" height="2" rx="1" fill="currentColor"
-        style={{ transition: 'opacity 0.2s ease', opacity: open ? 1 : 0 }} />
+        style={{ transition: 'opacity 0.2s ease', opacity: open ? 0 : 1 }} />
       <rect x="0" y="14" width="18" height="2" rx="1" fill="currentColor"
-        style={{ transformOrigin: '9px 15px', transition: 'transform 0.25s ease', transform: open ? 'none' : 'rotate(-45deg) translate(4px, -4px)' }} />
+        style={{ transformOrigin: '9px 15px', transition: 'transform 0.25s ease', transform: open ? 'rotate(-45deg) translate(4px, -4px)' : 'none' }} />
     </svg>
   );
 }
