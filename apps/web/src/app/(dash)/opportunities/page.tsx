@@ -1391,15 +1391,15 @@ export default function OpportunitiesPage() {
                             {netMinor > 0 ? '+' : ''}{currency}{(netMinor/100).toFixed(0)}
                           </span>
                         )}
-                        {/* Score badge — flush left of View button */}
-                        <span className="text-[11px] font-black tabular-nums px-1.5 py-1 rounded-md leading-none"
-                          style={{ color: scoreColor, backgroundColor: scoreColor + '18', border: `1px solid ${scoreColor}40` }}>
-                          {score}
-                        </span>
+                        {/* Score embedded inside the View button */}
                         <Link href={`/opportunities/${opp.id}`}
                           onClick={e => e.stopPropagation()}
-                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
-                          View →
+                          className="inline-flex items-center gap-0 text-[11px] font-bold rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap overflow-hidden">
+                          <span className="px-2 py-1.5 font-black tabular-nums"
+                            style={{ backgroundColor: 'rgba(0,0,0,0.18)', color: scoreColor === '#10b981' ? '#6ee7b7' : scoreColor === '#f59e0b' ? '#fcd34d' : '#fca5a5' }}>
+                            {score}
+                          </span>
+                          <span className="px-2.5 py-1.5">View →</span>
                         </Link>
                       </div>
                     </div>
