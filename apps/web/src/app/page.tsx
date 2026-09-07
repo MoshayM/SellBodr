@@ -397,13 +397,14 @@ export default function LandingPage() {
               <motion.div
                 key={p.name}
                 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className={`relative bg-white rounded-2xl p-7 flex flex-col overflow-hidden border-2 ${
-                  p.highlight ? 'border-violet-400 shadow-xl shadow-violet-100' : 'border-slate-200 shadow-sm'
+                className={`relative bg-white rounded-2xl p-7 flex flex-col border-2 ${
+                  p.highlight ? 'border-violet-400 shadow-xl shadow-violet-100 pt-9' : 'border-slate-200 shadow-sm'
                 }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2px]"
+                {/* top accent line — clipped separately so badge above isn't cut */}
+                <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl overflow-hidden"
                   style={{ background: p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
                 {p.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg z-10"
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg z-10 whitespace-nowrap"
                     style={{ background: 'linear-gradient(135deg,#7C3AED,#6366F1)', boxShadow: '0 4px 14px rgba(99,102,241,0.45)' }}>
                     MOST POPULAR
                   </div>
