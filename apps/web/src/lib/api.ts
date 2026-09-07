@@ -256,6 +256,11 @@ export function clearAuth() {
   localStorage.removeItem('bs_access_token');
   localStorage.removeItem('bs_refresh_token');
   localStorage.removeItem('bs_user');
+  // Tell Google Identity Services to forget the selected account so the
+  // login page shows the picker instead of "Sign in as <previous user>".
+  try {
+    (window as any).google?.accounts?.id?.disableAutoSelect();
+  } catch {}
 }
 
 export function isPro(): boolean {
