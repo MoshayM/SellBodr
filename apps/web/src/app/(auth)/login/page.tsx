@@ -254,7 +254,8 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fpLoading, setFpLoading]         = useState(false);
   const [canFingerprint, setCanFingerprint] = useState(false);
-  const fpModuleRef = useRef<Promise<typeof import('@simplewebauthn/browser')> | null>(null);
+  const fpModuleRef    = useRef<Promise<typeof import('@simplewebauthn/browser')> | null>(null);
+  const fpChallengeRef = useRef<{ data: any; fetchedAt: number } | null>(null);
   const [gsiReady, setGsiReady]           = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS]                 = useState(false);
@@ -284,9 +285,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
+    // Preconnect to Google domains so the script + auth handshake start sooner
+    for (const origin of ['https://accounts.google.com', 'https://apis.google.com']) {
+      const l = document.createElement('link');
+      l.rel = 'preconnect'; l.href = origin; l.crossOrigin = 'anonymous';
+      document.head.appendChild(l);
+    }
     const el = document.createElement('script');
     el.src = 'https://accounts.google.com/gsi/client';
-    el.async = true;
+    el.async = true; el.defer = true;
     el.onload = () => setGsiReady(true);
     document.head.appendChild(el);
     return () => { try { document.head.removeChild(el); } catch {} };
@@ -333,19 +340,46 @@ export default function LoginPage() {
     });
   }
 
+  // Pre-fetch passkey challenge when email is entered so tap→scan is instant
+  function prefetchFpChallenge(emailVal: string) {
+    if (!canFingerprint) return;
+    const CACHE_MS = 4 * 60 * 1000; // 4 min — challenge TTL is 5 min
+    const cached = fpChallengeRef.current;
+    if (cached && Date.now() - cached.fetchedAt < CACHE_MS) return;
+    fpChallengeRef.current = null;
+    api.passkeys.loginBegin(emailVal || undefined)
+      .then(data => { fpChallengeRef.current = { data, fetchedAt: Date.now() }; })
+      .catch(() => {});
+  }
+
   async function loginWithFingerprint() {
     setError(''); setFpLoading(true);
     try {
+      // Use pre-fetched challenge if fresh, otherwise fetch now
+      const CACHE_MS = 4 * 60 * 1000;
+      const cached = fpChallengeRef.current;
+      const isFresh = cached && Date.now() - cached.fetchedAt < CACHE_MS;
+
       const [beginData, { startAuthentication }] = await Promise.all([
-        api.passkeys.loginBegin(email || undefined),
+        isFresh ? Promise.resolve(cached!.data) : api.passkeys.loginBegin(email || undefined),
         fpModuleRef.current ?? import('@simplewebauthn/browser'),
       ]);
+      fpChallengeRef.current = null; // consume it
+
       const { challengeId, ...options } = beginData;
-      const assnResp = await startAuthentication({ ...options, userVerification: 'required' });
+      // Use server's userVerification setting — do NOT override with 'required'
+      // 'required' causes "unknown error talking to credential manager" on Android
+      const assnResp = await startAuthentication(options);
       const auth = await api.passkeys.loginComplete(challengeId, assnResp) as any;
       saveAuth(auth); router.push('/opportunities');
     } catch (err: any) {
-      setError(err?.name === 'NotAllowedError' ? 'Fingerprint scan cancelled.' : (err?.message || 'Fingerprint login failed.'));
+      fpChallengeRef.current = null; // clear stale challenge on error
+      const msg = err?.name === 'NotAllowedError'
+        ? 'Fingerprint scan cancelled.'
+        : err?.name === 'InvalidStateError' || err?.message?.includes('credential')
+        ? 'Passkey not found on this device. Try signing in with email.'
+        : (err?.message || 'Fingerprint login failed.');
+      setError(msg);
     } finally { setFpLoading(false); }
   }
 
@@ -556,6 +590,7 @@ export default function LoginPage() {
                 </label>
                 <input type="email" value={email}
                   onChange={e => { setEmail(e.target.value); setError(''); }}
+                  onBlur={e => prefetchFpChallenge(e.target.value)}
                   autoComplete="email" inputMode="email" placeholder="you@example.com"
                   className="input-dark" />
               </div>
