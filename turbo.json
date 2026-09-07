@@ -21,7 +21,10 @@
         "ADMIN_PASSWORD",
         "PEXELS_API_KEY",
         "SCRAPERAPI_KEY",
-        "NEXT_PUBLIC_CARTO_API_KEY"
+        "NEXT_PUBLIC_CARTO_API_KEY",
+        "PROVIDER_KEY_SECRET",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET"
       ]
     },
     "dev": {
