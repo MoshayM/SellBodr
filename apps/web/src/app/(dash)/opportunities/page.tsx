@@ -795,6 +795,7 @@ export default function OpportunitiesPage() {
 
   // Search visibility: Pro-only. 'private' = create private + show only my results; 'public' = shared pool
   const [searchVisibility, setSearchVisibility] = useState<'public' | 'private'>('public');
+  const [mineVisFilter,    setMineVisFilter]    = useState<'all' | 'public' | 'private'>('all');
 
   // Wishlist state (localStorage-backed)
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -844,10 +845,13 @@ export default function OpportunitiesPage() {
 
   const oppParams: Record<string, string> = {};
   if (mpFilter) oppParams.marketplace = mpFilter;
-  if (mineOnly) oppParams.mine = 'true';
+  if (mineOnly) {
+    oppParams.mine = 'true';
+    if (mineVisFilter !== 'all') oppParams.mineVis = mineVisFilter;
+  }
 
   const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities', { marketplace: mpFilter, visibility: searchVisibility }],
+    queryKey: ['opportunities', { marketplace: mpFilter, visibility: searchVisibility, mineVis: mineOnly ? mineVisFilter : 'n/a' }],
     queryFn: () => api.opportunities.list(oppParams),
   });
 
@@ -1088,28 +1092,51 @@ export default function OpportunitiesPage() {
             />
           )}
 
-          {/* View mode toggle — Pro only: All Results (public pool) vs My Results (private) */}
-          {!isFree ? (
+          {/* View mode toggle — All Results vs My Scans (Pro only) */}
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg border border-slate-200 bg-slate-50 text-xs select-none"
-              title="All Results: shared public pool · My Results: only your scans, saved privately">
+              title="All Results: shared public pool · My Scans: your own scanned results (public + private)">
               <button
-                onClick={() => setSearchVisibility('public')}
+                onClick={() => { setSearchVisibility('public'); setMineVisFilter('all'); }}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'public' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                 🌐 All Results
               </button>
-              <button
-                onClick={() => setSearchVisibility('private')}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'private' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                🔒 My Results
-              </button>
+              {!isFree ? (
+                <button
+                  onClick={() => setSearchVisibility('private')}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'private' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                  🔍 My Scans
+                </button>
+              ) : (
+                <span className="flex items-center gap-1 px-2.5 py-1.5 text-slate-400 cursor-default"
+                  title="My Scans is Pro-only">
+                  🔒 <Link href="/upgrade" className="text-violet-600 font-medium hover:underline">My Scans</Link>
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-1 text-xs text-slate-400 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-200"
-              title="My Results (private scans) is Pro-only">
-              🔒 <span className="hidden sm:inline">My Results — </span>
-              <Link href="/upgrade" className="text-violet-600 font-medium hover:underline">Pro only</Link>
-            </div>
-          )}
+            {/* Sub-filter: only shown in My Scans mode */}
+            {searchVisibility === 'private' && !isFree && (
+              <div className="flex items-center gap-1 text-[11px] select-none">
+                <span className="text-slate-400 font-medium mr-0.5">Show:</span>
+                {(['all', 'public', 'private'] as const).map(v => (
+                  <button key={v}
+                    onClick={() => setMineVisFilter(v)}
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all border ${
+                      mineVisFilter === v
+                        ? v === 'private'
+                          ? 'bg-violet-100 text-violet-700 border-violet-300'
+                          : v === 'public'
+                            ? 'bg-sky-100 text-sky-700 border-sky-300'
+                            : 'bg-slate-200 text-slate-800 border-slate-300'
+                        : 'bg-transparent text-slate-400 border-transparent hover:text-slate-600'
+                    }`}>
+                    {v === 'all' ? 'All' : v === 'public' ? '🌐 Public' : '🔒 Private'}
+                  </button>
+                ))}
+                <span className="ml-auto text-slate-400 text-[10px]">sorted by AI score</span>
+              </div>
+            )}
+          </div>
           </div>
         </div>
 
@@ -1377,12 +1404,17 @@ export default function OpportunitiesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <div className="font-semibold dark:text-white text-slate-900 text-sm leading-snug line-clamp-2">{opp.product?.title}</div>
-                      {opp.isPrivate && (
+                      {opp.isPrivate ? (
                         <span title="Private — only visible to you and admins"
                           className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-violet-400/40 bg-violet-500/10 text-violet-500 font-semibold leading-none">
-                          🔒
+                          🔒 Private
                         </span>
-                      )}
+                      ) : mineOnly ? (
+                        <span title="Public — visible in the shared pool"
+                          className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-sky-400/40 bg-sky-500/10 text-sky-600 font-semibold leading-none">
+                          🌐 Public
+                        </span>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {opp.product?.category && (
@@ -1591,12 +1623,17 @@ export default function OpportunitiesPage() {
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
-                              {opp.isPrivate && (
+                              {opp.isPrivate ? (
                                 <span title="Private — only visible to you and admins"
                                   className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-violet-400/40 bg-violet-500/10 text-violet-500 font-semibold leading-none">
-                                  🔒
+                                  🔒 Private
                                 </span>
-                              )}
+                              ) : mineOnly ? (
+                                <span title="Public — visible in the shared pool"
+                                  className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-sky-400/40 bg-sky-500/10 text-sky-600 font-semibold leading-none">
+                                  🌐 Public
+                                </span>
+                              ) : null}
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {opp.product?.category && (

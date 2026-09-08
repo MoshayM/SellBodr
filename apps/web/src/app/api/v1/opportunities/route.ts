@@ -36,8 +36,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const recFilter  = searchParams.get('recommendation') || '';
     const mpFilter   = searchParams.get('marketplace') || '';
-    // Pro/Admin: ?mine=true shows only the user's own searches (public + private)
+    // Pro/Admin: ?mine=true shows user's own searches; ?mineVis=public|private sub-filters within that
     const mineOnly   = searchParams.get('mine') === 'true' && (isPro || isAdmin);
+    const mineVis    = searchParams.get('mineVis') || ''; // 'public' | 'private' | '' (both)
 
     const clauses: string[] = [];
     const args: (string | number)[] = [];
@@ -46,8 +47,14 @@ export async function GET(req: NextRequest) {
     if (isAdmin) {
       // Admins see everything — no visibility clause
     } else if (mineOnly) {
-      // "My Results" view: only this user's searches (both public and private)
-      clauses.push('(o.searchId IS NOT NULL AND sr.userId = ?)');
+      // "My Scans" view: user's own searches, optionally filtered by visibility
+      if (mineVis === 'public') {
+        clauses.push("(o.searchId IS NOT NULL AND sr.userId = ? AND (sr.visibility IS NULL OR sr.visibility = 'public'))");
+      } else if (mineVis === 'private') {
+        clauses.push("(o.searchId IS NOT NULL AND sr.userId = ? AND sr.visibility = 'private')");
+      } else {
+        clauses.push('(o.searchId IS NOT NULL AND sr.userId = ?)');
+      }
       args.push(userId);
     } else if (isPro) {
       // Pro: public pool + their own private searches
