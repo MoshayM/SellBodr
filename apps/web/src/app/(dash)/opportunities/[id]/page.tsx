@@ -50,11 +50,11 @@ function GenProgressButton({
 
   if (noCredits) {
     return (
-      <button onClick={onBuyCredits}
+      <a href="/register?plan=pro"
         className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap ${className}`}
-        style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-        💳 Buy 10 Credits — {buyLabel}
-      </button>
+        style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,0.4)' }}>
+        ⭐ Become Pro
+      </a>
     );
   }
 
@@ -1769,7 +1769,10 @@ export default function OpportunityDetailPage() {
       })()}
 
       {/* ── Listing ── */}
-      {!isGuest && tab === 'Listing' && (
+      {!isGuest && isFree && tab === 'Listing' && (
+        <ProGate compact icon="✍️" feature="AI Listing Copy" tagline="SEO-optimised title, bullet points, description and backend keywords — ready to paste into Seller Central." benefits={['SEO-optimised title', 'Bullet points & description', 'Backend keywords', 'One-click copy']} />
+      )}
+      {!isGuest && !isFree && tab === 'Listing' && (
         <div className="space-y-4">
           {listing ? (
             <>
@@ -1828,7 +1831,10 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Ads ── */}
-      {!isGuest && tab === 'Ads' && (() => {
+      {!isGuest && isFree && tab === 'Ads' && (
+        <ProGate compact icon="📣" feature="AI Ad Copy" tagline="Facebook, Instagram, YouTube and Google ad campaigns — written and ready to launch." benefits={['Platform-specific headlines', 'Ad body copy & CTAs', 'Audience targeting hints', 'Multiple ad variations']} />
+      )}
+      {!isGuest && !isFree && tab === 'Ads' && (() => {
         const ads = (genAds.data ?? savedAds) as any;
         return (
         <div className="space-y-4">
@@ -2019,7 +2025,10 @@ export default function OpportunityDetailPage() {
       })()}
 
       {/* ── Growth ── */}
-      {!isGuest && tab === 'Growth' && (() => {
+      {!isGuest && isFree && tab === 'Growth' && (
+        <ProGate compact icon="📈" feature="Growth Strategy" tagline="Personalised 90-day launch roadmap, pricing strategy and scale-up plan for this product." benefits={['90-day launch roadmap', 'Pricing strategy', 'Scale-up tactics', 'Channel recommendations']} />
+      )}
+      {!isGuest && !isFree && tab === 'Growth' && (() => {
         const g = (genGrowth.data ?? savedGrowth) as any;
         return (
         <div className="space-y-4">
@@ -2213,7 +2222,10 @@ export default function OpportunityDetailPage() {
       })()}
 
       {/* ── Brand Builder ── */}
-      {!isGuest && tab === 'Brand Builder' && (() => {
+      {!isGuest && isFree && tab === 'Brand Builder' && (
+        <ProGate compact icon="🎨" feature="Brand Builder" tagline="AI-generated brand names, positioning, taglines and visual direction for your product." benefits={['Brand name ideas', 'Brand positioning statement', 'Visual direction', 'Tagline & tone of voice']} />
+      )}
+      {!isGuest && !isFree && tab === 'Brand Builder' && (() => {
         const b = (genBrand.data ?? savedBrand) as any;
         return (
         <div className="space-y-4">
@@ -2362,7 +2374,10 @@ export default function OpportunityDetailPage() {
       })()}
 
       {/* ── Bundle Generator ── */}
-      {!isGuest && tab === 'Bundle' && (() => {
+      {!isGuest && isFree && tab === 'Bundle' && (
+        <ProGate compact icon="📦" feature="Bundle Generator" tagline="AI-designed product bundles that increase average order value and reduce direct competition." benefits={['Bundle ideas & rationale', 'Pricing recommendations', 'AOV impact estimate', 'Competitive differentiation']} />
+      )}
+      {!isGuest && !isFree && tab === 'Bundle' && (() => {
         const bundleData = (genBundle.data ?? savedBundle) as any;
         const bundles: any[] = bundleData?.bundles || (Array.isArray(bundleData) ? bundleData : []);
         return (
@@ -2528,7 +2543,10 @@ export default function OpportunityDetailPage() {
       )}
 
       {/* ── Report ── */}
-      {!isGuest && tab === 'Report' && (
+      {!isGuest && isFree && tab === 'Report' && (
+        <ProGate compact icon="📊" feature="Full Opportunity Report" tagline="Complete deep-dive report covering demand, sourcing, margins, competition and launch plan — saved history included." benefits={['Multi-section deep-dive report', 'PDF & JSON export', 'Historical report archive', 'Shareable link']} />
+      )}
+      {!isGuest && !isFree && tab === 'Report' && (
         <div className="space-y-4">
           {/* Header + Generate button */}
           <div className="card-dark p-4 sm:p-6 flex items-center justify-between gap-3 flex-wrap">
