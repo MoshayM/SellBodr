@@ -5,6 +5,9 @@ import { ensureSchema } from '@/lib/schema';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ message: 'Not found' }, { status: 404 });
+  }
   const secret = req.headers.get('x-admin-secret');
   if (!secret || secret !== process.env.ADMIN_SECRET) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

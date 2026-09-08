@@ -22,10 +22,10 @@ const nextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net https://checkout.razorpay.com",
+      "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net https://checkout.razorpay.com",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https:",
+      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://cdn.pixabay.com https://picsum.photos https://fastly.picsum.photos https://image.pollinations.ai https://loremflickr.com https://*.staticflickr.com https://lh3.googleusercontent.com",
+      "connect-src 'self' https://api.groq.com https://api.mistral.ai https://accounts.google.com https://oauth2.googleapis.com https://checkout.razorpay.com https://api.razorpay.com",
       "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://www.openstreetmap.org",
       "font-src 'self' data: https://cdn.jsdelivr.net",
       "object-src 'none'",
@@ -41,6 +41,7 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           { key: 'Content-Security-Policy', value: csp },
         ],
       },

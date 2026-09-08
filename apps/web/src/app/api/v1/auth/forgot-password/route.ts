@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
           console.log('[forgot-password] Email sent, id:', sendResult.data?.id);
         }
       } else {
-        console.warn('[forgot-password] RESEND_API_KEY not set — skipping email. Reset URL:', resetUrl);
+        console.warn('[forgot-password] RESEND_API_KEY not set — skipping email send');
       }
     }
 

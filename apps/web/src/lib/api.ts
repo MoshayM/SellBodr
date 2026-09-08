@@ -292,5 +292,5 @@ export function isPro(): boolean {
 export function isAdmin(): boolean {
   if (typeof window === 'undefined') return false;
   const user = getUser();
-  return user?.role === 'admin' || user?.email === 'sellbodr@gmail.com';
+  return user?.role === 'admin';
 }

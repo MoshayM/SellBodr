@@ -6,12 +6,12 @@ import { fetchProductImage } from '@/lib/imageEnrichment';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>
-// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&debug=1   — list all products
-// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&pending=1 — list products still needing enrichment
-// GET /api/v1/admin/fix-images?secret=<ADMIN_SECRET>&force=1   — re-enrich ALL products
+// GET /api/v1/admin/fix-images  (x-admin-secret: <ADMIN_SECRET> header required)
+// GET /api/v1/admin/fix-images?debug=1   — list all products
+// GET /api/v1/admin/fix-images?pending=1 — list products still needing enrichment
+// GET /api/v1/admin/fix-images?force=1   — re-enrich ALL products
 export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret');
+  const secret = req.headers.get('x-admin-secret');
   const validSecret = process.env.ADMIN_SECRET || process.env.JWT_ACCESS_SECRET;
   if (!validSecret || secret !== validSecret) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -51,16 +51,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ count: rows.rows.length, pending: rows.rows });
   }
 
-  const result = await db.execute(
-    `SELECT p.id, p.title, p.category, p.imageSource, m.code as marketplace
+  const result = await db.execute({
+    sql: `SELECT p.id, p.title, p.category, p.imageSource, m.code as marketplace
      FROM "Product" p
      JOIN "Opportunity" o ON o.productId = p.id
      JOIN "Marketplace" m ON o.marketplaceId = m.id
      ${whereClause}
      GROUP BY p.id
      ORDER BY p.createdAt DESC
-     LIMIT ${limit} OFFSET ${offset}`
-  );
+     LIMIT ? OFFSET ?`,
+    args: [limit, offset],
+  });
 
   let fixed = 0;
   let failed = 0;

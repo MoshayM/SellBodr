@@ -32,10 +32,15 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'SellBodr/1.0 (image-proxy)' },
-      redirect: 'follow',
+      redirect: 'manual',
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
+
+    // Reject redirects — a redirect chain could bypass the private-IP check above
+    if (res.status >= 300 && res.status < 400) {
+      return NextResponse.json({ error: 'Redirects not allowed' }, { status: 400 });
+    }
 
     if (!res.ok) return NextResponse.json({ error: 'Upstream error' }, { status: 502 });
 
