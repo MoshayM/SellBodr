@@ -96,7 +96,6 @@ export default function LandingPage() {
   const heroY      = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
 
   const [proPrice, setProPrice] = useState('19');
-  const [creditBundle, setCreditBundle] = useState({ size: '10', price: '5' });
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [isAnnual, setIsAnnual] = useState(false);
 
@@ -105,9 +104,6 @@ export default function LandingPage() {
       .then(r => r.json())
       .then((s: any) => {
         if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
-        if (s.credit_bundle_size || s.credit_bundle_price_usd) {
-          setCreditBundle({ size: String(s.credit_bundle_size ?? '10'), price: String(s.credit_bundle_price_usd ?? '5') });
-        }
       })
       .catch(() => {});
   }, []);
@@ -130,8 +126,6 @@ export default function LandingPage() {
       cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
     },
   ];
-
-  const aiCreditNote = `AI content generation (Reports · Ads · Brand · Listing Copy · Growth Playbooks) — 1 credit per use. Buy ${creditBundle.size} credits for ${currency === 'INR' ? '₹499' : `$${creditBundle.price}`}. Works on any plan.`;
 
   useEffect(() => {
     const token = localStorage.getItem('bs_access_token');
@@ -481,15 +475,9 @@ export default function LandingPage() {
             })}
           </div>
 
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="mt-8 max-w-2xl mx-auto rounded-2xl px-6 py-4 text-center"
-            style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)' }}>
-            <p className="text-sm font-semibold text-violet-700 mb-1">⚡ AI Generation Credits</p>
-            <p className="text-xs text-slate-500">{aiCreditNote}</p>
-          </motion.div>
           <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            className="text-center text-slate-400 text-xs mt-4">
-            No credit card required for Starter · {currency === 'INR' ? 'Prices in INR' : 'Prices in USD'} · Credits never expire
+            className="text-center text-slate-400 text-xs mt-6">
+            No credit card required for Starter · {currency === 'INR' ? 'Prices in INR' : 'Prices in USD'} · Cancel anytime
           </motion.p>
         </div>
       </section>

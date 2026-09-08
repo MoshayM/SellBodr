@@ -27,9 +27,11 @@ export default function AdminPage() {
   const [ready, setReady] = useState(false);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
-  const [providerDraft, setProviderDraft] = useState<Record<string, string>>({});
+  const [providerEditing, setProviderEditing] = useState<Record<string, string>>({});
+  const [providerSavingId, setProviderSavingId] = useState<string | null>(null);
+  const [providerSavedId, setProviderSavedId] = useState<string | null>(null);
+  const [providerError, setProviderError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'providers' | 'audit' | 'health' | 'marketplaces' | 'models' | 'platform' | 'analytics'>('users');
-  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const [updating, setUpdating] = useState<string | null>(null);
   const [auditLog, setAuditLog] = useState<any[]>([]);
@@ -171,15 +173,31 @@ export default function AdminPage() {
     setModelSaving(false);
   }
 
-  async function saveProviders() {
-    setSaving(true);
+  async function saveProvider(providerId: string) {
+    const value = providerEditing[providerId]?.trim();
+    if (!value) return;
+    setProviderSavingId(providerId); setProviderError(null);
     try {
-      await api.settings.updateAiProviderKeys(providerDraft);
-      setProviderDraft({});
-      await loadProviders();
-      showToast('Provider keys saved');
-    } catch { showToast('Save failed'); }
-    setSaving(false);
+      await api.settings.updateAiProviderKeys({ [providerId]: value });
+      setProviderSavedId(providerId);
+      setProviderEditing(prev => { const n = { ...prev }; delete n[providerId]; return n; });
+      const fresh: any = await api.settings.getAiProviderKeys();
+      setProviders(fresh ?? []);
+      setTimeout(() => setProviderSavedId(null), 2500);
+    } catch (e: any) {
+      setProviderError(e?.message ?? 'Failed to save key');
+    } finally { setProviderSavingId(null); }
+  }
+
+  async function removeProvider(providerId: string) {
+    setProviderSavingId(providerId); setProviderError(null);
+    try {
+      await api.settings.updateAiProviderKeys({ [providerId]: '' });
+      const fresh: any = await api.settings.getAiProviderKeys();
+      setProviders(fresh ?? []);
+    } catch (e: any) {
+      setProviderError(e?.message ?? 'Failed to remove key');
+    } finally { setProviderSavingId(null); }
   }
 
   function showToast(msg: string) {
@@ -319,57 +337,77 @@ export default function AdminPage() {
 
       {/* ── Provider Keys Tab ── */}
       {activeTab === 'providers' && (
-        <div className="space-y-3">
-          <div className="card-dark rounded-xl p-4 bg-amber-500/5 border-amber-500/15 mb-2">
-            <div className="flex items-start gap-2 text-sm text-amber-200/80">
-              <span className="text-base shrink-0">⚠️</span>
-              <span>These keys are used server-side for all AI operations. Keep them secret. Only admin users can view or change them.</span>
+        <div>
+          {providerError && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-300 flex items-center gap-2">
+              <span className="shrink-0">⚠️</span>{providerError}
             </div>
-          </div>
-          {providers.map(p => (
-            <div key={p.id} className="card-dark rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <div className="font-semibold text-white text-sm">{p.label}</div>
-                  <div className="text-xs text-white/55 mt-0.5">{p.hint}</div>
-                </div>
-                {p.isSet ? (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-500/15 text-green-400 border border-green-500/25">
-                    ✓ Set {p.source === 'env' ? '(env)' : '(db)'}
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-white/5 text-white/50 border border-white/10">
-                    Not set
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  placeholder={p.isSet ? (p.masked ?? 'Update key...') : `Enter ${p.label} API key...`}
-                  value={providerDraft[p.id] ?? ''}
-                  onChange={e => setProviderDraft(d => ({ ...d, [p.id]: e.target.value }))}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/50"
-                />
-                {p.isSet && (
-                  <button
-                    onClick={() => setProviderDraft(d => ({ ...d, [p.id]: '' }))}
-                    title="Clear key (removes DB override, falls back to env)"
-                    className="text-xs px-3 py-2 rounded-xl border border-red-500/20 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors whitespace-nowrap">
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {Object.values(providerDraft).some(v => v !== undefined) && (
-            <button
-              onClick={saveProviders}
-              disabled={saving}
-              className="w-full btn-primary text-sm disabled:opacity-50">
-              {saving ? '⟳ Saving…' : '💾 Save Provider Keys'}
-            </button>
           )}
+          <div className="space-y-3">
+            {providers.map(p => {
+              const isEditing = p.id in providerEditing;
+              const isSaving = providerSavingId === p.id;
+              const isSaved = providerSavedId === p.id;
+              return (
+                <div key={p.id} className="card-dark rounded-xl p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-white">{p.label}</span>
+                        {p.source === 'env' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/20">ENV VAR</span>}
+                        {p.source === 'db' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/20">DB KEY</span>}
+                        {p.source === 'none' && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/10">NOT SET</span>}
+                      </div>
+                      <p className="text-xs text-white/55 mt-0.5">{p.hint}</p>
+                    </div>
+                  </div>
+                  {p.isSet && !isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-xs text-white/50 bg-white/5 rounded-lg px-3 py-2 font-mono truncate">
+                        {p.masked ?? '••••••••••••••••'}
+                      </code>
+                      <button onClick={() => setProviderEditing(prev => ({ ...prev, [p.id]: '' }))} disabled={isSaving}
+                        className="text-xs px-3 py-2 rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 hover:bg-white/5 transition-all">
+                        Replace
+                      </button>
+                      {p.source === 'db' && (
+                        <button onClick={() => removeProvider(p.id)} disabled={isSaving}
+                          className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-300 hover:bg-red-500/8 transition-all">
+                          {isSaving ? '…' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input type="password"
+                        value={providerEditing[p.id] ?? ''}
+                        onChange={e => setProviderEditing(prev => ({ ...prev, [p.id]: e.target.value }))}
+                        placeholder={`Enter ${p.label} API key…`}
+                        className="flex-1 bg-white/5 border border-white/10 focus:border-violet-500/50 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono transition-colors"
+                        onKeyDown={e => e.key === 'Enter' && saveProvider(p.id)}
+                      />
+                      <button onClick={() => saveProvider(p.id)} disabled={isSaving || !providerEditing[p.id]?.trim()}
+                        className={`btn-primary text-xs px-4 py-2 disabled:opacity-40 whitespace-nowrap ${isSaved ? '!bg-emerald-600 hover:!bg-emerald-500' : ''}`}>
+                        {isSaving ? '…' : isSaved ? '✓ Saved' : 'Save'}
+                      </button>
+                      {isEditing && p.isSet && (
+                        <button onClick={() => setProviderEditing(prev => { const n = { ...prev }; delete n[p.id]; return n; })}
+                          className="text-xs px-3 py-2 rounded-lg border border-white/10 text-white/40 hover:text-white transition-colors">
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4 card-dark rounded-xl p-4 flex items-start gap-3">
+            <span className="text-white/40 text-base shrink-0 mt-0.5">ℹ️</span>
+            <p className="text-xs text-white/50 leading-relaxed">
+              Changes apply immediately to new AI pipeline runs. ENV VAR keys (set in Vercel environment) cannot be updated here — they take precedence over DB keys.
+            </p>
+          </div>
         </div>
       )}
 

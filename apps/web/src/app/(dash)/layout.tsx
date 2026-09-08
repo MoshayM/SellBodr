@@ -88,8 +88,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
   const [user, setUser] = useState<{ name?: string; role?: string; plan?: string } | null>(null);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
-  const [credits, setCredits] = useState<number | null>(null);
-  const [creditsIsAdmin, setCreditsIsAdmin] = useState(false);
 
   const userMenuRef     = useRef<HTMLDivElement>(null);
   const sidebarUserRef  = useRef<HTMLDivElement>(null);
@@ -119,10 +117,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
     if (!token) { router.replace('/login'); return; }
     setUser(getUser());
     setAuthChecked(true);
-    api.billing.getCredits().then(d => {
-      setCredits(d.credits);
-      setCreditsIsAdmin(d.isAdmin);
-    }).catch(() => {});
   }, [router]);
 
   useEffect(() => { setMenuOpen(false); }, [path]);
@@ -388,28 +382,15 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     </div>
                   </div>
 
-                  {/* Credits bar */}
-                  {!creditsIsAdmin && (
+                  {/* Upgrade bar — free users only */}
+                  {user.plan !== 'pro' && user.role !== 'admin' && (
                     <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Report Credits</span>
-                        <span className="text-[13px] font-black text-slate-900">
-                          {credits === null ? '…' : credits}
-                          <span className="text-[10px] font-normal text-slate-400 ml-0.5">remaining</span>
-                        </span>
-                      </div>
                       <a
                         href="/upgrade"
                         className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all"
                         style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}>
                         ⭐ Become Pro
                       </a>
-                    </div>
-                  )}
-                  {creditsIsAdmin && (
-                    <div className="px-4 py-2 border-b border-slate-100 bg-amber-50/60 flex items-center gap-1.5">
-                      <span className="text-[10px]">🔑</span>
-                      <span className="text-[11px] font-semibold text-amber-700">Admin — unlimited credits</span>
                     </div>
                   )}
 
@@ -428,16 +409,10 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                       <span className="text-base w-5 text-center">👥</span><span>Team</span>
                     </Link>
                     {isAdmin() && (
-                      <>
-                        <Link href="/ai-keys" onClick={() => setSidebarUserOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-xl transition-colors">
-                          <span className="text-base w-5 text-center">🔑</span><span>AI Provider Keys</span>
-                        </Link>
-                        <Link href="/admin" onClick={() => setSidebarUserOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors">
-                          <span className="text-base w-5 text-center">🔐</span><span>Admin Panel</span>
-                        </Link>
-                      </>
+                      <Link href="/admin" onClick={() => setSidebarUserOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors">
+                        <span className="text-base w-5 text-center">🔐</span><span>Admin Panel</span>
+                      </Link>
                     )}
                     <Link href="/guide" onClick={() => setSidebarUserOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors">
@@ -467,18 +442,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                 <div className="text-[13px] font-semibold truncate leading-tight" style={{ color: 'rgba(255,255,255,0.85)' }}>{user.name ?? 'User'}</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <PlanBadge />
-                  {!creditsIsAdmin && credits !== null && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none"
-                      style={{
-                        color: credits === 0 ? '#ef4444' : credits <= 3 ? '#f59e0b' : '#6366f1',
-                        background: credits === 0 ? '#fef2f2' : credits <= 3 ? '#fffbeb' : '#eef2ff',
-                      }}>
-                      {credits} cr
-                    </span>
-                  )}
-                  {creditsIsAdmin && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-amber-50 text-amber-600">∞</span>
-                  )}
                 </div>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5" className="shrink-0 transition-transform duration-200"

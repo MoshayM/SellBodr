@@ -29,12 +29,12 @@ export default function BillingSuccessPage() {
           Payment confirmed
         </div>
 
-        <h1 className="text-2xl font-black text-slate-900 mb-2">Credits added!</h1>
+        <h1 className="text-2xl font-black text-slate-900 mb-2">You're Pro!</h1>
         <p className="text-slate-500 mb-1">
-          <span className="font-semibold text-indigo-600">10 report credits</span> have been added to your account.
+          <span className="font-semibold text-indigo-600">SellBodr Pro</span> is now active on your account.
         </p>
         <p className="text-sm text-slate-400 mb-8">
-          Use them to generate AI Reports, Ad copy, and Brand Builder assets.
+          All AI features — reports, ad copy, brand builder, and more — are now unlocked.
         </p>
 
         <Link href="/opportunities" className="btn-scout w-full justify-center">
