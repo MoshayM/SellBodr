@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ── Guide content ─────────────────────────────────────────────────────────────
@@ -9,9 +10,9 @@ const SECTIONS = [
     id: 'scout',
     icon: '🔭',
     title: 'Scout the Market',
-    color: 'from-violet-500/20 to-purple-500/10',
-    accent: 'text-violet-400',
-    border: 'border-violet-500/20',
+    accent: '#a78bfa',
+    accentBg: 'rgba(124,58,237,0.12)',
+    accentBorder: 'rgba(124,58,237,0.2)',
     steps: [
       { title: 'Go to Scout', body: 'Navigate to the Scout page from the left sidebar. This is your main search hub.' },
       { title: 'Pick a marketplace', body: 'Select your target marketplace (Amazon US/UK/DE/CA/AU, Etsy, eBay, Walmart, TikTok Shop) from the dropdown.' },
@@ -24,9 +25,9 @@ const SECTIONS = [
     id: 'scores',
     icon: '🎯',
     title: 'Understanding Opportunity Scores',
-    color: 'from-emerald-500/20 to-green-500/10',
-    accent: 'text-emerald-400',
-    border: 'border-emerald-500/20',
+    accent: '#34d399',
+    accentBg: 'rgba(16,185,129,0.10)',
+    accentBorder: 'rgba(16,185,129,0.2)',
     steps: [
       { title: 'The Opportunity Score (0–100)', body: 'A composite score across 7 dimensions. 80+ = strong opportunity. 60–79 = promising. Below 60 = proceed with caution.' },
       { title: 'Demand score', body: 'How much buyers are searching for this product right now. Based on search volume, trend direction, and seasonal patterns.' },
@@ -38,26 +39,26 @@ const SECTIONS = [
   },
   {
     id: 'more',
-    icon: '🎯',
+    icon: '⚡',
     title: 'New Scan vs. Scan for More',
-    color: 'from-cyan-500/20 to-blue-500/10',
-    accent: 'text-cyan-400',
-    border: 'border-cyan-500/20',
+    accent: '#38bdf8',
+    accentBg: 'rgba(6,182,212,0.10)',
+    accentBorder: 'rgba(6,182,212,0.2)',
     steps: [
       { title: 'New Scan (top purple button)', body: 'Runs a broad AI discovery across all categories and trend profiles for the selected marketplace. Best for exploring new product ideas without constraints.' },
-      { title: 'Scan for More (bottom button) — smart mode', body: 'When you have active filters (category, trend strength 🔥 Hot/📈 Rising, or channel), the bottom button turns purple and changes label — e.g. "Scan More 🔥 Hot · Wall Art 🎯". The AI narrows its search to exactly what you are filtering for.' },
+      { title: 'Scan for More — smart mode', body: 'When you have active filters (category, trend strength 🔥 Hot/📈 Rising, or channel), the bottom button turns purple and narrows its search to exactly what you are filtering for.' },
       { title: 'No filters active?', body: 'If no filters are set, "Scan for More ↓" runs a broad scan just like New Scan — adding more diverse results to the existing list.' },
       { title: 'Filter results', body: 'Use the filter bar (Opportunity score/signal, Category, Source channel, Trend strength, Date range) to narrow the visible list. Active filters also guide the Scan for More AI.' },
-      { title: 'Result limits', body: 'Each scan returns up to 8 results — the highest-scoring products after AI validation. Free accounts are limited to 5 total scans. Pro users can run unlimited scans.' },
+      { title: 'Result limits', body: 'Each scan returns up to 8 results — the highest-scoring products after AI validation. Free accounts are limited to 5 total scans. Pro users run unlimited scans.' },
     ],
   },
   {
     id: 'suppliers',
     icon: '🏭',
     title: 'Suppliers & the Global Map',
-    color: 'from-orange-500/20 to-amber-500/10',
-    accent: 'text-amber-400',
-    border: 'border-amber-500/20',
+    accent: '#fbbf24',
+    accentBg: 'rgba(245,158,11,0.10)',
+    accentBorder: 'rgba(245,158,11,0.2)',
     steps: [
       { title: 'Open an opportunity', body: 'Click any opportunity card to open the full detail page. Switch to the Suppliers tab to see all sourcing candidates.' },
       { title: 'Read the supplier table', body: 'Each row shows supplier name, country 🇮🇳, platform (IndiaMART, Alibaba…), unit cost, trust score, MOQ, lead time, and ease rating.' },
@@ -71,9 +72,9 @@ const SECTIONS = [
     id: 'profit',
     icon: '💰',
     title: 'Profitability Model',
-    color: 'from-pink-500/20 to-rose-500/10',
-    accent: 'text-pink-400',
-    border: 'border-pink-500/20',
+    accent: '#f472b6',
+    accentBg: 'rgba(236,72,153,0.10)',
+    accentBorder: 'rgba(236,72,153,0.2)',
     steps: [
       { title: 'Open Profitability tab', body: 'On any opportunity detail page, click the Profitability tab to see the full cost waterfall.' },
       { title: 'Cost waterfall chart', body: 'A butterfly chart shows: Sale Price → Source Cost → Shipping → Packaging → Import Duty → Landed Cost → Marketplace Fees → Ad Spend → Net Profit.' },
@@ -85,9 +86,9 @@ const SECTIONS = [
     id: 'launch',
     icon: '🚀',
     title: 'AI Launch Assets',
-    color: 'from-indigo-500/20 to-blue-500/10',
-    accent: 'text-indigo-400',
-    border: 'border-indigo-500/20',
+    accent: '#818cf8',
+    accentBg: 'rgba(99,102,241,0.10)',
+    accentBorder: 'rgba(99,102,241,0.2)',
     steps: [
       { title: 'Generate assets', body: 'On any opportunity detail page, click "✨ Generate Launch Assets" at the top right. The AI writes everything for the selected marketplace.' },
       { title: 'Listing tab', body: 'Go to the Listing tab to see the full AI-written title, 5 bullet points, product description, and a backend keyword list — all SEO-optimised.' },
@@ -98,16 +99,15 @@ const SECTIONS = [
   {
     id: 'account',
     icon: '⚙️',
-    title: 'Plans, Credits & Account',
-    color: 'from-slate-500/20 to-gray-500/10',
-    accent: 'text-slate-400',
-    border: 'border-slate-500/20',
+    title: 'Plans & Account',
+    accent: '#94a3b8',
+    accentBg: 'rgba(148,163,184,0.08)',
+    accentBorder: 'rgba(148,163,184,0.15)',
     steps: [
       { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans (up to 8 results each), full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.' },
-      { title: 'Pro plan ($18/mo)', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + GPT-4 + Groq) for higher quality results, full supplier list with no cap, real-time IndiaMART/Alibaba supplier search, and all dashboard tools. Upgrade from the avatar menu.' },
-      { title: 'AI Generation Credits ($5 = 10 credits)', body: 'Generating AI content — Full Reports, Ad Campaigns, Brand Identity, Listing Copy, Growth Playbooks, or Bundle Strategy — costs 1 credit per generation. Buy 10 credits for $5 from the credits chip in the sidebar or any "Buy Credits" prompt. Admin accounts always generate for free.' },
-      { title: 'Upgrade', body: 'Click any 🔒 locked feature or open the avatar menu and tap "Upgrade to Pro". Credits can be purchased separately at any time — they never expire.' },
-      { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Admins can manage AI provider keys under Settings → AI Keys.' },
+      { title: 'Pro plan', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + Groq + Mistral) for higher quality results, full supplier list with no cap, all dashboard tools, and priority support. India users get ₹99/mo; other countries see the USD rate.' },
+      { title: 'Upgrade to Pro', body: 'Click the "Upgrade to Pro" button in the sidebar, or click any 🔒 locked feature. Payment is processed securely via Razorpay — no mobile number required.' },
+      { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Change your password or manage passkeys under Settings → Security.' },
     ],
   },
 ];
@@ -116,16 +116,15 @@ const QUICK_QUESTIONS = [
   'How do I run my first product search?',
   'What does the Opportunity Score mean?',
   'How does Scan for More with filters work?',
-  'How do AI generation credits work?',
-  'How do I contact a supplier?',
   'What is included in the Pro plan?',
+  'How do I contact a supplier?',
   'How does the profit model work?',
   'What is the Launch / Hold / Reject verdict?',
   'How do I generate an AI listing?',
-  'How do I buy credits for AI generation?',
+  'How do I upgrade to Pro?',
+  'How do I read the supplier map?',
 ];
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 type Message = { role: 'user' | 'assistant'; content: string };
 
 // ── AI Chat Panel ─────────────────────────────────────────────────────────────
@@ -139,9 +138,7 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
   const MAX_CHARS = 600;
 
   useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-    }
+    if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
   useEffect(() => {
@@ -154,11 +151,9 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
     if (q.length > MAX_CHARS) { setCharWarn(true); return; }
     setCharWarn(false);
     setInput('');
-
     const next: Message[] = [...messages, { role: 'user', content: q }];
     setMessages(next);
     setLoading(true);
-
     try {
       const res = await fetch('/api/v1/guide/chat', {
         method: 'POST',
@@ -182,68 +177,73 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop — mobile only */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/60 lg:hidden"
             onClick={onClose}
           />
-
-          {/* Panel */}
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.97 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
             className="fixed z-50 bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] max-w-[420px] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
-            style={{ maxHeight: 'calc(100dvh - 8rem)', background: 'rgba(8,12,30,0.97)', border: '1px solid rgba(124,58,237,0.25)', backdropFilter: 'blur(20px)' }}
+            style={{ maxHeight: 'calc(100dvh - 8rem)', background: 'rgba(8,14,35,0.98)', border: '1px solid rgba(124,58,237,0.28)', backdropFilter: 'blur(24px)' }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 shrink-0"
-              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.2),rgba(79,70,229,0.1))' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0"
+              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'linear-gradient(135deg,rgba(124,58,237,0.18),rgba(79,70,229,0.08))' }}>
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-                  ✦
-                </div>
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>✦</div>
                 <div>
                   <div className="text-sm font-bold text-white leading-tight">SellBodr Guide AI</div>
-                  <div className="text-[10px] text-white/40 leading-none">Ask anything about the app</div>
+                  <div className="text-[10px] leading-none" style={{ color: 'rgba(255,255,255,0.35)' }}>Ask anything about the app</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {messages.length > 0 && (
                   <button onClick={() => setMessages([])}
-                    className="text-[10px] text-white/30 hover:text-white/60 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
+                    className="text-[10px] px-2 py-1 rounded-lg transition-colors"
+                    style={{ color: 'rgba(255,255,255,0.3)' }}
+                    onMouseOver={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                    onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}>
                     Clear
                   </button>
                 )}
                 <button onClick={onClose}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors text-lg leading-none">
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-lg leading-none transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                  onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}>
                   ×
                 </button>
               </div>
             </div>
 
             {/* Disclaimer */}
-            <div className="px-4 py-2 text-[10px] text-white/30 leading-snug border-b border-white/5 shrink-0">
+            <div className="px-4 py-2 text-[10px] leading-snug border-b shrink-0"
+              style={{ color: 'rgba(255,255,255,0.28)', borderColor: 'rgba(255,255,255,0.05)' }}>
               AI responses are for guidance only. Not financial or legal advice.{' '}
-              <Link href="/terms" className="underline hover:text-white/50">Terms</Link>
+              <Link href="/terms" className="underline hover:opacity-70">Terms</Link>
               {' · '}
-              <Link href="/privacy" className="underline hover:text-white/50">Privacy</Link>
+              <Link href="/privacy" className="underline hover:opacity-70">Privacy</Link>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
               {messages.length === 0 && (
                 <div className="space-y-4">
-                  <p className="text-xs text-white/40 text-center leading-snug">
+                  <p className="text-xs text-center leading-snug" style={{ color: 'rgba(255,255,255,0.35)' }}>
                     Ask me anything about using SellBodr
                   </p>
                   <div className="grid grid-cols-1 gap-1.5">
                     {QUICK_QUESTIONS.map(q => (
                       <button key={q} onClick={() => send(q)}
-                        className="text-left text-xs px-3 py-2 rounded-lg text-white/55 hover:text-white border border-white/8 hover:border-violet-500/30 hover:bg-violet-500/8 transition-all leading-snug">
+                        className="text-left text-xs px-3 py-2 rounded-lg transition-all leading-snug"
+                        style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.07)' }}
+                        onMouseOver={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.35)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                        onMouseOut={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                         {q}
                       </button>
                     ))}
@@ -255,18 +255,14 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {m.role === 'assistant' && (
                     <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mr-2 mt-0.5 self-start"
-                      style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-                      ✦
-                    </div>
+                      style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>✦</div>
                   )}
                   <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                    m.role === 'user'
-                      ? 'text-white rounded-br-sm'
-                      : 'text-white/80 border border-white/8 rounded-bl-sm'
+                    m.role === 'user' ? 'text-white rounded-br-sm' : 'rounded-bl-sm'
                   }`}
                     style={m.role === 'user'
                       ? { background: 'linear-gradient(135deg,rgba(124,58,237,0.85),rgba(79,70,229,0.85))' }
-                      : { background: 'rgba(255,255,255,0.04)' }
+                      : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)' }
                     }>
                     {m.content}
                   </div>
@@ -276,28 +272,23 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
               {loading && (
                 <div className="flex justify-start">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mr-2 mt-0.5"
-                    style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-                    ✦
-                  </div>
-                  <div className="px-3.5 py-3 rounded-2xl rounded-bl-sm border border-white/8"
-                    style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>✦</div>
+                  <div className="px-3.5 py-3 rounded-2xl rounded-bl-sm"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <span className="flex gap-1 items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                      {[0, 150, 300].map(d => (
+                        <span key={d} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                      ))}
                     </span>
                   </div>
                 </div>
               )}
-
               <div ref={bottomRef} />
             </div>
 
             {/* Input */}
-            <div className="px-4 pb-4 pt-2 border-t border-white/8 shrink-0">
-              {charWarn && (
-                <p className="text-[10px] text-rose-400 mb-1.5">Question is too long (max {MAX_CHARS} characters)</p>
-              )}
+            <div className="px-4 pb-4 pt-2 border-t shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              {charWarn && <p className="text-[10px] text-rose-400 mb-1.5">Question is too long (max {MAX_CHARS} characters)</p>}
               <div className="flex gap-2 items-end">
                 <div className="flex-1 relative">
                   <textarea
@@ -309,8 +300,10 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
                     rows={1}
                     maxLength={MAX_CHARS + 20}
                     disabled={loading}
-                    className="w-full resize-none bg-white/5 border border-white/10 focus:border-violet-500/50 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-white/25 outline-none transition-colors leading-snug disabled:opacity-50"
-                    style={{ maxHeight: '100px', overflowY: 'auto' }}
+                    className="w-full resize-none rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all leading-snug disabled:opacity-50"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', maxHeight: '100px', overflowY: 'auto' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = 'rgba(124,58,237,0.5)')}
+                    onBlur={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
                     onInput={e => {
                       const el = e.currentTarget;
                       el.style.height = 'auto';
@@ -333,8 +326,8 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
                   </svg>
                 </button>
               </div>
-              <p className="text-[9px] text-white/20 mt-1.5 text-center leading-snug">
-                Only answers questions about the SellBodr app · Shift+Enter for new line
+              <p className="text-[9px] mt-1.5 text-center leading-snug" style={{ color: 'rgba(255,255,255,0.18)' }}>
+                Only answers questions about SellBodr · Shift+Enter for new line
               </p>
             </div>
           </motion.div>
@@ -346,74 +339,107 @@ function GuideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function GuidePage() {
+  const router = useRouter();
   const [active, setActive]     = useState('scout');
   const [chatOpen, setChatOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('bs_access_token'));
+  }, []);
+
+  function handleClose() {
+    if (window.history.length > 1) router.back();
+    else router.push('/opportunities');
+  }
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white">
+    <div className="min-h-screen text-white" style={{ background: 'linear-gradient(180deg,#0D1B35 0%,#0a1120 100%)' }}>
 
       {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 border-b border-white/5"
-        style={{ background: 'rgba(2,8,23,0.85)', backdropFilter: 'blur(12px)' }}>
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8"
-            style={{ filter: 'drop-shadow(0 0 7px rgba(124,58,237,0.7))' }} />
-          <span className="text-sm font-black text-white/80 group-hover:text-white transition-colors">SellBodr</span>
-          <span className="text-white/20 text-sm">/</span>
-          <span className="text-sm font-semibold text-white/50">User Guide</span>
+      <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-5 lg:px-10 h-16"
+        style={{ background: 'rgba(13,27,53,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
+
+        {/* Brand */}
+        <Link href={isLoggedIn ? '/opportunities' : '/'} className="flex items-center gap-2.5 group">
+          <img src="/icons/icon.svg" alt="SellBodr" className="w-8 h-8 transition-transform duration-200 group-hover:scale-105"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(124,58,237,0.8)) brightness(1.15)' }} />
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black" style={{ color: '#fff' }}>SellBodr</span>
+            <span style={{ color: 'rgba(255,255,255,0.2)' }}>/</span>
+            <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>User Guide</span>
+          </div>
         </Link>
-        <div className="flex items-center gap-3">
-          {/* Ask AI — nav button */}
+
+        {/* Right actions */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setChatOpen(o => !o)}
-            className={`hidden sm:flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-lg border transition-all ${
-              chatOpen
-                ? 'border-violet-500/50 text-violet-300 bg-violet-500/10'
-                : 'border-white/10 text-white/60 hover:border-violet-500/30 hover:text-violet-300 hover:bg-violet-500/8'
-            }`}>
+            className="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition-all"
+            style={chatOpen
+              ? { background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.45)', color: '#c4b5fd' }
+              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
             <span>✦</span>
             Ask AI
           </button>
-          <Link href="/opportunities" className="text-sm text-white/50 hover:text-white transition-colors hidden sm:block">Open App</Link>
-          <Link href="/register" className="text-xs px-4 py-2 rounded-lg font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-            Get Started →
-          </Link>
+
+          {isLoggedIn ? (
+            <button
+              onClick={handleClose}
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition-all"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+              onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+              onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}>
+              <span style={{ fontSize: '16px', lineHeight: 1 }}>×</span>
+              <span>Close</span>
+            </button>
+          ) : (
+            <Link href="/register"
+              className="text-xs font-semibold px-4 py-2 rounded-xl text-white transition-all"
+              style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}>
+              Get Started →
+            </Link>
+          )}
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-6 pt-28 pb-20 flex gap-8">
+      <div className="max-w-6xl mx-auto px-5 pt-28 pb-20 flex gap-8">
 
         {/* Sidebar TOC */}
-        <aside className="hidden lg:flex flex-col gap-1 w-56 shrink-0 sticky top-28 self-start">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-3 px-3">Contents</p>
+        <aside className="hidden lg:flex flex-col gap-0.5 w-52 shrink-0 sticky top-28 self-start">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-3" style={{ color: 'rgba(255,255,255,0.3)' }}>Contents</p>
           {SECTIONS.map(s => (
             <button key={s.id} onClick={() => {
               setActive(s.id);
               document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }}
-              className={`text-left px-3 py-2 rounded-lg text-sm transition-all ${active === s.id
-                ? 'bg-white/8 text-white font-semibold'
-                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
-              }`}>
+              className="text-left px-3 py-2 rounded-xl text-sm transition-all"
+              style={active === s.id
+                ? { background: 'rgba(124,58,237,0.15)', color: '#fff', fontWeight: 600, border: '1px solid rgba(124,58,237,0.25)' }
+                : { color: 'rgba(255,255,255,0.4)', border: '1px solid transparent' }}
+              onMouseOver={e => { if (active !== s.id) { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}}
+              onMouseOut={e => { if (active !== s.id) { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}}>
               <span className="mr-2">{s.icon}</span>{s.title}
             </button>
           ))}
-          <div className="mt-6 pt-4 border-t border-white/8 space-y-1">
+          <div className="mt-5 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <Link href="/opportunities"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-violet-400 hover:bg-violet-500/10 transition-all font-semibold">
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all"
+              style={{ color: '#a78bfa' }}
+              onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.1)'; }}
+              onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
               Open Scout →
             </Link>
           </div>
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 space-y-12">
+        <main className="flex-1 min-w-0 space-y-8">
 
-          {/* Header */}
+          {/* Hero header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold border mb-5"
-              style={{ background: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)', color: '#a78bfa' }}>
+            <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold mb-5"
+              style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.28)', color: '#a78bfa' }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#a78bfa' }} />
               SellBodr User Guide
             </div>
@@ -423,35 +449,36 @@ export default function GuidePage() {
                 SellBodr
               </span>
             </h1>
-            <p className="text-white/45 text-lg leading-relaxed max-w-2xl">
+            <p className="text-lg leading-relaxed max-w-2xl" style={{ color: 'rgba(255,255,255,0.45)' }}>
               Everything you need to find products in India and sell them profitably on global marketplaces — from your first search to your first sale.
             </p>
 
-            {/* AI search call-to-action banner */}
+            {/* AI ask banner */}
             <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               onClick={() => setChatOpen(true)}
-              className="mt-6 w-full sm:max-w-xl flex items-center gap-3 px-4 py-3.5 rounded-xl border border-violet-500/25 hover:border-violet-500/50 transition-all group text-left"
-              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.08),rgba(79,70,229,0.04))' }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 transition-transform group-hover:scale-110"
-                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-                ✦
-              </div>
+              className="mt-6 w-full sm:max-w-xl flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left group transition-all"
+              style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.22)' }}
+              onMouseOver={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.45)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.12)'; }}
+              onMouseOut={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.22)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0"
+                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>✦</div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">Ask the Guide AI anything</div>
-                <div className="text-xs text-white/35 truncate">How does the Opportunity Score work? How do I contact a supplier?…</div>
+                <div className="text-sm font-semibold text-white">Ask the Guide AI anything</div>
+                <div className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>How does the Opportunity Score work? How do I contact a supplier?…</div>
               </div>
-              <div className="text-xs text-violet-400 font-semibold shrink-0 group-hover:translate-x-0.5 transition-transform">Ask →</div>
+              <div className="text-xs font-semibold shrink-0" style={{ color: '#a78bfa' }}>Ask →</div>
             </motion.button>
           </motion.div>
 
-          {/* Quick links — mobile */}
+          {/* Mobile quick-links */}
           <div className="lg:hidden flex flex-wrap gap-2">
             {SECTIONS.map(s => (
               <button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
+                className="text-xs px-3 py-1.5 rounded-full transition-all"
+                style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
+                onMouseOver={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.25)'; }}
+                onMouseOut={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}>
                 {s.icon} {s.title}
               </button>
             ))}
@@ -462,66 +489,87 @@ export default function GuidePage() {
             <motion.section
               key={section.id}
               id={section.id}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.5, delay: 0.05 }}
+              transition={{ duration: 0.45, delay: 0.04 }}
               onViewportEnter={() => setActive(section.id)}
-              className={`animate-card-in stagger-${Math.min(si + 1, 7)} rounded-2xl border bg-gradient-to-br ${section.color} ${section.border} p-6 sm:p-8`}
+              className="rounded-2xl p-6 sm:p-8"
+              style={{ background: section.accentBg, border: `1px solid ${section.accentBorder}` }}
             >
+              {/* Section header */}
               <div className="flex items-center gap-3 mb-6">
-                <div className="text-3xl">{section.icon}</div>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+                  style={{ background: `${section.accentBg}`, border: `1px solid ${section.accentBorder}` }}>
+                  {section.icon}
+                </div>
                 <div>
-                  <div className={`text-[10px] font-bold uppercase tracking-widest ${section.accent} mb-0.5`}>
+                  <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: section.accent }}>
                     Step {si + 1} of {SECTIONS.length}
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-white">{section.title}</h2>
                 </div>
               </div>
 
+              {/* Steps */}
               <div className="space-y-4">
                 {section.steps.map((step, i) => (
                   <div key={i} className="flex gap-4">
-                    <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5 ${section.accent} border border-current opacity-60`}>
+                    <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5"
+                      style={{ color: section.accent, border: `1px solid ${section.accent}`, opacity: 0.65 }}>
                       {i + 1}
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-white mb-1">{step.title}</div>
-                      <p className="text-sm text-white/55 leading-relaxed">{step.body}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.52)' }}>{step.body}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Per-section quick ask */}
+              {/* Quick-ask link */}
               <button
-                onClick={() => { setChatOpen(true); }}
-                className={`mt-5 text-xs flex items-center gap-1.5 ${section.accent} opacity-60 hover:opacity-100 transition-opacity`}>
+                onClick={() => setChatOpen(true)}
+                className="mt-5 text-xs flex items-center gap-1.5 transition-opacity opacity-50 hover:opacity-100"
+                style={{ color: section.accent }}>
                 <span>✦</span>
                 <span>Have a question about {section.title.toLowerCase()}? Ask the Guide AI →</span>
               </button>
             </motion.section>
           ))}
 
-          {/* CTA */}
+          {/* Bottom CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-2xl border border-violet-500/20 p-8 text-center"
-            style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(79,70,229,0.06))' }}
+            className="rounded-2xl p-8 text-center"
+            style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.14),rgba(79,70,229,0.07))', border: '1px solid rgba(124,58,237,0.22)' }}
           >
             <div className="text-4xl mb-4">🚀</div>
             <h2 className="text-2xl font-black text-white mb-3">Ready to scout your first opportunity?</h2>
-            <p className="text-white/45 mb-6 max-w-md mx-auto">
+            <p className="mb-6 max-w-md mx-auto" style={{ color: 'rgba(255,255,255,0.45)' }}>
               Free account takes 30 seconds. No credit card. Start finding products to sell globally today.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/register" className="btn-primary text-sm">
-                Create Free Account →
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/opportunities"
+                  className="px-6 py-3 rounded-xl font-semibold text-white text-sm transition-all"
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 4px 16px rgba(124,58,237,0.4)' }}>
+                  Go to Scout →
+                </Link>
+              ) : (
+                <Link href="/register"
+                  className="px-6 py-3 rounded-xl font-semibold text-white text-sm transition-all"
+                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 4px 16px rgba(124,58,237,0.4)' }}>
+                  Create Free Account →
+                </Link>
+              )}
               <Link href="/opportunities"
-                className="px-6 py-3 rounded-xl font-semibold text-white/70 text-sm border border-white/10 hover:bg-white/5 hover:text-white transition-all">
+                className="px-6 py-3 rounded-xl font-semibold text-sm transition-all"
+                style={{ color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.1)' }}
+                onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+                onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; }}>
                 Open Scout
               </Link>
             </div>
@@ -530,13 +578,13 @@ export default function GuidePage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-8 px-6 text-center">
-        <p className="text-white/45 text-sm">
-          <Link href="/" className="hover:text-white/50 transition-colors">SellBodr</Link>
+      <footer className="py-8 px-6 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.28)' }}>
+          <Link href={isLoggedIn ? '/opportunities' : '/'} className="hover:opacity-60 transition-opacity">SellBodr</Link>
           {' · '}
-          <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>
+          <Link href="/privacy" className="hover:opacity-60 transition-opacity">Privacy</Link>
           {' · '}
-          <Link href="/terms" className="hover:text-white/50 transition-colors">Terms</Link>
+          <Link href="/terms" className="hover:opacity-60 transition-opacity">Terms</Link>
         </p>
       </footer>
 
@@ -549,15 +597,14 @@ export default function GuidePage() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
             onClick={() => setChatOpen(true)}
-            className="fixed bottom-6 right-4 sm:right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm text-white shadow-xl shadow-violet-500/30 transition-shadow hover:shadow-violet-500/50"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+            className="fixed bottom-6 right-4 sm:right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm text-white"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 8px 24px rgba(124,58,237,0.45)' }}>
             <span className="text-base leading-none">✦</span>
             <span>Ask Guide AI</span>
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Chat panel */}
       <GuideChat open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
