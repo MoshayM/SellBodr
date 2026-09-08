@@ -43,10 +43,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Too many login attempts. Please try again in 15 minutes.' }, { status: 429 });
     }
 
-    const result = await db.execute({ sql: 'SELECT * FROM "User" WHERE email = ? AND deletedAt IS NULL', args: [email] });
+    const GRACE_MS = 24 * 60 * 60 * 1000;
+    const result = await db.execute({ sql: 'SELECT * FROM "User" WHERE email = ?', args: [email] });
     const user = result.rows[0];
 
     if (!user || !user.passwordHash) return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
+
+    // Account is soft-deleted
+    if (user.deletedAt) {
+      const deletedAt = Number(user.deletedAt);
+      const valid = await bcrypt.compare(password, String(user.passwordHash));
+      if (!valid) return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
+      // Within 24h grace period — let user choose to restore or purge
+      if (now - deletedAt < GRACE_MS) {
+        await db.execute({ sql: 'DELETE FROM "RateLimit" WHERE key = ?', args: [rlKey] });
+        return NextResponse.json({
+          pendingDeletion: true,
+          deletionExpiresAt: deletedAt + GRACE_MS,
+          email,
+        });
+      }
+      // Past grace period — account is gone
+      return NextResponse.json({ message: 'This account has been permanently deleted.' }, { status: 401 });
+    }
 
     const valid = await bcrypt.compare(password, String(user.passwordHash));
     if (!valid) return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });

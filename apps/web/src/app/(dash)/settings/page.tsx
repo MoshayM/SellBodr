@@ -527,9 +527,13 @@ function DataExportPanel({ user, isGuest }: { user: any; isGuest: boolean }) {
       {/* Delete account */}
       <div className="card-dark p-5 border border-rose-500/15">
         <div className="text-sm font-semibold text-white mb-1">Delete Account</div>
-        <p className="text-xs text-white/40 mb-4 leading-relaxed">
-          Permanently delete your account and all associated data. This action is irreversible.
-          Type <span className="font-mono text-rose-400 text-[11px]">DELETE MY ACCOUNT</span> to confirm.
+        <p className="text-xs text-white/40 mb-1 leading-relaxed">
+          Schedules your account for deletion. You will have <span className="text-white/60 font-semibold">24 hours</span> to
+          log back in and restore it or confirm permanent removal.
+        </p>
+        <p className="text-xs text-white/30 mb-4 leading-relaxed">
+          Your transaction and work history are retained for compliance. Type{' '}
+          <span className="font-mono text-rose-400 text-[11px]">DELETE MY ACCOUNT</span> to confirm.
         </p>
         <div className="flex items-center gap-2">
           <input
@@ -540,14 +544,24 @@ function DataExportPanel({ user, isGuest }: { user: any; isGuest: boolean }) {
             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder-white/20 outline-none focus:border-rose-500/40"
           />
           <button
-            onClick={() => {
+            onClick={async () => {
               if (deleteConfirm !== 'DELETE MY ACCOUNT') { setDeleteError('Phrase does not match'); return; }
               setDeleting(true);
-              // POST /auth/delete-account — shows confirmation that request is queued
-              fetch('/api/v1/auth/delete-account', { method: 'POST', headers: { Authorization: `Bearer ${localStorage.getItem('bs_access_token')}`, 'Content-Type': 'application/json' } })
-                .then(() => { alert('Account deletion request submitted. You will receive an email confirmation within 24 hours.'); })
-                .catch(() => { alert('Request submitted — our team will process it within 24 hours.'); })
-                .finally(() => setDeleting(false));
+              try {
+                const res = await fetch('/api/v1/auth/delete-account', {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${localStorage.getItem('bs_access_token')}`, 'Content-Type': 'application/json' },
+                });
+                if (!res.ok) throw new Error();
+                // Clear session and redirect to login
+                localStorage.removeItem('bs_access_token');
+                localStorage.removeItem('bs_refresh_token');
+                localStorage.removeItem('bs_user');
+                window.location.href = '/login?deleted=1';
+              } catch {
+                setDeleteError('Failed to schedule deletion. Please try again.');
+                setDeleting(false);
+              }
             }}
             disabled={deleting || deleteConfirm !== 'DELETE MY ACCOUNT'}
             className="shrink-0 text-xs px-4 py-2 rounded-xl border border-rose-500/30 text-rose-400/70 hover:bg-rose-500/10 hover:text-rose-400 transition-all disabled:opacity-40 whitespace-nowrap font-semibold">

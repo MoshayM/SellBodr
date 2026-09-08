@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api, saveAuth } from '@/lib/api';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
@@ -242,6 +242,110 @@ function InstallCTA({ installPrompt, isIOS, onInstall }: {
   );
 }
 
+// ── Account-deletion recovery modal ───────────────────────────────────────
+function DeletionRecoveryModal({
+  email, password, expiresAt, onRestore, onPurge, onClose,
+}: {
+  email: string; password: string; expiresAt: number;
+  onRestore: () => void; onPurge: () => void; onClose: () => void;
+}) {
+  const [action, setAction]   = useState<'restore' | 'purge' | null>(null);
+  const [busy, setBusy]       = useState(false);
+  const [err, setErr]         = useState('');
+  const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
+
+  useEffect(() => {
+    const t = setInterval(() => setRemaining(r => Math.max(0, r - 1000)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const hh = String(Math.floor(remaining / 3600000)).padStart(2, '0');
+  const mm = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0');
+  const ss = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+
+  async function handle(choice: 'restore' | 'purge') {
+    setAction(choice); setBusy(true); setErr('');
+    try {
+      const endpoint = choice === 'restore' ? '/auth/restore-account' : '/auth/purge-account';
+      const res = await fetch(`/api/v1${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Request failed');
+      if (choice === 'restore') {
+        saveAuth(data);
+        onRestore();
+      } else {
+        onPurge();
+      }
+    } catch (e: any) {
+      setErr(e.message || 'Something went wrong');
+      setBusy(false); setAction(null);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl border border-slate-100">
+
+        {/* Icon */}
+        <div className="flex justify-center mb-5">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg,#fff1f2,#ffe4e6)' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+        </div>
+
+        <h3 className="text-center text-lg font-black text-slate-900 mb-1">Account Scheduled for Deletion</h3>
+        <p className="text-center text-slate-500 text-sm mb-5 leading-relaxed">
+          Your account is pending deletion. You can restore it or confirm permanent removal within the grace period.
+        </p>
+
+        {/* Countdown */}
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-rose-50 border border-rose-100">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span className="text-rose-600 font-mono font-bold text-base tracking-widest">{hh}:{mm}:{ss}</span>
+            <span className="text-rose-400 text-xs font-medium">remaining</span>
+          </div>
+        </div>
+
+        {err && (
+          <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-red-600 text-sm text-center">{err}</div>
+        )}
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button onClick={() => handle('restore')} disabled={busy}
+            className="w-full py-3 rounded-2xl font-bold text-sm transition-all disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg,#7c3aed,#db2777)', color: '#fff', boxShadow: busy && action === 'restore' ? 'none' : '0 4px 14px rgba(124,58,237,0.35)' }}>
+            {busy && action === 'restore' ? 'Restoring…' : 'Restore My Account'}
+          </button>
+          <button onClick={() => handle('purge')} disabled={busy}
+            className="w-full py-3 rounded-2xl font-bold text-sm border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50">
+            {busy && action === 'purge' ? 'Deleting…' : 'Delete Immediately'}
+          </button>
+          <button onClick={onClose} disabled={busy}
+            className="w-full py-2.5 text-sm text-slate-400 hover:text-slate-600 transition-colors">
+            Cancel
+          </button>
+        </div>
+
+        <p className="text-center text-slate-400 text-[11px] mt-4 leading-relaxed">
+          Transactions &amp; work history are retained for compliance regardless of choice.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const googleBtnRef = useRef<HTMLDivElement>(null);
@@ -260,6 +364,15 @@ export default function LoginPage() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS]                 = useState(false);
   const [isInstalled, setIsInstalled]     = useState(false);
+
+  // Pending deletion recovery state
+  const [pendingDeletion, setPendingDeletion]     = useState<{ email: string; password: string; expiresAt: number } | null>(null);
+  const [showDeletedBanner, setShowDeletedBanner] = useState(false);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('deleted') === '1')
+      setShowDeletedBanner(true);
+  }, []);
 
   useEffect(() => {
     if (localStorage.getItem('bs_access_token')) router.replace('/opportunities');
@@ -393,6 +506,10 @@ export default function LoginPage() {
     e.preventDefault(); setError(''); setLoading(true);
     try {
       const res = await api.auth.login(email, password) as any;
+      if (res?.pendingDeletion) {
+        setPendingDeletion({ email, password, expiresAt: res.deletionExpiresAt });
+        return;
+      }
       saveAuth(res); router.push('/opportunities');
     } catch (err: any) {
       setError(err?.message || 'Invalid email or password');
@@ -409,6 +526,20 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-white">
+
+      {/* Pending deletion recovery modal */}
+      <AnimatePresence>
+        {pendingDeletion && (
+          <DeletionRecoveryModal
+            email={pendingDeletion.email}
+            password={pendingDeletion.password}
+            expiresAt={pendingDeletion.expiresAt}
+            onRestore={() => router.push('/opportunities')}
+            onPurge={() => { setPendingDeletion(null); router.push('/register'); }}
+            onClose={() => setPendingDeletion(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Left brand panel (desktop only) ─────────────────────── */}
       <div className="hidden lg:flex flex-col justify-between w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
@@ -548,6 +679,21 @@ export default function LoginPage() {
 
           <div className="bg-white rounded-3xl p-7 sm:p-9 border border-slate-200/80"
             style={{ boxShadow: '0 4px 6px -1px rgba(15,23,42,0.05), 0 20px 48px -8px rgba(15,23,42,0.13)' }}>
+
+            {/* Account deletion scheduled banner */}
+            {showDeletedBanner && (
+              <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+                <svg className="mt-0.5 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                  <p className="text-amber-800 text-sm font-semibold leading-snug">Account deletion scheduled</p>
+                  <p className="text-amber-700 text-xs mt-0.5 leading-relaxed">
+                    You have <strong>24 hours</strong> to sign back in and restore your account, or confirm permanent deletion.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="text-center mb-7">
               <h2 className="text-2xl font-black text-slate-900 mb-1">Welcome back</h2>
