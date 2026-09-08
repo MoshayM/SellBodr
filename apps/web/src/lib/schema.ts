@@ -230,6 +230,15 @@ const MIGRATIONS = [
     count INTEGER NOT NULL DEFAULT 0,
     resetAt INTEGER NOT NULL DEFAULT 0
   )`,
+  // PasswordResetToken — one-time tokens for forgot-password flow
+  `CREATE TABLE IF NOT EXISTS "PasswordResetToken" (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    tokenHash TEXT NOT NULL,
+    expiresAt INTEGER NOT NULL,
+    usedAt INTEGER,
+    createdAt INTEGER NOT NULL DEFAULT 0
+  )`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {
