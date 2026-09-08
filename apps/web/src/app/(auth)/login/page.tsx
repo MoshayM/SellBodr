@@ -542,19 +542,19 @@ export default function LoginPage() {
       </AnimatePresence>
 
       {/* ── Left brand panel (desktop only) ─────────────────────── */}
-      <div className="hidden lg:flex flex-col w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
+      <div className="hidden lg:flex flex-col w-[48%] relative overflow-hidden p-12 xl:p-16 select-none"
         style={{ background: 'linear-gradient(145deg, #0D1B35 0%, #0F2040 35%, #162240 65%, #0D1B35 100%)' }}>
 
         {/* Decorative orbs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.28), transparent 70%)', transform: 'translate(35%, -35%)' }} />
-        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.22), transparent 70%)', transform: 'translate(-30%, 30%)' }} />
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.12), transparent 70%)', transform: 'translate(-50%, -50%)' }} />
+        <div className="absolute top-0 right-0 w-[520px] h-[520px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3), transparent 70%)', transform: 'translate(35%, -35%)' }} />
+        <div className="absolute bottom-0 left-0 w-[420px] h-[420px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.24), transparent 70%)', transform: 'translate(-30%, 30%)' }} />
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%)', transform: 'translate(-50%, -50%)' }} />
         {/* Dot-grid texture */}
         <div className="absolute inset-0 pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.07) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.06) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
 
         {/* Logo wordmark */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
@@ -574,86 +574,90 @@ export default function LoginPage() {
 
         {/* Hero content */}
         <motion.div className="relative z-10 flex-1 flex flex-col justify-center"
-          initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.65 }}>
+          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1, duration: 0.6 }}>
 
-          {/* Live indicator */}
-          <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full w-fit"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="text-violet-200 text-[11px] font-medium tracking-wider">AI-powered · Cross-Border eCommerce</span>
-          </div>
-
-          <h1 className="text-[2.4rem] xl:text-[2.8rem] font-black text-white leading-[1.08] mb-5">
+          {/* Headline */}
+          <h1 className="text-[2.9rem] xl:text-[3.4rem] font-black text-white leading-[1.04] mb-5">
             Source in India.<br />
-            <span style={{ background: 'linear-gradient(90deg, #c4b5fd, #f9a8d4, #fcd34d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <span style={{ background: 'linear-gradient(90deg, #c4b5fd 0%, #f9a8d4 50%, #fcd34d 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Sell everywhere.
             </span><br />
             Profit instantly.
           </h1>
 
-          <p className="text-violet-200 text-[14.5px] leading-[1.75] opacity-75 mb-8">
-            AI discovers products to source cheap in India and sell at 2–5× margin globally — verdict in under 60 seconds.
+          {/* Subtitle */}
+          <p className="text-violet-200 text-[14px] leading-[1.75] mb-7 max-w-[23rem]"
+            style={{ opacity: 0.75 }}>
+            AI finds products you can source cheap in India and sell at 2–5× margin on Amazon, Etsy, Walmart &amp; 73 more — with a Launch / Hold / Reject verdict in under 60 seconds.
           </p>
 
-          {/* Feature highlights */}
-          <div className="space-y-3 mb-8">
+          {/* Feature bullets with circular icon badges */}
+          <div className="space-y-3.5 mb-8">
             {[
-              { icon: '🔭', label: 'Discover high-demand products in 13 global marketplaces' },
-              { icon: '📊', label: 'Full profit model — fees, shipping, duties & ad spend' },
-              { icon: '🎯', label: 'Launch / Hold / Reject verdict with confidence score' },
-              { icon: '🏭', label: 'Real Indian suppliers with MOQ, lead time & location' },
+              {
+                svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
+                text: 'AI scans 76+ marketplaces for high-demand, low-competition products',
+              },
+              {
+                svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+                text: '7-dimension Opportunity Score with full profit model & landed cost',
+              },
+              {
+                svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                text: 'India supplier contacts + AI-generated listing copy, ready to launch',
+              },
             ].map((f, i) => (
-              <motion.div key={f.label}
-                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.08, duration: 0.45 }}
-                className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  {f.icon}
-                </span>
-                <span className="text-violet-200 text-[13px] leading-snug opacity-85">{f.label}</span>
+              <motion.div key={i}
+                initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.28 + i * 0.09, duration: 0.42 }}
+                className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-[1px] text-violet-300"
+                  style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(139,92,246,0.35)' }}>
+                  {f.svg}
+                </div>
+                <span className="text-violet-200 text-[13.5px] leading-snug" style={{ opacity: 0.82 }}>{f.text}</span>
               </motion.div>
             ))}
           </div>
 
-          {/* Mini stats */}
-          <div className="flex items-center gap-6">
+          {/* Stats row */}
+          <div className="flex items-start gap-8">
             {[
-              { value: '13', label: 'Marketplaces' },
-              { value: '60s', label: 'AI verdict' },
-              { value: '2–5×', label: 'Avg margin' },
+              { value: '76+', label: 'Marketplaces' },
+              { value: '19', label: 'Countries' },
+              { value: '< 60s', label: 'Scan to verdict' },
             ].map((s, i) => (
               <motion.div key={s.label}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.65 + i * 0.07, duration: 0.4 }}>
-                <div className="text-white font-black text-xl leading-none">{s.value}</div>
-                <div className="text-violet-400 text-[11px] font-medium mt-1">{s.label}</div>
+                transition={{ delay: 0.55 + i * 0.08, duration: 0.38 }}>
+                <div className="text-white font-black text-[1.6rem] leading-none tracking-tight">{s.value}</div>
+                <div className="text-violet-400 text-[11px] font-medium mt-1 tracking-wide">{s.label}</div>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
         {/* Testimonial */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-          className="relative z-10 rounded-2xl px-5 py-4 mt-10"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.11)', backdropFilter: 'blur(10px)' }}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.72, duration: 0.45 }}
+          className="relative z-10 rounded-2xl px-5 py-4 mt-9"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
           <div className="flex gap-0.5 mb-2.5">
             {[...Array(5)].map((_, i) => (
               <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.4 2.8 3.1.45-2.25 2.2.53 3.1L6 8.05 3.22 9.55l.53-3.1L1.5 4.25l3.1-.45z"/></svg>
             ))}
           </div>
-          <p className="text-violet-100 text-[13px] leading-relaxed italic opacity-90">
+          <p className="text-violet-100 text-[13px] leading-relaxed italic" style={{ opacity: 0.9 }}>
             &ldquo;Found a ₹380 product in Jaipur, listed on Amazon US for $28. Margin after fees: 61%. Paid for itself in week one.&rdquo;
           </p>
           <div className="flex items-center gap-2.5 mt-3">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black text-white shrink-0"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)' }}>R</div>
             <div className="min-w-0">
               <p className="text-violet-300 text-[11px] font-semibold leading-none">Rahul M. · Amazon FBA Seller</p>
               <p className="text-violet-500 text-[10px] mt-0.5">Verified SellBodr user</p>
             </div>
-            <span className="ml-auto flex items-center gap-1 text-emerald-400 text-[10px] font-semibold shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />Verified
+            <span className="ml-auto flex items-center gap-1.5 text-emerald-400 text-[10px] font-semibold shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />+ Verified
             </span>
           </div>
         </motion.div>
@@ -674,7 +678,7 @@ export default function LoginPage() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
-          className="w-full max-w-[420px]">
+          className="w-full max-w-[460px]">
 
           {/* ── Main card ── */}
           <div className="bg-white rounded-3xl border border-slate-200/80"
