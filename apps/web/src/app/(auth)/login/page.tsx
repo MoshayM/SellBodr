@@ -573,87 +573,49 @@ export default function LoginPage() {
         </motion.div>
 
         {/* Hero content */}
-        <div className="relative z-10">
-          <motion.div initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.65 }}>
+        <motion.div className="relative z-10"
+          initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.65 }}>
 
-            {/* Tagline chip */}
-            <div className="inline-flex items-center gap-1.5 mb-5 px-3 py-1 rounded-full"
-              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-violet-100 text-[11px] font-semibold tracking-widest uppercase">AI · Cross-Border · eCommerce</span>
-            </div>
+          {/* Live indicator */}
+          <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-violet-200 text-[11px] font-medium tracking-wider">AI-powered · Cross-Border eCommerce</span>
+          </div>
 
-            <h1 className="text-4xl xl:text-[2.7rem] font-black text-white leading-[1.1] mb-5">
-              Source in India.<br />
-              <span style={{ background: 'linear-gradient(90deg, #c4b5fd, #f9a8d4, #fcd34d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                Sell everywhere.
-              </span><br />
-              Profit instantly.
-            </h1>
+          <h1 className="text-[2.6rem] xl:text-[3rem] font-black text-white leading-[1.08] mb-6">
+            Source in India.<br />
+            <span style={{ background: 'linear-gradient(90deg, #c4b5fd, #f9a8d4, #fcd34d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Sell everywhere.
+            </span><br />
+            Profit instantly.
+          </h1>
 
-            <p className="text-violet-100 text-base leading-relaxed max-w-sm opacity-85 mb-7">
-              AI finds products you can source cheap in India and sell at 2–5× margin on Amazon, Etsy, Walmart &amp; 73 more — with a Launch / Hold / Reject verdict in under 60 seconds.
-            </p>
-
-            {/* Feature highlights */}
-            <div className="space-y-3">
-              {[
-                { icon: <SearchIcon />, text: 'AI scans 76+ marketplaces for high-demand, low-competition products' },
-                { icon: <ScoreIcon />,  text: '7-dimension Opportunity Score with full profit model & landed cost' },
-                { icon: <RocketIcon />, text: 'India supplier contacts + AI-generated listing copy, ready to launch' },
-              ].map((f, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                    {f.icon}
-                  </div>
-                  <p className="text-violet-100 text-sm leading-relaxed opacity-90">{f.text}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="mt-8 grid grid-cols-3 gap-2.5">
-            {[
-              { val: '76+', label: 'Marketplaces' },
-              { val: '19', label: 'Countries' },
-              { val: '< 60s', label: 'Scan to verdict' },
-            ].map(s => (
-              <div key={s.label} className="rounded-2xl p-3.5 text-center"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)' }}>
-                <div className="text-xl font-black text-white mb-0.5"
-                  style={{ background: 'linear-gradient(135deg, #e9d5ff, #fbcfe8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  {s.val}
-                </div>
-                <div className="text-violet-200 text-[10px] leading-snug font-medium">{s.label}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
+          <p className="text-violet-200 text-[15px] leading-[1.75] max-w-[17rem] opacity-75">
+            AI discovers products to source cheap in India and sell at 2–5× margin globally — verdict in under 60 seconds.
+          </p>
+        </motion.div>
 
         {/* Testimonial */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
-          className="relative z-10 rounded-2xl p-5"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(10px)' }}>
-          <div className="flex gap-0.5 mb-3">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+          className="relative z-10 rounded-2xl px-5 py-4"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.11)', backdropFilter: 'blur(10px)' }}>
+          <div className="flex gap-0.5 mb-2.5">
             {[...Array(5)].map((_, i) => (
-              <svg key={i} width="12" height="12" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.4 2.8 3.1.45-2.25 2.2.53 3.1L6 8.05 3.22 9.55l.53-3.1L1.5 4.25l3.1-.45z"/></svg>
+              <svg key={i} width="11" height="11" viewBox="0 0 12 12" fill="#fbbf24"><path d="M6 1l1.4 2.8 3.1.45-2.25 2.2.53 3.1L6 8.05 3.22 9.55l.53-3.1L1.5 4.25l3.1-.45z"/></svg>
             ))}
           </div>
-          <p className="text-violet-100 text-sm leading-relaxed italic">
-            &ldquo;Found a ₹380 product sourcing in Jaipur, listed it on Amazon US for $28.&nbsp;
-            Margin after fees: 61%. SellBodr paid for itself in week one.&rdquo;
+          <p className="text-violet-100 text-[13px] leading-relaxed italic opacity-90">
+            &ldquo;Found a ₹380 product in Jaipur, listed on Amazon US for $28. Margin after fees: 61%. Paid for itself in week one.&rdquo;
           </p>
-          <div className="flex items-center gap-2.5 mt-3.5">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+          <div className="flex items-center gap-2.5 mt-3">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
               style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)' }}>R</div>
-            <div>
-              <p className="text-violet-200 text-xs font-semibold">Rahul M. · Amazon FBA Seller</p>
-              <p className="text-violet-400 text-[10px]">Verified SellBodr user</p>
+            <div className="min-w-0">
+              <p className="text-violet-300 text-[11px] font-semibold leading-none">Rahul M. · Amazon FBA Seller</p>
+              <p className="text-violet-500 text-[10px] mt-0.5">Verified SellBodr user</p>
             </div>
-            <span className="ml-auto flex items-center gap-1 text-emerald-400 text-[10px] font-semibold">
+            <span className="ml-auto flex items-center gap-1 text-emerald-400 text-[10px] font-semibold shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />Verified
             </span>
           </div>
@@ -880,31 +842,6 @@ function EyeOffIcon() {
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-  );
-}
-
-function ScoreIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-    </svg>
-  );
-}
-
-function RocketIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-    </svg>
-  );
-}
 
 function LockIcon() {
   return (
