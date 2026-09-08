@@ -42,7 +42,6 @@ const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
 const ALL_PAGES: NavPage[] = [
   ...NAV_GROUPS.flatMap(g => g.pages),
   { href: '/settings', label: 'Settings',         icon: '⚙️', desc: 'Account & preferences' },
-  { href: '/ai-keys',  label: 'AI Provider Keys', icon: '🔑', desc: 'Manage AI model API keys', adminOnly: true },
 ];
 
 function SearchIcon() {
@@ -602,10 +601,6 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                         <Link href="/admin" onClick={() => setUserMenuOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors">
                           <span>🔐</span><span>Admin Panel</span>
-                        </Link>
-                        <Link href="/ai-keys" onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-xl transition-colors">
-                          <span>🔑</span><span>AI Provider Keys</span>
                         </Link>
                       </>
                     )}
