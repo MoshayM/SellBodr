@@ -1,23 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDb } from '@/lib/db';
+import { ensureSchema } from '@/lib/schema';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-// ── Rate limiter (in-process; best-effort on serverless) ─────────────────────
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX       = 20;
-const rateMap        = new Map<string, { count: number; reset: number }>();
 
-function checkRateLimit(ip: string): boolean {
-  const now  = Date.now();
-  const slot = rateMap.get(ip);
-  if (!slot || now > slot.reset) {
-    rateMap.set(ip, { count: 1, reset: now + RATE_WINDOW_MS });
-    return true;
+async function checkRateLimit(ip: string): Promise<boolean> {
+  try {
+    const db  = getDb();
+    await ensureSchema(db);
+    const now = Date.now();
+    const resetAt = now + RATE_WINDOW_MS;
+    const key = `guide:${ip}`;
+    await db.execute({
+      sql: `INSERT INTO "RateLimit" (key, count, resetAt) VALUES (?, 1, ?)
+            ON CONFLICT (key) DO UPDATE SET
+              count   = CASE WHEN "RateLimit".resetAt < ? THEN 1 ELSE "RateLimit".count + 1 END,
+              resetAt = CASE WHEN "RateLimit".resetAt < ? THEN ? ELSE "RateLimit".resetAt END`,
+      args: [key, resetAt, now, now, resetAt],
+    });
+    const rl = await db.execute({ sql: 'SELECT count FROM "RateLimit" WHERE key = ?', args: [key] });
+    return Number(rl.rows[0]?.count ?? 0) <= RATE_MAX;
+  } catch {
+    return true; // fail open if DB unavailable
   }
-  if (slot.count >= RATE_MAX) return false;
-  slot.count++;
-  return true;
 }
 
 // ── Injection / jailbreak detection ──────────────────────────────────────────
@@ -110,7 +119,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limit
     const ip = (req.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim();
-    if (!checkRateLimit(ip)) {
+    if (!(await checkRateLimit(ip))) {
       return NextResponse.json(
         { answer: "You've sent many questions in a short time. Please wait a moment before asking again." },
         { status: 429 }

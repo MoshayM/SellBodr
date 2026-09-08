@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
 
+const RL_WINDOW_MS = 15 * 60 * 1000;
+const RL_MAX       = 5;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -18,6 +21,23 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getDb();
+
+    // IP-based rate limit: 5 attempts per 15 minutes
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rlKey = `reset-pw:${ip}`;
+    const now = Date.now();
+    const resetAt = now + RL_WINDOW_MS;
+    await db.execute({
+      sql: `INSERT INTO "RateLimit" (key, count, resetAt) VALUES (?, 1, ?)
+            ON CONFLICT (key) DO UPDATE SET
+              count   = CASE WHEN "RateLimit".resetAt < ? THEN 1 ELSE "RateLimit".count + 1 END,
+              resetAt = CASE WHEN "RateLimit".resetAt < ? THEN ? ELSE "RateLimit".resetAt END`,
+      args: [rlKey, resetAt, now, now, resetAt],
+    });
+    const rl = await db.execute({ sql: 'SELECT count FROM "RateLimit" WHERE key = ?', args: [rlKey] });
+    if (Number(rl.rows[0]?.count ?? 0) > RL_MAX) {
+      return NextResponse.json({ message: 'Too many attempts. Please try again in 15 minutes.' }, { status: 429 });
+    }
     const tokenHash = createHash('sha256').update(String(token)).digest('hex');
     const now = Date.now();
 

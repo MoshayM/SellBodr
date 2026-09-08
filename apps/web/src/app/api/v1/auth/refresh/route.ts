@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
 
@@ -45,7 +46,20 @@ export async function POST(req: NextRequest) {
       .setExpirationTime('15m')
       .sign(ACCESS_SECRET);
 
-    return NextResponse.json({ accessToken, expiresIn: 900 });
+    // Rotate: revoke consumed token, issue a fresh one
+    await db.execute({
+      sql: 'UPDATE "RefreshToken" SET revoked = 1 WHERE tokenHash = ?',
+      args: [tokenHash],
+    });
+    const newRaw = randomBytes(48).toString('hex');
+    const newHash = createHash('sha256').update(newRaw).digest('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    await db.execute({
+      sql: 'INSERT INTO "RefreshToken" (id, userId, tokenHash, expiresAt, revoked, createdAt) VALUES (?,?,?,?,0,?)',
+      args: [uuidv4(), String(row.uid), newHash, expiresAt, new Date().toISOString()],
+    });
+
+    return NextResponse.json({ accessToken, refreshToken: newRaw, expiresIn: 900 });
   } catch (err: any) {
     console.error('Token refresh error:', err);
     return NextResponse.json({ message: 'Token refresh failed' }, { status: 500 });

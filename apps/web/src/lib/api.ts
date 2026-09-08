@@ -42,6 +42,8 @@ async function silentRefresh(): Promise<string | null> {
       const data = await res.json();
       if (data.accessToken) {
         localStorage.setItem('bs_access_token', data.accessToken);
+        // Persist rotated refresh token if server issued a new one
+        if (data.refreshToken) localStorage.setItem('bs_refresh_token', data.refreshToken);
         return data.accessToken as string;
       }
       return null;

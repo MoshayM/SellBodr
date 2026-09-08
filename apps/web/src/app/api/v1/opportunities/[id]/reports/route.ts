@@ -27,8 +27,12 @@ function staticReport(title: string, category: string, mkt: string, rec: string,
 }
 
 // GET /api/v1/opportunities/:id/reports — returns all generations, newest first
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const token = req.headers.get('authorization')?.split(' ')[1];
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    await jwtVerify(token, ACCESS_SECRET);
+
     const db = getDb();
     await ensureSchema(db);
     const r = await db.execute({
@@ -42,7 +46,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     }));
     return NextResponse.json(rows);
   } catch (err: any) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    if (err?.code?.startsWith('ERR_JWT')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Failed to load reports' }, { status: 500 });
   }
 }
 
@@ -150,18 +155,42 @@ Be specific with numbers, timelines, and actionable advice.` },
 // DELETE /api/v1/opportunities/:id/reports/:reportId — deletes a specific report from history
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const token = req.headers.get('authorization')?.split(' ')[1];
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { payload } = await jwtVerify(token, ACCESS_SECRET);
+    const userId = String(payload.sub ?? '');
+
     const url = new URL(req.url);
     const reportId = url.searchParams.get('reportId');
     if (!reportId) return NextResponse.json({ error: 'reportId required' }, { status: 400 });
 
     const db = getDb();
     await ensureSchema(db);
+
+    // Admins can delete any; regular users can only delete from their own scans
+    if (payload.role !== 'admin') {
+      const own = await db.execute({
+        sql: `SELECT 1 FROM "OpportunityReport" r
+              JOIN "Search" sr ON sr.id = (
+                SELECT s2.id FROM "Search" s2
+                JOIN "Opportunity" o2 ON o2.id = ?
+                WHERE s2.userId = ? LIMIT 1
+              )
+              WHERE r.id = ? AND r.opportunityId = ?`,
+        args: [params.id, userId, reportId, params.id],
+      });
+      if (!own.rows.length) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+    }
+
     await db.execute({
       sql: `DELETE FROM "OpportunityReport" WHERE id = ? AND opportunityId = ?`,
       args: [reportId, params.id],
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    if (err?.code?.startsWith('ERR_JWT')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Failed to delete report' }, { status: 500 });
   }
 }
