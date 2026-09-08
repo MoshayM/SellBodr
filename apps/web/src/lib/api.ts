@@ -100,7 +100,8 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
       localStorage.removeItem('bs_refresh_token');
       localStorage.removeItem('bs_user');
     }
-    throw new Error('Unauthorized');
+    const errBody = await res.json().catch(() => null);
+    throw new Error(errBody?.message || errBody?.error || 'Unauthorized');
   }
 
   if (!res.ok) {
