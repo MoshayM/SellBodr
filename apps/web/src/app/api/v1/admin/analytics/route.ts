@@ -120,16 +120,55 @@ export async function GET(req: NextRequest) {
   const totalCurrentCredits = users.reduce((s, u) => s + Number(u.credits ?? 0), 0);
   const avgCreditsPerUser   = totalUsers > 0 ? (totalCurrentCredits / totalUsers).toFixed(1) : '0';
 
+  // ── Activation (users who ran ≥1 search) ─────────────────────────────────
+  let activatedUserIds = new Set<string>();
+  try {
+    const actRes = await db.execute({ sql: `SELECT DISTINCT userId FROM "Search" WHERE status != 'failed'`, args: [] });
+    for (const row of actRes.rows as any[]) if (row.userId) activatedUserIds.add(String(row.userId));
+  } catch {}
+  const activatedUsers   = activatedUserIds.size;
+  const activationRate   = totalUsers > 0 ? ((activatedUsers / totalUsers) * 100).toFixed(1) : '0.0';
+
+  // ── SaaS unit economics ───────────────────────────────────────────────────
+  const arpu        = totalUsers > 0  ? (mrr / totalUsers).toFixed(2)  : '0.00';
+  const arpa        = proUsers  > 0   ? (mrr / proUsers).toFixed(2)    : '0.00';
+  const acv         = proUsers  > 0   ? (arr / proUsers).toFixed(2)    : '0.00';
+  const tcv         = acv; // monthly subscriptions → TCV = ACV (no multi-year deals)
+  const churnRateNum = parseFloat(String(churnRate));
+  const arpaNum      = parseFloat(arpa);
+  // LTV = ARPA / monthly_churn. If churn ~0, cap at 36 months.
+  const monthlyChurn = churnRateNum > 0 ? churnRateNum / 100 / 12 : 1 / 36;
+  const ltv         = (arpaNum / monthlyChurn).toFixed(2);
+  const retentionRate = (100 - churnRateNum).toFixed(1);
+
+  // ── Accounting & cash flow ────────────────────────────────────────────────
+  const runRate        = arr;           // MRR × 12
+  const deferredRevenue = 0;            // no annual pre-pay plans yet
+  const grossMarginPct  = 90;           // SaaS infrastructure ~10% COGS estimate
+  const monthlyNetRevenue = (mrr + creditRevenue);
+
+  // ── Marketing & sales efficiency ─────────────────────────────────────────
+  // CAC & burn require expense tracking — marked N/A until integrated
+  const creditUtilizationRate = creditsPurchased > 0
+    ? ((creditsConsumed / creditsPurchased) * 100).toFixed(1) : '0.0';
+  // Net Revenue Retention (no expansion MRR tracked yet — approximate)
+  const nrr = retentionRate; // proxy until cohort tracking available
+
   return NextResponse.json({
     // Users
-    totalUsers, proUsers, adminUsers, newUsers7d, newUsers30d, activeUsers30d, churnedUsers,
-    conversionRate, churnRate,
+    totalUsers, proUsers, adminUsers, newUsers7d, newUsers30d, activeUsers30d,
+    churnedUsers, activatedUsers,
+    conversionRate, churnRate, retentionRate, activationRate,
     // Revenue
-    mrr, arr, totalRevenue, creditRevenue,
+    mrr, arr, totalRevenue, creditRevenue, monthlyNetRevenue,
     proPrice, bundlePrice, bundleSize,
+    // SaaS unit economics
+    arpu, arpa, acv, tcv, ltv, nrr,
+    // Accounting
+    runRate, deferredRevenue, grossMarginPct,
     // Credits
     creditsPurchased, creditsConsumed, creditPurchaseTxns,
-    totalCurrentCredits, avgCreditsPerUser,
+    totalCurrentCredits, avgCreditsPerUser, creditUtilizationRate,
     // Activity
     totalSearches,
     avgSearchesPerUser: totalUsers > 0 ? (totalSearches / totalUsers).toFixed(1) : '0',

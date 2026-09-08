@@ -226,7 +226,8 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="tab-pill-bar mb-5">
+      <div className="overflow-x-auto pb-1 -mb-1">
+      <div className="tab-pill-bar mb-5 min-w-max">
         <button className={`tab-pill${activeTab === 'users' ? ' active' : ''}`} onClick={() => setActiveTab('users')}>
           Users ({totalUsers})
         </button>
@@ -251,6 +252,7 @@ export default function AdminPage() {
         <button className={`tab-pill${activeTab === 'analytics' ? ' active' : ''}`} onClick={() => setActiveTab('analytics')}>
           📊 Analytics
         </button>
+      </div>
       </div>
 
       {/* ── Users Tab ── */}
@@ -767,8 +769,8 @@ export default function AdminPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-white">Analytics & Metrics</h2>
-              <p className="text-xs text-white/40 mt-0.5">Real-time business intelligence</p>
+              <h2 className="text-base font-bold text-white">Analytics & Business Intelligence</h2>
+              <p className="text-xs text-white/40 mt-0.5">Real-time SaaS metrics — admin only</p>
             </div>
             <button onClick={loadAnalytics} disabled={analyticsLoading}
               className="text-xs font-medium px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:bg-white/5 transition-all disabled:opacity-40">
@@ -782,57 +784,159 @@ export default function AdminPage() {
 
           {analytics && (
             <>
-              {/* KPI Row 1 — Revenue */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'MRR',         value: `$${(analytics.mrr ?? 0).toLocaleString()}`,         sub: 'Monthly Recurring Revenue',    color: 'text-emerald-400' },
-                  { label: 'ARR',         value: `$${(analytics.arr ?? 0).toLocaleString()}`,         sub: 'Annual Run Rate',              color: 'text-emerald-300' },
-                  { label: 'Total Rev.',  value: `$${(analytics.totalRevenue ?? 0).toLocaleString()}`, sub: 'MRR + credit revenue',         color: 'text-violet-400'  },
-                  { label: 'Credit Rev.', value: `$${(analytics.creditRevenue ?? 0).toFixed(2)}`,     sub: 'From credit purchases',        color: 'text-cyan-400'    },
-                ].map(kpi => (
-                  <div key={kpi.label} className="card-dark rounded-xl p-4">
-                    <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
-                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
-                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
-                  </div>
-                ))}
+              {/* ── Section 1: Subscription & Revenue ───────────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">💰 Subscription & Revenue</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'MRR',          value: `$${(analytics.mrr ?? 0).toLocaleString()}`,              sub: 'Monthly Recurring Revenue',     color: 'text-emerald-400' },
+                    { label: 'ARR',          value: `$${(analytics.arr ?? 0).toLocaleString()}`,              sub: 'Annual Run Rate (MRR × 12)',     color: 'text-emerald-300' },
+                    { label: 'Total Rev.',   value: `$${(analytics.totalRevenue ?? 0).toLocaleString()}`,     sub: 'MRR + credit purchases',        color: 'text-violet-400'  },
+                    { label: 'Credit Rev.',  value: `$${Number(analytics.creditRevenue ?? 0).toFixed(2)}`,   sub: 'One-time credit purchases',     color: 'text-cyan-400'    },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* KPI Row 2 — Users */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Total Users',    value: analytics.totalUsers    ?? 0, sub: 'All registered',          color: 'text-white'        },
-                  { label: 'Pro Users',      value: analytics.proUsers      ?? 0, sub: 'Paying subscribers',      color: 'text-violet-400'   },
-                  { label: 'New (7d)',       value: analytics.newUsers7d    ?? 0, sub: 'Registrations this week', color: 'text-blue-400'     },
-                  { label: 'Active (30d)',   value: analytics.activeUsers30d ?? 0, sub: 'Logged in this month',   color: 'text-emerald-400'  },
-                ].map(kpi => (
-                  <div key={kpi.label} className="card-dark rounded-xl p-4">
-                    <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value.toLocaleString()}</div>
-                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
-                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
-                  </div>
-                ))}
+              {/* ── Section 2: SaaS Unit Economics ──────────────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">📐 SaaS Unit Economics</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'ARPU',  value: `$${analytics.arpu ?? '0.00'}`,  sub: 'Avg Rev / All Users / mo',     color: 'text-blue-400',   tip: 'MRR ÷ Total Users' },
+                    { label: 'ARPA',  value: `$${analytics.arpa ?? '0.00'}`,  sub: 'Avg Rev / Paying Acct / mo',   color: 'text-violet-400', tip: 'MRR ÷ Pro Users' },
+                    { label: 'ACV',   value: `$${Number(analytics.acv ?? 0).toLocaleString()}`,   sub: 'Annual Contract Value',        color: 'text-amber-400',  tip: 'ARR ÷ Pro Users' },
+                    { label: 'TCV',   value: `$${Number(analytics.tcv ?? 0).toLocaleString()}`,   sub: 'Total Contract Value',         color: 'text-amber-300',  tip: '= ACV (monthly subs)' },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                      <div className="text-[9px] text-white/20 mt-1 font-mono">{kpi.tip}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                  {[
+                    { label: 'LTV',       value: `$${Number(analytics.ltv ?? 0).toLocaleString()}`,  sub: 'Customer Lifetime Value',      color: 'text-emerald-400', tip: 'ARPA ÷ monthly churn' },
+                    { label: 'LTV:CAC',   value: 'N/A',                                              sub: 'CAC not tracked yet',          color: 'text-white/30',    tip: 'Needs ad spend data' },
+                    { label: 'CAC',       value: 'N/A',                                              sub: 'Customer Acq. Cost',           color: 'text-white/30',    tip: 'Needs marketing costs' },
+                    { label: 'Payback',   value: 'N/A',                                              sub: 'CAC Payback Period',           color: 'text-white/30',    tip: 'CAC ÷ ARPA (months)' },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                      <div className="text-[9px] text-white/20 mt-1 font-mono">{kpi.tip}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* KPI Row 3 — Rates & Credits */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Conversion',    value: `${analytics.conversionRate ?? 0}%`,  sub: 'Free → Pro',                color: 'text-amber-400'  },
-                  { label: 'Churn Est.',    value: `${analytics.churnRate      ?? 0}%`,  sub: 'Inactive 30d+ free users',  color: 'text-red-400'    },
-                  { label: 'Credits Sold',  value: analytics.creditsPurchased ?? 0,         sub: 'Total credits purchased',   color: 'text-cyan-400'   },
-                  { label: 'Credits Used',  value: analytics.creditsConsumed  ?? 0,         sub: 'Total credits consumed',    color: 'text-cyan-300'   },
-                ].map(kpi => (
-                  <div key={kpi.label} className="card-dark rounded-xl p-4">
-                    <div className={`text-2xl font-black ${kpi.color}`}>{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</div>
-                    <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
-                    <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
-                  </div>
-                ))}
+              {/* ── Section 3: Customer Retention ───────────────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">🔄 Customer Retention Metrics</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Retention Rate', value: `${analytics.retentionRate ?? 0}%`,   sub: '100 − churn rate',              color: 'text-emerald-400' },
+                    { label: 'Churn Rate',      value: `${analytics.churnRate ?? 0}%`,       sub: 'Inactive 30d+ free users',      color: 'text-red-400'     },
+                    { label: 'NRR / NDR',       value: `${analytics.nrr ?? 0}%`,             sub: 'Net Revenue Retention (est.)',  color: 'text-blue-400'    },
+                    { label: 'Conversion',      value: `${analytics.conversionRate ?? 0}%`,  sub: 'Free → Pro upgrade rate',       color: 'text-amber-400'   },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                  {[
+                    { label: 'Total Users',    value: (analytics.totalUsers ?? 0).toLocaleString(),     sub: 'All registered',          color: 'text-white'       },
+                    { label: 'Pro Users',      value: (analytics.proUsers ?? 0).toLocaleString(),       sub: 'Paying subscribers',      color: 'text-violet-400'  },
+                    { label: 'Active (30d)',   value: (analytics.activeUsers30d ?? 0).toLocaleString(), sub: 'Logged in last 30 days',  color: 'text-emerald-400' },
+                    { label: 'Activated',      value: (analytics.activatedUsers ?? 0).toLocaleString(), sub: 'Ran ≥1 scan',             color: 'text-cyan-400'    },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Charts row */}
+              {/* ── Section 4: Marketing & Sales Efficiency ─────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">📣 Marketing & Sales Efficiency</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Activation Rate', value: `${analytics.activationRate ?? 0}%`,            sub: 'Users who ran ≥1 scan',        color: 'text-blue-400'    },
+                    { label: 'New (7d)',         value: (analytics.newUsers7d ?? 0).toLocaleString(),   sub: 'Signups this week',            color: 'text-emerald-400' },
+                    { label: 'New (30d)',        value: (analytics.newUsers30d ?? 0).toLocaleString(),  sub: 'Signups this month',           color: 'text-emerald-300' },
+                    { label: 'Avg Scans/User',   value: analytics.avgSearchesPerUser ?? '0',            sub: 'Engagement depth',             color: 'text-amber-400'   },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Section 5: Accounting & Cash Flow ───────────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">🏦 Accounting & Cash Flow</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Run Rate',         value: `$${(analytics.runRate ?? 0).toLocaleString()}`,        sub: 'Annualised revenue (MRR×12)',   color: 'text-emerald-400' },
+                    { label: 'Monthly Net Rev.',  value: `$${Number(analytics.monthlyNetRevenue ?? 0).toFixed(2)}`, sub: 'MRR + credits this period',  color: 'text-violet-400'  },
+                    { label: 'Deferred Rev.',     value: `$${analytics.deferredRevenue ?? 0}`,                  sub: 'Prepaid (no annual plans yet)', color: 'text-white/40'    },
+                    { label: 'Gross Margin',      value: `~${analytics.grossMarginPct ?? 90}%`,                 sub: 'SaaS infra COGS ~10%',         color: 'text-emerald-300' },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="card-dark rounded-xl p-4 border border-amber-500/15 bg-amber-500/5 mt-3">
+                  <div className="text-xs font-semibold text-amber-300/70 mb-1">⚠️ Burn Rate</div>
+                  <p className="text-[11px] text-white/40 leading-relaxed">
+                    Burn rate requires expense tracking (infra, payroll, marketing). Not yet integrated —
+                    connect your accounting system or enter costs manually in Platform Settings to enable this metric.
+                  </p>
+                </div>
+              </div>
+
+              {/* ── Section 6: Credit Economics ─────────────────────────── */}
+              <div>
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">🎟️ Credit Economics</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Purchased',     value: (analytics.creditsPurchased ?? 0).toLocaleString(),  sub: 'Total credits bought',         color: 'text-cyan-400'    },
+                    { label: 'Consumed',      value: (analytics.creditsConsumed ?? 0).toLocaleString(),   sub: 'Total credits used',           color: 'text-cyan-300'    },
+                    { label: 'Utilisation',   value: `${analytics.creditUtilizationRate ?? 0}%`,          sub: 'Used ÷ purchased',             color: 'text-amber-400'   },
+                    { label: 'Avg / User',    value: analytics.avgCreditsPerUser ?? '0',                  sub: 'Current credits held',         color: 'text-white'       },
+                  ].map(kpi => (
+                    <div key={kpi.label} className="card-dark rounded-xl p-4">
+                      <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+                      <div className="text-[10px] font-bold text-white/60 mt-1 uppercase tracking-widest">{kpi.label}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{kpi.sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Charts ──────────────────────────────────────────────── */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Searches per day */}
                 <div className="card-dark rounded-xl p-5">
                   <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Searches — Last 30 Days</h3>
                   <div className="h-40 flex items-end gap-[2px]">
@@ -841,10 +945,7 @@ export default function AdminPage() {
                       const h = Math.round((d.count / max) * 100);
                       return (
                         <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
-                          <div
-                            className="w-full rounded-sm bg-violet-500/60 hover:bg-violet-400/80 transition-all"
-                            style={{ height: `${Math.max(h, 2)}%` }}
-                          />
+                          <div className="w-full rounded-sm bg-violet-500/60 hover:bg-violet-400/80 transition-all" style={{ height: `${Math.max(h, 2)}%` }} />
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-white/70 bg-black/80 px-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
                             {d.date.slice(5)}: {d.count}
                           </div>
@@ -859,7 +960,6 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* User growth */}
                 <div className="card-dark rounded-xl p-5">
                   <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">New Registrations — Last 30 Days</h3>
                   <div className="h-40 flex items-end gap-[2px]">
@@ -868,10 +968,7 @@ export default function AdminPage() {
                       const h = Math.round((d.count / max) * 100);
                       return (
                         <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
-                          <div
-                            className="w-full rounded-sm bg-emerald-500/60 hover:bg-emerald-400/80 transition-all"
-                            style={{ height: `${Math.max(h, 2)}%` }}
-                          />
+                          <div className="w-full rounded-sm bg-emerald-500/60 hover:bg-emerald-400/80 transition-all" style={{ height: `${Math.max(h, 2)}%` }} />
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] text-white/70 bg-black/80 px-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
                             {d.date.slice(5)}: {d.count}
                           </div>
@@ -887,7 +984,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Top Marketplaces */}
+              {/* ── Top Marketplaces ────────────────────────────────────── */}
               {(analytics.topMarketplaces ?? []).length > 0 && (
                 <div className="card-dark rounded-xl p-5">
                   <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Top Marketplaces by Scans</h3>
@@ -908,29 +1005,46 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* Summary metrics table */}
+              {/* ── Full metrics reference table ─────────────────────────── */}
               <div className="card-dark rounded-xl p-5">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Key Business Metrics Summary</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest mb-4">Full Metrics Reference</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm">
                   {[
-                    ['MRR', `$${(analytics.mrr ?? 0).toLocaleString()}`],
-                    ['ARR', `$${(analytics.arr ?? 0).toLocaleString()}`],
-                    ['Pro subscribers', analytics.proUsers],
-                    ['Conversion rate (free→pro)', `${analytics.conversionRate}%`],
-                    ['Estimated churn rate', `${analytics.churnRate}%`],
-                    ['Total AI scans run', analytics.totalSearches],
-                    ['Avg scans/user', analytics.avgSearchesPerUser],
-                    ['Credits purchased', analytics.creditsPurchased],
-                    ['Credits consumed', analytics.creditsConsumed],
-                    ['Avg credits/user', analytics.avgCreditsPerUser],
-                    ['Credit revenue', `$${(analytics.creditRevenue ?? 0).toFixed(2)}`],
-                    ['Total revenue (est.)', `$${(analytics.totalRevenue ?? 0).toFixed(2)}`],
-                    ['New users (last 7d)', analytics.newUsers7d],
-                    ['New users (last 30d)', analytics.newUsers30d],
-                    ['Active users (last 30d)', analytics.activeUsers30d],
+                    ['MRR',                       `$${(analytics.mrr ?? 0).toLocaleString()}`],
+                    ['ARR / Run Rate',             `$${(analytics.arr ?? 0).toLocaleString()}`],
+                    ['Monthly Net Revenue',        `$${Number(analytics.monthlyNetRevenue ?? 0).toFixed(2)}`],
+                    ['Credit Revenue',             `$${Number(analytics.creditRevenue ?? 0).toFixed(2)}`],
+                    ['Total Revenue (est.)',       `$${Number(analytics.totalRevenue ?? 0).toFixed(2)}`],
+                    ['ARPU',                       `$${analytics.arpu ?? '0.00'}/mo`],
+                    ['ARPA',                       `$${analytics.arpa ?? '0.00'}/mo`],
+                    ['ACV',                        `$${Number(analytics.acv ?? 0).toLocaleString()}/yr`],
+                    ['TCV',                        `$${Number(analytics.tcv ?? 0).toLocaleString()}`],
+                    ['LTV (est.)',                 `$${Number(analytics.ltv ?? 0).toLocaleString()}`],
+                    ['Gross Margin',               `~${analytics.grossMarginPct ?? 90}%`],
+                    ['Deferred Revenue',           `$${analytics.deferredRevenue ?? 0}`],
+                    ['Burn Rate',                  'N/A — no expense data'],
+                    ['CAC',                        'N/A — no ad spend data'],
+                    ['LTV:CAC',                    'N/A'],
+                    ['Conversion Rate (free→pro)', `${analytics.conversionRate ?? 0}%`],
+                    ['Churn Rate (est.)',           `${analytics.churnRate ?? 0}%`],
+                    ['Retention Rate',             `${analytics.retentionRate ?? 0}%`],
+                    ['NRR / NDR (est.)',           `${analytics.nrr ?? 0}%`],
+                    ['Activation Rate',            `${analytics.activationRate ?? 0}%`],
+                    ['Total Users',                analytics.totalUsers ?? 0],
+                    ['Pro Subscribers',            analytics.proUsers ?? 0],
+                    ['Active (30d)',                analytics.activeUsers30d ?? 0],
+                    ['Activated Users',            analytics.activatedUsers ?? 0],
+                    ['New (7d)',                   analytics.newUsers7d ?? 0],
+                    ['New (30d)',                  analytics.newUsers30d ?? 0],
+                    ['Total Scans',               analytics.totalSearches ?? 0],
+                    ['Avg Scans/User',            analytics.avgSearchesPerUser ?? '0'],
+                    ['Credits Purchased',          analytics.creditsPurchased ?? 0],
+                    ['Credits Consumed',           analytics.creditsConsumed ?? 0],
+                    ['Credit Utilisation',         `${analytics.creditUtilizationRate ?? 0}%`],
+                    ['Avg Credits/User',           analytics.avgCreditsPerUser ?? '0'],
                   ].map(([k, v]) => (
-                    <div key={String(k)} className="flex items-center justify-between py-1.5 border-b border-white/5">
-                      <span className="text-white/50 text-xs">{k}</span>
+                    <div key={String(k)} className="flex items-center justify-between py-1 border-b border-white/5">
+                      <span className="text-white/45 text-xs">{k}</span>
                       <span className="text-white font-mono text-xs font-semibold">{String(v)}</span>
                     </div>
                   ))}
