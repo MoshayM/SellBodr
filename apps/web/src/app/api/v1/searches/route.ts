@@ -447,8 +447,9 @@ export async function POST(req: NextRequest) {
       args: [searchId, userId, marketplace, visibility, now, now],
     });
 
-    // Pro users can use all AI providers; free/guest are restricted to Groq + Mistral only
-    const freeOnly = userRole !== 'admin' && userPlan !== 'pro';
+    // Paid providers (Anthropic, OpenAI) only for Pro/Admin private searches
+    // Public searches always use free-tier providers (Groq + Mistral) regardless of plan
+    const freeOnly = visibility === 'public' || (userRole !== 'admin' && userPlan !== 'pro');
 
     // ── Stage 1: Parallel multi-provider discovery ────────────────────────────
     const discMsgs = [
