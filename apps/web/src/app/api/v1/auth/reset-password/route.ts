@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Too many attempts. Please try again in 15 minutes.' }, { status: 429 });
     }
     const tokenHash = createHash('sha256').update(String(token)).digest('hex');
-    const now = Date.now();
 
     const result = await db.execute({
       sql: 'SELECT id, userId, expiresAt, usedAt FROM "PasswordResetToken" WHERE tokenHash = ?',
