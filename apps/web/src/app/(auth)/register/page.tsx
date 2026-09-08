@@ -118,17 +118,17 @@ export default function RegisterPage() {
                 <h2 className="text-3xl font-black text-slate-900 mb-2">Create your account</h2>
                 <p className="text-slate-500 text-sm">Free forever · Upgrade to Pro anytime · No credit card required to start</p>
               </div>
-              <div className="grid sm:grid-cols-2 gap-5 mb-6">
+              <div className="grid sm:grid-cols-2 gap-5 mt-4 mb-6">
                 {plans.map(p => (
                   <motion.button
                     key={p.id} onClick={() => setPlan(p.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className={`relative bg-white rounded-2xl p-6 text-left transition-all duration-200 border-2 overflow-hidden ${
+                    className={`relative bg-white rounded-2xl p-6 pt-7 text-left transition-all duration-200 border-2 ${
                       plan === p.id
                         ? p.highlight ? 'border-violet-500 shadow-xl shadow-violet-100/80' : 'border-emerald-400 shadow-xl shadow-emerald-50'
                         : 'border-slate-200 hover:border-slate-300 shadow-sm'
                     }`}>
                     {/* Top accent line */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px]"
+                    <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
                       style={{ background: plan === p.id
                         ? p.highlight ? 'linear-gradient(90deg,transparent,#7C3AED,transparent)' : 'linear-gradient(90deg,transparent,#10B981,transparent)'
                         : 'linear-gradient(90deg,transparent,#E2E8F0,transparent)' }} />
