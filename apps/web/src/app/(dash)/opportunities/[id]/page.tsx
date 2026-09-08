@@ -13,11 +13,11 @@ const TABS = ['Overview', 'Research', 'Suppliers', 'Profitability', 'Competition
 /* Animated progress button — credit-aware */
 function GenProgressButton({
   isPending, icon, label, pendingLabel, onClick, disabled = false, className = '',
-  credits, isAdmin, onBuyCredits,
+  credits, isAdmin, onBuyCredits, buyLabel = '₹499',
 }: {
   isPending: boolean; icon: string; label: string; pendingLabel: string;
   onClick?: () => void; disabled?: boolean; className?: string;
-  credits?: number | null; isAdmin?: boolean; onBuyCredits?: () => void;
+  credits?: number | null; isAdmin?: boolean; onBuyCredits?: () => void; buyLabel?: string;
 }) {
   const [pct, setPct] = useState(0);
   useEffect(() => {
@@ -53,7 +53,7 @@ function GenProgressButton({
       <button onClick={onBuyCredits}
         className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap ${className}`}
         style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', boxShadow: '0 2px 10px rgba(245,158,11,0.35)' }}>
-        💳 Buy 10 Credits — $5
+        💳 Buy 10 Credits — {buyLabel}
       </button>
     );
   }
@@ -541,12 +541,54 @@ export default function OpportunityDetailPage() {
     }
   };
 
+  const [buyingCredits, setBuyingCredits] = useState(false);
+  const [buyLabel, setBuyLabel] = useState('₹499');
+
   const buyCredits = async () => {
+    if (buyingCredits) return;
+    setBuyingCredits(true);
     try {
+      // Try Razorpay first (India / INR). Falls back to Stripe (international).
+      const order = await api.billing.razorpayOrder().catch(() => null);
+      if (order) {
+        setBuyLabel('₹499');
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise(r => { script.onload = r; });
+        const rzp = new (window as any).Razorpay({
+          key:         order.keyId,
+          amount:      order.amount,
+          currency:    order.currency,
+          order_id:    order.orderId,
+          name:        'SellBodr',
+          description: '10 Report Credits',
+          theme:       { color: '#6366f1' },
+          handler: async (response: any) => {
+            try {
+              await api.billing.razorpayVerify({
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+              });
+              window.location.href = '/billing/success';
+            } catch {
+              alert('Payment verification failed. Contact support.');
+            }
+          },
+          modal: { ondismiss: () => setBuyingCredits(false) },
+        });
+        rzp.open();
+        return;
+      }
+      // Razorpay unavailable — try Stripe (international subscribers)
       const { url } = await api.billing.buyCredits();
+      setBuyLabel('$5');
       window.location.href = url;
     } catch {
-      alert('Stripe not configured yet — contact admin to add STRIPE_SECRET_KEY.');
+      setBuyingCredits(false);
+      alert('Payment is not available yet — please contact support.');
     }
   };
 
@@ -817,7 +859,7 @@ export default function OpportunityDetailPage() {
               isPending={genAssets.isPending}
               icon="✨" label={genAssets.isSuccess ? '↻ Regenerate Assets' : 'Generate Launch Assets'} pendingLabel="Launch assets…"
               onClick={() => genAssets.mutate()}
-              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
             />
             <button
               onClick={() => rescore.mutate()}
@@ -1799,7 +1841,7 @@ export default function OpportunityDetailPage() {
                   isPending={genAds.isPending}
                   icon="✨" label={ads ? '↻ Regenerate Ads' : 'Generate Ads'} pendingLabel="Ad campaigns…"
                   onClick={() => genAds.mutate()}
-                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
                 />
               </div>
             </div>
@@ -1990,7 +2032,7 @@ export default function OpportunityDetailPage() {
                   isPending={genGrowth.isPending}
                   icon="🚀" label={g ? '↻ Refresh Playbook' : 'Build Playbook'} pendingLabel="Building playbook…"
                   onClick={() => genGrowth.mutate()}
-                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
                 />
               </div>
             </div>
@@ -2184,7 +2226,7 @@ export default function OpportunityDetailPage() {
                   isPending={genBrand.isPending}
                   icon="🎨" label={b ? '↻ Regenerate Brand' : 'Build Brand'} pendingLabel="Building brand…"
                   onClick={() => genBrand.mutate()}
-                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
                 />
               </div>
             </div>
@@ -2334,7 +2376,7 @@ export default function OpportunityDetailPage() {
                   isPending={genBundle.isPending}
                   icon="📦" label={bundleData ? '↻ Regenerate Bundles' : 'Generate Bundles'} pendingLabel="Bundle strategy…"
                   onClick={() => genBundle.mutate()}
-                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+                  credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
                 />
               </div>
             </div>
@@ -2498,7 +2540,7 @@ export default function OpportunityDetailPage() {
               isPending={genReport.isPending}
               icon="📄" label={reportHistory?.length ? '↻ Generate New Report' : 'Generate Report'} pendingLabel="Building report…"
               onClick={() => genReport.mutate()}
-              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits}
+              credits={userCredits} isAdmin={creditsAdmin} onBuyCredits={buyCredits} buyLabel={buyLabel}
             />
           </div>
 
