@@ -28,19 +28,35 @@ function recommend(score: number, marginScore: number): 'launch' | 'hold' | 'rej
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  // Auth is optional — expired/missing token falls back to free-tier scoring
+  let isAdminUser = false;
+  let userId = '';
   let freeOnly = true;
   const token = req.headers.get('authorization')?.split(' ')[1];
   if (token) {
     try {
       const { payload } = await jwtVerify(token, ACCESS_SECRET);
-      freeOnly = payload.role !== 'admin' && payload.plan !== 'pro';
-    } catch { /* invalid/expired token — treat as free guest */ }
+      isAdminUser = payload.role === 'admin';
+      freeOnly = !isAdminUser && payload.plan !== 'pro';
+      if (!isAdminUser) userId = String(payload.sub ?? '');
+    } catch { }
+  }
+
+  if (!isAdminUser && !userId) {
+    return NextResponse.json({ message: 'Sign in to rescore', code: 'auth_required' }, { status: 401 });
   }
 
   try {
     const db = getDb();
     await ensureSchema(db);
+
+    if (!isAdminUser) {
+      const own = await db.execute({
+        sql: `SELECT 1 FROM "Opportunity" o LEFT JOIN "Search" sr ON sr.id = o.searchId
+              WHERE o.id = ? AND (o.searchId IS NULL OR sr.userId = ?)`,
+        args: [params.id, userId],
+      });
+      if (!own.rows.length) return NextResponse.json({ message: 'Opportunity not found' }, { status: 404 });
+    }
 
     const r = await db.execute({
       sql: `SELECT o.id, o.confidence, p.title, p.category, m.code as mCode, m.country as mCountry,

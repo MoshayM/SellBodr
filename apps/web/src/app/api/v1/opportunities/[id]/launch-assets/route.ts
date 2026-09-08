@@ -55,6 +55,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await ensureSchema(db);
 
     if (!isAdminUser) {
+      const own = await db.execute({
+        sql: `SELECT 1 FROM "Opportunity" o LEFT JOIN "Search" sr ON sr.id = o.searchId
+              WHERE o.id = ? AND (o.searchId IS NULL OR sr.userId = ?)`,
+        args: [params.id, userId],
+      });
+      if (!own.rows.length) return NextResponse.json({ message: 'Opportunity not found' }, { status: 404 });
+
       const cr = await checkAndDeductCredit(userId, 'listing', db);
       if (!cr.ok) {
         return NextResponse.json(

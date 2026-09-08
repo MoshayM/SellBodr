@@ -9,9 +9,15 @@ export const maxDuration = 30;
 const MARKETPLACE_SOURCES = ['amazon', 'etsy', 'ebay'];
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const secret = req.headers.get('x-admin-secret');
+  const validSecret = process.env.ADMIN_SECRET || process.env.JWT_ACCESS_SECRET;
+  if (!validSecret || secret !== validSecret) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   try {
     const db = getDb();
     await ensureSchema(db);
