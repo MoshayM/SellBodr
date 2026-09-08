@@ -69,8 +69,26 @@ export default function UpgradePage() {
         });
       }
 
+      // Always refresh the access token before payment to avoid "Invalid token"
+      // (access tokens expire in 15 min; user may have been on this page longer)
+      let token = localStorage.getItem('bs_access_token') ?? '';
+      const rawRefresh = localStorage.getItem('bs_refresh_token');
+      if (rawRefresh) {
+        try {
+          const rt = await fetch('/api/v1/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: rawRefresh }),
+          });
+          const rtData = await rt.json();
+          if (rtData.accessToken) {
+            token = rtData.accessToken;
+            localStorage.setItem('bs_access_token', token);
+          }
+        } catch {}
+      }
+
       // Create order
-      const token = localStorage.getItem('bs_access_token') ?? '';
       const orderRes = await fetch('/api/v1/billing/razorpay/pro-order', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
