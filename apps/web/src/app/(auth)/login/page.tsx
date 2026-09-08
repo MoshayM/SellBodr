@@ -542,7 +542,7 @@ export default function LoginPage() {
       </AnimatePresence>
 
       {/* ── Left brand panel (desktop only) ─────────────────────── */}
-      <div className="hidden lg:flex flex-col justify-between gap-8 w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
+      <div className="hidden lg:flex flex-col w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
         style={{ background: 'linear-gradient(145deg, #0D1B35 0%, #0F2040 35%, #162240 65%, #0D1B35 100%)' }}>
 
         {/* Decorative orbs */}
@@ -558,7 +558,7 @@ export default function LoginPage() {
 
         {/* Logo wordmark */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="relative z-10 flex items-center gap-3">
+          className="relative z-10 flex items-center gap-3 mb-10">
           <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9 shrink-0"
             style={{ filter: 'drop-shadow(0 0 10px rgba(99,102,241,0.9)) brightness(1.2)' }} />
           <div>
@@ -573,17 +573,17 @@ export default function LoginPage() {
         </motion.div>
 
         {/* Hero content */}
-        <motion.div className="relative z-10"
+        <motion.div className="relative z-10 flex-1 flex flex-col justify-center"
           initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.65 }}>
 
           {/* Live indicator */}
-          <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full"
+          <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full w-fit"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span className="text-violet-200 text-[11px] font-medium tracking-wider">AI-powered · Cross-Border eCommerce</span>
           </div>
 
-          <h1 className="text-[2.6rem] xl:text-[3rem] font-black text-white leading-[1.08] mb-6">
+          <h1 className="text-[2.4rem] xl:text-[2.8rem] font-black text-white leading-[1.08] mb-5">
             Source in India.<br />
             <span style={{ background: 'linear-gradient(90deg, #c4b5fd, #f9a8d4, #fcd34d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Sell everywhere.
@@ -591,14 +591,51 @@ export default function LoginPage() {
             Profit instantly.
           </h1>
 
-          <p className="text-violet-200 text-[15px] leading-[1.75] max-w-[17rem] opacity-75">
+          <p className="text-violet-200 text-[14.5px] leading-[1.75] opacity-75 mb-8">
             AI discovers products to source cheap in India and sell at 2–5× margin globally — verdict in under 60 seconds.
           </p>
+
+          {/* Feature highlights */}
+          <div className="space-y-3 mb-8">
+            {[
+              { icon: '🔭', label: 'Discover high-demand products in 13 global marketplaces' },
+              { icon: '📊', label: 'Full profit model — fees, shipping, duties & ad spend' },
+              { icon: '🎯', label: 'Launch / Hold / Reject verdict with confidence score' },
+              { icon: '🏭', label: 'Real Indian suppliers with MOQ, lead time & location' },
+            ].map((f, i) => (
+              <motion.div key={f.label}
+                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.08, duration: 0.45 }}
+                className="flex items-center gap-3">
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  {f.icon}
+                </span>
+                <span className="text-violet-200 text-[13px] leading-snug opacity-85">{f.label}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Mini stats */}
+          <div className="flex items-center gap-6">
+            {[
+              { value: '13', label: 'Marketplaces' },
+              { value: '60s', label: 'AI verdict' },
+              { value: '2–5×', label: 'Avg margin' },
+            ].map((s, i) => (
+              <motion.div key={s.label}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65 + i * 0.07, duration: 0.4 }}>
+                <div className="text-white font-black text-xl leading-none">{s.value}</div>
+                <div className="text-violet-400 text-[11px] font-medium mt-1">{s.label}</div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Testimonial */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-          className="relative z-10 rounded-2xl px-5 py-4"
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+          className="relative z-10 rounded-2xl px-5 py-4 mt-10"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.11)', backdropFilter: 'blur(10px)' }}>
           <div className="flex gap-0.5 mb-2.5">
             {[...Array(5)].map((_, i) => (
