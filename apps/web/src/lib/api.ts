@@ -286,8 +286,7 @@ export function isPro(): boolean {
   if (typeof window === 'undefined') return false;
   const token = localStorage.getItem('bs_access_token');
   if (!token) return false;
-  const user = getUser();
-  return user?.plan === 'pro' || user?.role === 'admin';
+  return isAdmin() || getUser()?.plan === 'pro';
 }
 
 export function isAdmin(): boolean {

@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
   if (existing.rows.length > 0) {
     const user = existing.rows[0];
     if (user.role === 'admin') return NextResponse.json({ message: 'Admin already exists', email: adminEmail });
-    // Upgrade existing user to admin
-    await db.execute({ sql: 'UPDATE "User" SET role = ?, updatedAt = ? WHERE email = ?', args: ['admin', new Date().toISOString(), adminEmail] });
+    // Upgrade existing user to admin + pro
+    await db.execute({ sql: 'UPDATE "User" SET role = ?, plan = ?, updatedAt = ? WHERE email = ?', args: ['admin', 'pro', Date.now(), adminEmail] });
     return NextResponse.json({ message: 'Existing user upgraded to admin', email: adminEmail });
   }
 
