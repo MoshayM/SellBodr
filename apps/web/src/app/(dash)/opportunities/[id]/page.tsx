@@ -895,9 +895,15 @@ export default function OpportunityDetailPage() {
 
             {/* Product Classification */}
             <div className="card-dark p-4 sm:p-5">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🏷️</span>
                 <h3 className="font-semibold text-white">Product Classification &amp; GST</h3>
+              </div>
+              <div className="flex items-start gap-2 mb-4 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠</span>
+                <p className="text-[11px] text-amber-300/80 leading-snug">
+                  HSN/HS codes and GST rates are <strong>AI-estimated by category</strong>. Always verify with a licensed customs broker or the <a href="https://www.cbic-gst.gov.in/" target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-200">CBIC GST portal</a> before filing.
+                </p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
                 <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-3">

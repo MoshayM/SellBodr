@@ -51,6 +51,22 @@ function h(seed: string, mod: number): number {
   return Math.abs(n) % mod;
 }
 
+// Country code and TLD mappings for correct phone/email generation
+const COUNTRY_PHONE_CODE: Record<string, string> = {
+  'India': '+91', 'China': '+86', 'Hong Kong': '+852',
+  'United States': '+1', 'UK': '+44', 'Germany': '+49',
+  'Japan': '+81', 'South Korea': '+82', 'Taiwan': '+886',
+};
+const COUNTRY_EMAIL_TLD: Record<string, string> = {
+  'India': 'co.in', 'China': 'cn', 'Hong Kong': 'hk',
+  'United States': 'com', 'UK': 'co.uk', 'Germany': 'de',
+};
+const COUNTRY_CERTS: Record<string, string[]> = {
+  'India':     ['MSME Registered', 'GST Verified', 'ISO 9001:2015', 'Export License', 'RoHS Compliant'],
+  'China':     ['ISO 9001:2015', 'CE Certified', 'RoHS Compliant', 'SGS Audited', 'BRC Certified'],
+  'Hong Kong': ['ISO 9001:2015', 'CE Certified', 'BRC Certified', 'SGS Audited'],
+};
+
 function generateProfile(sc: Record<string, unknown>) {
   const id = String(sc.id);
   // Use stored city/country if available (global suppliers have these set at insert time)
@@ -69,22 +85,35 @@ function generateProfile(sc: Record<string, unknown>) {
   const reviewCount = 20 + h(id + 'r', 180);
   const yearEstablished = 1985 + h(id + 'y', 35);
   const employeeCount = ['1–10', '11–50', '51–200', '201–500'][h(id + 'e', 4)];
-  const annualTurnover = ['< ₹1 Cr', '₹1–5 Cr', '₹5–10 Cr', '₹10–50 Cr'][h(id + 't', 4)];
   const companyType = ['Manufacturer', 'Exporter', 'Manufacturer & Exporter', 'Trading Company'][h(id + 'ct', 4)];
 
-  const phoneNum = 7000000000 + h(id + 'p', 2999999999);
-  const contactPhone = `+91 ${phoneNum}`;
+  // Turnover label in correct currency for the country
+  const turnoverLabels = isIndia
+    ? ['< ₹1 Cr', '₹1–5 Cr', '₹5–10 Cr', '₹10–50 Cr']
+    : ['< $1M', '$1–5M', '$5–20M', '$20–100M'];
+  const annualTurnover = turnoverLabels[h(id + 't', 4)];
 
+  // Correct phone country code for the supplier's actual country
+  const phoneCode = COUNTRY_PHONE_CODE[country] ?? '+91';
+  const phoneDigits = isIndia
+    ? (7000000000 + h(id + 'p', 2999999999)).toString()
+    : (100000000  + h(id + 'p', 899999999)).toString();
+  const contactPhone = `${phoneCode} ${phoneDigits}`;
+
+  // Correct email TLD for the supplier's country
   const slug = String(sc.supplierName || 'supplier')
     .toLowerCase().replace(/[^a-z]/g, '').slice(0, 12) || 'supplier';
-  const emailDomain = `${slug}.co.in`;
+  const tld = COUNTRY_EMAIL_TLD[country] ?? 'com';
+  const emailDomain = `${slug}.${tld}`;
   const contactEmail = `info@${emailDomain}`;
 
-  const certs: string[] = ['MSME Registered'];
-  if (h(id + 'iso', 3) < 2) certs.push('ISO 9001:2015');
-  if (h(id + 'gst', 2) === 0) certs.push('GST Verified');
-  if (h(id + 'exp', 3) < 1) certs.push('Export License');
-  if (h(id + 'brc', 4) < 1) certs.push('BRC Certified');
+  // Correct certifications for the supplier's country
+  const certPool = COUNTRY_CERTS[country] ?? COUNTRY_CERTS['China'];
+  const certs: string[] = [certPool[0]];
+  if (h(id + 'iso', 3) < 2) certs.push(certPool[1] ?? 'ISO 9001:2015');
+  if (h(id + 'gst', 2) === 0) certs.push(certPool[2] ?? 'CE Certified');
+  if (h(id + 'exp', 3) < 1) certs.push(certPool[3] ?? 'SGS Audited');
+  if (h(id + 'brc', 4) < 1) certs.push(certPool[4] ?? 'BRC Certified');
 
   const verifiedBadge = h(id + 'v', 3) < 1 ? 1 : 0;
   const description = `Established in ${yearEstablished}, we are a leading ${companyType.toLowerCase()} based in ${city}${state ? ', ' + state : ''}, ${country}. We specialize in high-quality products for global markets with competitive pricing and reliable delivery.`;
@@ -173,6 +202,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       outreachCount,
       product: { title: sc.pTitle, category: sc.pCategory },
       marketplace: { code: sc.mCode, country: sc.mCountry, currency: sc.mCurrency },
+      dataNote: 'Contact details and profile fields are AI-estimated. Verify directly before placing orders.',
     });
   } catch (err: any) {
     if (err.message === 'Unauthorized' || err?.code?.startsWith('ERR_JWT')) {
