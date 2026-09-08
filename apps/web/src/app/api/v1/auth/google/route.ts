@@ -52,16 +52,26 @@ export async function POST(req: NextRequest) {
     let user = result.rows[0] as any;
 
     if (!user) {
-      // First-time Google sign-in → create account automatically
+      // First-time Google sign-in → create org + account automatically
       const userId = uuidv4();
+      const orgId  = uuidv4();
+      const subId  = uuidv4();
       const sentinelHash = `GOOGLE:${payload.sub}`;
       const displayName = payload.name || email.split('@')[0];
       await db.execute({
-        sql: `INSERT INTO "User" (id, email, passwordHash, name, role, plan, createdAt, updatedAt)
-              VALUES (?, ?, ?, ?, 'member', 'free', ?, ?)`,
-        args: [userId, email, sentinelHash, displayName, now, now],
+        sql: 'INSERT INTO "Organization" (id, name, plan, createdAt, updatedAt) VALUES (?,?,?,?,?)',
+        args: [orgId, `${displayName}'s Organisation`, 'starter', now, now],
       });
-      user = { id: userId, email, name: displayName, role: 'member', plan: 'free', organizationId: null };
+      await db.execute({
+        sql: 'INSERT INTO "Subscription" (id, organizationId, plan, status, createdAt, updatedAt) VALUES (?,?,?,?,?,?)',
+        args: [subId, orgId, 'starter', 'active', now, now],
+      });
+      await db.execute({
+        sql: `INSERT INTO "User" (id, organizationId, email, passwordHash, name, role, plan, createdAt, updatedAt)
+              VALUES (?, ?, ?, ?, ?, 'owner', 'free', ?, ?)`,
+        args: [userId, orgId, email, sentinelHash, displayName, now, now],
+      });
+      user = { id: userId, email, name: displayName, role: 'owner', plan: 'free', organizationId: orgId };
     } else if (!String(user.passwordHash).startsWith('GOOGLE:') && String(user.passwordHash).startsWith('$2')) {
       // Existing password account — allow Google sign-in for same email (link accounts)
       // No action needed; just log them in
