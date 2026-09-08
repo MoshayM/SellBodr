@@ -26,7 +26,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https:",
-      "frame-src 'self' https://accounts.google.com https://api.razorpay.com",
+      "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://www.openstreetmap.org",
       "font-src 'self' data: https://cdn.jsdelivr.net",
       "object-src 'none'",
       "base-uri 'self'",
