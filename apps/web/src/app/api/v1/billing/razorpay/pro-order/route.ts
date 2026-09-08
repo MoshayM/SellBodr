@@ -35,7 +35,10 @@ export async function POST(req: NextRequest) {
   }
 
   const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
-  const amountPaise = Number(process.env.RAZORPAY_PRO_AMOUNT_PAISE ?? 149900); // default ₹1,499/mo
+  const country = req.headers.get('x-vercel-ip-country') ?? '';
+  const amountPaise = country === 'IN'
+    ? 9900  // ₹99/mo for India
+    : Number(process.env.RAZORPAY_PRO_AMOUNT_PAISE ?? 149900);
 
   const order = await razorpay.orders.create({
     amount:   amountPaise,

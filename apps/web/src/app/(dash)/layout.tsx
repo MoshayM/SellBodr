@@ -592,7 +592,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                     <div className="px-3 py-2.5 border-b border-slate-100 mb-1">
                       <div className="text-xs font-semibold text-slate-800 truncate">{user?.name ?? 'User'}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-slate-400 capitalize">{user?.role ?? 'member'}</span>
+                        <span className="text-[10px] text-slate-400 capitalize">{user?.role === 'admin' ? 'admin' : 'member'}</span>
                         <PlanBadge />
                       </div>
                     </div>

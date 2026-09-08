@@ -96,16 +96,37 @@ export default function LandingPage() {
   const heroY      = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
 
   const [proPrice, setProPrice] = useState('19');
+  const [proINR, setProINR] = useState(1499);
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
-    fetch('/api/v1/platform/settings')
+    // Detect country first, then set currency and pricing
+    fetch('/api/v1/geo')
       .then(r => r.json())
-      .then((s: any) => {
-        if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
+      .then((g: any) => {
+        if (g.country === 'IN') {
+          setCurrency('INR');
+          setProINR(99);
+        } else {
+          setCurrency('USD');
+          fetch('/api/v1/platform/settings')
+            .then(r => r.json())
+            .then((s: any) => {
+              if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
+            })
+            .catch(() => {});
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: load platform settings for USD price
+        fetch('/api/v1/platform/settings')
+          .then(r => r.json())
+          .then((s: any) => {
+            if (s.pro_price_usd) setProPrice(String(s.pro_price_usd));
+          })
+          .catch(() => {});
+      });
   }, []);
 
   const plans = [
@@ -120,7 +141,7 @@ export default function LandingPage() {
     {
       key: 'pro',
       name: 'Pro',
-      priceINR: 1499, priceUSD: Number(proPrice),
+      priceINR: proINR, priceUSD: Number(proPrice),
       desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
       features: ['100 AI product scans per month', 'Up to 30 results per scan', 'Premium AI — Claude + Groq + Mistral', 'Full supplier list with contact details', 'All dashboards — Research, Profitability, Keywords', 'Export to CSV, Excel, PDF & Word', 'Priority email support'],
       cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
@@ -281,7 +302,7 @@ export default function LandingPage() {
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
             className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}>
-            Free to start · No credit card · Plans from ₹1,499/mo
+            Free to start · No credit card · Plans from {currency === 'INR' ? `₹${proINR}/mo` : `$${proPrice}/mo`}
           </motion.p>
 
           {/* Floating opportunity cards */}

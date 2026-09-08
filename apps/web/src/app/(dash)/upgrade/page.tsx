@@ -27,12 +27,32 @@ export default function UpgradePage() {
 
   useEffect(() => {
     if (isPro()) { router.replace('/opportunities'); return; }
-    fetch('/api/v1/platform/settings')
+    // Detect country first, then set appropriate price
+    fetch('/api/v1/geo')
       .then(r => r.json())
-      .then((s: any) => {
-        if (s.pro_price_inr) setProPrice(`₹${Number(s.pro_price_inr).toLocaleString('en-IN')}`);
+      .then((g: any) => {
+        if (g.country === 'IN') {
+          setProPrice('₹99');
+        } else {
+          // Non-India: show USD price from platform settings
+          fetch('/api/v1/platform/settings')
+            .then(r => r.json())
+            .then((s: any) => {
+              if (s.pro_price_usd) setProPrice(`$${s.pro_price_usd}`);
+              else setProPrice('$18');
+            })
+            .catch(() => setProPrice('$18'));
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: show INR price from platform settings
+        fetch('/api/v1/platform/settings')
+          .then(r => r.json())
+          .then((s: any) => {
+            if (s.pro_price_inr) setProPrice(`₹${Number(s.pro_price_inr).toLocaleString('en-IN')}`);
+          })
+          .catch(() => {});
+      });
   }, [router]);
 
   async function handleUpgrade() {

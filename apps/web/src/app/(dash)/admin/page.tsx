@@ -18,7 +18,6 @@ function PlanBadge({ plan }: { plan: string }) {
 
 function RoleBadge({ role }: { role: string }) {
   if (role === 'admin') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">Admin</span>;
-  if (role === 'owner') return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">Owner</span>;
   return <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/8 text-white/40 border border-white/10">Member</span>;
 }
 
@@ -318,7 +317,6 @@ export default function AdminPage() {
                           onChange={e => updateUser(u.id, { role: e.target.value })}
                           className="text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/70 focus:outline-none focus:ring-1 focus:ring-red-500 [&>option]:bg-[#0a0f1e] disabled:opacity-50 cursor-pointer">
                           <option value="member">Member</option>
-                          <option value="owner">Owner</option>
                           <option value="admin">Admin</option>
                         </select>
                         {updating === u.id && <span className="text-xs text-white/55 animate-pulse">saving…</span>}
