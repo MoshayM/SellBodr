@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
 
       if (resendKey) {
         const resend = new Resend(resendKey);
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL || 'SellBodr <noreply@sellbodr.com>',
+        const sendResult = await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
           to: email,
           subject: 'Reset your SellBodr password',
           html: `
@@ -86,6 +86,11 @@ export async function POST(req: NextRequest) {
             </div>
           `,
         });
+        if (sendResult.error) {
+          console.error('[forgot-password] Resend error:', JSON.stringify(sendResult.error));
+        } else {
+          console.log('[forgot-password] Email sent, id:', sendResult.data?.id);
+        }
       } else {
         console.warn('[forgot-password] RESEND_API_KEY not set — skipping email. Reset URL:', resetUrl);
       }
