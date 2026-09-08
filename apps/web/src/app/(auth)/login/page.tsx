@@ -542,7 +542,7 @@ export default function LoginPage() {
       </AnimatePresence>
 
       {/* ── Left brand panel (desktop only) ─────────────────────── */}
-      <div className="hidden lg:flex flex-col justify-between w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
+      <div className="hidden lg:flex flex-col justify-between gap-8 w-[46%] relative overflow-hidden p-12 xl:p-16 select-none"
         style={{ background: 'linear-gradient(145deg, #0D1B35 0%, #0F2040 35%, #162240 65%, #0D1B35 100%)' }}>
 
         {/* Decorative orbs */}
@@ -661,10 +661,10 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right form panel ─────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10" style={{ background: '#F4F6FB' }}>
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-12 overflow-y-auto" style={{ background: '#F4F6FB' }}>
 
         {/* Mobile header logo */}
-        <div className="lg:hidden mb-7 flex flex-col items-center gap-2">
+        <div className="lg:hidden mb-8 flex flex-col items-center gap-2.5">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #0D1B35, #162240)', boxShadow: '0 8px 24px rgba(99,102,241,0.35)', border: '1px solid rgba(99,102,241,0.3)' }}>
             <img src="/icons/icon.svg" alt="SellBodr" className="w-9 h-9"
@@ -677,138 +677,151 @@ export default function LoginPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
           className="w-full max-w-[420px]">
 
-          <div className="bg-white rounded-3xl p-7 sm:p-9 border border-slate-200/80"
+          {/* ── Main card ── */}
+          <div className="bg-white rounded-3xl border border-slate-200/80"
             style={{ boxShadow: '0 4px 6px -1px rgba(15,23,42,0.05), 0 20px 48px -8px rgba(15,23,42,0.13)' }}>
 
-            {/* Account deletion scheduled banner */}
-            {showDeletedBanner && (
-              <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">
-                <svg className="mt-0.5 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                <div>
-                  <p className="text-amber-800 text-sm font-semibold leading-snug">Account deletion scheduled</p>
-                  <p className="text-amber-700 text-xs mt-0.5 leading-relaxed">
-                    You have <strong>24 hours</strong> to sign back in and restore your account, or confirm permanent deletion.
-                  </p>
+            {/* Card header */}
+            <div className="px-8 pt-9 pb-7 sm:px-10 sm:pt-10 sm:pb-8 text-center border-b border-slate-100">
+              {/* Account deletion scheduled banner */}
+              {showDeletedBanner && (
+                <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-left">
+                  <svg className="mt-0.5 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <div>
+                    <p className="text-amber-800 text-sm font-semibold leading-snug">Account deletion scheduled</p>
+                    <p className="text-amber-700 text-xs mt-1 leading-relaxed">
+                      You have <strong>24 hours</strong> to sign back in and restore your account, or confirm permanent deletion.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
-
-            <div className="text-center mb-7">
-              <h2 className="text-2xl font-black text-slate-900 mb-1">Welcome back</h2>
-              <p className="text-slate-400 text-sm">Your next winning product is one scan away</p>
-            </div>
-
-            {/* Google Sign-In */}
-            <div className="mb-4">
-              {GOOGLE_CLIENT_ID ? (
-                <div ref={googleBtnRef} className="w-full min-h-[44px] flex items-center justify-center"
-                  style={{ opacity: gsiReady ? 1 : 0.5, transition: 'opacity 0.3s' }} />
-              ) : (
-                <button type="button" onClick={triggerGoogleSignIn} disabled={googleLoading}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700 font-semibold text-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
-                  {googleLoading
-                    ? <Spinner className="text-violet-500" />
-                    : <GoogleIcon />}
-                  {googleLoading ? 'Signing in…' : 'Continue with Google'}
-                </button>
               )}
+              <h2 className="text-[1.6rem] font-black text-slate-900 leading-tight mb-2">Welcome back</h2>
+              <p className="text-slate-400 text-[13.5px] leading-relaxed">Your next winning product is one scan away</p>
             </div>
 
-            {/* Fingerprint */}
-            {canFingerprint && (
-              <motion.button type="button" onClick={loginWithFingerprint}
-                disabled={fpLoading || loading || googleLoading}
-                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                className="w-full mb-4 py-3 rounded-xl flex items-center justify-center gap-2.5 text-sm font-semibold text-slate-600 hover:text-violet-700 transition-all border border-slate-200 hover:border-violet-300 hover:bg-violet-50 bg-white disabled:opacity-40 disabled:cursor-not-allowed">
-                {fpLoading ? <Spinner className="text-violet-500" /> : <FingerprintIcon className="w-5 h-5 text-violet-500" />}
-                {fpLoading ? 'Scanning…' : 'Use fingerprint / Face ID'}
-              </motion.button>
-            )}
+            {/* Card body */}
+            <div className="px-8 py-8 sm:px-10 sm:py-9">
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-slate-100" />
-              <span className="text-slate-400 text-xs font-medium whitespace-nowrap">or sign in with email</span>
-              <div className="flex-1 h-px bg-slate-100" />
-            </div>
-
-            {/* Email + Password */}
-            <form onSubmit={submitPassword} className="space-y-4" noValidate>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">
-                  Email
-                </label>
-                <input type="email" value={email}
-                  onChange={e => { setEmail(e.target.value); setError(''); }}
-                  onBlur={e => prefetchFpChallenge(e.target.value)}
-                  autoComplete="email" inputMode="email" placeholder="you@example.com"
-                  className="input-dark" />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Password</label>
-                  <a href="/forgot-password" className="text-xs text-violet-600 hover:text-violet-700 transition-colors font-medium">
-                    Forgot?
-                  </a>
-                </div>
-                <div className="relative">
-                  <input type={showPw ? 'text' : 'password'} value={password}
-                    onChange={e => { setPassword(e.target.value); setError(''); }}
-                    autoComplete="current-password" placeholder="••••••••"
-                    className="input-dark pr-11" />
-                  <button type="button" onClick={() => setShowPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors text-sm select-none">
-                    {showPw ? <EyeOffIcon /> : <EyeIcon />}
+              {/* Quick login methods */}
+              <div className="space-y-3">
+                {/* Google Sign-In */}
+                {GOOGLE_CLIENT_ID ? (
+                  <div ref={googleBtnRef} className="w-full min-h-[48px] flex items-center justify-center"
+                    style={{ opacity: gsiReady ? 1 : 0.5, transition: 'opacity 0.3s' }} />
+                ) : (
+                  <button type="button" onClick={triggerGoogleSignIn} disabled={googleLoading}
+                    className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700 font-semibold text-sm shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                    {googleLoading ? <Spinner className="text-violet-500" /> : <GoogleIcon />}
+                    {googleLoading ? 'Signing in…' : 'Continue with Google'}
                   </button>
-                </div>
+                )}
+
+                {/* Fingerprint */}
+                {canFingerprint && (
+                  <motion.button type="button" onClick={loginWithFingerprint}
+                    disabled={fpLoading || loading || googleLoading}
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                    className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2.5 text-sm font-semibold text-slate-600 hover:text-violet-700 transition-all border border-slate-200 hover:border-violet-300 hover:bg-violet-50 bg-white disabled:opacity-40 disabled:cursor-not-allowed">
+                    {fpLoading ? <Spinner className="text-violet-500" /> : <FingerprintIcon className="w-5 h-5 text-violet-500" />}
+                    {fpLoading ? 'Scanning…' : 'Use fingerprint / Face ID'}
+                  </motion.button>
+                )}
               </div>
 
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm text-center font-medium">
-                  {error}
-                </motion.div>
-              )}
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-7">
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="text-slate-400 text-xs font-medium whitespace-nowrap">or continue with email</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
 
-              <motion.button type="submit" disabled={loading || googleLoading}
-                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                className="btn-primary w-full text-base py-3.5 min-h-0 disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading
-                  ? <span className="flex items-center gap-2 justify-center"><Spinner className="text-white/80" /> Signing in…</span>
-                  : 'Sign in →'}
-              </motion.button>
-            </form>
+              {/* Email + Password form */}
+              <form onSubmit={submitPassword} className="space-y-5" noValidate>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-widest">
+                    Email
+                  </label>
+                  <input type="email" value={email}
+                    onChange={e => { setEmail(e.target.value); setError(''); }}
+                    onBlur={e => prefetchFpChallenge(e.target.value)}
+                    autoComplete="email" inputMode="email" placeholder="you@example.com"
+                    className="input-dark" />
+                </div>
 
-            <p className="text-center text-slate-400 text-sm mt-6">
-              No account?{' '}
-              <Link href="/register" className="text-violet-600 hover:text-violet-700 font-bold transition-colors">
-                Start free →
-              </Link>
-            </p>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Password</label>
+                    <a href="/forgot-password" className="text-xs text-violet-600 hover:text-violet-700 transition-colors font-semibold">
+                      Forgot password?
+                    </a>
+                  </div>
+                  <div className="relative">
+                    <input type={showPw ? 'text' : 'password'} value={password}
+                      onChange={e => { setPassword(e.target.value); setError(''); }}
+                      autoComplete="current-password" placeholder="••••••••"
+                      className="input-dark pr-11" />
+                    <button type="button" onClick={() => setShowPw(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors text-sm select-none">
+                      {showPw ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
 
-            {/* PWA install CTA — always visible when not already installed */}
-            {!isInstalled && <InstallCTA installPrompt={installPrompt} isIOS={isIOS} onInstall={handleInstall} />}
+                {error && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm text-center font-medium">
+                    {error}
+                  </motion.div>
+                )}
+
+                <motion.button type="submit" disabled={loading || googleLoading}
+                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                  className="btn-primary w-full text-base py-3.5 mt-1 min-h-0 disabled:opacity-60 disabled:cursor-not-allowed">
+                  {loading
+                    ? <span className="flex items-center gap-2 justify-center"><Spinner className="text-white/80" /> Signing in…</span>
+                    : 'Sign in →'}
+                </motion.button>
+              </form>
+            </div>
+
+            {/* Card footer — register link */}
+            <div className="px-8 py-5 sm:px-10 border-t border-slate-100 text-center rounded-b-3xl bg-slate-50/60">
+              <p className="text-slate-500 text-sm">
+                No account?{' '}
+                <Link href="/register" className="text-violet-600 hover:text-violet-700 font-bold transition-colors">
+                  Create one free →
+                </Link>
+              </p>
+            </div>
           </div>
 
-          {/* Trust row */}
-          <div className="flex items-center justify-center gap-5 mt-5 flex-wrap">
-            {[
-              { icon: <LockIcon />, text: '256-bit SSL' },
-              { icon: <ShieldIcon />, text: 'SOC2 ready' },
-              { icon: <UptimeIcon />, text: '99.9% uptime' },
-            ].map(b => (
-              <span key={b.text} className="flex items-center gap-1.5 text-slate-400 text-xs">
-                <span className="text-slate-300">{b.icon}</span>{b.text}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center justify-center gap-4 mt-3">
-            <Link href="/privacy" className="text-slate-400 text-xs hover:text-slate-600 transition-colors">Privacy</Link>
-            <span className="text-slate-200">·</span>
-            <Link href="/terms" className="text-slate-400 text-xs hover:text-slate-600 transition-colors">Terms</Link>
+          {/* PWA install CTA — outside main card, visually separated */}
+          {!isInstalled && (
+            <div className="mt-4">
+              <InstallCTA installPrompt={installPrompt} isIOS={isIOS} onInstall={handleInstall} />
+            </div>
+          )}
+
+          {/* Trust + legal row */}
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-6 flex-wrap">
+              {[
+                { icon: <LockIcon />, text: '256-bit SSL' },
+                { icon: <ShieldIcon />, text: 'SOC2 ready' },
+                { icon: <UptimeIcon />, text: '99.9% uptime' },
+              ].map(b => (
+                <span key={b.text} className="flex items-center gap-1.5 text-slate-400 text-xs">
+                  <span className="text-slate-300">{b.icon}</span>{b.text}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="text-slate-400 text-xs hover:text-slate-600 transition-colors">Privacy</Link>
+              <span className="text-slate-200">·</span>
+              <Link href="/terms" className="text-slate-400 text-xs hover:text-slate-600 transition-colors">Terms</Link>
+            </div>
           </div>
         </motion.div>
       </div>
