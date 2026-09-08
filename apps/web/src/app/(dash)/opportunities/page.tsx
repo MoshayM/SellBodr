@@ -793,6 +793,11 @@ export default function OpportunitiesPage() {
   // Expand state
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Search visibility: Pro-only, default public
+  const [searchVisibility, setSearchVisibility] = useState<'public' | 'private'>('public');
+  // "My Results" toggle: Pro-only, shows only the current user's searches
+  const [mineFilter, setMineFilter] = useState(false);
+
   // Wishlist state (localStorage-backed)
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   useEffect(() => { setWishlist(new Set(getWishlist())); }, []);
@@ -838,9 +843,10 @@ export default function OpportunitiesPage() {
 
   const oppParams: Record<string, string> = {};
   if (mpFilter) oppParams.marketplace = mpFilter;
+  if (mineFilter && !isFree) oppParams.mine = 'true';
 
   const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities', { marketplace: mpFilter }],
+    queryKey: ['opportunities', { marketplace: mpFilter, mine: mineFilter }],
     queryFn: () => api.opportunities.list(oppParams),
   });
 
@@ -939,7 +945,7 @@ export default function OpportunitiesPage() {
   const runSearch = useMutation({
     mutationFn: () => {
       setSearchError(''); setSearching(true); setSearchStatus('');
-      return api.searches.create({ marketplace: mpFilter });
+      return api.searches.create({ marketplace: mpFilter, visibility: isFree ? 'public' : searchVisibility });
     },
     onSuccess: (data: any) => {
       setSearching(false);
@@ -962,6 +968,7 @@ export default function OpportunitiesPage() {
       setSearchError(''); setSearching(true); setSearchStatus('');
       return api.searches.create({
         marketplace: mpFilter,
+        visibility: isFree ? 'public' : searchVisibility,
         ...(catFilter      && { category:      catFilter }),
         ...(srcFilter      && { trendSource:   srcFilter }),
         ...(strengthFilter && { trendStrength: strengthFilter }),
@@ -1078,6 +1085,29 @@ export default function OpportunitiesPage() {
               label={`opportunities-${mpFilter || 'all'}`}
               align="left"
             />
+          )}
+
+          {/* Visibility toggle — Pro only */}
+          {!isFree ? (
+            <div className="flex items-center gap-0.5 p-0.5 rounded-lg border border-slate-200 bg-slate-50 text-xs select-none"
+              title="Set visibility for the next scan">
+              <button
+                onClick={() => setSearchVisibility('public')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'public' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                🌐 Public
+              </button>
+              <button
+                onClick={() => setSearchVisibility('private')}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'private' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                🔒 Private
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-xs text-slate-400 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-200"
+              title="Private searches are Pro-only">
+              🔒 <span className="hidden sm:inline">Private search — </span>
+              <Link href="/upgrade" className="text-violet-600 font-medium hover:underline">Pro only</Link>
+            </div>
           )}
           </div>
         </div>
@@ -1259,10 +1289,24 @@ export default function OpportunitiesPage() {
               <option value="oldest">🕐 Oldest</option>
             </select>
 
+            {/* My Results — Pro only */}
+            {!isFree && (
+              <button
+                onClick={() => setMineFilter(!mineFilter)}
+                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all whitespace-nowrap ${
+                  mineFilter
+                    ? 'bg-violet-600 text-white border-violet-600 shadow-[0_0_8px_rgba(124,58,237,0.35)]'
+                    : 'text-slate-600 border-slate-200 hover:border-violet-400 hover:text-violet-700'
+                }`}
+                title="Show only your own searches (public + private)">
+                {mineFilter ? '🔒 My Results' : '👤 My Results'}
+              </button>
+            )}
+
             {/* Clear + count */}
             <div className="ml-auto flex items-center gap-2.5 pl-2">
-              {hasClientFilters && (
-                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
+              {(hasClientFilters || mineFilter) && (
+                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); setMineFilter(false); }}
                   className="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 whitespace-nowrap">
                   Clear ✕
                 </button>
@@ -1344,7 +1388,15 @@ export default function OpportunitiesPage() {
 
                   {/* Title + meta */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold dark:text-white text-slate-900 text-sm leading-snug line-clamp-2">{opp.product?.title}</div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="font-semibold dark:text-white text-slate-900 text-sm leading-snug line-clamp-2">{opp.product?.title}</div>
+                      {opp.isPrivate && (
+                        <span title="Private — only visible to you and admins"
+                          className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-violet-400/40 bg-violet-500/10 text-violet-500 font-semibold leading-none">
+                          🔒
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {opp.product?.category && (
                         <span className="text-[10px] dark:text-white/45 text-slate-500 leading-none truncate max-w-[120px]">
@@ -1567,7 +1619,15 @@ export default function OpportunitiesPage() {
                                 })()}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="font-medium dark:text-white text-slate-900 line-clamp-1 text-sm">{opp.product?.title}</div>
+                              {opp.isPrivate && (
+                                <span title="Private — only visible to you and admins"
+                                  className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-violet-400/40 bg-violet-500/10 text-violet-500 font-semibold leading-none">
+                                  🔒
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               {opp.product?.category && (
                                 <span className="text-[10px] text-slate-500 capitalize leading-snug truncate max-w-[120px]">

@@ -239,6 +239,8 @@ const MIGRATIONS = [
     usedAt INTEGER,
     createdAt INTEGER NOT NULL DEFAULT 0
   )`,
+  // Search visibility — 'public' (shared pool, default) | 'private' (Pro-only, owner+admin only)
+  `ALTER TABLE "Search" ADD COLUMN visibility TEXT NOT NULL DEFAULT 'public'`,
 ];
 
 export async function ensureSchema(db: Client): Promise<void> {

@@ -405,6 +405,11 @@ export async function POST(req: NextRequest) {
 
     const { role: userRole, plan: userPlan } = getTokenPayload(req);
 
+    // Private search is Pro-only; free/guest are forced to public
+    const isProOrAdmin = userRole === 'admin' || userPlan === 'pro';
+    const rawVisibility = String(body.visibility ?? 'public').toLowerCase();
+    const visibility: 'public' | 'private' = isProOrAdmin && rawVisibility === 'private' ? 'private' : 'public';
+
     const db = getDb();
     await ensureSchema(db);
 
@@ -438,8 +443,8 @@ export async function POST(req: NextRequest) {
     const year     = new Date().getFullYear();
 
     await db.execute({
-      sql: `INSERT INTO "Search" (id, userId, marketplace, filters, status, opportunityCount, createdAt, updatedAt) VALUES (?, ?, ?, '{}', 'running', 0, ?, ?)`,
-      args: [searchId, userId, marketplace, now, now],
+      sql: `INSERT INTO "Search" (id, userId, marketplace, filters, status, opportunityCount, visibility, createdAt, updatedAt) VALUES (?, ?, ?, '{}', 'running', 0, ?, ?, ?)`,
+      args: [searchId, userId, marketplace, visibility, now, now],
     });
 
     // Pro users can use all AI providers; free/guest are restricted to Groq + Mistral only

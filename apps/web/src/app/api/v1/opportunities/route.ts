@@ -17,10 +17,12 @@ export async function GET(req: NextRequest) {
 
   let isAdmin = false;
   let isPro   = false;
+  let userId  = '';
   try {
     const { payload } = await jwtVerify(token, ACCESS_SECRET);
     isAdmin = payload.role === 'admin';
     isPro   = isAdmin || payload.plan === 'pro';
+    userId  = String(payload.sub ?? '');
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -32,11 +34,30 @@ export async function GET(req: NextRequest) {
     await ensureSchema(db);
 
     const { searchParams } = new URL(req.url);
-    const recFilter = searchParams.get('recommendation') || '';
-    const mpFilter  = searchParams.get('marketplace') || '';
+    const recFilter  = searchParams.get('recommendation') || '';
+    const mpFilter   = searchParams.get('marketplace') || '';
+    // Pro/Admin: ?mine=true shows only the user's own searches (public + private)
+    const mineOnly   = searchParams.get('mine') === 'true' && (isPro || isAdmin);
 
     const clauses: string[] = [];
     const args: (string | number)[] = [];
+
+    // ── Visibility scope ───────────────────────────────────────────────────────
+    if (isAdmin) {
+      // Admins see everything — no visibility clause
+    } else if (mineOnly) {
+      // "My Results" view: only this user's searches (both public and private)
+      clauses.push('(o.searchId IS NOT NULL AND sr.userId = ?)');
+      args.push(userId);
+    } else if (isPro) {
+      // Pro: public pool + their own private searches
+      clauses.push("(o.searchId IS NULL OR sr.visibility IS NULL OR sr.visibility = 'public' OR sr.userId = ?)");
+      args.push(userId);
+    } else {
+      // Free: only public + legacy (searchId IS NULL)
+      clauses.push("(o.searchId IS NULL OR sr.visibility IS NULL OR sr.visibility = 'public')");
+    }
+
     if (recFilter) { clauses.push('LOWER(o.recommendation) = LOWER(?)'); args.push(recFilter); }
     if (mpFilter)  { clauses.push('m.code = ?');           args.push(mpFilter); }
     const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
@@ -47,19 +68,21 @@ export async function GET(req: NextRequest) {
           o.id, o.status, o.recommendation, o.confidence, o.createdAt as oCreatedAt,
           p.id as pId, p.title as pTitle, p.category as pCategory, p.imageUrl as pImageUrl,
           m.id as mId, m.code as mCode, m.country as mCountry, m.currency as mCurrency,
-          s.opportunity as sOpp, s.demand as sDemand, s.competition as sComp,
-          s.margin as sMargin, s.trend as sTrend, s.shipping as sShipping, s.saturation as sSat,
+          sc.opportunity as sOpp, sc.demand as sDemand, sc.competition as sComp,
+          sc.margin as sMargin, sc.trend as sTrend, sc.shipping as sShipping, sc.saturation as sSat,
           pm.productCostMinor as pmSrc, pm.salePriceMinor as pmSale,
           pm.landedCostMinor as pmLanded, pm.marketplaceFeesMinor as pmFees,
           pm.grossProfitMinor as pmGross, pm.netProfitMinor as pmNet,
-          pm.netMarginPct as pmMargin, pm.roiPct as pmRoi, pm.currency as pmCurrency
+          pm.netMarginPct as pmMargin, pm.roiPct as pmRoi, pm.currency as pmCurrency,
+          sr.visibility as srVisibility
         FROM "Opportunity" o
+        LEFT JOIN "Search" sr      ON sr.id            = o.searchId
         LEFT JOIN "Product" p      ON o.productId      = p.id
         LEFT JOIN "Marketplace" m  ON o.marketplaceId  = m.id
-        LEFT JOIN "Score" s        ON o.id             = s.opportunityId
+        LEFT JOIN "Score" sc       ON o.id             = sc.opportunityId
         LEFT JOIN "ProfitModel" pm ON o.id             = pm.opportunityId
         ${where}
-        ORDER BY s.opportunity DESC, o.createdAt DESC
+        ORDER BY sc.opportunity DESC, o.createdAt DESC
         LIMIT ${rowLimit}
       `,
       args,
@@ -178,6 +201,7 @@ export async function GET(req: NextRequest) {
       return {
         id: r.id, status: r.status, recommendation: r.recommendation,
         confidence: r.confidence, createdAt: r.oCreatedAt,
+        isPrivate: (r.srVisibility as string) === 'private',
         product: { id: r.pId, title: r.pTitle, category: r.pCategory, imageUrl },
         marketplace: { id: r.mId, code: r.mCode, country: r.mCountry, currency: r.mCurrency },
         score: r.sOpp != null ? {
