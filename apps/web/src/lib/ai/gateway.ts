@@ -186,10 +186,30 @@ export async function callAllProviders<T>(
       : 'No AI providers configured — set at least GROQ_API_KEY or configure a free key in Settings'
   );
 
-  const results = await Promise.all(
-    available.map(p => tryProvider<T>(p, p.discoveryModel, messages, callOpts, guestKeys[p.id]))
+  const settled = await Promise.allSettled(
+    available.map(async (p) => {
+      try {
+        const result = await p.callJSON<T>(p.discoveryModel, messages, callOpts, guestKeys[p.id]);
+        return { provider: p, result };
+      } catch (err) {
+        console.warn(`[gateway] ${p.name} failed:`, String(err).slice(0, 200));
+        throw err;
+      }
+    })
   );
-  return results.filter((r): r is { provider: Provider; result: T } => r !== null);
+
+  const successes = settled
+    .filter((r): r is PromiseFulfilledResult<{ provider: Provider; result: T }> => r.status === 'fulfilled')
+    .map(r => r.value);
+
+  if (successes.length === 0) {
+    const reasons = settled
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => String(r.reason).slice(0, 300));
+    throw new Error(`All AI providers failed. Errors: ${reasons.join(' | ')}`);
+  }
+
+  return successes;
 }
 
 /** Call a single provider's validation model — prefers highest quality available, skips discovery providers.

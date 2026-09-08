@@ -466,7 +466,7 @@ export async function POST(req: NextRequest) {
 
     if (providerResults.length === 0) {
       await db.execute({ sql: `UPDATE "Search" SET status='failed', errorMessage='All AI providers failed', updatedAt=? WHERE id=?`, args: [Date.now(), searchId] });
-      return NextResponse.json({ error: 'No AI providers responded — set GROQ_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY', searchId }, { status: 502 });
+      return NextResponse.json({ error: 'All AI providers failed to respond — check that API keys are valid and have available credits', searchId }, { status: 502 });
     }
 
     // ── Stage 2: Merge + consensus scoring ────────────────────────────────────
