@@ -198,14 +198,14 @@ export async function callAllProviders<T>(
     })
   );
 
-  const successes = settled
-    .filter((r): r is PromiseFulfilledResult<{ provider: Provider; result: T }> => r.status === 'fulfilled')
-    .map(r => r.value);
+  const successes: Array<{ provider: Provider; result: T }> = [];
+  const reasons: string[] = [];
+  for (const r of settled) {
+    if (r.status === 'fulfilled') successes.push(r.value as { provider: Provider; result: T });
+    else reasons.push(String(r.reason).slice(0, 300));
+  }
 
   if (successes.length === 0) {
-    const reasons = settled
-      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-      .map(r => String(r.reason).slice(0, 300));
     throw new Error(`All AI providers failed. Errors: ${reasons.join(' | ')}`);
   }
 
