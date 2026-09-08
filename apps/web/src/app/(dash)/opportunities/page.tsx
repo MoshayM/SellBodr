@@ -662,9 +662,9 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
   ) : null;
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <button ref={btnRef} type="button" onClick={() => { setOpen(o => !o); setSearch(''); }} disabled={loading}
-        className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500/60 rounded-xl px-3 py-2.5 text-sm text-white min-w-[220px] min-h-[42px] transition-colors disabled:opacity-50 text-left focus:outline-none">
+        className="flex items-center gap-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-violet-500/60 rounded-xl px-3 py-2.5 text-sm text-white w-full sm:w-auto sm:min-w-[220px] min-h-[42px] transition-colors disabled:opacity-50 text-left focus:outline-none">
         <span className="flex-1 leading-snug">{loading ? 'Loading…' : (selected ? mkLabel(selected) : 'Select marketplace')}</span>
         <svg className={`shrink-0 w-3.5 h-3.5 text-white/40 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 12 8" fill="none">
           <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -677,7 +677,7 @@ function MarketplaceDropdown({ marketplaces, value, onChange, loading }: {
 
 // ── Filter select style ───────────────────────────────────────────────────────
 
-const SEL = 'bg-slate-50 border border-slate-200 hover:border-violet-300 text-xs text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 cursor-pointer transition-colors min-h-[34px]';
+const SEL = 'flex-1 min-w-[45%] sm:flex-none sm:min-w-0 bg-slate-50 border border-slate-200 hover:border-violet-300 text-xs text-slate-700 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500/40 cursor-pointer transition-colors min-h-[34px]';
 
 // ── Scan progress panel ───────────────────────────────────────────────────────
 
@@ -793,10 +793,8 @@ export default function OpportunitiesPage() {
   // Expand state
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Search visibility: Pro-only, default public
+  // Search visibility: Pro-only. 'private' = create private + show only my results; 'public' = shared pool
   const [searchVisibility, setSearchVisibility] = useState<'public' | 'private'>('public');
-  // "My Results" toggle: Pro-only, shows only the current user's searches
-  const [mineFilter, setMineFilter] = useState(false);
 
   // Wishlist state (localStorage-backed)
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -841,12 +839,15 @@ export default function OpportunitiesPage() {
     queryFn: () => api.marketplaces.list({ active: true }),
   });
 
+  // Derived: when private mode is active for a Pro user, scope display to their own searches only
+  const mineOnly = searchVisibility === 'private' && !isFree;
+
   const oppParams: Record<string, string> = {};
   if (mpFilter) oppParams.marketplace = mpFilter;
-  if (mineFilter && !isFree) oppParams.mine = 'true';
+  if (mineOnly) oppParams.mine = 'true';
 
   const { data: opps = [], isLoading } = useQuery({
-    queryKey: ['opportunities', { marketplace: mpFilter, mine: mineFilter }],
+    queryKey: ['opportunities', { marketplace: mpFilter, visibility: searchVisibility }],
     queryFn: () => api.opportunities.list(oppParams),
   });
 
@@ -1087,25 +1088,25 @@ export default function OpportunitiesPage() {
             />
           )}
 
-          {/* Visibility toggle — Pro only */}
+          {/* View mode toggle — Pro only: All Results (public pool) vs My Results (private) */}
           {!isFree ? (
             <div className="flex items-center gap-0.5 p-0.5 rounded-lg border border-slate-200 bg-slate-50 text-xs select-none"
-              title="Set visibility for the next scan">
+              title="All Results: shared public pool · My Results: only your scans, saved privately">
               <button
                 onClick={() => setSearchVisibility('public')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'public' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                🌐 Public
+                🌐 All Results
               </button>
               <button
                 onClick={() => setSearchVisibility('private')}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md font-medium transition-all ${searchVisibility === 'private' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                🔒 Private
+                🔒 My Results
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-1 text-xs text-slate-400 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-200"
-              title="Private searches are Pro-only">
-              🔒 <span className="hidden sm:inline">Private search — </span>
+              title="My Results (private scans) is Pro-only">
+              🔒 <span className="hidden sm:inline">My Results — </span>
               <Link href="/upgrade" className="text-violet-600 font-medium hover:underline">Pro only</Link>
             </div>
           )}
@@ -1206,8 +1207,8 @@ export default function OpportunitiesPage() {
         <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-200 bg-violet-50">
           <span className="text-violet-600 text-base shrink-0">✦</span>
           <p className="flex-1 text-xs text-violet-800 leading-snug">
-            <strong className="text-violet-900">Free account:</strong> browse AI-scored opportunities.{' '}
-            <strong className="text-violet-900">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
+            <strong className="text-violet-900">Free account:</strong> browse AI-scored opportunities &amp; profit models.{' '}
+            <strong className="text-violet-900">Pro</strong> unlocks unlimited AI scans, private searches, full supplier sourcing &amp; AI listing generator.
           </p>
           <Link href="/upgrade"
             className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
@@ -1218,22 +1219,22 @@ export default function OpportunitiesPage() {
 
       {/* ── Filter bar — sticky, visually attached to top nav ── */}
       <div className="sticky top-14 z-20 -mx-3 sm:-mx-4 md:-mx-5 lg:-mx-6 xl:-mx-8 mb-4">
-        <div className="filter-bar-inner px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 py-2.5 overflow-x-auto scroll-tabs">
-          <div className="flex items-center gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+        <div className="filter-bar-inner px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8 py-2.5">
+          <div className="flex flex-wrap items-center gap-2">
 
             {/* Marketplace */}
             <MarketplaceDropdown marketplaces={marketplaces as any[]} value={mpFilter}
               onChange={v => setMpFilter(v)} loading={mktLoading} />
 
             {/* Product name / keyword search */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-[45%] sm:flex-none sm:w-40">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">🔍</span>
               <input
                 type="text"
                 value={nameFilter}
                 onChange={e => setNameFilter(e.target.value)}
                 placeholder="Search products…"
-                className="pl-7 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30 w-40 transition-colors"
+                className="pl-7 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30 w-full transition-colors"
               />
               {nameFilter && (
                 <button onClick={() => setNameFilter('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
@@ -1289,24 +1290,10 @@ export default function OpportunitiesPage() {
               <option value="oldest">🕐 Oldest</option>
             </select>
 
-            {/* My Results — Pro only */}
-            {!isFree && (
-              <button
-                onClick={() => setMineFilter(!mineFilter)}
-                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all whitespace-nowrap ${
-                  mineFilter
-                    ? 'bg-violet-600 text-white border-violet-600 shadow-[0_0_8px_rgba(124,58,237,0.35)]'
-                    : 'text-slate-600 border-slate-200 hover:border-violet-400 hover:text-violet-700'
-                }`}
-                title="Show only your own searches (public + private)">
-                {mineFilter ? '🔒 My Results' : '👤 My Results'}
-              </button>
-            )}
-
             {/* Clear + count */}
-            <div className="ml-auto flex items-center gap-2.5 pl-2">
-              {(hasClientFilters || mineFilter) && (
-                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); setMineFilter(false); }}
+            <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-end gap-2.5 sm:pl-2">
+              {hasClientFilters && (
+                <button onClick={() => { setNameFilter(''); setCatFilter(''); setSrcFilter(''); setStrengthFilter(''); setPeriodFilter(''); setRecFilter(''); }}
                   className="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 transition-colors hover:border-slate-300 whitespace-nowrap">
                   Clear ✕
                 </button>
@@ -1346,7 +1333,7 @@ export default function OpportunitiesPage() {
             </p>
           </div>
         ) : (
-          (isFree ? displayed.slice(0, 10) : displayed).map((opp: any) => {
+          displayed.map((opp: any) => {
             const mpCode   = opp.marketplace?.code || '';
             const cc       = countryCode(mpCode);
             const ts       = trendSource(mpCode);
@@ -1525,23 +1512,6 @@ export default function OpportunitiesPage() {
           })
         )}
 
-        {/* Free gate — mobile */}
-        {isFree && displayed.length > 10 && (
-          <div className="card-dark rounded-xl py-10 text-center border border-violet-500/20"
-            style={{ background: 'linear-gradient(to top,rgba(124,58,237,0.08),transparent)' }}>
-            <div className="text-3xl mb-3">🔒</div>
-            <p className="text-sm font-semibold dark:text-white text-slate-900 mb-1">
-              {displayed.length - 10} more results locked
-            </p>
-            <p className="text-xs dark:text-white/40 text-slate-500 mb-4 px-8 leading-snug">
-              Upgrade to Pro for unlimited AI scans &amp; full results
-            </p>
-            <Link href="/upgrade"
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] transition-all">
-              Upgrade to Pro →
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* ── Table (desktop ≥ md) ─────────────────────────────── */}
@@ -1579,7 +1549,7 @@ export default function OpportunitiesPage() {
                   </td></tr>
                 )
                 : [
-                    ...(isFree ? displayed.slice(0, 10) : displayed).flatMap((opp: any) => {
+                    ...displayed.flatMap((opp: any) => {
                   const mpCode  = opp.marketplace?.code || '';
                   const cc      = countryCode(mpCode);
                   const ts      = trendSource(mpCode);
@@ -1739,26 +1709,6 @@ export default function OpportunitiesPage() {
                   }
                   return rows;
                 }),
-                ...(isFree && displayed.length > 10 ? [
-                  <tr key="free-gate">
-                    <td colSpan={7} className="p-0">
-                      <div className="py-12 text-center border-t border-slate-200"
-                        style={{ background: 'linear-gradient(to top, rgba(245,243,255,0.8) 0%, rgba(255,255,255,0.5) 100%)' }}>
-                        <div className="text-4xl mb-3">🔒</div>
-                        <p className="text-sm font-semibold text-slate-900 mb-1">
-                          {displayed.length - 10} more opportunit{displayed.length - 10 === 1 ? 'y' : 'ies'} on this marketplace
-                        </p>
-                        <p className="text-xs text-slate-500 mb-5 leading-snug max-w-xs mx-auto">
-                          Free account shows 10 results per marketplace · Upgrade to Pro for unlimited AI scans &amp; full results
-                        </p>
-                        <Link href="/upgrade"
-                          className="inline-flex items-center gap-1.5 text-sm font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] hover:shadow-[0_0_24px_rgba(124,58,237,0.8)] transition-all">
-                          Unlock All Results — Upgrade to Pro →
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>,
-                ] : []),
               ]
             }
           </tbody>
@@ -1775,15 +1725,10 @@ export default function OpportunitiesPage() {
             <span>
               Showing{' '}
               <span className="font-semibold text-slate-800 tabular-nums">
-                {isFree ? Math.min(10, displayed.length) : displayed.length}
+                {displayed.length}
               </span>
-              {isFree && allOpps.length > 10 && (
-                <span> of <span className="font-semibold text-slate-800 tabular-nums">{allOpps.length}</span></span>
-              )}{' '}
-              opportunit{(isFree ? Math.min(10, displayed.length) : displayed.length) === 1 ? 'y' : 'ies'}
-              {isFree && allOpps.length > 10 && (
-                <span className="text-violet-600"> · {allOpps.length - 10} locked</span>
-              )}
+              {' '}
+              opportunit{displayed.length === 1 ? 'y' : 'ies'}
             </span>
             <div className="flex items-center gap-2.5">
               {hotCount > 0 && <span>🔥 <span className="font-semibold tabular-nums">{hotCount}</span> hot</span>}
@@ -1793,12 +1738,7 @@ export default function OpportunitiesPage() {
           </div>
           {/* CTA */}
           <div className="sm:ml-auto">
-            {isFree ? (
-              <Link href="/upgrade"
-                className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:shadow-[0_0_20px_rgba(124,58,237,0.7)] transition-all">
-                🔒 Upgrade to Pro — Unlock All
-              </Link>
-            ) : (
+            {(
               <button
                 onClick={() => runScanMore.mutate()}
                 disabled={searching}
