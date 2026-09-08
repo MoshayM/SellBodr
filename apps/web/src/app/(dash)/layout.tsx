@@ -399,7 +399,7 @@ export default function DashLayout({ children }: { children: React.ReactNode }) 
                         </span>
                       </div>
                       <a
-                        href="/register?plan=pro"
+                        href="/upgrade"
                         className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[12px] font-bold text-white transition-all"
                         style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}>
                         ⭐ Become Pro

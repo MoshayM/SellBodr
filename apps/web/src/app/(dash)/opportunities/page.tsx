@@ -530,7 +530,7 @@ function BreakdownPanel({ opp, mpCode, isFree }: { opp: any; mpCode: string; isF
                   <p className="text-[11px] text-white/40 mb-3 leading-snug">
                     Free shows up to 10 suppliers · Pro searches IndiaMART, Alibaba &amp; 8 more sources in real-time
                   </p>
-                  <Link href="/register?plan=pro" onClick={e => e.stopPropagation()}
+                  <Link href="/upgrade" onClick={e => e.stopPropagation()}
                     className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_10px_rgba(124,58,237,0.4)] transition-all">
                     Upgrade to Pro →
                   </Link>
@@ -1179,7 +1179,7 @@ export default function OpportunitiesPage() {
             <strong className="text-violet-900">Free account:</strong> browse AI-scored opportunities.{' '}
             <strong className="text-violet-900">Pro</strong> unlocks unlimited AI scans, supplier sourcing, full profit models &amp; AI listing generator.
           </p>
-          <Link href="/register?plan=pro"
+          <Link href="/upgrade"
             className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.4)] transition-all whitespace-nowrap">
             Upgrade to Pro →
           </Link>
@@ -1484,7 +1484,7 @@ export default function OpportunitiesPage() {
             <p className="text-xs dark:text-white/40 text-slate-500 mb-4 px-8 leading-snug">
               Upgrade to Pro for unlimited AI scans &amp; full results
             </p>
-            <Link href="/register?plan=pro"
+            <Link href="/upgrade"
               className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] transition-all">
               Upgrade to Pro →
             </Link>
@@ -1691,7 +1691,7 @@ export default function OpportunitiesPage() {
                         <p className="text-xs text-slate-500 mb-5 leading-snug max-w-xs mx-auto">
                           Free account shows 10 results per marketplace · Upgrade to Pro for unlimited AI scans &amp; full results
                         </p>
-                        <Link href="/register?plan=pro"
+                        <Link href="/upgrade"
                           className="inline-flex items-center gap-1.5 text-sm font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] hover:shadow-[0_0_24px_rgba(124,58,237,0.8)] transition-all">
                           Unlock All Results — Upgrade to Pro →
                         </Link>
@@ -1734,7 +1734,7 @@ export default function OpportunitiesPage() {
           {/* CTA */}
           <div className="sm:ml-auto">
             {isFree ? (
-              <Link href="/register?plan=pro"
+              <Link href="/upgrade"
                 className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_12px_rgba(124,58,237,0.4)] hover:shadow-[0_0_20px_rgba(124,58,237,0.7)] transition-all">
                 🔒 Upgrade to Pro — Unlock All
               </Link>

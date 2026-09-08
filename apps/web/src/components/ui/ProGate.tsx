@@ -30,7 +30,7 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
           <h3 className="text-lg font-black text-white mb-1.5">{feature}</h3>
           <p className="text-sm text-white/50 mb-5 max-w-sm mx-auto leading-relaxed">{tagline}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
-            <Link href="/register?plan=pro"
+            <Link href="/upgrade"
               className="inline-flex items-center gap-1.5 text-xs font-bold px-5 py-2.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_14px_rgba(124,58,237,0.5)] hover:shadow-[0_0_22px_rgba(124,58,237,0.7)] transition-all duration-200 border border-violet-400/30">
               Upgrade to Pro →
             </Link>
@@ -76,9 +76,9 @@ export function ProGate({ icon, feature, tagline, benefits, compact = false }: P
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <Link href="/register?plan=pro"
+            <Link href="/upgrade"
               className="inline-flex items-center gap-2 text-sm font-bold px-7 py-3.5 rounded-xl text-white bg-violet-600 hover:bg-violet-500 shadow-[0_0_20px_rgba(124,58,237,0.5)] hover:shadow-[0_0_30px_rgba(124,58,237,0.75)] transition-all duration-200 border border-violet-400/30">
-              Start Pro →
+              Upgrade to Pro →
             </Link>
             <Link href="/login"
               className="inline-flex items-center gap-2 text-sm font-medium px-5 py-3.5 rounded-xl text-white/55 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-200">

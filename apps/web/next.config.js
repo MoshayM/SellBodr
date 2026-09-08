@@ -22,12 +22,12 @@ const nextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net https://checkout.razorpay.com",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https:",
-      "frame-src https://accounts.google.com",
-      "font-src 'self' data:",
+      "frame-src 'self' https://accounts.google.com https://api.razorpay.com",
+      "font-src 'self' data: https://cdn.jsdelivr.net",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

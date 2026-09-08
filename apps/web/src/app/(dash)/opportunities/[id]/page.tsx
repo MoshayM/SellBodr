@@ -50,7 +50,7 @@ function GenProgressButton({
 
   if (noCredits) {
     return (
-      <a href="/register?plan=pro"
+      <a href="/upgrade"
         className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap ${className}`}
         style={{ background: 'linear-gradient(135deg,#7c3aed,#6366f1)', color: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,0.4)' }}>
         ⭐ Become Pro
