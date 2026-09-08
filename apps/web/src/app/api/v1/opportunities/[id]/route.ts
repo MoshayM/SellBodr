@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  // Require authentication; all authenticated users can view any opportunity detail
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try { await jwtVerify(token, ACCESS_SECRET); } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const db = getDb();
     await ensureSchema(db);

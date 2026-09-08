@@ -1,10 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { getDb } from '@/lib/db';
 import { ensureSchema } from '@/lib/schema';
+import { ACCESS_SECRET } from '@/lib/auth-secrets';
 
 export const dynamic = 'force-dynamic';
 
+// Free tier sees top 20; Pro / Admin sees up to 200
+const FREE_LIMIT = 20;
+const PRO_LIMIT  = 200;
+
 export async function GET(req: NextRequest) {
+  // Require authentication — unauthenticated callers get 401
+  const token = req.headers.get('authorization')?.split(' ')[1];
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let isAdmin = false;
+  let isPro   = false;
+  try {
+    const { payload } = await jwtVerify(token, ACCESS_SECRET);
+    isAdmin = payload.role === 'admin';
+    isPro   = isAdmin || payload.plan === 'pro';
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const rowLimit = isPro ? PRO_LIMIT : FREE_LIMIT;
+
   try {
     const db = getDb();
     await ensureSchema(db);
@@ -14,7 +36,7 @@ export async function GET(req: NextRequest) {
     const mpFilter  = searchParams.get('marketplace') || '';
 
     const clauses: string[] = [];
-    const args: string[] = [];
+    const args: (string | number)[] = [];
     if (recFilter) { clauses.push('LOWER(o.recommendation) = LOWER(?)'); args.push(recFilter); }
     if (mpFilter)  { clauses.push('m.code = ?');           args.push(mpFilter); }
     const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
@@ -38,7 +60,7 @@ export async function GET(req: NextRequest) {
         LEFT JOIN "ProfitModel" pm ON o.id             = pm.opportunityId
         ${where}
         ORDER BY s.opportunity DESC, o.createdAt DESC
-        LIMIT 200
+        LIMIT ${rowLimit}
       `,
       args,
     });
@@ -193,7 +215,11 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json(rows);
+    const res = NextResponse.json(rows);
+    // Expose plan tier so the client can show an upgrade nudge if needed
+    res.headers.set('X-Plan-Tier', isPro ? 'pro' : 'free');
+    res.headers.set('X-Row-Limit', String(rowLimit));
+    return res;
   } catch (err: any) {
     console.error('Opportunities GET error:', err);
     return NextResponse.json([], { status: 200 });
