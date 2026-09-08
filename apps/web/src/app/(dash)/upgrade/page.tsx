@@ -87,7 +87,8 @@ export default function UpgradePage() {
           order_id:    orderData.orderId,
           name:        'SellBodr',
           description: 'Pro Plan — Monthly Subscription',
-          prefill:     { name: user?.name ?? '', email: user?.email ?? '' },
+          prefill:     { name: user?.name ?? '', email: user?.email ?? '', contact: '' },
+          hidden:      { contact: true },
           theme:       { color: '#7c3aed' },
           handler: async (response: any) => {
             try {
