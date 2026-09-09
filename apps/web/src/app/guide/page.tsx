@@ -49,7 +49,7 @@ const SECTIONS = [
       { title: 'Scan for More — smart mode', body: 'When you have active filters (category, trend strength 🔥 Hot/📈 Rising, or channel), the bottom button turns purple and narrows its search to exactly what you are filtering for.' },
       { title: 'No filters active?', body: 'If no filters are set, "Scan for More ↓" runs a broad scan just like New Scan — adding more diverse results to the existing list.' },
       { title: 'Filter results', body: 'Use the filter bar (Opportunity score/signal, Category, Source channel, Trend strength, Date range) to narrow the visible list. Active filters also guide the Scan for More AI.' },
-      { title: 'Result limits', body: 'Each scan returns up to 8 results — the highest-scoring products after AI validation. Free accounts are limited to 5 total scans. Pro users run unlimited scans.' },
+      { title: 'Result limits', body: 'Each scan returns up to 20 results for free accounts (up to 200 for Pro) — the highest-scoring products after AI validation. Free accounts are limited to 5 total scans. Pro users run unlimited scans.' },
     ],
   },
   {
@@ -104,7 +104,7 @@ const SECTIONS = [
     accentBg: 'rgba(148,163,184,0.08)',
     accentBorder: 'rgba(148,163,184,0.15)',
     steps: [
-      { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans (up to 8 results each), full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.' },
+      { title: 'Free plan', body: 'Free accounts get up to 5 AI product scans (up to 20 results each), full 7-dimension Opportunity Score, supplier list (up to 10 per product), and profit calculator. No credit card required.' },
       { title: 'Pro plan', body: 'Pro unlocks unlimited AI scans, premium AI models (Claude + Groq + Mistral) for higher quality results, full supplier list with no cap, all dashboard tools, and priority support. India users get ₹99/mo; other countries see the USD rate.' },
       { title: 'Upgrade to Pro', body: 'Click the "Upgrade to Pro" button in the sidebar, or click any 🔒 locked feature. Payment is processed securely via Razorpay — no mobile number required.' },
       { title: 'Settings', body: 'Go to Settings → Marketplaces to enable/disable target markets. Change your password or manage passkeys under Settings → Security.' },

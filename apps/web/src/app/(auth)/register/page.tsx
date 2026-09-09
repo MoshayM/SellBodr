@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [showPw, setShowPw]   = useState(false);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
-  const [proPrice, setProPrice] = useState('18');
+  const [proPrice, setProPrice] = useState('19');
 
   useEffect(() => {
     fetch('/api/v1/platform/settings')
@@ -31,7 +31,7 @@ export default function RegisterPage() {
     {
       id: 'free', name: 'Starter', price: '$0',
       desc: 'Start scouting — no credit card needed',
-      features: ['Up to 5 AI product scans', 'Up to 8 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Save products to wishlist'],
+      features: ['Up to 5 AI product scans (lifetime)', 'Up to 20 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Save products to wishlist'],
       highlight: false, startLabel: 'Start for Free',
     },
     {

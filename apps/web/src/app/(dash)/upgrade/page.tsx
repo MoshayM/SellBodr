@@ -39,9 +39,9 @@ export default function UpgradePage() {
             .then(r => r.json())
             .then((s: any) => {
               if (s.pro_price_usd) setProPrice(`$${s.pro_price_usd}`);
-              else setProPrice('$18');
+              else setProPrice('$19');
             })
-            .catch(() => setProPrice('$18'));
+            .catch(() => setProPrice('$19'));
         }
       })
       .catch(() => {
