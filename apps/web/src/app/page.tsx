@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 const FEATURES = [
   { icon: '🎯', title: 'AI Opportunity Scoring', desc: 'Every product scored 0–100 across demand, competition, margin, trend, saturation, shipping, and marketplace fit — instantly.', accent: '#7C3AED' },
@@ -99,6 +99,7 @@ export default function LandingPage() {
   const [proINR, setProINR] = useState(1499);
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [isAnnual, setIsAnnual] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     // Detect country first, then set currency and pricing
@@ -224,15 +225,64 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm font-medium transition-colors duration-150 hover:text-white"
+          <Link href="/login" className="hidden sm:block text-sm font-medium transition-colors duration-150 hover:text-white"
             style={{ color: 'rgba(255,255,255,0.6)' }}>
             Sign in
           </Link>
-          <Link href="/register" className="btn-scout text-sm px-5 py-2.5">
+          <Link href="/register" className="btn-scout text-sm px-4 py-2 sm:px-5 sm:py-2.5">
             Get started →
           </Link>
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden flex flex-col justify-center gap-[5px] w-9 h-9 rounded-lg ml-1"
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            style={{ color: 'rgba(255,255,255,0.75)' }}>
+            <span className={`block w-5 h-[2px] bg-current rounded-full transition-all duration-200 origin-center ${menuOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
+            <span className={`block w-5 h-[2px] bg-current rounded-full transition-all duration-200 ${menuOpen ? 'opacity-0 scale-x-0' : ''}`} />
+            <span className={`block w-5 h-[2px] bg-current rounded-full transition-all duration-200 origin-center ${menuOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
+          </button>
         </div>
       </motion.nav>
+
+      {/* ── Mobile nav drawer ──────────────────────────────────── */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            key="mobile-nav"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="fixed top-16 inset-x-0 z-40 md:hidden flex flex-col"
+            style={{ background: 'rgba(10,21,43,0.98)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 16px 40px rgba(0,0,0,0.35)' }}>
+            {[
+              { href: '#features', label: 'Features' },
+              { href: '#how',      label: 'How it works' },
+              { href: '#pricing',  label: 'Pricing' },
+              { href: '/guide',    label: 'User Guide' },
+            ].map(item => (
+              <a key={item.label} href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="px-6 py-4 text-[15px] font-medium border-b transition-colors duration-150 active:bg-white/5"
+                style={{ color: 'rgba(255,255,255,0.72)', borderColor: 'rgba(255,255,255,0.07)' }}>
+                {item.label}
+              </a>
+            ))}
+            <div className="flex gap-3 px-6 py-5">
+              <Link href="/login" onClick={() => setMenuOpen(false)}
+                className="flex-1 text-center py-3 rounded-xl text-sm font-semibold border transition-colors duration-150"
+                style={{ color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.15)' }}>
+                Sign in
+              </Link>
+              <Link href="/register" onClick={() => setMenuOpen(false)}
+                className="flex-1 btn-scout text-sm py-3 text-center rounded-xl">
+                Get started →
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Hero — dark-to-light gradient ────────────────────── */}
       <motion.section
@@ -270,7 +320,7 @@ export default function LandingPage() {
           {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8 }}
-            className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6"
+            className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6"
             style={{ color: '#ffffff', textShadow: '0 2px 24px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.4)' }}>
             Find Products
             <br />
@@ -305,11 +355,23 @@ export default function LandingPage() {
             Free to start · No credit card · Plans from {currency === 'INR' ? `₹${proINR}/mo` : `$${proPrice}/mo`}
           </motion.p>
 
-          {/* Floating opportunity cards */}
-          <div className="flex items-end justify-center gap-4 sm:gap-6 flex-wrap">
+          {/* Mobile: horizontal snap-scroll strip */}
+          <div className="sm:hidden w-full overflow-x-auto pb-3 -mx-6 px-6"
+            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex gap-4 pr-6" style={{ width: 'max-content' }}>
+              {CARDS.map((c, i) => (
+                <div key={c.product} style={{ scrollSnapAlign: 'center' }}>
+                  <OpportunityCard card={c} delay={0.9 + i * 0.15} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop: staggered floating layout */}
+          <div className="hidden sm:flex items-end justify-center gap-6 flex-wrap">
             {CARDS.map((c, i) => (
               <OpportunityCard key={c.product} card={c} delay={0.9 + i * 0.15}
-                className={i === 1 ? 'mb-0' : i === 0 ? 'mb-0 sm:mb-8' : 'mb-0 sm:mb-4'} />
+                className={i === 1 ? 'mb-0' : i === 0 ? 'mb-8' : 'mb-4'} />
             ))}
           </div>
         </div>
