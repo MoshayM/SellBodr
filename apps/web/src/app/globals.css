@@ -2,9 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+html {
   overflow-x: hidden;
-  max-width: 100vw;
+}
+body {
+  overflow-x: hidden;
+  position: relative; /* iOS Safari: lets overflow-x clip while keeping vertical scroll */
+  width: 100%;
 }
 
 /* ── Design Tokens — Guru-inspired Light Theme ──────────────── */

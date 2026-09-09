@@ -93,7 +93,6 @@ export default function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-  const heroY      = useTransform(scrollYProgress, [0, 0.25], [0, -60]);
 
   const [proPrice, setProPrice] = useState('19');
   const [proINR, setProINR] = useState(1499);
@@ -289,21 +288,20 @@ export default function LandingPage() {
         ref={heroRef as any}
         style={{
           opacity: heroOpacity,
-          y: heroY,
           background: 'linear-gradient(180deg,#0D1B35 0%,#111d38 18%,#162240 36%,#1c2d50 52%,#243460 74%,#ddd8ff 88%,#EEF2FF 94%,#FFFFFF 100%)',
-        } as any}
-        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 overflow-x-hidden">
+        }}
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-20 overflow-hidden">
 
         {/* Dot-grid texture (dark zone) */}
         <div className="absolute top-0 left-0 right-0 h-[50%] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
-        {/* Ambient orbs */}
-        <div className="absolute top-[5%] left-1/4 w-40 sm:w-[500px] h-40 sm:h-[500px] rounded-full blur-3xl pointer-events-none"
+        {/* Ambient orbs — desktop only to avoid overflow on mobile */}
+        <div className="hidden sm:block absolute top-[5%] left-1/4 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(99,102,241,0.22),transparent 70%)' }} />
-        <div className="absolute top-[8%] right-[15%] w-32 sm:w-72 h-32 sm:h-72 rounded-full blur-3xl pointer-events-none"
+        <div className="hidden sm:block absolute top-[8%] right-[15%] w-72 h-72 rounded-full blur-3xl pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%)' }} />
-        <div className="absolute bottom-1/3 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-1/3 left-1/4 w-96 h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden sm:block absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60 pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto">
