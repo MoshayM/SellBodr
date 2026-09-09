@@ -292,18 +292,18 @@ export default function LandingPage() {
           y: heroY,
           background: 'linear-gradient(180deg,#0D1B35 0%,#111d38 18%,#162240 36%,#1c2d50 52%,#243460 74%,#ddd8ff 88%,#EEF2FF 94%,#FFFFFF 100%)',
         } as any}
-        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
+        className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 overflow-x-hidden">
 
         {/* Dot-grid texture (dark zone) */}
         <div className="absolute top-0 left-0 right-0 h-[50%] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '28px 28px' }} />
         {/* Ambient orbs */}
-        <div className="absolute top-[5%] left-1/4 w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none"
+        <div className="absolute top-[5%] left-1/4 w-40 sm:w-[500px] h-40 sm:h-[500px] rounded-full blur-3xl pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(99,102,241,0.22),transparent 70%)' }} />
-        <div className="absolute top-[8%] right-[15%] w-72 h-72 rounded-full blur-3xl pointer-events-none"
+        <div className="absolute top-[8%] right-[15%] w-32 sm:w-72 h-32 sm:h-72 rounded-full blur-3xl pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%)' }} />
-        <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/3 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60 pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto">
@@ -314,7 +314,8 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium mb-8"
             style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)' }}>
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-            AI-powered · 76+ marketplaces · 19 Amazon countries · Live data
+            <span className="sm:hidden">AI-powered · 76+ marketplaces</span>
+            <span className="hidden sm:inline">AI-powered · 76+ marketplaces · 19 Amazon countries · Live data</span>
           </motion.div>
 
           {/* Headline */}
@@ -338,14 +339,15 @@ export default function LandingPage() {
           {/* Subtext */}
           <motion.p
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-            className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-base sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 12px rgba(0,0,0,0.5)' }}>
-            AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified Indian suppliers on a live map, and a Launch / Hold / Reject verdict in under 60 seconds.
+            <span className="sm:hidden">Source in India. Sell on Amazon, Etsy &amp; 74+ marketplaces — with AI scoring, a full profit model, and a verdict in under 60 seconds.</span>
+            <span className="hidden sm:inline">AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified Indian suppliers on a live map, and a Launch / Hold / Reject verdict in under 60 seconds.</span>
           </motion.p>
 
           {/* CTA */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex justify-center mb-4">
-            <Link href="/register" className="btn-scout text-base px-10 py-4 rounded-2xl"
+            <Link href="/register" className="btn-scout text-sm sm:text-base px-7 sm:px-10 py-3.5 sm:py-4 rounded-2xl"
               style={{ boxShadow: '0 8px 32px rgba(99,102,241,0.55), 0 4px 12px rgba(99,102,241,0.3)' }}>
               Scout your first product →
             </Link>
