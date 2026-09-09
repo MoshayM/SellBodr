@@ -537,6 +537,7 @@ export default function OpportunityDetailPage() {
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showAdCopy, setShowAdCopy] = useState(false);
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
 
   const { data: gallery, isLoading: galleryLoading } = useQuery<{
     title: string; category: string; marketplace: string;
@@ -568,6 +569,8 @@ export default function OpportunityDetailPage() {
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opp?.id]);
+
+  useEffect(() => { setHeroImgFailed(false); }, [selectedImage, enrichedHeroImage]);
 
   if (isLoading) return <OpportunityLoadingSkeleton />;
   if (!opp) return <div className="card-dark p-8 text-center text-white/40">Opportunity not found</div>;
@@ -631,10 +634,10 @@ export default function OpportunityDetailPage() {
                   {/* Image / shimmer */}
                   {(galleryLoading || (enrichingHero && !enrichedHeroImage)) && !currentImg ? (
                     <div className="w-full h-full animate-pulse bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100" />
-                  ) : currentImg ? (
+                  ) : currentImg && !heroImgFailed ? (
                     <img src={currentImg.url} alt={currentImg.angle}
                       className="w-full h-full object-contain transition-opacity duration-200"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      onError={() => setHeroImgFailed(true)} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">📦</div>
                   )}
