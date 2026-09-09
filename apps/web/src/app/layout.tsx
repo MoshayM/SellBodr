@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
       </head>
-      <body className="relative w-full overflow-x-hidden">
+      <body>
         <script dangerouslySetInnerHTML={{ __html: `
           window.__pwaInstallPrompt = null;
           window.addEventListener('beforeinstallprompt', function(e) {
