@@ -240,7 +240,7 @@ export default function LandingPage() {
         style={{
           opacity: heroOpacity,
           y: heroY,
-          background: 'linear-gradient(180deg,#0D1B35 0%,#111d38 18%,#162240 36%,#1c2d50 52%,#243460 65%,#ddd8ff 80%,#EEF2FF 90%,#FFFFFF 100%)',
+          background: 'linear-gradient(180deg,#0D1B35 0%,#111d38 18%,#162240 36%,#1c2d50 52%,#243460 74%,#ddd8ff 88%,#EEF2FF 94%,#FFFFFF 100%)',
         } as any}
         className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
 
@@ -254,7 +254,7 @@ export default function LandingPage() {
           style={{ background: 'radial-gradient(circle,rgba(124,58,237,0.18),transparent 70%)' }} />
         <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-violet-200/40 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/60 pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto">
 
@@ -271,7 +271,7 @@ export default function LandingPage() {
           <motion.h1
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8 }}
             className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.05] tracking-tight mb-6"
-            style={{ color: '#ffffff', textShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
+            style={{ color: '#ffffff', textShadow: '0 2px 24px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.4)' }}>
             Find Products
             <br />
             <span style={{
@@ -301,7 +301,7 @@ export default function LandingPage() {
             </Link>
           </motion.div>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85 }}
-            className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}>
+            className="text-sm mb-12" style={{ color: 'rgba(255,255,255,0.82)', textShadow: '0 1px 12px rgba(0,0,0,0.75), 0 2px 6px rgba(0,0,0,0.5)' }}>
             Free to start · No credit card · Plans from {currency === 'INR' ? `₹${proINR}/mo` : `$${proPrice}/mo`}
           </motion.p>
 
