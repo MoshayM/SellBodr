@@ -925,6 +925,10 @@ export default function OpportunitiesPage() {
         if (periodFilter === '30d' && age > 30 * DAY) return false;
         if (periodFilter === '3m'  && age > 90 * DAY) return false;
       }
+      if (mineOnly && mineVisFilter !== 'all') {
+        if (mineVisFilter === 'private' && !opp.isPrivate) return false;
+        if (mineVisFilter === 'public'  &&  opp.isPrivate) return false;
+      }
       return true;
     });
 
@@ -936,7 +940,7 @@ export default function OpportunitiesPage() {
       return (b.score?.opportunity ?? 0) - (a.score?.opportunity ?? 0);
     });
     return rows;
-  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, recFilter, periodFilter, sortBy]);
+  }, [allOpps, nameFilter, catFilter, srcFilter, strengthFilter, recFilter, periodFilter, sortBy, mineOnly, mineVisFilter]);
 
   const hasClientFilters = !!(nameFilter || catFilter || srcFilter || strengthFilter || recFilter || periodFilter);
 

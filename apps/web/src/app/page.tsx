@@ -135,15 +135,15 @@ export default function LandingPage() {
       name: 'Starter',
       priceINR: 0, priceUSD: 0,
       desc: 'Start scouting — no credit card, no commitment.',
-      features: ['5 AI product scans (lifetime)', 'Up to 10 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
+      features: ['5 AI product scans (lifetime)', 'Up to 20 results per scan', 'Full 7-dimension Opportunity Score', 'Supplier list (up to 10 per product)', 'Wishlist — save products locally'],
       cta: 'Start free', ctaHref: '/register', highlight: false,
     },
     {
       key: 'pro',
       name: 'Pro',
       priceINR: proINR, priceUSD: Number(proPrice),
-      desc: 'Unlimited scans. Premium AI. Full supplier intelligence.',
-      features: ['100 AI product scans per month', 'Up to 30 results per scan', 'Premium AI — Claude + Groq + Mistral', 'Full supplier list with contact details', 'All dashboards — Research, Profitability, Keywords', 'Export to CSV, Excel, PDF & Word', 'Priority email support'],
+      desc: 'Unlimited scans. 200 results per scan. Premium AI. Full supplier intelligence.',
+      features: ['Unlimited AI product scans', 'Up to 200 results per scan', 'Private & public search (My Scans)', 'Premium AI — Claude + Groq + Mistral', 'Full supplier list with contact details', 'All dashboards — Research, Profitability, Keywords', 'Export to CSV, Excel, PDF & Word', 'Priority email support'],
       cta: 'Go Pro', ctaHref: '/register?plan=pro', highlight: true,
     },
   ];
@@ -290,7 +290,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
             className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 12px rgba(0,0,0,0.5)' }}>
-            AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified suppliers, and a Launch / Hold / Reject verdict in under 60 seconds.
+            AI discovers high-margin cross-border products you can source in India and sell on Amazon, Etsy &amp; 74+ global marketplaces — with a full profit model, verified Indian suppliers on a live map, and a Launch / Hold / Reject verdict in under 60 seconds.
           </motion.p>
 
           {/* CTA */}

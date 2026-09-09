@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-3xl font-black text-white mb-2">Privacy Policy</h1>
-        <p className="text-sm text-white/40 mb-2">Effective date: 1 August 2026 · Last updated: 3 September 2026</p>
+        <p className="text-sm text-white/40 mb-2">Effective date: 1 August 2026 · Last updated: 8 September 2026</p>
         <p className="text-sm text-white/50 mb-10 p-4 rounded-xl border border-white/8 bg-white/[0.02]">
           <strong className="text-white/70">Plain-English summary:</strong> Guest users browse anonymously — we collect no personal data from you. Registered users provide an email and name. We never sell your data. You can delete your account and all associated data at any time.
         </p>
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
               <li><Pill>Usage data</Pill> — opportunity searches, filters applied, marketplace and category selections, and features used — collected to personalise your dashboard and improve our AI models.</li>
               <li><Pill>AI search inputs</Pill> — the product keywords and marketplace preferences you submit. We log query context (not free-form text) for model quality assurance. Query logs are anonymised after 30 days.</li>
               <li><Pill>Optional API keys</Pill> — if you supply third-party API keys (Groq, Anthropic, OpenAI, etc.) they are stored AES-256 encrypted. They are never transmitted in plain text and are never accessible to our staff.</li>
-              <li><Pill>Payment data</Pill> — billing is processed by Stripe. We store only your credit balance, transaction history, and billing country. We never handle or store raw card numbers — Stripe holds all payment instrument data under their own PCI-DSS compliance.</li>
+              <li><Pill>Payment data</Pill> — billing is processed by Stripe (international users) and Razorpay (India users). We store only your credit balance, transaction history, and billing country. We never handle or store raw card numbers or UPI payment data — Stripe and Razorpay hold all payment instrument data under their own PCI-DSS compliance.</li>
               <li><Pill>Communication data</Pill> — emails you send to our support address.</li>
             </ul>
           </Section>
@@ -58,8 +58,8 @@ export default function PrivacyPage() {
 
           <Section title="4. How We Use Your Information">
             <ul className="space-y-1.5 list-disc pl-5 text-white/60">
-              <li>Operate and maintain the Service, including running AI opportunity scouts.</li>
-              <li>Personalise your dashboard — surfacing relevant marketplaces, products, and sourcing leads.</li>
+              <li>Operate and maintain the Service, including running AI opportunity scouts and storing your search history (public and private) under your account.</li>
+              <li>Personalise your dashboard — surfacing relevant marketplaces, products, and sourcing leads, and powering the &quot;My Scans&quot; feature which shows your past search results separated by search visibility (public or private).</li>
               <li>Improve our AI scoring models using aggregated, anonymised patterns (never individual identifiers).</li>
               <li>Send transactional emails (account confirmation, password reset, payment receipts). We do not send marketing email without explicit opt-in.</li>
               <li>Detect, investigate, and prevent fraud, abuse, or violations of our Terms.</li>
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
           <Section title="5. Cookies &amp; Local Storage">
             <p className="mb-3">We use a minimal cookie footprint:</p>
             <ul className="space-y-2 list-none pl-0 text-white/60">
-              <li><Pill>Strictly necessary:</Pill> <code className="text-violet-300 text-xs">bs_access_token</code> (JWT stored in localStorage) — required for authenticated sessions. Expires after 24 hours. No equivalent cookie is set for guests.</li>
+              <li><Pill>Strictly necessary:</Pill> <code className="text-violet-300 text-xs">bs_access_token</code> (JWT access token, 15-minute TTL, stored in localStorage) — required for authenticated sessions. Renewed automatically via a secure HttpOnly refresh-token cookie (7-day TTL). No equivalent tokens are set for guest users.</li>
               <li><Pill>Analytics:</Pill> Vercel Edge Network collects anonymised access logs (no cookie). We do not use Google Analytics or third-party tracking pixels.</li>
               <li><Pill>Wishlist / preferences:</Pill> Stored in your browser&apos;s localStorage only. Never transmitted to our servers.</li>
             </ul>
@@ -82,6 +82,7 @@ export default function PrivacyPage() {
             <p className="mb-3">We share data only with processors that operate under Data Processing Agreements (DPAs) and whose privacy practices we have assessed:</p>
             <ul className="space-y-2 list-disc pl-5 text-white/60">
               <li><strong className="text-white/80">Anthropic / Groq / Mistral / OpenAI</strong> — AI inference. Anonymous query context (marketplace, category keywords) is transmitted. No personal account data is sent. These providers&apos; zero-data-retention options are used where available.</li>
+              <li><strong className="text-white/80">Stripe / Razorpay</strong> — payment processing. Stripe handles billing for international users; Razorpay handles INR billing for users in India. We store only a transaction reference and your plan status. No raw card numbers, UPI credentials, or payment instrument data are stored by us — these are held by Stripe and Razorpay under their respective PCI-DSS compliance programmes.</li>
               <li><strong className="text-white/80">Turso (libsql)</strong> — database. All application data is stored in an AWS-region (eu-central-1 for EU users) SQLite-compatible database.</li>
               <li><strong className="text-white/80">Vercel</strong> — application hosting and edge network. Vercel processes request metadata per their privacy policy and DPA. EU/UK traffic is served from EU edge nodes.</li>
               <li><strong className="text-white/80">Marketplaces (Amazon, eBay, Etsy, etc.)</strong> — only publicly available catalogue data is fetched server-side. Your personal data is never sent to marketplace APIs.</li>
@@ -117,7 +118,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="10. Security">
-            We implement layered security controls: TLS 1.3 in transit, AES-256 for sensitive data at rest (API keys, secrets), bcrypt (cost 12) for password hashing, short-lived JWTs (24-hour expiry), passkey (FIDO2/WebAuthn) support, and rate limiting on all authentication endpoints. Access to production data is restricted to named engineers with MFA. We conduct periodic security reviews. No method of transmission or storage is 100% secure; we cannot guarantee absolute security and recommend you use a strong, unique password or passkey.
+            We implement layered security controls: TLS 1.3 in transit, AES-256 for sensitive data at rest (API keys, secrets), bcrypt (cost 12) for password hashing, short-lived JWTs (15-minute access tokens with sliding refresh-token rotation), passkey (FIDO2/WebAuthn) support, and rate limiting on all authentication endpoints. Access to production data is restricted to named engineers with MFA. We conduct periodic security reviews. No method of transmission or storage is 100% secure; we cannot guarantee absolute security and recommend you use a strong, unique password or passkey.
           </Section>
 
           <Section title="11. Children&apos;s Privacy">
