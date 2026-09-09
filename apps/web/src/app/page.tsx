@@ -358,9 +358,9 @@ export default function LandingPage() {
           </motion.p>
 
           {/* Mobile: horizontal snap-scroll strip */}
-          <div className="sm:hidden w-full overflow-x-auto pb-3 -mx-6 px-6"
+          <div className="sm:hidden w-full overflow-x-auto pb-3"
             style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-            <div className="flex gap-4 pr-6" style={{ width: 'max-content' }}>
+            <div className="flex gap-4" style={{ width: 'max-content' }}>
               {CARDS.map((c, i) => (
                 <div key={c.product} style={{ scrollSnapAlign: 'center' }}>
                   <OpportunityCard card={c} delay={0.9 + i * 0.15} />
